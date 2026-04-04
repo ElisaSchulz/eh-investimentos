@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EH Investimentos — Gestão Financeira</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy:       #0D1E4E;
+      --navy-dark:  #081537;
+      --navy-mid:   #122460;
+      --gold:       #D4820A;
+      --gold-light: #E8A030;
+      --gold-pale:  #F0C060;
+      --white:      #FFFFFF;
+      --gray:       #8A9BB8;
+      --gray-light: #C8D4E8;
+      --border:     rgba(212, 130, 10, 0.25);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: var(--navy-dark);
+      color: var(--white);
+      overflow-x: hidden;
+    }
+
+    /* ─── NOISE TEXTURE ─── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1000;
+      opacity: 0.35;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 900;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.4rem 5vw;
+      background: rgba(8, 21, 55, 0.85);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+      transition: padding 0.3s;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      text-decoration: none;
+    }
+
+    .nav-logo-icon {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+    }
+
+    .nav-logo-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .nav-logo-text span:first-child {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.08em;
+      color: var(--white);
+    }
+
+    .nav-logo-text span:last-child {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 300;
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      color: var(--gray);
+      text-transform: uppercase;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gray-light);
+      text-decoration: none;
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px; left: 0; right: 0;
+      height: 1px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transition: transform 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--white); }
+    .nav-links a:hover::after { transform: scaleX(1); }
+
+    .nav-cta-ghost {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      border: 1px solid var(--border);
+      padding: 0.65rem 1.5rem;
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .nav-cta-ghost:hover {
+      background: var(--gold-pale);
+      color: var(--gold-light);
+    }
+
+    .nav-cta {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--navy-dark);
+      background: var(--gold);
+      padding: 0.65rem 1.5rem;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .nav-cta:hover { background: var(--gold-light); transform: translateY(-1px); }
+
+    /* ─── HERO ─── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 10rem 5vw 6rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 70% 50%, rgba(18, 36, 96, 0.9) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 15% 80%, rgba(212, 130, 10, 0.12) 0%, transparent 60%),
+        linear-gradient(160deg, var(--navy-dark) 0%, var(--navy) 50%, var(--navy-dark) 100%);
+    }
+
+    .hero-lines {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .hero-lines::before,
+    .hero-lines::after {
+      content: '';
+      position: absolute;
+      border: 1px solid rgba(212, 130, 10, 0.1);
+    }
+
+    .hero-lines::before {
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      top: -100px; right: -100px;
+      animation: rotateSlow 40s linear infinite;
+    }
+
+    .hero-lines::after {
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      bottom: 5%; right: 5%;
+      border-color: rgba(212, 130, 10, 0.06);
+      animation: rotateSlow 60s linear infinite reverse;
+    }
+
+    @keyframes rotateSlow {
+      to { transform: rotate(360deg); }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 780px;
+      animation: fadeUp 1s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 2rem;
+      animation: fadeUp 1s 0.1s ease both;
+    }
+
+    .hero-tag::before {
+      content: '';
+      display: block;
+      width: 32px;
+      height: 1px;
+      background: var(--gold);
+    }
+
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: clamp(3rem, 7vw, 5.5rem);
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+      margin-bottom: 1.8rem;
+      animation: fadeUp 1s 0.2s ease both;
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--gold-light);
+    }
+
+    .hero-desc {
+      font-size: 1rem;
+      font-weight: 300;
+      line-height: 1.8;
+      color: var(--gray-light);
+      max-width: 520px;
+      margin-bottom: 3rem;
+      animation: fadeUp 1s 0.35s ease both;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1.2rem;
+      align-items: center;
+      flex-wrap: wrap;
+      animation: fadeUp 1s 0.5s ease both;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      background: var(--gold);
+      color: var(--navy-dark);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 1rem 2.2rem;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 0 0 rgba(212,130,10,0.4);
+    }
+
+    .btn-primary:hover {
+      background: var(--gold-light);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(212,130,10,0.3);
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--gray-light);
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .btn-ghost svg { transition: transform 0.2s; }
+    .btn-ghost:hover { color: var(--white); }
+    .btn-ghost:hover svg { transform: translateX(4px); }
+
+    .hero-stat-row {
+      position: absolute;
+      bottom: 4rem; left: 5vw; right: 5vw;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      max-width: 600px;
+      border-top: 1px solid var(--border);
+      padding-top: 2rem;
+      z-index: 2;
+      animation: fadeUp 1s 0.7s ease both;
+    }
+
+    .hero-stat { padding-right: 2rem; }
+
+    .hero-stat-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.4rem;
+      font-weight: 500;
+      color: var(--gold-light);
+      line-height: 1;
+    }
+
+    .hero-stat-num sup {
+      font-size: 1rem;
+      vertical-align: super;
+    }
+
+    .hero-stat-label {
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gray);
+      margin-top: 0.4rem;
+    }
+
+    /* ─── SECTIONS ─── */
+    section { padding: 7rem 5vw; }
+
+    .section-tag {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .section-tag::before {
+      content: '';
+      display: block;
+      width: 24px;
+      height: 1px;
+      background: var(--gold);
+    }
+
+    h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: clamp(2.2rem, 4.5vw, 3.5rem);
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+    }
+
+    h2 em { font-style: italic; color: var(--gold-light); }
+
+    /* ─── ABOUT ─── */
+    #sobre {
+      background: var(--navy);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #sobre::before {
+      content: '';
+      position: absolute;
+      right: -200px; top: -200px;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(212,130,10,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .sobre-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .sobre-text p {
+      font-size: 0.95rem;
+      font-weight: 300;
+      line-height: 1.85;
+      color: var(--gray-light);
+      margin-bottom: 1.2rem;
+    }
+
+    .sobre-text p strong {
+      color: var(--white);
+      font-weight: 500;
+    }
+
+    .sobre-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      padding: 3rem;
+      position: relative;
+    }
+
+    .sobre-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px; height: 60px;
+      background: linear-gradient(to bottom, var(--gold), transparent);
+    }
+
+    .founder-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 400;
+      margin-bottom: 0.3rem;
+    }
+
+    .founder-title {
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 2rem;
+    }
+
+    .founder-bio {
+      font-size: 0.9rem;
+      line-height: 1.75;
+      color: var(--gray-light);
+      font-weight: 300;
+      border-top: 1px solid var(--border);
+      padding-top: 1.5rem;
+    }
+
+    /* ─── SERVICES ─── */
+    #servicos { background: var(--navy-dark); }
+
+    .services-header {
+      max-width: 600px;
+      margin-bottom: 4rem;
+    }
+
+    .services-header p {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--gray-light);
+      font-weight: 300;
+    }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .service-card {
+      background: var(--navy-dark);
+      padding: 2.8rem 2.2rem;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s;
+      cursor: default;
+    }
+
+    .service-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(to right, var(--gold), var(--gold-light));
+      transform: scaleX(0);
+      transition: transform 0.3s;
+      transform-origin: left;
+    }
+
+    .service-card:hover { background: rgba(18,36,96,0.7); }
+    .service-card:hover::after { transform: scaleX(1); }
+
+    .service-icon {
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.8rem;
+      color: var(--gold);
+      transition: background 0.3s, border-color 0.3s;
+    }
+
+    .service-card:hover .service-icon {
+      background: rgba(212,130,10,0.1);
+      border-color: var(--gold);
+    }
+
+    .service-num {
+      position: absolute;
+      top: 2.2rem; right: 2.2rem;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3rem;
+      font-weight: 300;
+      color: rgba(255,255,255,0.04);
+      line-height: 1;
+      transition: color 0.3s;
+    }
+
+    .service-card:hover .service-num { color: rgba(212,130,10,0.08); }
+
+    .service-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+    }
+
+    .service-desc {
+      font-size: 0.85rem;
+      line-height: 1.75;
+      color: var(--gray);
+      font-weight: 300;
+    }
+
+    /* ─── PERFIL DO INVESTIDOR ─── */
+    #perfil {
+      background: var(--navy);
+      position: relative;
+    }
+
+    .perfil-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: start;
+    }
+
+    .perfil-text p {
+      font-size: 0.95rem;
+      line-height: 1.85;
+      color: var(--gray-light);
+      font-weight: 300;
+      margin-bottom: 1.2rem;
+    }
+
+    .requisitos {
+      list-style: none;
+      margin-top: 2.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .requisitos li {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      font-size: 0.88rem;
+      color: var(--gray-light);
+      line-height: 1.6;
+    }
+
+    .requisito-icon {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      background: rgba(212,130,10,0.15);
+      border: 1px solid rgba(212,130,10,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+
+    .requisito-icon svg { color: var(--gold); }
+
+    .perfil-quote {
+      border-left: 2px solid var(--gold);
+      padding: 2.5rem 2.5rem;
+      background: rgba(255,255,255,0.02);
+      position: sticky;
+      top: 120px;
+    }
+
+    .perfil-quote blockquote {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.6rem;
+      font-weight: 300;
+      line-height: 1.5;
+      font-style: italic;
+      color: var(--gray-light);
+      margin-bottom: 1.5rem;
+    }
+
+    .perfil-quote cite {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-style: normal;
+    }
+
+    /* ─── PROCESSO ─── */
+    #processo { background: var(--navy-dark); }
+
+    .processo-steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      margin-top: 4rem;
+      position: relative;
+    }
+
+    .processo-steps::before {
+      content: '';
+      position: absolute;
+      top: 22px; left: 10%; right: 10%;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--border), var(--border), transparent);
+    }
+
+    .step {
+      padding: 0 1.5rem 0 0;
+      position: relative;
+    }
+
+    .step-dot {
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--gold);
+      background: var(--navy-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.8rem;
+      position: relative;
+      z-index: 1;
+      color: var(--gold);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-weight: 500;
+      transition: background 0.3s;
+    }
+
+    .step:hover .step-dot {
+      background: rgba(212,130,10,0.15);
+    }
+
+    .step-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-weight: 500;
+      margin-bottom: 0.7rem;
+    }
+
+    .step-desc {
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: var(--gray);
+      font-weight: 300;
+    }
+
+    /* ─── CTA BAND ─── */
+    #contato {
+      background: linear-gradient(135deg, var(--navy-mid) 0%, var(--navy) 100%);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cta-inner {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .cta-text h2 { margin-bottom: 0.8rem; }
+
+    .cta-text p {
+      font-size: 0.95rem;
+      color: var(--gray-light);
+      font-weight: 300;
+      line-height: 1.7;
+    }
+
+    .cta-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      min-width: 340px;
+    }
+
+    .form-input {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      color: var(--white);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.8rem;
+      padding: 0.9rem 1.2rem;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+      width: 100%;
+    }
+
+    .form-input::placeholder { color: var(--gray); }
+    .form-input:focus {
+      border-color: var(--gold);
+      background: rgba(212,130,10,0.05);
+    }
+
+    .form-input option { background: var(--navy); }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: var(--navy-dark);
+      border-top: 1px solid var(--border);
+      padding: 4rem 5vw 2.5rem;
+    }
+
+    .footer-top {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 4rem;
+      padding-bottom: 3rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2rem;
+    }
+
+    .footer-brand p {
+      font-size: 0.85rem;
+      line-height: 1.75;
+      color: var(--gray);
+      font-weight: 300;
+      margin-top: 1.2rem;
+      max-width: 300px;
+    }
+
+    .footer-col h4 {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.2rem;
+    }
+
+    .footer-col ul { list-style: none; }
+
+    .footer-col ul li {
+      margin-bottom: 0.6rem;
+    }
+
+    .footer-col ul li a {
+      font-size: 0.82rem;
+      color: var(--gray);
+      text-decoration: none;
+      font-weight: 300;
+      transition: color 0.2s;
+    }
+
+    .footer-col ul li a:hover { color: var(--white); }
+
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-copy {
+      font-size: 0.72rem;
+      color: var(--gray);
+      font-weight: 300;
+    }
+
+    .footer-disclaimer {
+      font-size: 0.65rem;
+      color: rgba(138,155,184,0.6);
+      max-width: 500px;
+      text-align: right;
+      line-height: 1.5;
+    }
+
+    /* ─── DIVIDER ─── */
+    .gold-divider {
+      width: 40px;
+      height: 2px;
+      background: linear-gradient(to right, var(--gold), var(--gold-light));
+      margin: 1.5rem 0;
+    }
+
+    /* ─── SCROLL ANIMATIONS ─── */
+    /* Elements start visible. JS adds .will-animate only after load */
+    .will-animate {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+
+    .will-animate.in-view {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 960px) {
+      .sobre-grid,
+      .perfil-inner,
+      .cta-inner { grid-template-columns: 1fr; gap: 3rem; }
+
+      .services-grid { grid-template-columns: 1fr 1fr; }
+
+      .processo-steps { grid-template-columns: 1fr 1fr; gap: 2.5rem; }
+      .processo-steps::before { display: none; }
+
+      .footer-top { grid-template-columns: 1fr; gap: 2.5rem; }
+      .footer-disclaimer { text-align: left; }
+      .footer-bottom { flex-direction: column; gap: 1rem; align-items: flex-start; }
+
+      .nav-links { display: none; }
+      .cta-form { min-width: auto; }
+      .perfil-quote { position: static; }
+    }
+
+    @media (max-width: 600px) {
+      .services-grid { grid-template-columns: 1fr; }
+      .processo-steps { grid-template-columns: 1fr; }
+      .hero-stat-row { grid-template-columns: 1fr; gap: 1.5rem; position: static; margin-top: 3rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav id="navbar">
+    <a href="#hero" class="nav-logo">
+      <!-- Inline SVG replicating the EH icon -->
+      <img src="Logo_EH.png" class="nav-logo-icon" alt="EH Investimentos" />
+      <div class="nav-logo-text">
+        <span>EH INVESTIMENTOS</span>
+        <span>Gestão Financeira</span>
+      </div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#sobre">Sobre</a></li>
+      <li><a href="#servicos">Serviços</a></li>
+      <li><a href="#perfil">Perfil</a></li>
+      <li><a href="#processo">Processo</a></li>
+    </ul>
+    <a href="eh-cliente-login.html" class="nav-cta-ghost">Área do Cliente</a>
+    <a href="#contato" class="nav-cta">Fale Conosco</a>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-lines"></div>
+    <div class="hero-content">
+      <div class="hero-tag">Gestão Financeira de Alta Performance</div>
+      <h1>
+        Patrimônio gerido com<br/>
+        <em>precisão e excelência</em>
+      </h1>
+      <p class="hero-desc">
+        A EH Investimentos oferece consultoria financeira personalizada para investidores profissionais, com estratégias sofisticadas e acompanhamento dedicado para preservar e multiplicar seu patrimônio.
+      </p>
+      <div class="hero-actions">
+        <a href="#contato" class="btn-primary">Iniciar Conversa</a>
+        <a href="#sobre" class="btn-ghost">
+          Conhecer a EH
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+    <div class="hero-stat-row">
+      <div class="hero-stat">
+        <div class="hero-stat-num">10<sup>+</sup></div>
+        <div class="hero-stat-label">Anos de Experiência</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">R$1M<sup>+</sup></div>
+        <div class="hero-stat-label">Patrimônio Mínimo</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">100%</div>
+        <div class="hero-stat-label">Independência</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOBRE -->
+  <section id="sobre">
+    <div class="sobre-grid reveal">
+      <div class="sobre-text">
+        <div class="section-tag">Sobre Nós</div>
+        <h2>Uma firma fundada na <em>confiança e resultado</em></h2>
+        <div class="gold-divider"></div>
+        <p>
+          A <strong>EH Investimentos</strong> nasceu da convicção de que investidores de alto patrimônio merecem uma gestão verdadeiramente independente, sem conflitos de interesse e com total transparência.
+        </p>
+        <p>
+          Atuamos exclusivamente com <strong>investidores profissionais</strong> — aqueles que possuem mais de R$ 1 milhão em aplicações financeiras — oferecendo acesso a estratégias e produtos de investimento normalmente reservados às grandes fortunas.
+        </p>
+        <p>
+          Nossa abordagem combina análise rigorosa de mercado, planejamento patrimonial de longo prazo e relacionamento próximo com cada cliente, garantindo decisões alinhadas aos seus objetivos e ao seu perfil de risco.
+        </p>
+      </div>
+      <div class="sobre-card reveal">
+        <div class="founder-name">Eduardo Horta</div>
+        <div class="founder-title">Fundador & Gestor Principal</div>
+        <p class="founder-bio">
+          Com mais de 10 anos de experiência no mercado financeiro brasileiro, Eduardo Horta construiu uma trajetória sólida em gestão de patrimônio, análise de investimentos e planejamento financeiro para clientes de alta renda. Sua expertise atravessa renda fixa, renda variável, fundos alternativos e ativos internacionais, sempre com foco na preservação e crescimento sustentável do capital.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVIÇOS -->
+  <section id="servicos">
+    <div class="services-header reveal">
+      <div class="section-tag">Serviços</div>
+      <h2>Soluções completas para o seu <em>patrimônio</em></h2>
+      <p>Cada serviço é estruturado para atender às demandas específicas de quem possui patrimônio significativo e busca maximizar seus resultados com responsabilidade.</p>
+    </div>
+    <div class="services-grid reveal">
+      <div class="service-card">
+        <span class="service-num">01</span>
+        <div class="service-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="service-title">Gestão de Carteiras</div>
+        <p class="service-desc">Construção e monitoramento de portfólios diversificados, com alocação estratégica entre classes de ativos nacionais e internacionais, ajustada ao seu perfil e objetivos.</p>
+      </div>
+      <div class="service-card">
+        <span class="service-num">02</span>
+        <div class="service-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 3v18h18"/>
+            <path d="M7 16l4-4 4 4 5-5"/>
+          </svg>
+        </div>
+        <div class="service-title">Planejamento Patrimonial</div>
+        <p class="service-desc">Estratégias de longo prazo para preservação, crescimento e sucessão do patrimônio, considerando aspectos fiscais, jurídicos e as particularidades da sua família.</p>
+      </div>
+      <div class="service-card">
+        <span class="service-num">03</span>
+        <div class="service-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+        </div>
+        <div class="service-title">Assessoria em Renda Fixa</div>
+        <p class="service-desc">Acesso a títulos privados, debêntures, CRIs, CRAs e instrumentos de crédito estruturado com análise criteriosa de risco e retorno para proteger e rentabilizar o capital.</p>
+      </div>
+      <div class="service-card">
+        <span class="service-num">04</span>
+        <div class="service-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <div class="service-title">Acesso a Ativos Alternativos</div>
+        <p class="service-desc">Fundos exclusivos, private equity, venture capital e investimentos no exterior — soluções sofisticadas normalmente inacessíveis ao investidor comum.</p>
+      </div>
+      <div class="service-card">
+        <span class="service-num">05</span>
+        <div class="service-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+            <path d="M16 3.13a4 4 0 010 7.75"/>
+          </svg>
+        </div>
+        <div class="service-title">Consultoria Personalizada</div>
+        <p class="service-desc">Relacionamento direto com Eduardo Horta, sem intermediários. Análises, relatórios periódicos e reuniões regulares para manter sua estratégia sempre alinhada ao cenário.</p>
+      </div>
+      <div class="service-card">
+        <span class="service-num">06</span>
+        <div class="service-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+            <path d="M1 10h22"/>
+          </svg>
+        </div>
+        <div class="service-title">Gestão Fiscal e Tributária</div>
+        <p class="service-desc">Orientação sobre estruturação eficiente de investimentos sob a ótica fiscal, minimizando a carga tributária dentro dos limites legais e maximizando o retorno líquido.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PERFIL DO INVESTIDOR -->
+  <section id="perfil">
+    <div class="perfil-inner reveal">
+      <div class="perfil-text">
+        <div class="section-tag">Perfil do Investidor</div>
+        <h2>Para quem buscamos <em>atuar</em></h2>
+        <div class="gold-divider"></div>
+        <p>
+          A EH Investimentos foi desenhada para um segmento muito específico de investidores: aqueles que já construíram patrimônio relevante e buscam uma gestão profissional, discreta e verdadeiramente alinhada aos seus interesses.
+        </p>
+        <p>
+          Trabalhamos com um número restrito de clientes para garantir atenção exclusiva, profundidade de relacionamento e a qualidade que cada portfólio merece.
+        </p>
+        <ul class="requisitos">
+          <li>
+            <div class="requisito-icon">
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="2 6 5 9 10 3"/>
+              </svg>
+            </div>
+            <span>Patrimônio financeiro mínimo de <strong style="color:var(--white)">R$ 1.000.000</strong> em aplicações</span>
+          </li>
+          <li>
+            <div class="requisito-icon">
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="2 6 5 9 10 3"/>
+              </svg>
+            </div>
+            <span>Enquadramento como <strong style="color:var(--white)">Investidor Profissional</strong> conforme regulamentação CVM</span>
+          </li>
+          <li>
+            <div class="requisito-icon">
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="2 6 5 9 10 3"/>
+              </svg>
+            </div>
+            <span>Visão de <strong style="color:var(--white)">longo prazo</strong> e comprometimento com a estratégia definida</span>
+          </li>
+          <li>
+            <div class="requisito-icon">
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="2 6 5 9 10 3"/>
+              </svg>
+            </div>
+            <span>Interesse em <strong style="color:var(--white)">diversificação sofisticada</strong> além dos produtos bancários convencionais</span>
+          </li>
+          <li>
+            <div class="requisito-icon">
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="2 6 5 9 10 3"/>
+              </svg>
+            </div>
+            <span>Valorização de um <strong style="color:var(--white)">relacionamento próximo</strong> e transparente com o gestor</span>
+          </li>
+        </ul>
+      </div>
+      <div class="perfil-quote reveal">
+        <blockquote>
+          "Gerir patrimônio é muito mais do que escolher ativos. É compreender a história, os valores e os objetivos de vida de cada cliente."
+        </blockquote>
+        <cite>Eduardo Horta — Fundador, EH Investimentos</cite>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROCESSO -->
+  <section id="processo">
+    <div class="section-tag reveal">Processo</div>
+    <h2 class="reveal">Como trabalhamos <em>com você</em></h2>
+    <div class="gold-divider reveal"></div>
+    <div class="processo-steps reveal">
+      <div class="step">
+        <div class="step-dot">01</div>
+        <div class="step-title">Diagnóstico Inicial</div>
+        <p class="step-desc">Reunião aprofundada para entender seu perfil, objetivos, tolerância ao risco, horizonte de investimento e situação patrimonial atual.</p>
+      </div>
+      <div class="step">
+        <div class="step-dot">02</div>
+        <div class="step-title">Proposta Personalizada</div>
+        <p class="step-desc">Elaboramos uma política de investimento individual com alocação estratégica desenhada especificamente para o seu perfil e metas.</p>
+      </div>
+      <div class="step">
+        <div class="step-dot">03</div>
+        <div class="step-title">Implementação</div>
+        <p class="step-desc">Execução cuidadosa da estratégia, com seleção criteriosa de ativos, fundos e produtos adequados ao portfólio definido.</p>
+      </div>
+      <div class="step">
+        <div class="step-dot">04</div>
+        <div class="step-title">Monitoramento Contínuo</div>
+        <p class="step-desc">Acompanhamento diário da carteira, rebalanceamentos periódicos e relatórios transparentes para manter sua estratégia no caminho certo.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTATO / CTA -->
+  <section id="contato">
+    <div class="cta-inner reveal">
+      <div class="cta-text">
+        <div class="section-tag">Contato</div>
+        <h2>Pronto para uma gestão <em>de alto nível</em>?</h2>
+        <p>Entre em contato para uma conversa inicial sem compromisso. Avaliaremos juntos como a EH Investimentos pode contribuir para a evolução do seu patrimônio.</p>
+      </div>
+      <div class="cta-form">
+        <input class="form-input" type="text" placeholder="Seu nome completo" />
+        <input class="form-input" type="email" placeholder="E-mail" />
+        <input class="form-input" type="tel" placeholder="WhatsApp / Telefone" />
+        <select class="form-input">
+          <option value="" disabled selected>Patrimônio financeiro aproximado</option>
+          <option>R$ 1M – R$ 5M</option>
+          <option>R$ 5M – R$ 20M</option>
+          <option>R$ 20M – R$ 50M</option>
+          <option>Acima de R$ 50M</option>
+        </select>
+        <button class="btn-primary" style="width:100%;cursor:pointer;border:none;font-family:'Montserrat',sans-serif;" onclick="this.textContent='Mensagem enviada ✓';this.style.background='#5a9e5a';setTimeout(()=>{this.textContent='Agendar Conversa';this.style.background=''},3000)">
+          Agendar Conversa
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="#hero" class="nav-logo" style="display:inline-flex;">
+          <img src="Logo_EH.png" width="40" height="40" alt="EH Investimentos" style="object-fit:contain;" />
+          <div class="nav-logo-text" style="margin-left:0.8rem;">
+            <span>EH INVESTIMENTOS</span>
+            <span>Gestão Financeira</span>
+          </div>
+        </a>
+        <p>Consultoria financeira independente para investidores profissionais. Transparência, excelência e resultado no cuidado do seu patrimônio.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Navegação</h4>
+        <ul>
+          <li><a href="#sobre">Sobre a EH</a></li>
+          <li><a href="#servicos">Serviços</a></li>
+          <li><a href="#perfil">Perfil do Investidor</a></li>
+          <li><a href="#processo">Processo</a></li>
+          <li><a href="#contato">Contato</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contato</h4>
+        <ul>
+          <li><a href="/cdn-cgi/l/email-protection#1f7c70716b7e6b705f7a777671697a6c6b76727a716b706c317c7072317d6d"><span class="__cf_email__" data-cfemail="11727e7f6570657e517479787f67746265787c747f657e623f727e7c3f7363">[email&#160;protected]</span></a></li>
+          <li><a href="tel:+5511999999999">+55 (11) 9 9999-9999</a></li>
+          <li><a href="#">São Paulo – SP, Brasil</a></li>
+          <li><a href="#">LinkedIn</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="footer-copy">© 2025 EH Investimentos. Todos os direitos reservados.</p>
+      <p class="footer-disclaimer">Este material é destinado exclusivamente a investidores profissionais conforme definição da Resolução CVM nº 30/2021. Rentabilidade passada não é garantia de rentabilidade futura.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Wait for full page load before hiding anything
+    window.addEventListener('load', function () {
+
+      // Collect all .reveal elements + stagger cards/steps
+      const targets = [];
+
+      document.querySelectorAll('.reveal').forEach(el => targets.push({ el, delay: 0 }));
+
+      document.querySelectorAll('.services-grid .service-card, .processo-steps .step').forEach((el, i) => {
+        el.style.transitionDelay = (i * 0.07) + 's';
+        if (!el.classList.contains('reveal')) targets.push({ el, delay: i * 70 });
+      });
+
+      if (!('IntersectionObserver' in window)) {
+        // No support — just leave everything visible
+        return;
+      }
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in-view');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.08, rootMargin: '0px 0px -50px 0px' });
+
+      targets.forEach(({ el }) => {
+        el.classList.add('will-animate');
+        observer.observe(el);
+      });
+
+      // Hard failsafe: after 2s reveal everything no matter what
+      setTimeout(() => {
+        document.querySelectorAll('.will-animate:not(.in-view)').forEach(el => {
+          el.classList.add('in-view');
+        });
+      }, 2000);
+    });
+  </script>
+
+</body>
+</html>
