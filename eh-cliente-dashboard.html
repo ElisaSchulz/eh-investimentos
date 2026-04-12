@@ -649,6 +649,109 @@
       z-index: 999;
     }
 
+
+    /* ── SET PASSWORD MODAL ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8,21,55,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .modal-box {
+      background: var(--navy);
+      border: 1px solid var(--border);
+      padding: 3rem;
+      width: 100%;
+      max-width: 440px;
+      position: relative;
+    }
+
+    .modal-tag {
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .modal-tag::before {
+      content: '';
+      display: block;
+      width: 20px; height: 1px;
+      background: var(--gold);
+    }
+
+    .modal-box h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 300;
+      margin-bottom: 0.5rem;
+    }
+
+    .modal-box p {
+      font-size: 0.82rem;
+      color: var(--gray-light);
+      font-weight: 300;
+      line-height: 1.6;
+      margin-bottom: 1.8rem;
+    }
+
+    .modal-field {
+      margin-bottom: 1rem;
+    }
+
+    .modal-field label {
+      display: block;
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gray);
+      margin-bottom: 0.4rem;
+    }
+
+    .modal-field input {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(138,155,184,0.25);
+      color: var(--white);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 300;
+      padding: 0.85rem 1rem;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .modal-field input:focus {
+      border-color: var(--gold);
+      background: rgba(212,130,10,0.05);
+    }
+
+    .modal-field input::placeholder { color: rgba(138,155,184,0.5); }
+
+    .modal-error {
+      font-size: 0.75rem;
+      color: #f08080;
+      background: rgba(224,85,85,0.1);
+      border: 1px solid rgba(224,85,85,0.3);
+      padding: 0.6rem 0.8rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .modal-error.show { display: block; }
+
     @media (max-width: 900px) {
       .sidebar { display: none; }
       .main { margin-left: 0; }
@@ -658,6 +761,35 @@
   </style>
 </head>
 <body>
+
+
+<!-- Set Password Modal (shown after invite link) -->
+<div class="modal-overlay" id="setPasswordModal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-tag">Primeiro Acesso</div>
+    <h2>Crie sua senha</h2>
+    <p>Bem-vindo! Defina seu nome e uma senha para acessar o Portal do Cliente.</p>
+
+    <div class="modal-field">
+      <label>Seu nome completo</label>
+      <input type="text" id="newUserName" placeholder="Ex: João Silva" />
+    </div>
+    <div class="modal-field">
+      <label>Nova senha</label>
+      <input type="password" id="newPassword" placeholder="Mínimo 6 caracteres" />
+    </div>
+    <div class="modal-field">
+      <label>Confirmar senha</label>
+      <input type="password" id="confirmPassword" placeholder="Repita a senha" />
+    </div>
+
+    <div class="modal-error" id="modalError"></div>
+
+    <button class="btn-upload" id="setPasswordBtn" onclick="doSetPassword()" style="width:100%;justify-content:center;padding:1rem;">
+      Salvar e Entrar
+    </button>
+  </div>
+</div>
 
 <!-- Auth guard overlay -->
 <div id="authGuard">
@@ -832,7 +964,39 @@
   let selectedFile = null;
 
   // ── INIT ──
-  sb.auth.getSession().then(({ data }) => {
+  // Check URL hash for Supabase auth tokens (invite / password reset)
+  async function handleAuthRedirect() {
+    const hash = window.location.hash;
+
+    // Supabase puts #access_token=...&type=invite or type=recovery in the URL
+    if (hash && hash.includes('access_token')) {
+      const params = new URLSearchParams(hash.substring(1));
+      const type = params.get('type');
+      const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token');
+
+      if ((type === 'invite' || type === 'recovery') && accessToken) {
+        // Set the session from the URL tokens
+        const { data, error } = await sb.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || ''
+        });
+
+        if (!error && data.session) {
+          currentUser = data.session.user;
+          isAdmin = currentUser.email === ADMIN_EMAIL;
+          // Clear the hash from URL
+          history.replaceState(null, '', window.location.pathname);
+          // Show set-password modal
+          document.getElementById('authGuard').style.display = 'none';
+          document.getElementById('setPasswordModal').style.display = 'flex';
+          return;
+        }
+      }
+    }
+
+    // Normal session check
+    const { data } = await sb.auth.getSession();
     if (!data.session) {
       window.location.href = 'eh-cliente-login.html';
       return;
@@ -840,7 +1004,45 @@
     currentUser = data.session.user;
     isAdmin = currentUser.email === ADMIN_EMAIL;
     initDashboard();
-  });
+  }
+
+  handleAuthRedirect();
+
+  async function doSetPassword() {
+    const name = document.getElementById('newUserName').value.trim();
+    const pw = document.getElementById('newPassword').value;
+    const pw2 = document.getElementById('confirmPassword').value;
+    const errEl = document.getElementById('modalError');
+    const btn = document.getElementById('setPasswordBtn');
+
+    errEl.classList.remove('show');
+
+    if (!name) { errEl.textContent = 'Por favor, informe seu nome.'; errEl.classList.add('show'); return; }
+    if (pw.length < 6) { errEl.textContent = 'A senha precisa ter pelo menos 6 caracteres.'; errEl.classList.add('show'); return; }
+    if (pw !== pw2) { errEl.textContent = 'As senhas não coincidem.'; errEl.classList.add('show'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+
+    const { error } = await sb.auth.updateUser({
+      password: pw,
+      data: { full_name: name }
+    });
+
+    if (error) {
+      errEl.textContent = 'Erro ao salvar: ' + error.message;
+      errEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Salvar e Entrar';
+      return;
+    }
+
+    // Refresh user info
+    const { data } = await sb.auth.getUser();
+    currentUser = data.user;
+    document.getElementById('setPasswordModal').style.display = 'none';
+    initDashboard();
+  }
 
   function initDashboard() {
     document.getElementById('authGuard').style.display = 'none';
