@@ -910,6 +910,12 @@
               <option value="Especial">Especial</option>
             </select>
           </div>
+          <div class="upload-field" style="grid-column: 1 / -1;">
+            <label>Destinatário</label>
+            <select id="reportRecipient">
+              <option value="">Todos os clientes</option>
+            </select>
+          </div>
         </div>
 
         <div class="drop-zone" id="dropZone">
@@ -1057,6 +1063,14 @@
     document.getElementById('userEmail').textContent = email;
     document.getElementById('welcomeName').textContent = name;
 
+    // Save/update this user's profile so admin can see client list
+    sb.from('profiles').upsert({
+      id: currentUser.id,
+      email: email,
+      full_name: currentUser.user_metadata?.full_name || null,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'id' }).then(() => {});
+
     // Admin extras
     if (isAdmin) {
       document.getElementById('adminMenuSection').style.display = 'block';
@@ -1067,6 +1081,36 @@
     document.getElementById('topbarDate').textContent = now.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
     loadReports();
+    if (isAdmin) loadClients();
+  }
+
+  // ── LOAD CLIENTS (for admin dropdown) ──
+  async function loadClients() {
+    // Use the admin-accessible users via a helper table or just list from reports
+    // We fetch users who have logged in by checking auth via a trick:
+    // Admin can see all users via Supabase admin API — but from client JS
+    // we instead maintain a simple "clients" list from the reports table user_ids
+    // Best approach: store client info when they first log in.
+    // For now, we fetch all distinct user metadata from a helper RPC or
+    // fall back to listing users from auth.users via service — not possible client-side.
+    // Solution: we create a profiles table. For now populate from known users.
+
+    // Try fetching from profiles table (we'll create it)
+    try {
+      const { data, error } = await sb.from('profiles').select('id, full_name, email');
+      if (error) throw error;
+
+      const select = document.getElementById('reportRecipient');
+      // Keep the "Todos os clientes" option
+      select.innerHTML = '<option value="">Todos os clientes</option>';
+
+      (data || []).forEach(profile => {
+        const label = profile.full_name || profile.email || profile.id;
+        select.innerHTML += `<option value="${profile.id}">${label}</option>`;
+      });
+    } catch(e) {
+      console.warn('Profiles table not available yet:', e.message);
+    }
   }
 
   // ── LOAD REPORTS ──
@@ -1169,6 +1213,7 @@
 
     grid.innerHTML = reports.map(r => {
       const date = formatDate(r.created_at);
+      const recipient = r.user_id ? '👤 Específico' : '👥 Todos';
       return `
         <div class="report-card">
           <div class="report-card-top">
@@ -1180,6 +1225,7 @@
           <div>
             <div class="report-name">${r.name || 'Relatório'}</div>
             <div class="report-meta" style="margin-top:0.3rem;">${r.period || date}</div>
+            <div class="report-meta" style="margin-top:0.2rem;color:var(--gold);font-size:0.65rem;">${recipient}</div>
           </div>
           <div style="display:flex;gap:0.8rem;padding-top:0.8rem;border-top:1px solid var(--border-dim);">
             <a style="font-size:0.65rem;color:var(--gold);text-decoration:none;" href="${r.file_url}" target="_blank">↓ Baixar</a>
@@ -1234,6 +1280,7 @@
       bar.style.width = '90%';
 
       // Save metadata to DB
+      const recipientId = document.getElementById('reportRecipient').value || null;
       const { error: dbError } = await sb.from('reports').insert({
         name,
         period,
@@ -1242,6 +1289,7 @@
         file_path: filePath,
         file_name: selectedFile.name,
         uploaded_by: currentUser.id,
+        user_id: recipientId,
         created_at: new Date().toISOString()
       });
 
