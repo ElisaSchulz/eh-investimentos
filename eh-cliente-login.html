@@ -321,6 +321,10 @@
       text-align: center;
     }
 
+
+    /* Set password view */
+    .set-password-view { display: none; }
+
     /* Reset password view */
     .reset-view { display: none; }
     .login-view { display: block; }
@@ -462,6 +466,46 @@
       <div class="success-msg" id="resetSuccessMsg"></div>
     </div>
 
+
+    <!-- SET PASSWORD VIEW (invite / recovery) -->
+    <div class="set-password-view" id="setPasswordView">
+      <button class="back-link" onclick="showLogin()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Voltar ao login
+      </button>
+
+      <div class="form-header">
+        <div class="form-tag">Primeiro Acesso</div>
+        <h1 id="setPasswordTitle">Crie sua senha</h1>
+        <p id="setPasswordDesc">Bem-vindo! Defina seu nome e uma senha para acessar o Portal do Cliente.</p>
+      </div>
+
+      <div id="nameField">
+        <div class="form-group">
+          <label for="newUserName">Seu nome completo</label>
+          <input type="text" id="newUserName" placeholder="Ex: João Silva" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="newPassword">Nova senha</label>
+        <input type="password" id="newPassword" placeholder="Mínimo 6 caracteres" />
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirmar senha</label>
+        <input type="password" id="confirmPassword" placeholder="Repita a senha" />
+      </div>
+
+      <div class="error-msg" id="setPasswordError"></div>
+
+      <button class="btn-login" id="setPasswordBtn" onclick="doSetPassword()">
+        <span>Salvar e Entrar</span>
+      </button>
+    </div>
+
   </div>
 
   <script>
@@ -470,24 +514,72 @@
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Redirect if already logged in
-    sb.auth.getSession().then(({ data }) => {
+    // ── ON LOAD: check for invite/recovery token in URL ──
+    window.addEventListener('load', async () => {
+      const hash = window.location.hash;
+
+      if (hash && hash.includes('access_token')) {
+        const params = new URLSearchParams(hash.substring(1));
+        const type = params.get('type');         // 'invite' or 'recovery'
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token') || '';
+
+        if ((type === 'invite' || type === 'recovery') && accessToken) {
+          // Establish session from the token
+          const { data, error } = await sb.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+
+          if (!error && data.session) {
+            // Clear the ugly token from the URL bar
+            history.replaceState(null, '', window.location.pathname);
+
+            // Show the set-password view
+            showSetPassword(type);
+            return;
+          }
+        }
+      }
+
+      // No token — check if already logged in
+      const { data } = await sb.auth.getSession();
       if (data.session) window.location.href = 'eh-cliente-dashboard.html';
     });
 
-    function togglePassword() {
-      const pw = document.getElementById('password');
-      pw.type = pw.type === 'password' ? 'text' : 'password';
-    }
-
+    // ── VIEWS ──
     function showReset() {
       document.getElementById('loginView').style.display = 'none';
       document.getElementById('resetView').style.display = 'block';
+      document.getElementById('setPasswordView').style.display = 'none';
     }
 
     function showLogin() {
-      document.getElementById('resetView').style.display = 'none';
       document.getElementById('loginView').style.display = 'block';
+      document.getElementById('resetView').style.display = 'none';
+      document.getElementById('setPasswordView').style.display = 'none';
+    }
+
+    function showSetPassword(type) {
+      document.getElementById('loginView').style.display = 'none';
+      document.getElementById('resetView').style.display = 'none';
+      document.getElementById('setPasswordView').style.display = 'block';
+
+      // Adjust title depending on flow
+      const title = document.getElementById('setPasswordTitle');
+      const desc = document.getElementById('setPasswordDesc');
+      if (type === 'invite') {
+        title.textContent = 'Crie sua senha';
+        desc.textContent = 'Bem-vindo! Defina seu nome e uma senha para acessar o Portal do Cliente.';
+        document.getElementById('nameField').style.display = 'block';
+      } else {
+        title.textContent = 'Nova senha';
+        desc.textContent = 'Defina sua nova senha de acesso ao Portal do Cliente.';
+        document.getElementById('nameField').style.display = 'none';
+      }
+    }
+
+    // ── LOGIN ──
+    function togglePassword() {
+      const pw = document.getElementById('password');
+      pw.type = pw.type === 'password' ? 'text' : 'password';
     }
 
     async function doLogin() {
@@ -498,7 +590,6 @@
       const errorMsg = document.getElementById('errorMsg');
 
       errorMsg.classList.remove('show');
-
       if (!email || !password) {
         errorMsg.textContent = 'Por favor, preencha e-mail e senha.';
         errorMsg.classList.add('show');
@@ -524,6 +615,7 @@
       }
     }
 
+    // ── PASSWORD RESET REQUEST ──
     async function doReset() {
       const email = document.getElementById('resetEmail').value.trim();
       const btn = document.getElementById('resetBtn');
@@ -543,8 +635,9 @@
       btn.disabled = true;
       btnText.innerHTML = '<span class="spinner"></span>';
 
+      // redirectTo must point back to THIS login page so the token is handled here
       const { error } = await sb.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/eh-cliente-dashboard.html'
+        redirectTo: window.location.origin + '/eh-cliente-login.html'
       });
 
       btn.disabled = false;
@@ -559,12 +652,59 @@
       }
     }
 
-    // Enter key to submit
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        if (document.getElementById('loginView').style.display !== 'none') doLogin();
-        else doReset();
+    // ── SET NEW PASSWORD ──
+    async function doSetPassword() {
+      const name = document.getElementById('newUserName').value.trim();
+      const pw = document.getElementById('newPassword').value;
+      const pw2 = document.getElementById('confirmPassword').value;
+      const errEl = document.getElementById('setPasswordError');
+      const btn = document.getElementById('setPasswordBtn');
+
+      errEl.classList.remove('show');
+
+      const nameVisible = document.getElementById('nameField').style.display !== 'none';
+      if (nameVisible && !name) {
+        errEl.textContent = 'Por favor, informe seu nome.';
+        errEl.classList.add('show');
+        return;
       }
+      if (pw.length < 6) {
+        errEl.textContent = 'A senha precisa ter pelo menos 6 caracteres.';
+        errEl.classList.add('show');
+        return;
+      }
+      if (pw !== pw2) {
+        errEl.textContent = 'As senhas não coincidem.';
+        errEl.classList.add('show');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Salvando...';
+
+      const updateData = { password: pw };
+      if (nameVisible && name) updateData.data = { full_name: name };
+
+      const { error } = await sb.auth.updateUser(updateData);
+
+      if (error) {
+        errEl.textContent = 'Erro ao salvar: ' + error.message;
+        errEl.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Salvar e Entrar';
+        return;
+      }
+
+      btn.textContent = 'Redirecionando...';
+      window.location.href = 'eh-cliente-dashboard.html';
+    }
+
+    // ── ENTER KEY ──
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      if (document.getElementById('setPasswordView').style.display === 'block') { doSetPassword(); return; }
+      if (document.getElementById('resetView').style.display === 'block') { doReset(); return; }
+      doLogin();
     });
   </script>
 
