@@ -387,7 +387,7 @@
     </div>
 
     <div class="panel-footer">
-      © 2025 EH Investimentos. Exclusivo para investidores profissionais.
+      © 2025 EH Investimentos. Exclusivo para investidores qualificados.
     </div>
   </div>
 
@@ -635,9 +635,11 @@
       btn.disabled = true;
       btnText.innerHTML = '<span class="spinner"></span>';
 
-      // redirectTo must point back to THIS login page so the token is handled here
+      // redirectTo: full URL of this login page
+      // Update this URL when you change the domain
+      const loginUrl = 'https://elisaschulz.github.io/eh-investimentos/eh-cliente-login.html';
       const { error } = await sb.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/eh-cliente-login.html'
+        redirectTo: loginUrl
       });
 
       btn.disabled = false;
