@@ -48,9 +48,9 @@
       position: fixed;
       top: 0; left: 0; right: 0;
       z-index: 900;
-      display: flex;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
       align-items: center;
-      justify-content: space-between;
       padding: 1.4rem 5vw;
       background: rgba(8, 21, 55, 0.85);
       backdrop-filter: blur(18px);
@@ -98,6 +98,13 @@
       display: flex;
       gap: 2.5rem;
       list-style: none;
+      justify-content: center;
+    }
+
+    .nav-buttons {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
     }
 
     .nav-links a {
@@ -874,8 +881,10 @@
       <li><a href="#perfil">Perfil</a></li>
       <li><a href="#processo">Processo</a></li>
     </ul>
-    <a href="eh-cliente-login.html" class="nav-cta-ghost">Área do Cliente</a>
-    <a href="#contato" class="nav-cta">Fale Conosco</a>
+    <div class="nav-buttons">
+      <a href="eh-cliente-login.html" class="nav-cta-ghost">Área do Cliente</a>
+      <a href="#contato" class="nav-cta">Fale Conosco</a>
+    </div>
   </nav>
 
   <!-- HERO -->
