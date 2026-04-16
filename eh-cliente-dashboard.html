@@ -1191,8 +1191,8 @@
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // ── ADMIN EMAIL (change to Eduardo's email) ──
-  const ADMIN_EMAIL = 'elisacmazzo@gmail.com';
+  // ── ADMIN EMAILS ──
+  const ADMIN_EMAILS = ['elisacmazzo@gmail.com', 'contato@eduardohorta.com.br'];
 
   let currentUser = null;
   let isAdmin = false;
@@ -1220,7 +1220,7 @@
 
         if (!error && data.session) {
           currentUser = data.session.user;
-          isAdmin = currentUser.email === ADMIN_EMAIL;
+          isAdmin = ADMIN_EMAILS.includes(currentUser.email);
           // Clear the hash from URL
           history.replaceState(null, '', window.location.pathname);
           // Show set-password modal
@@ -1238,7 +1238,7 @@
       return;
     }
     currentUser = data.session.user;
-    isAdmin = currentUser.email === ADMIN_EMAIL;
+    isAdmin = ADMIN_EMAILS.includes(currentUser.email);
     initDashboard();
   }
 
