@@ -1632,6 +1632,12 @@
 
     const titles = { relatorios: 'Relatórios', cartas: 'Cartas Mensais', upload: 'Upload de Relatório', emails: 'Envio de Emails' };
     document.getElementById('topbarTitle').textContent = titles[viewId] || viewId;
+
+    // Init email view on first open
+    if (viewId === 'emails') {
+      loadTemplates();
+      if (clientRows.length === 0) addClientRow();
+    }
   }
 
   // ── HELPERS ──
@@ -1876,15 +1882,7 @@
     }
   }
 
-  // Load saved templates and init rows when email view is shown
-  const _origShowView = showView;
-  function showView(viewId, btn) {
-    _origShowView(viewId, btn);
-    if (viewId === 'emails') {
-      loadTemplates();
-      if (clientRows.length === 0) addClientRow();
-    }
-  }
+
 
 </script>
 
