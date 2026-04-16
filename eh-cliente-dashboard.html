@@ -752,6 +752,92 @@
 
     .modal-error.show { display: block; }
 
+
+    /* ── EMAIL TABS ── */
+    .email-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border-dim);
+      margin-bottom: 2rem;
+    }
+
+    .email-tab {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.8rem 1.5rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gray);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      font-family: 'Montserrat', sans-serif;
+      transition: color 0.2s, border-color 0.2s;
+      margin-bottom: -1px;
+    }
+
+    .email-tab:hover { color: var(--gray-light); }
+    .email-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    .email-tab-content { display: none; }
+    .email-tab-content.active { display: block; }
+
+    #clientsTable input {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(138,155,184,0.2);
+      color: var(--white);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.78rem;
+      padding: 0.5rem 0.7rem;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.2s;
+    }
+
+    #clientsTable input:focus { border-color: var(--gold); }
+
+    #clientsTable td { padding: 0.4rem 0.5rem; vertical-align: middle; }
+    #clientsTable tr { border-bottom: 1px solid rgba(138,155,184,0.08); }
+
+    .desempenho-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 2px;
+    }
+
+    .badge-acima { background: rgba(76,175,130,0.15); color: #4caf82; border: 1px solid rgba(76,175,130,0.3); }
+    .badge-abaixo { background: rgba(224,85,85,0.15); color: #e05555; border: 1px solid rgba(224,85,85,0.3); }
+
+    .preview-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-dim);
+      padding: 1.5rem;
+    }
+
+    .preview-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 1px solid var(--border-dim);
+    }
+
+    .preview-meta { font-size: 0.72rem; color: var(--gray); line-height: 1.6; }
+    .preview-meta strong { color: var(--white); }
+
+    .preview-body {
+      font-size: 0.82rem;
+      color: var(--gray-light);
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+
     @media (max-width: 900px) {
       .sidebar { display: none; }
       .main { margin-left: 0; }
@@ -823,6 +909,10 @@
     <button class="sidebar-link" onclick="showView('upload', this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Upload de Relatório
+    </button>
+    <button class="sidebar-link" onclick="showView('emails', this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      Envio de Emails
     </button>
   </div>
 
@@ -969,6 +1059,127 @@
       <div class="reports-grid" id="adminReportsGrid">
         <div class="loading-state"><div class="spinner"></div> Carregando...</div>
       </div>
+    </div>
+
+
+    <!-- EMAIL VIEW (admin only) -->
+    <div class="view" id="view-emails">
+
+      <!-- TABS -->
+      <div class="email-tabs">
+        <button class="email-tab active" onclick="switchEmailTab('templates', this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Templates do Mês
+        </button>
+        <button class="email-tab" onclick="switchEmailTab('disparar', this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Disparar Emails
+        </button>
+      </div>
+
+      <!-- TEMPLATES TAB -->
+      <div class="email-tab-content active" id="tab-templates">
+        <div class="upload-panel">
+          <h3>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Templates do Mês
+          </h3>
+          <p style="font-size:0.8rem;color:var(--gray);margin-bottom:1.5rem;line-height:1.7;">
+            Use <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{nome}}</code>, 
+            <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{desempenho}}</code> e 
+            <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{valor}}</code> 
+            para inserir dados personalizados de cada cliente.
+          </p>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+            <div>
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.8rem;">
+                <div style="width:10px;height:10px;background:#4caf82;border-radius:50%;"></div>
+                <label style="font-size:0.65rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--gray);">Acima do CDI</label>
+              </div>
+              <div class="upload-field" style="margin-bottom:0.6rem;">
+                <label>Assunto</label>
+                <input type="text" id="subjectAcima" placeholder="Ex: Resultado de Março — EH Investimentos" />
+              </div>
+              <div class="upload-field">
+                <label>Corpo do Email</label>
+                <textarea id="templateAcima" rows="12" placeholder="Olá {{nome}},&#10;&#10;Temos boas notícias! Sua carteira rendeu {{desempenho}} no mês...&#10;&#10;O valor do serviço neste mês foi de {{valor}}." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Montserrat',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;transition:border-color 0.2s;line-height:1.7;"></textarea>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.8rem;">
+                <div style="width:10px;height:10px;background:#e05555;border-radius:50%;"></div>
+                <label style="font-size:0.65rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--gray);">Abaixo do CDI</label>
+              </div>
+              <div class="upload-field" style="margin-bottom:0.6rem;">
+                <label>Assunto</label>
+                <input type="text" id="subjectAbaixo" placeholder="Ex: Resultado de Março — EH Investimentos" />
+              </div>
+              <div class="upload-field">
+                <label>Corpo do Email</label>
+                <textarea id="templateAbaixo" rows="12" placeholder="Olá {{nome}},&#10;&#10;Neste mês sua carteira rendeu {{desempenho}}...&#10;&#10;O valor do serviço neste mês foi de {{valor}}." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Montserrat',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;transition:border-color 0.2s;line-height:1.7;"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-upload" onclick="saveTemplates()" style="margin-top:1.2rem;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Salvar Templates
+          </button>
+          <div class="upload-feedback" id="templateFeedback"></div>
+        </div>
+      </div>
+
+      <!-- DISPARAR TAB -->
+      <div class="email-tab-content" id="tab-disparar">
+        <div class="upload-panel">
+          <h3>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Dados dos Clientes
+          </h3>
+          <p style="font-size:0.8rem;color:var(--gray);margin-bottom:1.2rem;line-height:1.7;">
+            Preencha os dados abaixo. A coluna <strong style="color:var(--white)">Desempenho vs CDI</strong> define qual template será usado automaticamente (+% = acima, -% = abaixo).
+          </p>
+
+          <div style="overflow-x:auto;">
+            <table id="clientsTable" style="width:100%;border-collapse:collapse;">
+              <thead>
+                <tr style="border-bottom:1px solid var(--border);">
+                  <th style="text-align:left;font-size:0.62rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--gray);padding:0.6rem 0.8rem;">Email</th>
+                  <th style="text-align:left;font-size:0.62rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--gray);padding:0.6rem 0.8rem;">Nome</th>
+                  <th style="text-align:left;font-size:0.62rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--gray);padding:0.6rem 0.8rem;">Desempenho vs CDI</th>
+                  <th style="text-align:left;font-size:0.62rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--gray);padding:0.6rem 0.8rem;">Valor do Serviço</th>
+                  <th style="padding:0.6rem 0.8rem;"></th>
+                </tr>
+              </thead>
+              <tbody id="clientsTableBody"></tbody>
+            </table>
+          </div>
+
+          <button class="btn-upload" onclick="addClientRow()" style="margin-top:1rem;background:rgba(212,130,10,0.15);color:var(--gold);border:1px solid var(--border);">
+            + Adicionar Cliente
+          </button>
+
+          <div style="margin-top:1.5rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+            <button class="btn-upload" onclick="previewEmails()" style="background:rgba(255,255,255,0.08);color:var(--white);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Pré-visualizar
+            </button>
+            <button class="btn-upload" id="sendBtn" onclick="sendAllEmails()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              Disparar Emails
+            </button>
+          </div>
+          <div class="upload-feedback" id="sendFeedback"></div>
+        </div>
+
+        <!-- PREVIEW AREA -->
+        <div id="previewArea" style="display:none;margin-top:1.5rem;">
+          <div class="section-header"><div class="section-title">Pré-visualização</div></div>
+          <div id="previewList" style="display:flex;flex-direction:column;gap:1rem;margin-top:1rem;"></div>
+        </div>
+      </div>
+
     </div>
 
   </div>
@@ -1419,7 +1630,7 @@
     document.getElementById('view-' + viewId).classList.add('active');
     if (btn) btn.classList.add('active');
 
-    const titles = { relatorios: 'Relatórios', cartas: 'Cartas Mensais', upload: 'Upload de Relatório' };
+    const titles = { relatorios: 'Relatórios', cartas: 'Cartas Mensais', upload: 'Upload de Relatório', emails: 'Envio de Emails' };
     document.getElementById('topbarTitle').textContent = titles[viewId] || viewId;
   }
 
@@ -1448,6 +1659,233 @@
       document.getElementById('selectedFileName').textContent = '📄 ' + file.name + ' (' + formatFileSize(file.size) + ')';
     }
   });
+
+  // ── RESEND API KEY ──
+  const RESEND_API_KEY = 're_EUTRUnG8_BjHoKm8LDHEJ9ewtA2pvxMgg';
+  const EMAIL_FROM = 'onboarding@resend.dev'; // trocar quando tiver domínio próprio
+  const EMAIL_FROM_NAME = 'Eduardo Horta | EH Investimentos';
+
+  // ── EMAIL TAB SWITCH ──
+  function switchEmailTab(tab, btn) {
+    document.querySelectorAll('.email-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.email-tab-content').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+  }
+
+  // ── CLIENT TABLE ──
+  let clientRows = [];
+
+  function addClientRow(data = {}) {
+    const id = Date.now();
+    clientRows.push(id);
+    const tbody = document.getElementById('clientsTableBody');
+    const tr = document.createElement('tr');
+    tr.id = 'row-' + id;
+    tr.innerHTML = `
+      <td><input type="email" placeholder="email@exemplo.com" value="${data.email || ''}" onchange="updateBadge(${id})" /></td>
+      <td><input type="text" placeholder="Nome do cliente" value="${data.nome || ''}" /></td>
+      <td style="width:160px;">
+        <input type="text" placeholder="ex: +2,3% ou -1,5%" value="${data.desempenho || ''}" oninput="updateBadge(${id})" id="desemp-${id}" />
+        <div id="badge-${id}" style="margin-top:0.3rem;"></div>
+      </td>
+      <td><input type="text" placeholder="ex: R$ 1.500,00" value="${data.valor || ''}" /></td>
+      <td><button onclick="removeRow(${id})" style="background:none;border:none;color:#e05555;cursor:pointer;font-size:1rem;padding:0.3rem;">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+    updateBadge(id);
+  }
+
+  function removeRow(id) {
+    document.getElementById('row-' + id)?.remove();
+    clientRows = clientRows.filter(r => r !== id);
+  }
+
+  function updateBadge(id) {
+    const val = (document.getElementById('desemp-' + id)?.value || '').trim();
+    const badge = document.getElementById('badge-' + id);
+    if (!badge) return;
+    const num = parseFloat(val.replace(',', '.').replace('%', ''));
+    if (isNaN(num) || val === '') { badge.innerHTML = ''; return; }
+    if (num >= 0) {
+      badge.innerHTML = '<span class="desempenho-badge badge-acima">▲ Acima do CDI</span>';
+    } else {
+      badge.innerHTML = '<span class="desempenho-badge badge-abaixo">▼ Abaixo do CDI</span>';
+    }
+  }
+
+  function getClientData() {
+    return clientRows.map(id => {
+      const row = document.getElementById('row-' + id);
+      if (!row) return null;
+      const inputs = row.querySelectorAll('input');
+      return {
+        email: inputs[0].value.trim(),
+        nome: inputs[1].value.trim(),
+        desempenho: inputs[2].value.trim(),
+        valor: inputs[3].value.trim()
+      };
+    }).filter(r => r && r.email && r.nome);
+  }
+
+  // ── SAVE TEMPLATES (localStorage) ──
+  function saveTemplates() {
+    const data = {
+      subjectAcima: document.getElementById('subjectAcima').value,
+      templateAcima: document.getElementById('templateAcima').value,
+      subjectAbaixo: document.getElementById('subjectAbaixo').value,
+      templateAbaixo: document.getElementById('templateAbaixo').value,
+    };
+    localStorage.setItem('eh_email_templates', JSON.stringify(data));
+    const fb = document.getElementById('templateFeedback');
+    fb.className = 'upload-feedback success';
+    fb.textContent = '✓ Templates salvos com sucesso!';
+    setTimeout(() => { fb.className = 'upload-feedback'; }, 4000);
+  }
+
+  function loadTemplates() {
+    const saved = localStorage.getItem('eh_email_templates');
+    if (!saved) return;
+    const data = JSON.parse(saved);
+    document.getElementById('subjectAcima').value = data.subjectAcima || '';
+    document.getElementById('templateAcima').value = data.templateAcima || '';
+    document.getElementById('subjectAbaixo').value = data.subjectAbaixo || '';
+    document.getElementById('templateAbaixo').value = data.templateAbaixo || '';
+  }
+
+  function applyTemplate(client) {
+    const desemp = parseFloat(client.desempenho.replace(',', '.').replace('%', ''));
+    const isAcima = desemp >= 0;
+    const subject = isAcima
+      ? document.getElementById('subjectAcima').value
+      : document.getElementById('subjectAbaixo').value;
+    const body = isAcima
+      ? document.getElementById('templateAcima').value
+      : document.getElementById('templateAbaixo').value;
+
+    const replace = (str) => str
+      .replace(/{{nome}}/g, client.nome)
+      .replace(/{{desempenho}}/g, client.desempenho)
+      .replace(/{{valor}}/g, client.valor);
+
+    return { subject: replace(subject), body: replace(body) };
+  }
+
+  // ── PREVIEW ──
+  function previewEmails() {
+    const clients = getClientData();
+    if (clients.length === 0) {
+      alert('Adicione pelo menos um cliente com email e nome.');
+      return;
+    }
+
+    const previewArea = document.getElementById('previewArea');
+    const previewList = document.getElementById('previewList');
+    previewArea.style.display = 'block';
+
+    previewList.innerHTML = clients.map(client => {
+      const { subject, body } = applyTemplate(client);
+      const desemp = parseFloat(client.desempenho.replace(',', '.').replace('%', ''));
+      const isAcima = desemp >= 0;
+      const badgeHtml = isAcima
+        ? '<span class="desempenho-badge badge-acima">▲ Acima do CDI</span>'
+        : '<span class="desempenho-badge badge-abaixo">▼ Abaixo do CDI</span>';
+
+      return `
+        <div class="preview-card">
+          <div class="preview-card-header">
+            <div class="preview-meta">
+              <strong>${client.nome}</strong> &lt;${client.email}&gt;<br/>
+              <strong>Assunto:</strong> ${subject}
+            </div>
+            ${badgeHtml}
+          </div>
+          <div class="preview-body">${body}</div>
+        </div>`;
+    }).join('');
+
+    previewArea.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // ── SEND ALL EMAILS ──
+  async function sendAllEmails() {
+    const clients = getClientData();
+    if (clients.length === 0) {
+      alert('Adicione pelo menos um cliente com email e nome.');
+      return;
+    }
+
+    const subjectAcima = document.getElementById('subjectAcima').value;
+    const subjectAbaixo = document.getElementById('subjectAbaixo').value;
+    if (!subjectAcima || !subjectAbaixo) {
+      alert('Preencha os assuntos dos dois templates antes de enviar.');
+      return;
+    }
+
+    if (!confirm(`Confirmar envio de ${clients.length} email(s)?`)) return;
+
+    const btn = document.getElementById('sendBtn');
+    const fb = document.getElementById('sendFeedback');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:12px;height:12px;border-width:2px;"></div> Enviando...';
+    fb.className = 'upload-feedback';
+
+    let sent = 0;
+    let errors = [];
+
+    for (const client of clients) {
+      const { subject, body } = applyTemplate(client);
+      try {
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${RESEND_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            from: `${EMAIL_FROM_NAME} <${EMAIL_FROM}>`,
+            to: [client.email],
+            subject: subject,
+            text: body
+          })
+        });
+
+        if (res.ok) {
+          sent++;
+        } else {
+          const err = await res.json();
+          errors.push(`${client.email}: ${err.message || 'Erro desconhecido'}`);
+        }
+      } catch (e) {
+        errors.push(`${client.email}: ${e.message}`);
+      }
+
+      // Small delay between sends
+      await new Promise(r => setTimeout(r, 300));
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Disparar Emails';
+
+    if (errors.length === 0) {
+      fb.className = 'upload-feedback success';
+      fb.textContent = `✓ ${sent} email(s) enviado(s) com sucesso!`;
+    } else {
+      fb.className = 'upload-feedback error';
+      fb.textContent = `${sent} enviado(s), ${errors.length} erro(s): ${errors.join(' | ')}`;
+    }
+  }
+
+  // Load saved templates and init rows when email view is shown
+  const _origShowView = showView;
+  function showView(viewId, btn) {
+    _origShowView(viewId, btn);
+    if (viewId === 'emails') {
+      loadTemplates();
+      if (clientRows.length === 0) addClientRow();
+    }
+  }
+
 </script>
 
 </body>
