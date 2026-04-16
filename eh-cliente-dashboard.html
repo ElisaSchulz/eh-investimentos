@@ -383,7 +383,7 @@
 
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
+    auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: false }
   });
 
   let currentUser  = null;
@@ -391,9 +391,12 @@
   let allReports   = [];
   let selectedFile = null;
   let clientRows   = [];
+  let booting      = false;
 
   // ── BOOT ──
   async function boot() {
+    if (booting) return;
+    booting = true;
     try {
       const hash = window.location.hash;
       if (hash && hash.includes('access_token')) {
@@ -402,11 +405,12 @@
         const at   = p.get('access_token');
         const rt   = p.get('refresh_token') || '';
         if ((type === 'invite' || type === 'recovery') && at) {
+          // Clear hash immediately to prevent re-processing
+          history.replaceState(null, '', window.location.pathname);
           const { data, error } = await sb.auth.setSession({ access_token: at, refresh_token: rt });
           if (!error && data.session) {
             currentUser = data.session.user;
             isAdmin = ADMIN_EMAILS.includes(currentUser.email);
-            history.replaceState(null, '', window.location.pathname);
             document.getElementById('authGuard').style.display = 'none';
             showPasswordModal(type);
             return;
