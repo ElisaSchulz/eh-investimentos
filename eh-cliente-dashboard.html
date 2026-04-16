@@ -1314,7 +1314,7 @@
       email: email,
       full_name: currentUser.user_metadata?.full_name || null,
       updated_at: new Date().toISOString()
-    }, { onConflict: 'id' }).then(() => {});
+    }, { onConflict: 'id' }).then(() => {}).catch(() => {});
 
     // Admin extras
     if (isAdmin) {
@@ -1331,30 +1331,19 @@
 
   // ── LOAD CLIENTS (for admin dropdown) ──
   async function loadClients() {
-    // Use the admin-accessible users via a helper table or just list from reports
-    // We fetch users who have logged in by checking auth via a trick:
-    // Admin can see all users via Supabase admin API — but from client JS
-    // we instead maintain a simple "clients" list from the reports table user_ids
-    // Best approach: store client info when they first log in.
-    // For now, we fetch all distinct user metadata from a helper RPC or
-    // fall back to listing users from auth.users via service — not possible client-side.
-    // Solution: we create a profiles table. For now populate from known users.
-
-    // Try fetching from profiles table (we'll create it)
     try {
       const { data, error } = await sb.from('profiles').select('id, full_name, email');
-      if (error) throw error;
-
       const select = document.getElementById('reportRecipient');
-      // Keep the "Todos os clientes" option
+      if (!select) return;
       select.innerHTML = '<option value="">Todos os clientes</option>';
-
-      (data || []).forEach(profile => {
-        const label = profile.full_name || profile.email || profile.id;
-        select.innerHTML += `<option value="${profile.id}">${label}</option>`;
-      });
+      if (!error && data) {
+        data.forEach(profile => {
+          const label = profile.full_name || profile.email || profile.id;
+          select.innerHTML += `<option value="${profile.id}">${label}</option>`;
+        });
+      }
     } catch(e) {
-      console.warn('Profiles table not available yet:', e.message);
+      console.warn('Profiles:', e.message);
     }
   }
 
