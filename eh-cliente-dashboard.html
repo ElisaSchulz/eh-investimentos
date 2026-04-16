@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <style>
     :root {
       --navy:       #0D1E4E;
@@ -377,9 +378,9 @@
   const SUPABASE_URL   = 'https://migyqowqjfhvdcrtryms.supabase.co';
   const SUPABASE_KEY   = 'sb_publishable_W7742tdq3Z8ZCo7CnakqDA_zT9VIeA0';
   const ADMIN_EMAILS   = ['elisacmazzo@gmail.com', 'contato@eduardohorta.com.br'];
-  const RESEND_KEY     = 're_EUTRUnG8_BjHoKm8LDHEJ9ewtA2pvxMgg';
-  const EMAIL_FROM     = 'onboarding@resend.dev';
-  const EMAIL_FROM_NAME = 'Eduardo Horta | EH Investimentos';
+  const EMAILJS_SERVICE  = 'service_sbdf37b';
+  const EMAILJS_TEMPLATE = 'template_9c6b9qj';
+  const EMAILJS_KEY      = 'kTuG_kiTpVirrILJv';
 
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
@@ -707,21 +708,27 @@
     if (!confirm(`Confirmar envio de ${clients.length} email(s)?`)) return;
     const btn = document.getElementById('sendBtn');
     btn.disabled = true; btn.textContent = 'Enviando...';
+
+    // Init EmailJS
+    emailjs.init(EMAILJS_KEY);
+
     let sent = 0; const errors = [];
     for (const c of clients) {
       const { subject, body } = applyTpl(c);
       try {
-        const res = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ from: `${EMAIL_FROM_NAME} <${EMAIL_FROM}>`, to: [c.email], subject, text: body })
+        await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+          to_email: c.email,
+          subject:  subject,
+          message:  body
         });
-        if (res.ok) { sent++; } else { const e = await res.json(); errors.push(`${c.email}: ${e.message}`); }
-      } catch(e) { errors.push(`${c.email}: ${e.message}`); }
-      await new Promise(r => setTimeout(r, 300));
+        sent++;
+      } catch(e) {
+        errors.push(`${c.email}: ${e.text || e.message || JSON.stringify(e)}`);
+      }
+      await new Promise(r => setTimeout(r, 400));
     }
     btn.disabled = false; btn.textContent = 'Disparar Emails';
-    showFb('sendFeedback', errors.length ? `${sent} enviado(s). Erros: ${errors.join(' | ')}` : `✓ ${sent} email(s) enviado(s)!`, errors.length ? 'error' : 'success');
+    showFb('sendFeedback', errors.length ? `${sent} enviado(s). Erros: ${errors.join(' | ')}` : `✓ ${sent} email(s) enviado(s) com sucesso!`, errors.length ? 'error' : 'success');
   }
 
   // Paste from Excel
