@@ -1086,7 +1086,7 @@
           </h3>
           <p style="font-size:0.8rem;color:var(--gray);margin-bottom:1.5rem;line-height:1.7;">
             Use <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{nome}}</code>, 
-            <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{desempenho}}</code> e 
+            <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{desempenho}}</code> (ex: 103% do CDI) e 
             <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{valor}}</code> 
             para inserir dados personalizados de cada cliente.
           </p>
@@ -1103,7 +1103,7 @@
               </div>
               <div class="upload-field">
                 <label>Corpo do Email</label>
-                <textarea id="templateAcima" rows="12" placeholder="Olá {{nome}},&#10;&#10;Temos boas notícias! Sua carteira rendeu {{desempenho}} no mês...&#10;&#10;O valor do serviço neste mês foi de {{valor}}." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Montserrat',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;transition:border-color 0.2s;line-height:1.7;"></textarea>
+                <textarea id="templateAcima" rows="12" placeholder="Olá {{nome}},&#10;&#10;Temos boas notícias! Sua carteira rendeu {{desempenho}} do CDI no mês...&#10;&#10;O valor do serviço neste mês foi de {{valor}}." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Montserrat',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;transition:border-color 0.2s;line-height:1.7;"></textarea>
               </div>
             </div>
             <div>
@@ -1117,7 +1117,7 @@
               </div>
               <div class="upload-field">
                 <label>Corpo do Email</label>
-                <textarea id="templateAbaixo" rows="12" placeholder="Olá {{nome}},&#10;&#10;Neste mês sua carteira rendeu {{desempenho}}...&#10;&#10;O valor do serviço neste mês foi de {{valor}}." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Montserrat',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;transition:border-color 0.2s;line-height:1.7;"></textarea>
+                <textarea id="templateAbaixo" rows="12" placeholder="Olá {{nome}},&#10;&#10;Neste mês sua carteira rendeu {{desempenho}} do CDI...&#10;&#10;O valor do serviço neste mês foi de {{valor}}." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Montserrat',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;transition:border-color 0.2s;line-height:1.7;"></textarea>
               </div>
             </div>
           </div>
@@ -1141,13 +1141,23 @@
             Preencha os dados abaixo. A coluna <strong style="color:var(--white)">Desempenho vs CDI</strong> define qual template será usado automaticamente (+% = acima, -% = abaixo).
           </p>
 
+          <!-- PASTE AREA -->
+          <div id="pasteZone" style="border:1px dashed rgba(212,130,10,0.35);padding:1.2rem 1.5rem;margin-bottom:1rem;cursor:pointer;transition:background 0.2s;" onclick="document.getElementById('pasteZone').focus()" tabindex="0">
+            <p style="font-size:0.78rem;color:var(--gray);margin:0;text-align:center;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:0.4rem;color:var(--gold);"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+              Clique aqui e cole sua tabela do Excel / Google Sheets (<strong style="color:var(--white);">Ctrl+V</strong>)<br/>
+              <span style="font-size:0.68rem;opacity:0.7;">Colunas esperadas: Email | Nome | % do CDI (ex: 103%) | Valor do Serviço</span>
+            </p>
+          </div>
+
+          <!-- TABLE -->
           <div style="overflow-x:auto;">
             <table id="clientsTable" style="width:100%;border-collapse:collapse;">
               <thead>
                 <tr style="border-bottom:1px solid var(--border);">
                   <th style="text-align:left;font-size:0.62rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--gray);padding:0.6rem 0.8rem;">Email</th>
                   <th style="text-align:left;font-size:0.62rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--gray);padding:0.6rem 0.8rem;">Nome</th>
-                  <th style="text-align:left;font-size:0.62rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--gray);padding:0.6rem 0.8rem;">Desempenho vs CDI</th>
+                  <th style="text-align:left;font-size:0.62rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--gray);padding:0.6rem 0.8rem;">% do CDI</th>
                   <th style="text-align:left;font-size:0.62rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--gray);padding:0.6rem 0.8rem;">Valor do Serviço</th>
                   <th style="padding:0.6rem 0.8rem;"></th>
                 </tr>
@@ -1156,9 +1166,14 @@
             </table>
           </div>
 
-          <button class="btn-upload" onclick="addClientRow()" style="margin-top:1rem;background:rgba(212,130,10,0.15);color:var(--gold);border:1px solid var(--border);">
-            + Adicionar Cliente
-          </button>
+          <div style="display:flex;gap:0.8rem;margin-top:1rem;flex-wrap:wrap;">
+            <button class="btn-upload" onclick="addClientRow()" style="background:rgba(212,130,10,0.15);color:var(--gold);border:1px solid var(--border);">
+              + Adicionar linha
+            </button>
+            <button class="btn-upload" onclick="clearAllRows()" style="background:rgba(224,85,85,0.1);color:#f08080;border:1px solid rgba(224,85,85,0.3);">
+              Limpar tudo
+            </button>
+          </div>
 
           <div style="margin-top:1.5rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
             <button class="btn-upload" onclick="previewEmails()" style="background:rgba(255,255,255,0.08);color:var(--white);">
@@ -1692,7 +1707,7 @@
       <td><input type="email" placeholder="email@exemplo.com" value="${data.email || ''}" onchange="updateBadge(${id})" /></td>
       <td><input type="text" placeholder="Nome do cliente" value="${data.nome || ''}" /></td>
       <td style="width:160px;">
-        <input type="text" placeholder="ex: +2,3% ou -1,5%" value="${data.desempenho || ''}" oninput="updateBadge(${id})" id="desemp-${id}" />
+        <input type="text" placeholder="ex: 103% ou 98%" value="${data.desempenho || ''}" oninput="updateBadge(${id})" id="desemp-${id}" />
         <div id="badge-${id}" style="margin-top:0.3rem;"></div>
       </td>
       <td><input type="text" placeholder="ex: R$ 1.500,00" value="${data.valor || ''}" /></td>
@@ -1707,13 +1722,75 @@
     clientRows = clientRows.filter(r => r !== id);
   }
 
+  function clearAllRows() {
+    document.getElementById('clientsTableBody').innerHTML = '';
+    clientRows = [];
+  }
+
+  // ── PASTE FROM EXCEL / GOOGLE SHEETS ──
+  document.addEventListener('paste', function(e) {
+    // Only handle paste when the email tab is active
+    const emailView = document.getElementById('view-emails');
+    if (!emailView || !emailView.classList.contains('active')) return;
+    const dispararTab = document.getElementById('tab-disparar');
+    if (!dispararTab || !dispararTab.classList.contains('active')) return;
+
+    const text = e.clipboardData.getData('text/plain');
+    if (!text) return;
+
+    const lines = text.trim().split('
+').filter(l => l.trim());
+    if (lines.length === 0) return;
+
+    // Detect if first line is a header (contains "email" or "nome")
+    const firstLine = lines[0].toLowerCase();
+    const hasHeader = firstLine.includes('email') || firstLine.includes('nome') || firstLine.includes('desempenho');
+    const dataLines = hasHeader ? lines.slice(1) : lines;
+
+    if (dataLines.length === 0) return;
+
+    // Clear existing rows before pasting
+    clearAllRows();
+
+    let added = 0;
+    dataLines.forEach(line => {
+      // Split by tab (Excel/Sheets default) or semicolon
+      const cols = line.split('	').map(c => c.trim());
+      if (cols.length < 2) return;
+
+      addClientRow({
+        email:       cols[0] || '',
+        nome:        cols[1] || '',
+        desempenho:  cols[2] || '',
+        valor:       cols[3] || ''
+      });
+      added++;
+    });
+
+    // Show feedback
+    const fb = document.getElementById('sendFeedback');
+    fb.className = 'upload-feedback success';
+    fb.textContent = `✓ ${added} cliente(s) importado(s) da tabela.`;
+    setTimeout(() => { fb.className = 'upload-feedback'; }, 4000);
+
+    e.preventDefault();
+  });
+
+  // Highlight paste zone on focus
+  document.addEventListener('DOMContentLoaded', () => {
+    const zone = document.getElementById('pasteZone');
+    if (!zone) return;
+    zone.addEventListener('focus', () => zone.style.background = 'rgba(212,130,10,0.07)');
+    zone.addEventListener('blur', () => zone.style.background = '');
+  });
+
   function updateBadge(id) {
     const val = (document.getElementById('desemp-' + id)?.value || '').trim();
     const badge = document.getElementById('badge-' + id);
     if (!badge) return;
     const num = parseFloat(val.replace(',', '.').replace('%', ''));
     if (isNaN(num) || val === '') { badge.innerHTML = ''; return; }
-    if (num >= 0) {
+    if (num >= 100) {
       badge.innerHTML = '<span class="desempenho-badge badge-acima">▲ Acima do CDI</span>';
     } else {
       badge.innerHTML = '<span class="desempenho-badge badge-abaixo">▼ Abaixo do CDI</span>';
@@ -1761,7 +1838,7 @@
 
   function applyTemplate(client) {
     const desemp = parseFloat(client.desempenho.replace(',', '.').replace('%', ''));
-    const isAcima = desemp >= 0;
+    const isAcima = desemp >= 100;
     const subject = isAcima
       ? document.getElementById('subjectAcima').value
       : document.getElementById('subjectAbaixo').value;
@@ -1792,7 +1869,7 @@
     previewList.innerHTML = clients.map(client => {
       const { subject, body } = applyTemplate(client);
       const desemp = parseFloat(client.desempenho.replace(',', '.').replace('%', ''));
-      const isAcima = desemp >= 0;
+      const isAcima = desemp >= 100;
       const badgeHtml = isAcima
         ? '<span class="desempenho-badge badge-acima">▲ Acima do CDI</span>'
         : '<span class="desempenho-badge badge-abaixo">▼ Abaixo do CDI</span>';
