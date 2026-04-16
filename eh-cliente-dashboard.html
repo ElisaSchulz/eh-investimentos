@@ -770,47 +770,46 @@
     return (b/1048576).toFixed(1) + ' MB';
   }
 
-  // START — wait for Supabase to restore session from storage before booting
+  // START
   sb.auth.onAuthStateChange((event, session) => {
     if (booting) return;
-    if (event === 'SIGNED_IN' && session) {
-      currentUser = session.user;
-      isAdmin = ADMIN_EMAILS.includes(currentUser.email);
+
+    if (event === 'INITIAL_SESSION') {
       booting = true;
-      initDashboard();
+      // Check for invite/recovery token first
+      const hash = window.location.hash;
+      if (hash && hash.includes('access_token')) {
+        const p    = new URLSearchParams(hash.substring(1));
+        const type = p.get('type');
+        const at   = p.get('access_token');
+        const rt   = p.get('refresh_token') || '';
+        if ((type === 'invite' || type === 'recovery') && at) {
+          history.replaceState(null, '', window.location.pathname);
+          sb.auth.setSession({ access_token: at, refresh_token: rt }).then(({ data, error }) => {
+            if (!error && data.session) {
+              currentUser = data.session.user;
+              isAdmin = ADMIN_EMAILS.includes(currentUser.email);
+              document.getElementById('authGuard').style.display = 'none';
+              showPasswordModal(type);
+            } else {
+              window.location.href = 'eh-cliente-login.html';
+            }
+          });
+          return;
+        }
+      }
+      // Normal session
+      if (session) {
+        currentUser = session.user;
+        isAdmin = ADMIN_EMAILS.includes(currentUser.email);
+        initDashboard();
+      } else {
+        window.location.href = 'eh-cliente-login.html';
+      }
     } else if (event === 'SIGNED_OUT') {
       window.location.href = 'eh-cliente-login.html';
     }
   });
-
-  // Fallback: if onAuthStateChange doesn't fire within 3s, try getSession
-  setTimeout(async () => {
-    if (booting) return;
-    booting = true;
-    const hash = window.location.hash;
-    if (hash && hash.includes('access_token')) {
-      const p    = new URLSearchParams(hash.substring(1));
-      const type = p.get('type');
-      const at   = p.get('access_token');
-      const rt   = p.get('refresh_token') || '';
-      if ((type === 'invite' || type === 'recovery') && at) {
-        history.replaceState(null, '', window.location.pathname);
-        const { data, error } = await sb.auth.setSession({ access_token: at, refresh_token: rt });
-        if (!error && data.session) {
-          currentUser = data.session.user;
-          isAdmin = ADMIN_EMAILS.includes(currentUser.email);
-          document.getElementById('authGuard').style.display = 'none';
-          showPasswordModal(type);
-          return;
-        }
-      }
-    }
-    const { data } = await sb.auth.getSession();
-    if (!data.session) { window.location.href = 'eh-cliente-login.html'; return; }
-    currentUser = data.session.user;
-    isAdmin = ADMIN_EMAILS.includes(currentUser.email);
-    initDashboard();
-  }, 800);
 </script>
 </body>
 </html>

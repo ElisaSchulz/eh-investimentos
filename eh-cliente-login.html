@@ -515,35 +515,36 @@
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: false } });
 
     // ── ON LOAD: check for invite/recovery token in URL ──
-    let _booted = false;
+    // Check session immediately from storage (sync-like, no flicker)
+    // onAuthStateChange fires as soon as Supabase restores the session
+    sb.auth.onAuthStateChange((event, session) => {
+      // Only act on INITIAL_SESSION to avoid reacting to other events
+      if (event === 'INITIAL_SESSION') {
+        const hash = window.location.hash;
+        // If there's an invite/recovery token in the URL, handle it — don't redirect
+        if (hash && hash.includes('access_token')) return;
+        // Already logged in — go straight to dashboard
+        if (session) window.location.href = 'eh-cliente-dashboard.html';
+      }
+    });
+
+    // Handle invite/recovery token in URL
     window.addEventListener('load', async () => {
-      if (_booted) return; _booted = true;
       const hash = window.location.hash;
+      if (!hash || !hash.includes('access_token')) return;
 
-      if (hash && hash.includes('access_token')) {
-        const params = new URLSearchParams(hash.substring(1));
-        const type = params.get('type');         // 'invite' or 'recovery'
-        const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token') || '';
+      const params = new URLSearchParams(hash.substring(1));
+      const type        = params.get('type');
+      const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token') || '';
 
-        if ((type === 'invite' || type === 'recovery') && accessToken) {
-          // Establish session from the token
-          const { data, error } = await sb.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-
-          if (!error && data.session) {
-            // Clear the ugly token from the URL bar
-            history.replaceState(null, '', window.location.pathname);
-
-            // Show the set-password view
-            showSetPassword(type);
-            return;
-          }
+      if ((type === 'invite' || type === 'recovery') && accessToken) {
+        history.replaceState(null, '', window.location.pathname);
+        const { data, error } = await sb.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        if (!error && data.session) {
+          showSetPassword(type);
         }
       }
-
-      // No token — check if already logged in
-      const { data } = await sb.auth.getSession();
-      if (data.session) window.location.href = 'eh-cliente-dashboard.html';
     });
 
     // ── VIEWS ──
