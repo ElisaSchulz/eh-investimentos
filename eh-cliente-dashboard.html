@@ -628,10 +628,12 @@ Qualquer dúvida, estou à disposição.</pre>
   function showView(viewId, btn) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    document.querySelectorAll('.mobile-drawer-link').forEach(l => l.classList.remove('active'));
     document.getElementById('view-' + viewId).classList.add('active');
     if (btn) btn.classList.add('active');
     const titles = { relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', emails:'Envio de Emails' };
-    document.getElementById('topbarTitle').textContent = titles[viewId] || viewId;
+    const topbar = document.getElementById('topbarTitle');
+    if (topbar) topbar.textContent = titles[viewId] || viewId;
     if (viewId === 'emails') { loadTemplates(); if (clientRows.length === 0) addClientRow(); }
   }
 
@@ -1007,15 +1009,6 @@ Qualquer dúvida, estou à disposição.</pre>
     document.getElementById('mobileDrawer').classList.remove('open');
     document.getElementById('hamburger').classList.remove('open');
     document.body.style.overflow = '';
-  }
-
-  // Sync mobile drawer active state with sidebar
-  const _origShowView = showView;
-  function showView(viewId, btn) {
-    _origShowView(viewId, btn);
-    // Update mobile drawer active states
-    document.querySelectorAll('.mobile-drawer-link').forEach(l => l.classList.remove('active'));
-    if (btn && btn.classList.contains('mobile-drawer-link')) btn.classList.add('active');
   }
 
   // START
