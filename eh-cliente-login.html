@@ -638,11 +638,13 @@
       if (error) {
         btn.disabled = false;
         btnText.textContent = 'Entrar';
-        let msg = 'Não foi possível fazer login. Tente novamente.';
-        if (error.message.includes('Invalid login')) msg = 'E-mail ou senha incorretos.';
+        let msg = error.message || 'Erro desconhecido.';
+        if (error.message.includes('Invalid login') || error.message.includes('invalid_credentials')) msg = 'E-mail ou senha incorretos.';
         if (error.message.includes('Email not confirmed')) msg = 'Por favor, confirme seu e-mail antes de entrar.';
+        if (error.message.includes('Too many requests')) msg = 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
         errorMsg.textContent = msg;
         errorMsg.classList.add('show');
+        console.error('Login error:', error);
       } else {
         btnText.textContent = 'Redirecionando...';
         window.location.href = 'eh-cliente-dashboard.html';
