@@ -162,7 +162,69 @@
     .preview-meta strong { color: var(--white); }
     .preview-body { font-size: 0.82rem; color: var(--gray-light); line-height: 1.8; white-space: pre-wrap; }
 
-    @media (max-width: 900px) { .sidebar { display: none; } .main { margin-left: 0; } .upload-form { grid-template-columns: 1fr 1fr; } .stats-row { grid-template-columns: 1fr; } }
+    /* ── MOBILE NAV ── */
+    .mobile-nav {
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0;
+      background: rgba(8,21,55,0.97);
+      border-bottom: 1px solid var(--border);
+      z-index: 200;
+      padding: 0.9rem 1.2rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .mobile-nav-logo { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+    .mobile-nav-logo span { font-weight: 700; font-size: 0.78rem; letter-spacing: 0.08em; color: var(--white); }
+    .hamburger {
+      background: none; border: none; cursor: pointer; padding: 0.3rem;
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .hamburger span { display: block; width: 22px; height: 2px; background: var(--white); transition: all 0.25s; border-radius: 2px; }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .mobile-drawer {
+      display: none;
+      position: fixed; inset: 0; top: 56px;
+      background: rgba(8,21,55,0.98);
+      z-index: 190;
+      padding: 1.5rem 1.2rem;
+      flex-direction: column;
+      gap: 0.3rem;
+      overflow-y: auto;
+    }
+    .mobile-drawer.open { display: flex; }
+    .mobile-drawer-section { font-size: 0.58rem; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(138,155,184,0.5); padding: 0.8rem 0.8rem 0.4rem; }
+    .mobile-drawer-link { display: flex; align-items: center; gap: 0.8rem; padding: 0.85rem 0.8rem; font-size: 0.85rem; color: var(--gray-light); background: none; border: none; width: 100%; text-align: left; font-family: 'Montserrat', sans-serif; cursor: pointer; border-radius: 2px; }
+    .mobile-drawer-link:hover, .mobile-drawer-link.active { background: var(--gold-pale); color: var(--white); }
+    .mobile-drawer-link svg { color: var(--gold); flex-shrink: 0; }
+    .mobile-drawer-divider { height: 1px; background: var(--border-dim); margin: 0.8rem 0; }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .mobile-nav { display: flex; }
+      .main { margin-left: 0; padding-top: 56px; }
+      .topbar { display: none; }
+      .content { padding: 1.5rem 1rem; }
+      .upload-form { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .reports-grid { grid-template-columns: 1fr; }
+      .welcome-banner { padding: 1.5rem; }
+      .welcome-banner h2 { font-size: 1.4rem; }
+      .upload-panel { padding: 1.2rem; }
+      .email-tabs { overflow-x: auto; }
+      .email-tab { white-space: nowrap; padding: 0.7rem 1rem; font-size: 0.65rem; }
+      #clientsTable { font-size: 0.72rem; }
+      #clientsTable input { font-size: 0.72rem; padding: 0.4rem 0.5rem; }
+    }
+
+    @media (max-width: 500px) {
+      .stats-row { grid-template-columns: 1fr; }
+      .content { padding: 1rem 0.8rem; }
+      .welcome-banner { padding: 1.2rem; }
+      .modal-box { padding: 2rem 1.2rem; }
+    }
   </style>
 </head>
 <body>
@@ -182,6 +244,49 @@
     <div class="modal-error" id="modalError"></div>
     <button class="btn-upload" onclick="doSetPassword()" style="width:100%;justify-content:center;padding:1rem;margin-top:0.5rem;">Salvar e Entrar</button>
   </div>
+</div>
+
+<!-- MOBILE NAV -->
+<nav class="mobile-nav">
+  <a href="index.html" class="mobile-nav-logo">
+    <img src="Logo_EH.png" width="28" height="28" alt="EH" style="object-fit:contain;" />
+    <span>EH INVESTIMENTOS</span>
+  </a>
+  <button class="hamburger" id="hamburger" onclick="toggleDrawer()">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- MOBILE DRAWER -->
+<div class="mobile-drawer" id="mobileDrawer">
+  <div class="mobile-drawer-section">Menu</div>
+  <button class="mobile-drawer-link active" onclick="showView('relatorios',this);closeDrawer()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    Relatórios
+  </button>
+  <button class="mobile-drawer-link" onclick="showView('cartas',this);closeDrawer()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    Cartas Mensais
+  </button>
+  <div class="mobile-drawer-divider" id="mobileAdminDivider" style="display:none;"></div>
+  <div class="mobile-drawer-section" id="mobileAdminSection" style="display:none;">Administração</div>
+  <button class="mobile-drawer-link" id="mobileUploadBtn" style="display:none;" onclick="showView('upload',this);closeDrawer()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    Upload de Relatório
+  </button>
+  <button class="mobile-drawer-link" id="mobileEmailsBtn" style="display:none;" onclick="showView('emails',this);closeDrawer()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    Envio de Emails
+  </button>
+  <div class="mobile-drawer-divider"></div>
+  <div style="padding:0.8rem;">
+    <div style="font-size:0.78rem;font-weight:500;color:var(--white);" id="mobileUserName">...</div>
+    <div style="font-size:0.68rem;color:var(--gray);margin-top:0.2rem;" id="mobileUserEmail">...</div>
+  </div>
+  <button class="mobile-drawer-link" onclick="doLogout()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Sair
+  </button>
 </div>
 
 <aside class="sidebar">
@@ -500,10 +605,20 @@ Qualquer dúvida, estou à disposição.</pre>
     document.getElementById('userName').textContent    = name;
     document.getElementById('userEmail').textContent   = email;
     document.getElementById('welcomeName').textContent = name;
+    // Mobile
+    const mun = document.getElementById('mobileUserName');
+    const mue = document.getElementById('mobileUserEmail');
+    if (mun) mun.textContent = name;
+    if (mue) mue.textContent = email;
     document.getElementById('topbarDate').textContent  = new Date().toLocaleDateString('pt-BR', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
     if (isAdmin) {
       document.getElementById('adminMenuSection').style.display = 'block';
       loadClients();
+      // Mobile drawer admin items
+      document.getElementById('mobileAdminDivider').style.display = 'block';
+      document.getElementById('mobileAdminSection').style.display = 'block';
+      document.getElementById('mobileUploadBtn').style.display = 'flex';
+      document.getElementById('mobileEmailsBtn').style.display = 'flex';
     }
     loadReports();
     sb.from('profiles').upsert({ id: currentUser.id, email, full_name: name, updated_at: new Date().toISOString() }, { onConflict: 'id' }).catch(() => {});
@@ -876,6 +991,31 @@ Qualquer dúvida, estou à disposição.</pre>
     if (b < 1024) return b + ' B';
     if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
     return (b/1048576).toFixed(1) + ' MB';
+  }
+
+  // ── MOBILE NAV ──
+  function toggleDrawer() {
+    const drawer = document.getElementById('mobileDrawer');
+    const burger = document.getElementById('hamburger');
+    const isOpen = drawer.classList.contains('open');
+    drawer.classList.toggle('open', !isOpen);
+    burger.classList.toggle('open', !isOpen);
+    document.body.style.overflow = isOpen ? '' : 'hidden';
+  }
+
+  function closeDrawer() {
+    document.getElementById('mobileDrawer').classList.remove('open');
+    document.getElementById('hamburger').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // Sync mobile drawer active state with sidebar
+  const _origShowView = showView;
+  function showView(viewId, btn) {
+    _origShowView(viewId, btn);
+    // Update mobile drawer active states
+    document.querySelectorAll('.mobile-drawer-link').forEach(l => l.classList.remove('active'));
+    if (btn && btn.classList.contains('mobile-drawer-link')) btn.classList.add('active');
   }
 
   // START

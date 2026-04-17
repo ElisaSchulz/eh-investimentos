@@ -360,10 +360,41 @@
     .success-msg.show { display: block; }
 
     @media (max-width: 800px) {
-      body { flex-direction: column; overflow: auto; }
-      .left-panel { padding: 2.5rem 2rem; min-height: 220px; }
-      .right-panel { width: 100%; padding: 2.5rem 2rem; border-left: none; border-top: 1px solid var(--border); }
-      .panel-quote blockquote { font-size: 1.4rem; }
+      body { flex-direction: column; overflow: auto; min-height: 100vh; }
+
+      /* Left panel — compact header on mobile */
+      .left-panel {
+        flex: none;
+        padding: 1.8rem 1.5rem 1.5rem;
+        min-height: auto;
+        justify-content: flex-start;
+        gap: 1rem;
+      }
+      .left-panel::before, .left-panel::after { display: none; }
+      .panel-quote { display: none; }
+      .panel-footer { display: none; }
+
+      /* Right panel — full width form */
+      .right-panel {
+        width: 100%;
+        flex: 1;
+        padding: 2rem 1.5rem 3rem;
+        border-left: none;
+        border-top: 1px solid var(--border);
+      }
+
+      .form-header h1 { font-size: 1.8rem; }
+      .form-header { margin-bottom: 1.8rem; }
+
+      .btn-login { padding: 1rem; font-size: 0.75rem; }
+
+      input[type="email"],
+      input[type="password"] { font-size: 0.9rem; padding: 0.95rem 1rem; }
+    }
+
+    @media (max-width: 400px) {
+      .right-panel { padding: 1.5rem 1.2rem 2.5rem; }
+      .form-header h1 { font-size: 1.6rem; }
     }
   </style>
 </head>
