@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     :root {
       --navy:       #0D1E4E;
@@ -201,6 +203,86 @@
     .mobile-drawer-link svg { color: var(--gold); flex-shrink: 0; }
     .mobile-drawer-divider { height: 1px; background: var(--border-dim); margin: 0.8rem 0; }
 
+
+    /* ── EXTRATOS ── */
+    .broker-selector { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border-dim); border:1px solid var(--border-dim); margin-bottom:2rem; }
+    .broker-btn { padding:1.2rem 1.5rem; background:var(--navy-dark); cursor:pointer; transition:background 0.2s; font-family:'Montserrat',sans-serif; border:none; text-align:left; }
+    .broker-btn:hover { background:rgba(212,130,10,0.08); }
+    .broker-btn.active { background:var(--gold-pale); border-bottom:2px solid var(--gold); }
+    .broker-btn-name { font-size:0.9rem; font-weight:600; color:var(--white); display:block; margin-bottom:0.2rem; }
+    .broker-btn.active .broker-btn-name { color:var(--gold-light); }
+    .broker-btn-sub { font-size:0.65rem; font-weight:400; letter-spacing:0.1em; text-transform:uppercase; color:var(--gray); }
+
+    .extrato-upload-zone { border:1px dashed rgba(212,130,10,0.35); padding:2rem; text-align:center; cursor:pointer; transition:background 0.2s, border-color 0.2s; position:relative; }
+    .extrato-upload-zone:hover, .extrato-upload-zone.drag-over { background:var(--gold-pale); border-color:var(--gold); }
+    .extrato-upload-zone input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+
+    .file-list-ext { display:flex; flex-direction:column; gap:0.5rem; margin-top:0.8rem; }
+    .file-item-ext { display:flex; align-items:center; gap:0.8rem; background:rgba(76,175,130,0.08); border:1px solid rgba(76,175,130,0.25); padding:0.6rem 1rem; }
+    .file-item-ext-name { font-size:0.78rem; color:var(--gray-light); flex:1; }
+    .file-item-ext-status { font-size:0.68rem; font-weight:600; }
+    .file-status-ok { color:#4caf82; }
+    .file-status-err { color:#e05555; }
+    .file-status-wait { color:var(--gray); }
+
+    .mapping-toolbar-ext { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.8rem; flex-wrap:wrap; gap:0.5rem; }
+    .save-indicator-ext { font-size:0.68rem; color:var(--gray); display:flex; align-items:center; gap:0.5rem; }
+    .save-dot { width:8px; height:8px; border-radius:50%; background:var(--border-dim); flex-shrink:0; transition:background 0.3s; }
+    .save-dot.saved { background:#4caf82; }
+    .save-dot.unsaved { background:var(--gold); }
+
+    .mapping-table-ext { width:100%; border-collapse:collapse; font-size:0.78rem; }
+    .mapping-table-ext th { text-align:left; font-size:0.6rem; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:var(--gray); padding:0.5rem 0.8rem; border-bottom:1px solid var(--border); background:rgba(0,0,0,0.2); }
+    .mapping-table-ext td { padding:0.35rem 0.5rem; border-bottom:1px solid rgba(138,155,184,0.08); vertical-align:middle; }
+    .mapping-table-ext input { width:100%; background:rgba(255,255,255,0.03); border:1px solid transparent; color:var(--white); font-family:'Montserrat',sans-serif; font-size:0.75rem; padding:0.3rem 0.5rem; outline:none; transition:border-color 0.2s; }
+    .mapping-table-ext input:focus { border-color:var(--gold); background:rgba(212,130,10,0.05); }
+    .mapping-table-ext input::placeholder { color:rgba(138,155,184,0.4); }
+
+    .ext-progress-wrap { display:none; margin-top:0.8rem; }
+    .ext-progress-wrap.visible { display:block; }
+    .ext-progress-bar { height:3px; background:var(--border-dim); }
+    .ext-progress-fill { height:100%; background:linear-gradient(to right, var(--gold), var(--gold-light)); width:0%; transition:width 0.3s; }
+    .ext-progress-label { font-size:0.68rem; color:var(--gray); margin-top:0.4rem; }
+
+    .ext-status-box { display:none; background:rgba(0,0,0,0.3); border:1px solid var(--border-dim); padding:1rem 1.2rem; margin-top:1rem; font-size:0.72rem; line-height:1.9; color:var(--gray); max-height:200px; overflow-y:auto; font-family:monospace; }
+    .ext-status-box.visible { display:block; }
+    .ext-log-ok { color:#4caf82; }
+    .ext-log-warn { color:var(--gold-light); }
+    .ext-log-err { color:#e05555; }
+    .ext-log-head { color:var(--white); font-weight:600; margin-top:0.3rem; }
+
+    .ext-preview-section { display:none; margin-top:2rem; }
+    .ext-preview-section.visible { display:block; }
+    .ext-chips { display:flex; gap:0.8rem; flex-wrap:wrap; margin:1rem 0; }
+    .ext-chip { background:rgba(255,255,255,0.04); border:1px solid var(--border-dim); border-radius:20px; padding:0.3rem 0.9rem; font-size:0.7rem; color:var(--gray); }
+    .ext-chip span { color:var(--white); font-weight:600; margin-left:0.3rem; }
+    .ext-preview-wrap { overflow-x:auto; border:1px solid var(--border-dim); max-height:360px; overflow-y:auto; }
+    .ext-preview-table { width:100%; border-collapse:collapse; font-size:0.72rem; }
+    .ext-preview-table th { background:var(--navy-mid); color:var(--gold-light); font-size:0.6rem; letter-spacing:0.1em; text-transform:uppercase; padding:0.6rem 0.9rem; text-align:left; white-space:nowrap; position:sticky; top:0; font-weight:400; }
+    .ext-preview-table td { padding:0.45rem 0.9rem; border-bottom:1px solid rgba(138,155,184,0.08); white-space:nowrap; }
+    .ext-preview-table tr:nth-child(even) td { background:rgba(255,255,255,0.02); }
+    .td-neg { color:#e05555; } .td-pos { color:#4caf82; }
+    .td-cnpj { color:var(--gold); font-weight:500; }
+    .td-na { color:var(--gray); }
+    .td-sheet { color:#6a9fd8; font-weight:500; }
+    .eqi-notice-dash { background:rgba(100,150,255,0.08); border:1px solid rgba(100,150,255,0.25); padding:0.8rem 1.2rem; font-size:0.78rem; color:var(--gray-light); line-height:1.6; display:none; margin-bottom:1rem; }
+    .eqi-notice-dash.visible { display:block; }
+    .btn-process-ext {
+      width:100%; padding:1rem 2rem; background:var(--gold); color:var(--navy-dark);
+      border:none; font-family:'Montserrat',sans-serif; font-size:0.75rem; font-weight:700;
+      letter-spacing:0.14em; text-transform:uppercase; cursor:pointer; margin-top:1.5rem;
+      transition:background 0.2s, transform 0.15s; display:flex; align-items:center; justify-content:center; gap:0.6rem;
+    }
+    .btn-process-ext:hover:not(:disabled) { background:var(--gold-light); transform:translateY(-1px); }
+    .btn-process-ext:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+    .btn-download-ext {
+      margin-top:1rem; padding:0.8rem 1.8rem; background:var(--navy-mid); color:var(--gold-light);
+      border:1px solid var(--border); font-family:'Montserrat',sans-serif; font-size:0.72rem; font-weight:600;
+      letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; display:inline-flex; align-items:center; gap:0.6rem;
+      transition:background 0.2s;
+    }
+    .btn-download-ext:hover { background:var(--navy); }
+
     @media (max-width: 900px) {
       .sidebar { display: none; }
       .mobile-nav { display: flex; }
@@ -274,6 +356,10 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     Upload de Relatório
   </button>
+  <button class="mobile-drawer-link" id="mobileExtratosBtn" style="display:none;" onclick="showView('extratos',this);closeDrawer()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 017 7h2"/><path d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Extratos → Excel
+  </button>
   <button class="mobile-drawer-link" id="mobileEmailsBtn" style="display:none;" onclick="showView('emails',this);closeDrawer()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
     Envio de Emails
@@ -310,6 +396,10 @@
     <button class="sidebar-link" onclick="showView('upload',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Upload de Relatório
+    </button>
+    <button class="sidebar-link" onclick="showView('extratos',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 017 7h2"/><path d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Extratos → Excel
     </button>
     <button class="sidebar-link" onclick="showView('emails',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -544,6 +634,101 @@ Qualquer dúvida, estou à disposição.</pre>
       </div>
     </div>
 
+
+    <!-- EXTRATOS VIEW (admin only) -->
+    <div class="view" id="view-extratos">
+      <div class="welcome-banner">
+        <h2>Extratos <em>para Excel</em></h2>
+        <p>Converta extratos de corretoras em Excel organizado com CNPJ, tipo e valores brutos.</p>
+      </div>
+
+      <!-- Broker selector -->
+      <div class="broker-selector">
+        <button class="broker-btn active" id="btnXP" onclick="extSelectBroker('XP')">
+          <span class="broker-btn-name">XP Investimentos</span>
+          <span class="broker-btn-sub">Extrato de Conta Depósito</span>
+        </button>
+        <button class="broker-btn" id="btnEQI" onclick="extSelectBroker('EQI')">
+          <span class="broker-btn-name">EQI / BTG</span>
+          <span class="broker-btn-sub">Extrato da Conta Investimento</span>
+        </button>
+      </div>
+
+      <div class="eqi-notice-dash" id="eqiNotice">
+        <strong style="color:var(--white);">Modo EQI/BTG:</strong> faça upload do <strong style="color:var(--white);">Extrato da Conta Investimento</strong> (PDF longo com todas as seções). Os valores de resgates e amortizações serão automaticamente substituídos pelos valores brutos.
+      </div>
+
+      <!-- Upload -->
+      <div class="upload-panel">
+        <h3>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          1. Extratos PDF
+        </h3>
+        <div class="extrato-upload-zone" id="extUploadZone">
+          <input type="file" id="extFileInput" accept=".pdf" multiple />
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--gold);margin:0 auto 0.6rem;display:block;"><path d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
+          <div style="font-size:0.85rem;color:var(--gray-light);margin-bottom:0.3rem;">Arraste os PDFs aqui</div>
+          <div style="font-size:0.68rem;color:var(--gray);">ou clique para selecionar · vários arquivos aceitos</div>
+        </div>
+        <div class="file-list-ext" id="extFileList"></div>
+        <div class="ext-progress-wrap" id="extProgressWrap">
+          <div class="ext-progress-bar"><div class="ext-progress-fill" id="extProgressFill"></div></div>
+          <div class="ext-progress-label" id="extProgressLabel"></div>
+        </div>
+      </div>
+
+      <!-- Mapping -->
+      <div class="upload-panel">
+        <h3>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+          2. Tabela CNPJ
+          <span style="font-size:0.62rem;font-weight:400;color:var(--gray);margin-left:0.5rem;" id="extMappingBrokerLabel">— XP</span>
+        </h3>
+        <p style="font-size:0.78rem;color:var(--gray);margin-bottom:1rem;line-height:1.6;">Mapeie trechos do nome do fundo para o CNPJ. Cada corretora tem sua própria tabela, salva automaticamente no Supabase.</p>
+
+        <div class="mapping-toolbar-ext">
+          <div class="save-indicator-ext">
+            <div class="save-dot saved" id="extSaveDot"></div>
+            <span id="extSaveLabel">Salvo</span>
+          </div>
+          <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+            <button onclick="extExportMapping()" class="btn-upload" style="background:rgba(255,255,255,0.06);color:var(--gray-light);font-size:0.62rem;padding:0.4rem 0.8rem;">↓ Exportar Excel</button>
+            <label class="btn-upload" style="background:rgba(255,255,255,0.06);color:var(--gray-light);font-size:0.62rem;padding:0.4rem 0.8rem;cursor:pointer;">↑ Importar Excel<input type="file" accept=".xlsx,.xls" style="display:none" onchange="extImportMapping(this)"></label>
+            <button onclick="extResetMapping()" class="btn-upload" style="background:rgba(224,85,85,0.1);color:#f08080;border:1px solid rgba(224,85,85,0.3);font-size:0.62rem;padding:0.4rem 0.8rem;">Restaurar padrão</button>
+          </div>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="mapping-table-ext">
+            <thead><tr><th>Trecho do nome</th><th>CNPJ</th><th>Nome completo</th><th></th></tr></thead>
+            <tbody id="extMappingBody"></tbody>
+          </table>
+        </div>
+        <button onclick="extAddMappingRow()" class="btn-upload" style="margin-top:0.8rem;background:rgba(212,130,10,0.1);color:var(--gold);border:1px solid var(--border);">+ Adicionar fundo</button>
+      </div>
+
+      <!-- Process -->
+      <button class="btn-process-ext" id="extBtnProcess" onclick="extProcessAll()" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+        <span id="extBtnLabel">Processar e gerar Excel</span>
+      </button>
+
+      <div class="ext-status-box" id="extStatusBox"></div>
+
+      <!-- Preview -->
+      <div class="ext-preview-section" id="extPreviewSection">
+        <div class="section-header"><div class="section-title">3. Preview & Download</div></div>
+        <div class="ext-chips" id="extSummaryChips"></div>
+        <div class="ext-preview-wrap">
+          <table class="ext-preview-table" id="extPreviewTable"></table>
+        </div>
+        <button class="btn-download-ext" id="extBtnDownload">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Baixar Excel
+        </button>
+      </div>
+    </div>
+
   </div>
 </main>
 
@@ -618,6 +803,7 @@ Qualquer dúvida, estou à disposição.</pre>
       document.getElementById('mobileAdminDivider').style.display = 'block';
       document.getElementById('mobileAdminSection').style.display = 'block';
       document.getElementById('mobileUploadBtn').style.display = 'flex';
+      document.getElementById('mobileExtratosBtn').style.display = 'flex';
       document.getElementById('mobileEmailsBtn').style.display = 'flex';
     }
     loadReports();
@@ -631,10 +817,11 @@ Qualquer dúvida, estou à disposição.</pre>
     document.querySelectorAll('.mobile-drawer-link').forEach(l => l.classList.remove('active'));
     document.getElementById('view-' + viewId).classList.add('active');
     if (btn) btn.classList.add('active');
-    const titles = { relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', emails:'Envio de Emails' };
+    const titles = { relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', extratos:'Extratos → Excel', emails:'Envio de Emails' };
     const topbar = document.getElementById('topbarTitle');
     if (topbar) topbar.textContent = titles[viewId] || viewId;
     if (viewId === 'emails') { loadTemplates(); if (clientRows.length === 0) addClientRow(); }
+    if (viewId === 'extratos') extLoadMappingFromSupabase();
   }
 
   async function doLogout() { await sb.auth.signOut(); window.location.href = 'eh-cliente-login.html'; }
@@ -1051,6 +1238,511 @@ Qualquer dúvida, estou à disposição.</pre>
       window.location.href = 'eh-cliente-login.html';
     }
   });
+
+  // ═══════════════════════════════════════════════════════
+  // ── EXTRATOS TOOL ──────────────────────────────────────
+  // ═══════════════════════════════════════════════════════
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  let extSelectedFiles = [];
+  let extAllProcessedRows = [];
+  let extCurrentBroker = 'XP';
+  let extMappingSaveTimer = null;
+
+  // Default mappings
+  const DEFAULT_MAPPING_XP = [
+    { key:"BV Institucional",            cnpj:"06.866.051/0001-87", full:"BV INSTITUCIONAL FIRF CP" },
+    { key:"Agrofin",                     cnpj:"61.700.255/0001-51", full:"AGROFIN MILENIO EQI FIC AGRO RL" },
+    { key:"SRM Exodus",                  cnpj:"55.912.292/0001-20", full:"FIC FIDC SRM EXODUS RESP LTD" },
+    { key:"Manati",                      cnpj:"63.441.263/0001-56", full:"MANATÍ RENDA IMOBILIÁRIA FII RL" },
+    { key:"Orram",                       cnpj:"43.551.206/0001-12", full:"ORRAM 60 FICFIM CrPr" },
+    { key:"Packem",                      cnpj:"63.932.359/0001-17", full:"PACKEM FIAGRO FIDC SR2" },
+    { key:"Porto Seguro FIRF",           cnpj:"18.719.154/0001-01", full:"PORTO SEGURO DI CP" },
+    { key:"Blueoak SSI",                 cnpj:"55.219.936/0001-08", full:"BLUEOAK SPECIAL SIT. I FIC FIP" },
+    { key:"Absolute Creta Advisory",     cnpj:"48.122.126/0001-65", full:"ABSOLUTE CRETA ADVISORY FIC FIRF" },
+    { key:"Jivemauá Bossanova",          cnpj:"", full:"Jivemauá Bossanova Crédito Securitizad" },
+    { key:"CRI MAGAZINE LUIZA",          cnpj:"", full:"CRI Magazine Luiza - OUT/2030" },
+    { key:"CDII11",                      cnpj:"", full:"CDII11 - FII" },
+    { key:"XP Renda Imobiliária",        cnpj:"", full:"XP Renda Imobiliária" },
+    { key:"CRA MARFRIG",                 cnpj:"", full:"CRA Marfrig - MAR/2034" },
+    { key:"CDCA VAMOS",                  cnpj:"", full:"CDCA Vamos - SET/2031" },
+    { key:"CDCA BTG",                    cnpj:"", full:"CDCA BTG - JUL/2034" },
+    { key:"CRA JBS",                     cnpj:"", full:"CRA JBS - SET/2037" },
+    { key:"CRA SEARA",                   cnpj:"", full:"CRA Seara - SET/2034" },
+    { key:"CRI MRV FLEX",                cnpj:"", full:"CRI MRV Flex - MAR/2033" },
+    { key:"RBRY11",                      cnpj:"", full:"RBRY11 - FII" },
+  ];
+
+  const DEFAULT_MAPPING_EQI = [
+    { key:"BV INSTI",                    cnpj:"06.866.051/0001-87", full:"BV INSTITUCIONAL FIRF CrPr" },
+    { key:"AGROFIN",                     cnpj:"61.700.255/0001-51", full:"AGROFIN MILENIO EQI FIC AGRO RL" },
+    { key:"SRM EXODUS",                  cnpj:"55.912.292/0001-20", full:"FIC FIDC SRM EXODUS RESP LTD" },
+    { key:"MANATI FII",                  cnpj:"63.441.263/0001-56", full:"MANATÍ RENDA IMOBILIÁRIA FII RL" },
+    { key:"ORRAM",                       cnpj:"43.551.206/0001-12", full:"ORRAM 60 FICFIM CrPr" },
+    { key:"PACKEM",                      cnpj:"63.932.359/0001-17", full:"PACKEM FIAGRO FIDC SR2" },
+    { key:"PSEG",                        cnpj:"18.719.154/0001-01", full:"Porto DI CrPr FIRef (PSEG)" },
+    { key:"RBR INFRA",                   cnpj:"63.085.032/0001-57", full:"RBR INFRA CRÉDITO CDI FIP RL" },
+    { key:"ROOT CAP",                    cnpj:"64.299.705/0001-34", full:"ROOT CAPITAL FICUS FIDC" },
+    { key:"SOLIS",                       cnpj:"13.054.728/0001-48", full:"SOLIS CAPITAL ANTARES CrPr FICFIM LP" },
+    { key:"EV ENERGIA",                  cnpj:"56.873.069/0001-84", full:"EV ENERGIA FIC FIP INFRA RESP LIMITADA" },
+    { key:"CRA BANDEIRANTES",            cnpj:"", full:"CRA Bandeirantes" },
+    { key:"CANAL COMPANHIA",             cnpj:"", full:"CRA Canal Companhia de Securitizacao" },
+    { key:"CRA AGRION",                  cnpj:"", full:"CRA Agrion - VENC 2033" },
+    { key:"CRI URBA",                    cnpj:"", full:"CRI Urba - VENC 2035" },
+    { key:"CRI FORGREEN",                cnpj:"", full:"CRI Forgreen III - VENC 2034" },
+    { key:"MINERVA",                     cnpj:"", full:"CRA Minerva" },
+    { key:"PANTANAL",                    cnpj:"", full:"CRA Pantanal" },
+  ];
+
+  // ── Broker selector ──
+  function extSelectBroker(broker) {
+    extCurrentBroker = broker;
+    document.getElementById('btnXP').classList.toggle('active', broker === 'XP');
+    document.getElementById('btnEQI').classList.toggle('active', broker === 'EQI');
+    document.getElementById('eqiNotice').classList.toggle('visible', broker === 'EQI');
+    document.getElementById('extMappingBrokerLabel').textContent = '— ' + (broker === 'XP' ? 'XP' : 'EQI/BTG');
+    extLoadMappingFromSupabase();
+    extSelectedFiles = [];
+    document.getElementById('extFileList').innerHTML = '';
+    document.getElementById('extBtnProcess').disabled = true;
+    document.getElementById('extPreviewSection').classList.remove('visible');
+    document.getElementById('extStatusBox').classList.remove('visible');
+    document.getElementById('extStatusBox').innerHTML = '';
+  }
+
+  // ── Mapping — Supabase ──
+  function extCurrentTable() { return extCurrentBroker === 'XP' ? 'cnpj_mapping_xp' : 'cnpj_mapping_eqi'; }
+  function extCurrentDefault() { return extCurrentBroker === 'XP' ? DEFAULT_MAPPING_XP : DEFAULT_MAPPING_EQI; }
+
+  async function extLoadMappingFromSupabase() {
+    extMarkSave('loading');
+    try {
+      const { data, error } = await sb.from(extCurrentTable()).select('*').order('key');
+      if (error) throw error;
+      const rows = (data && data.length > 0) ? data.map(r => ({ key: r.key, cnpj: r.cnpj || '', full: r.full_name || '' })) : extCurrentDefault();
+      extRenderMapping(rows);
+      extMarkSave('saved');
+    } catch(e) {
+      console.warn('Mapping load:', e.message);
+      extRenderMapping(extCurrentDefault());
+      extMarkSave('saved');
+    }
+  }
+
+  async function extSaveMappingToSupabase() {
+    extMarkSave('unsaved');
+    clearTimeout(extMappingSaveTimer);
+    extMappingSaveTimer = setTimeout(async () => {
+      const rows = extGetMappingRows();
+      const table = extCurrentTable();
+      try {
+        await sb.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        if (rows.length > 0) {
+          const inserts = rows.map(r => ({ key: r.key, cnpj: r.cnpj, full_name: r.full, updated_at: new Date().toISOString() }));
+          const { error } = await sb.from(table).insert(inserts);
+          if (error) throw error;
+        }
+        extMarkSave('saved');
+      } catch(e) {
+        console.warn('Mapping save:', e.message);
+        extMarkSave('error');
+      }
+    }, 1500);
+  }
+
+  function extMarkSave(state) {
+    const dot = document.getElementById('extSaveDot');
+    const label = document.getElementById('extSaveLabel');
+    if (!dot || !label) return;
+    if (state === 'saved') {
+      dot.className = 'save-dot saved';
+      label.textContent = 'Salvo — ' + new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+    } else if (state === 'unsaved') {
+      dot.className = 'save-dot unsaved';
+      label.textContent = 'Salvando...';
+    } else if (state === 'loading') {
+      dot.className = 'save-dot';
+      label.textContent = 'Carregando...';
+    } else {
+      dot.className = 'save-dot unsaved';
+      label.textContent = 'Erro ao salvar';
+    }
+  }
+
+  function extRenderMapping(rows) {
+    document.getElementById('extMappingBody').innerHTML = '';
+    rows.forEach(r => extAddMappingRow(r.key, r.cnpj, r.full));
+  }
+
+  function extEscHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+  function extAddMappingRow(key='', cnpj='', full='') {
+    const tbody = document.getElementById('extMappingBody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" placeholder="ex: BV INSTITUCIONAL" value="${extEscHtml(key)}" /></td>
+      <td><input type="text" placeholder="00.000.000/0000-00" value="${extEscHtml(cnpj)}" style="color:var(--gold);" /></td>
+      <td><input type="text" placeholder="Nome completo (opcional)" value="${extEscHtml(full)}" /></td>
+      <td><button onclick="this.closest('tr').remove();extSaveMappingToSupabase();" style="background:none;border:none;color:#e05555;cursor:pointer;font-size:1rem;padding:0.3rem;">✕</button></td>`;
+    tr.querySelectorAll('input').forEach(inp => {
+      inp.addEventListener('input', () => extSaveMappingToSupabase());
+    });
+    tbody.appendChild(tr);
+  }
+
+  function extGetMappingRows() {
+    return Array.from(document.querySelectorAll('#extMappingBody tr')).map(tr => {
+      const ins = tr.querySelectorAll('input');
+      return { key: ins[0].value.trim(), cnpj: ins[1].value.trim(), full: ins[2].value.trim() };
+    }).filter(r => r.key);
+  }
+
+  function extResetMapping() {
+    if (!confirm('Restaurar tabela padrão? Isso vai sobrescrever o mapeamento atual.')) return;
+    extRenderMapping(extCurrentDefault());
+    extSaveMappingToSupabase();
+  }
+
+  function extExportMapping() {
+    const rows = extGetMappingRows();
+    const data = [['Trecho do Nome','CNPJ','Nome Completo'], ...rows.map(r => [r.key, r.cnpj, r.full])];
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [28, 22, 42].map(w => ({ wch: w }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Mapeamento CNPJ');
+    XLSX.writeFile(wb, `mapeamento_${extCurrentBroker.toLowerCase()}_eh.xlsx`);
+  }
+
+  function extImportMapping(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        const rows = data.slice(1).filter(r => r[0]).map(r => ({ key: String(r[0]||'').trim(), cnpj: String(r[1]||'').trim(), full: String(r[2]||'').trim() }));
+        if (!rows.length) { alert('Nenhuma linha encontrada.'); return; }
+        extRenderMapping(rows);
+        extSaveMappingToSupabase();
+        alert('✓ ' + rows.length + ' fundos importados.');
+      } catch(err) { alert('Erro: ' + err.message); }
+      input.value = '';
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // ── File upload ──
+  const extUploadZone = document.getElementById('extUploadZone');
+  const extFileInput  = document.getElementById('extFileInput');
+  extUploadZone.addEventListener('click', () => extFileInput.click());
+  extUploadZone.addEventListener('dragover', e => { e.preventDefault(); extUploadZone.classList.add('drag-over'); });
+  extUploadZone.addEventListener('dragleave', () => extUploadZone.classList.remove('drag-over'));
+  extUploadZone.addEventListener('drop', e => {
+    e.preventDefault(); extUploadZone.classList.remove('drag-over');
+    const pdfs = [...e.dataTransfer.files].filter(f => f.type === 'application/pdf');
+    if (pdfs.length) extSetFiles(pdfs);
+  });
+  extFileInput.addEventListener('change', () => { if (extFileInput.files.length) extSetFiles([...extFileInput.files]); });
+
+  function extSetFiles(files) {
+    extSelectedFiles = files;
+    const list = document.getElementById('extFileList');
+    list.innerHTML = '';
+    files.forEach(f => {
+      const div = document.createElement('div');
+      div.className = 'file-item-ext';
+      div.id = 'efi_' + f.name.replace(/\W/g, '_');
+      div.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--gold);flex-shrink:0;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span class="file-item-ext-name">${f.name}</span>
+        <span class="file-item-ext-status file-status-wait" id="efs_${f.name.replace(/\W/g,'_')}">aguardando</span>`;
+      list.appendChild(div);
+    });
+    document.getElementById('extBtnProcess').disabled = false;
+    const n = files.length;
+    document.getElementById('extBtnLabel').textContent = n === 1 ? 'Processar e gerar Excel' : `Processar ${n} extratos e gerar Excel`;
+  }
+
+  function extSetFileStatus(file, status, cls) {
+    const el = document.getElementById('efs_' + file.name.replace(/\W/g, '_'));
+    if (el) { el.textContent = status; el.className = 'file-item-ext-status ' + (cls || ''); }
+  }
+
+  // ── PDF extraction ──
+  async function extExtractText(file) {
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+    let text = '';
+    for (let p = 1; p <= pdf.numPages; p++) {
+      const page = await pdf.getPage(p);
+      const content = await page.getTextContent();
+      text += content.items.map(i => i.str).join(' ') + '\n';
+    }
+    return text;
+  }
+
+  // ── Shared utilities ──
+  function extParseAmount(str) {
+    if (!str) return null;
+    const n = parseFloat(str.replace(/R\$\s*/g,'').replace(/\./g,'').replace(',','.'));
+    return isNaN(n) ? null : n;
+  }
+  function extLookupCNPJ(h, mapping) {
+    const u = h.toUpperCase();
+    for (const m of mapping) { if (m.key && u.includes(m.key.toUpperCase())) return m.cnpj || '—'; }
+    return '—';
+  }
+  function extGetSheetName(text, filename) {
+    const flat = text.replace(/\n/g,' ').replace(/\s+/g,' ');
+    const anchor = flat.match(/(.{5,80}?)\s+CPF\/CNPJ/);
+    if (anchor) { const words = anchor[1].trim().split(/\s+/).filter(w => /^[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÀÇ]{2,}$/.test(w)); if (words.length >= 2) return words.slice(-4).join(' ').slice(0,31); }
+    const anchor2 = flat.match(/(.{5,80}?)\s+CPF\b/);
+    if (anchor2) { const words = anchor2[1].trim().split(/\s+/).filter(w => /^[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÀÇ]{2,}$/.test(w)); if (words.length >= 2) return words.slice(-4).join(' ').slice(0,31); }
+    return filename.replace(/\.pdf$/i,'').replace(/[_-]/g,' ').slice(0,31);
+  }
+
+  // ── XP Parser ──
+  function extClassifyTipoXP(h) {
+    const u = h.toUpperCase();
+    if (u.includes('IRRF')) return 'IRRF';
+    if (u.includes('IOF')) return 'IOF';
+    if (u.includes('RESGATE')) return 'Resgate';
+    if (u.includes('INTEGRALIZ')) return 'Integralização';
+    if (u.includes('RENDIMENTO')||u.includes('RENDIMENTOS DE CLIENTES')) return 'Rendimento';
+    if (u.includes('AMORTIZ')) return 'Amortização';
+    if (u.includes('JUROS')||u.includes('PGTO')||u.includes('PGT ')) return 'Juros';
+    if (u.includes('TED')) return 'TED';
+    if (u.includes('PIX')) return 'PIX';
+    return 'Outro';
+  }
+  function extParseXP(text) {
+    const flat = text.replace(/\n/g,' ').replace(/\s{2,}/g,' ');
+    const re = /(\d{2}\/\d{2}\/\d{4})\s+(\d{2}\/\d{2}\/\d{4})\s+(.+?)\s+R\$\s*([-\d.,]+)\s+R\$\s*([-\d.,]+)/g;
+    const rows = []; let m;
+    while ((m = re.exec(flat)) !== null) {
+      const historico = m[3].trim().replace(/\s+/g,' ');
+      if (/Histórico|Mov\b|^Liq\b/.test(historico)) continue;
+      const valor = extParseAmount(m[4]); const saldo = extParseAmount(m[5]);
+      if (valor === null || saldo === null) continue;
+      rows.push({ dataMov:m[1], dataLiq:m[2], historico, valor, saldo });
+    }
+    return rows;
+  }
+
+  // ── EQI Parser ──
+  function extParseAmountEQI(s) { if (!s) return null; const n = parseFloat(s.replace(/\./g,'').replace(',','.')); return isNaN(n) ? null : n; }
+  function extIsFinancialEQI(s) { return /^-?[\d\.]+,\d{2}$/.test(s); }
+  function extClassifyTipoEQI(desc) {
+    const u = desc.toUpperCase();
+    if (u.includes('RESGATE DE COTAS')) return 'Resgate';
+    if (u.includes('AQUISICAO DE COTAS')||u.includes('AQUISIÇÃO DE COTAS')) return 'Integralização';
+    if (u.includes('AMORTIZAÇÃO DO FUNDO')||u.includes('AMORTIZACAO DO FUNDO')) return 'Amortização';
+    if (u.includes('CUPOM')) return 'Juros CRA/CRI';
+    if (u.includes('VLR. AMORTIZ')||u.includes('VLR . AMORTIZ')) return 'Amortização CRI/CRA';
+    if (u.includes('VENCIMENTO')) return 'Vencimento CRA/CRI';
+    if (u.includes('RENDIMENTO')) return 'Rendimento';
+    if (u.includes('COMPRA')) return 'Compra';
+    if (u.includes('REMUNERADA')) return 'Conta Remunerada';
+    return 'Outro';
+  }
+  function extParseEQIFundMovs(text) {
+    const flat = text.replace(/\n/g,' ').replace(/\s{2,}/g,' ');
+    const result = {};
+    const parts = flat.split(/ovimenta.{0,5}o\s*[-–]\s*/i);
+    for (let pi = 1; pi < parts.length; pi++) {
+      const part = parts[pi];
+      const nameMatch = part.match(/^([A-Za-z][A-Za-z0-9\s\.\-ÁÉÍÓÚÂÊÎÔÛÃÕÀÇáéíóúâêîôûãõàç]{2,80}?)(?=\s+\d{2}\/\d{2}\/|\s+[Dd]\s*[Aa])/);
+      if (!nameMatch) continue;
+      const fundName = nameMatch[1].trim().toUpperCase();
+      const totalIdx = part.search(/[Tt]\s*otal\s+de\s+[Aa]|[Tt]\s*otal\s+de\s+[Rr]/i);
+      const secText = totalIdx >= 0 ? part.slice(0, totalIdx) : part;
+      const dates = [...secText.matchAll(/\d{2}\/\d{2}\/\d{2,4}/g)];
+      const movs = [];
+      for (let di = 0; di < dates.length; di++) {
+        const dPos = dates[di].index; const dEnd = di+1<dates.length?dates[di+1].index:secText.length;
+        const seg = secText.slice(dPos, dEnd); const dateStr = dates[di][0]; const segU = seg.toUpperCase();
+        let tipo = null;
+        if (segU.includes('RESGATE')) tipo = 'RESGATE';
+        else if (segU.includes('AMORTIZA')) tipo = 'AMORTIZAÇÃO';
+        else if (segU.includes('APLICA')) tipo = 'APLICAÇÃO';
+        if (!tipo) continue;
+        const finNums = (seg.match(/-?[\d\.]+,\d+/g)||[]).filter(n => extIsFinancialEQI(n));
+        if (finNums.length < 2) continue;
+        const bruto = Math.abs(extParseAmountEQI(finNums[0])); const liq = Math.abs(extParseAmountEQI(finNums[finNums.length-1]));
+        let d = dateStr; if (d.length===8) { const p=d.split('/'); d=`${p[0]}/${p[1]}/20${p[2]}`; }
+        movs.push({ date:d, tipo, bruto, liq });
+      }
+      if (movs.length > 0) result[fundName] = movs;
+    }
+    return result;
+  }
+  function extFindEQIGross(fundMovs, ccDesc, ccValor, ccTipo) {
+    const absLiq = Math.abs(ccValor); const targetTipo = ccTipo==='Resgate'?'RESGATE':'AMORTIZAÇÃO';
+    const u = ccDesc.toUpperCase(); let fundHint = '';
+    const m1 = u.match(/(?:RESGATE|AQUISICAO|AQUISIÇÃO)\s+DE\s+COTAS\s+(?:NO\s+FUNDO\s+[-–]?\s*)(\w[\w\s]+)/);
+    if (m1) fundHint = m1[1].trim();
+    const m2 = u.match(/AMORTIZA[ÇC][AÃ]O\s+DO\s+FUNDO\s+(\w[\w\s]+)/);
+    if (m2) fundHint = m2[1].trim();
+    function sumByDate(movs) { const bd={}; for (const mov of movs.filter(m=>m.tipo===targetTipo)) { if (!bd[mov.date]) bd[mov.date]={bruto:0,liq:0}; bd[mov.date].bruto+=mov.bruto; bd[mov.date].liq+=mov.liq; } return bd; }
+    function searchFund(fname) { const bd=sumByDate(fundMovs[fname]); for (const v of Object.values(bd)) { if (Math.abs(v.liq-absLiq)<0.02) return v.bruto; } for (const mov of fundMovs[fname].filter(m=>m.tipo===targetTipo)) { if (Math.abs(mov.liq-absLiq)<0.02) return mov.bruto; } return null; }
+    if (fundHint) { const hw=fundHint.split(/\s+/).filter(w=>w.length>2); let bf=null,bs=0; for (const fn of Object.keys(fundMovs)) { const s=hw.filter(w=>fn.includes(w)).length; if(s>bs){bs=s;bf=fn;} } if (bf&&bs>0) { const f=searchFund(bf); if(f!==null) return f; } }
+    for (const fn of Object.keys(fundMovs)) { const f=searchFund(fn); if(f!==null) return f; }
+    return null;
+  }
+  function extParseEQICC(text, fundMovs, mapping) {
+    const flat = text.replace(/\n/g,' ').replace(/\s{2,}/g,' ');
+    const ccStartMatch = flat.match(/orrente\s*[-–]?\s*[Mm].{0,10}ovimenta/i);
+    if (!ccStartMatch) { extLog('Seção Conta Corrente não encontrada','err'); return []; }
+    const ccStart = ccStartMatch.index; const afterCC = flat.slice(ccStart);
+    const endA=afterCC.search(/[Ss]\s*aldo\s+[Ff]\s*inal/i); const endB=afterCC.search(/[Tt]\s*otal\s+de\s+[Cc]/i);
+    const endOffset=Math.min(endA>=0?endA:Infinity,endB>=0?endB:Infinity,10000);
+    const ccText=flat.slice(ccStart,ccStart+endOffset); const ccDates=[...ccText.matchAll(/\d{2}\/\d{2}\/\d{2,4}/g)];
+    extLog(`Seção CC: ${ccText.length} chars, ${ccDates.length} datas`,'ok');
+    const rows=[];
+    for (let i=0;i<ccDates.length;i++) {
+      const dPos=ccDates[i].index; const dEnd=i+1<ccDates.length?ccDates[i+1].index:ccText.length;
+      const seg=ccText.slice(dPos,dEnd).trim(); const dateStr=ccDates[i][0];
+      let dateNorm=dateStr; if(dateNorm.length===8){const p=dateNorm.split('/');dateNorm=`${p[0]}/${p[1]}/20${p[2]}`;}
+      const finNums=(seg.match(/-?[\d\.]+,\d+/g)||[]).filter(n=>extIsFinancialEQI(n));
+      const hasBareTrailingDash=/[-–]\s*$/.test(seg.replace(/-?[\d\.]+,\d+/g,'').trim());
+      let valor,saldo;
+      if(finNums.length>=2){valor=extParseAmountEQI(finNums[0]);saldo=extParseAmountEQI(finNums[1]);}
+      else if(finNums.length===1&&hasBareTrailingDash){valor=extParseAmountEQI(finNums[0]);saldo=null;}
+      else continue;
+      let desc=seg.slice(dateStr.length).replace(/-?[\d\.]+,\d+/g,'').replace(/\s+/g,' ').trim();
+      desc=desc.replace(/^\d{9}\s*[-–]\s*/,'');
+      const bleedIdx=desc.search(/\s+[Dd]\s*is[cl]|[Ss]eção com|[Oo]uvidoria/i);
+      if(bleedIdx>4) desc=desc.slice(0,bleedIdx);
+      desc=desc.replace(/[-–\s.]+$/,'').trim();
+      if(desc.length<4&&i>0){const prevSeg=ccText.slice(ccDates[i-1].index,dPos);const prevFin=[...prevSeg.matchAll(/-?[\d\.]+,\d+/g)].filter(m=>extIsFinancialEQI(m[0]));if(prevFin.length>0){const le=prevFin[prevFin.length-1].index+prevFin[prevFin.length-1][0].length;let orp=prevSeg.slice(le).replace(/\s+/g,' ').trim();orp=orp.replace(/[-–\s.]+$/,'').replace(/^[-–\s]+/,'').trim();if(orp.length>=4)desc=orp;}}
+      if(!desc||desc.length<4||desc.length>200) continue;
+      if(/^[Ss]aldo\s+[Aa]|[Dd]isclai|[Tt]otal\s+de|^[Ss]aldo\s+[Ff]|^[Ss]aldo\s+[Cc]|endimento\s+[Pp]rovisionado/i.test(desc)) continue;
+      const tipo=extClassifyTipoEQI(desc); const needsGross=(tipo==='Resgate'||tipo==='Amortização');
+      let valorFinal=valor; let isGross=!needsGross;
+      if(needsGross){const found=extFindEQIGross(fundMovs,desc,valor,tipo);if(found!==null){valorFinal=valor<0?-found:found;isGross=true;}}
+      const cnpj=['IRRF','IOF'].includes(tipo)?'—':extLookupCNPJ(desc,mapping);
+      rows.push({dataMov:dateNorm,dataLiq:dateNorm,historico:desc,valor:valorFinal,valorLiq:valor,saldo:saldo??0,tipo,cnpj,isGross,needsGross});
+    }
+    return rows;
+  }
+  function extParseEQI(text, mapping) {
+    const fundMovs = extParseEQIFundMovs(text);
+    const n = Object.keys(fundMovs).length;
+    extLog(`Seções de movimentação: ${n}`, n>0?'ok':'warn');
+    Object.entries(fundMovs).forEach(([name,movs]) => extLog(`  · ${name.slice(0,45)} (${movs.length} mov.)`,''));
+    const rows = extParseEQICC(text, fundMovs, mapping);
+    const notMatched = rows.filter(r=>r.needsGross&&!r.isGross);
+    if (notMatched.length>0) extLog(`${notMatched.length} linha(s) sem bruto — valor líquido mantido`,'warn');
+    return rows;
+  }
+
+  // ── Process ──
+  async function extProcessAll() {
+    if (!extSelectedFiles.length) return;
+    document.getElementById('extPreviewSection').classList.remove('visible');
+    document.getElementById('extStatusBox').innerHTML='';
+    document.getElementById('extStatusBox').classList.add('visible');
+    document.getElementById('extBtnProcess').disabled=true;
+    extAllProcessedRows=[];
+    const mapping=extGetMappingRows();
+    const fill=document.getElementById('extProgressFill');
+    const plabel=document.getElementById('extProgressLabel');
+    document.getElementById('extProgressWrap').classList.add('visible');
+
+    for (let i=0;i<extSelectedFiles.length;i++) {
+      const f=extSelectedFiles[i];
+      fill.style.width=Math.round((i/extSelectedFiles.length)*100)+'%';
+      plabel.textContent=`Processando ${i+1} de ${extSelectedFiles.length}: ${f.name}`;
+      extLog(`── ${f.name}`,'head'); extSetFileStatus(f,'processando...','');
+      try {
+        const text=await extExtractText(f);
+        const sheetName=extGetSheetName(text,f.name);
+        extLog(`Cliente: "${sheetName}"`,'ok');
+        let rows;
+        if (extCurrentBroker==='XP') {
+          const rawRows=extParseXP(text);
+          if(!rawRows.length){extLog('Nenhuma transação encontrada','err');extSetFileStatus(f,'erro','file-status-err');continue;}
+          rows=rawRows.map(r=>{const tipo=extClassifyTipoXP(r.historico);const cnpj=['IOF','IRRF'].includes(tipo)?'—':extLookupCNPJ(r.historico,mapping);return{...r,tipo,cnpj,isGross:true,needsGross:false};});
+        } else {
+          rows=extParseEQI(text,mapping);
+          if(!rows.length){extLog('Nenhuma transação na Conta Corrente encontrada','err');extSetFileStatus(f,'erro','file-status-err');continue;}
+        }
+        extAllProcessedRows.push({sheetName,rows,filename:f.name});
+        extLog(`${rows.length} transações · aba: "${sheetName}"`,'ok');
+        extSetFileStatus(f,`✓ ${rows.length} transações`,'file-status-ok');
+      } catch(e) {
+        extLog('Erro: '+e.message,'err'); console.error(e); extSetFileStatus(f,'erro','file-status-err');
+      }
+    }
+    fill.style.width='100%';
+    plabel.textContent=`Concluído — ${extAllProcessedRows.length} de ${extSelectedFiles.length} arquivo(s)`;
+    if (extAllProcessedRows.length>0) { extRenderPreview(extAllProcessedRows); extLog(`Pronto! ${extAllProcessedRows.length} aba(s) gerada(s).`,'ok'); }
+    document.getElementById('extBtnProcess').disabled=false;
+  }
+
+  function extLog(msg, type='') {
+    const box=document.getElementById('extStatusBox');
+    const cls=type==='ok'?'ext-log-ok':type==='warn'?'ext-log-warn':type==='err'?'ext-log-err':type==='head'?'ext-log-head':'';
+    box.innerHTML+=`<div class="${cls}">› ${msg}</div>`;
+    box.scrollTop=box.scrollHeight;
+  }
+
+  function extFmtVal(n) { if(n==null) return '—'; return 'R$ '+Math.abs(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+  function extRenderPreview(sheets) {
+    document.getElementById('extPreviewSection').classList.add('visible');
+    const totalTx=sheets.reduce((s,sh)=>s+sh.rows.length,0);
+    const totalIn=sheets.flatMap(s=>s.rows).filter(r=>r.valor>0).reduce((s,r)=>s+r.valor,0);
+    const totalOut=sheets.flatMap(s=>s.rows).filter(r=>r.valor<0).reduce((s,r)=>s+r.valor,0);
+    document.getElementById('extSummaryChips').innerHTML=`
+      <div class="ext-chip">Clientes <span>${sheets.length}</span></div>
+      <div class="ext-chip">Transações <span>${totalTx}</span></div>
+      <div class="ext-chip">Entradas <span style="color:#4caf82">${extFmtVal(totalIn)}</span></div>
+      <div class="ext-chip">Saídas <span style="color:#e05555">${extFmtVal(Math.abs(totalOut))}</span></div>`;
+    const table=document.getElementById('extPreviewTable');
+    const isEQI=extCurrentBroker==='EQI';
+    table.innerHTML=`<thead><tr><th>Aba</th><th>CNPJ</th><th>Data</th><th>Descrição</th><th>Valor${isEQI?' (bruto)':''}</th><th>Saldo</th><th>Tipo</th></tr></thead>`;
+    const tbody=document.createElement('tbody');
+    let count=0;
+    for (const sh of sheets) {
+      for (const r of sh.rows) {
+        if(count++>60) break;
+        const tr=document.createElement('tr');
+        const valCls=r.valor<0?'td-neg':'td-pos';
+        const cnpjCls=r.cnpj==='—'?'td-na':'td-cnpj';
+        const hist=r.historico.length>38?r.historico.slice(0,37)+'…':r.historico;
+        tr.innerHTML=`<td class="td-sheet">${sh.sheetName}</td><td class="${cnpjCls}">${r.cnpj}</td><td>${r.dataMov}</td><td title="${r.historico}">${hist}</td><td class="${valCls}">${r.valor<0?'-':'+'}${extFmtVal(Math.abs(r.valor))}</td><td>${extFmtVal(r.saldo)}</td><td>${r.tipo}</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+    if(totalTx>60){const tr=document.createElement('tr');tr.innerHTML=`<td colspan="7" style="text-align:center;color:var(--gray);padding:0.8rem;font-size:0.68rem;">… e mais ${totalTx-60} transações no Excel</td>`;tbody.appendChild(tr);}
+    table.appendChild(tbody);
+    document.getElementById('extBtnDownload').onclick=extDownloadExcel;
+  }
+
+  function extDownloadExcel() {
+    const wb=XLSX.utils.book_new();
+    const isEQI=extCurrentBroker==='EQI';
+    const header=isEQI?['CNPJ','Data','Descrição','Valor Bruto (R$)','Valor Líquido (R$)','Saldo (R$)','Tipo']:['CNPJ','Data Mov.','Data Liq.','Histórico','Valor (R$)','Saldo (R$)','Tipo'];
+    const usedNames=new Set();
+    for (const sh of extAllProcessedRows) {
+      let name=sh.sheetName.slice(0,31); let suffix=2;
+      while(usedNames.has(name)){name=sh.sheetName.slice(0,28)+'_'+suffix++;} usedNames.add(name);
+      let data;
+      if(isEQI){data=[header,...sh.rows.map(r=>[r.cnpj,r.dataMov,r.historico,r.valor,r.valorLiq!==undefined?r.valorLiq:r.valor,r.saldo,r.tipo])];}
+      else{data=[header,...sh.rows.map(r=>[r.cnpj,r.dataMov,r.dataLiq,r.historico,r.valor,r.saldo,r.tipo])];}
+      const ws=XLSX.utils.aoa_to_sheet(data);
+      ws['!cols']=(isEQI?[22,13,50,16,16,14,16]:[22,13,13,50,14,14,16]).map(w=>({wch:w}));
+      XLSX.utils.book_append_sheet(wb,ws,name);
+    }
+    const today=new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb,`extratos_${extCurrentBroker.toLowerCase()}_${today}.xlsx`);
+  }
+
+
+
 </script>
 </body>
 </html>
