@@ -506,8 +506,10 @@
           <h3>Templates do Mês</h3>
           <p style="font-size:0.8rem;color:var(--gray);margin-bottom:1rem;line-height:1.7;">
             Use <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{nome}}</code>,
-            <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{desempenho}}</code> e
-            <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{valor}}</code>
+            <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{desempenho}}</code>,
+            <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{valor}}</code>,
+            <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{link_relatorio}}</code> (URL do PDF) e
+            <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{btn_relatorio}}</code> (botão de download)
             para personalizar cada email. O email suporta formatação HTML e já inclui a assinatura da EH automaticamente.
           </p>
 
@@ -610,7 +612,7 @@ Qualquer dúvida, estou à disposição.</pre>
           </div>
           <div style="overflow-x:auto;margin-top:0.8rem;">
             <table id="clientsTable">
-              <thead><tr><th>Email</th><th>Nome</th><th>% do CDI</th><th>Valor do Serviço</th><th></th></tr></thead>
+              <thead><tr><th>Email</th><th>Nome</th><th>% do CDI</th><th>Valor do Serviço</th><th>Relatório PDF</th><th></th></tr></thead>
               <tbody id="clientsTableBody"></tbody>
             </table>
           </div>
@@ -1016,6 +1018,19 @@ Qualquer dúvida, estou à disposição.</pre>
         <div id="db-${id}" style="margin-top:0.3rem;"></div>
       </td>
       <td><input type="text" placeholder="ex: R$ 1.500,00" value="${data.valor||''}" /></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <label id="pdf-label-${id}" style="font-size:0.65rem;color:var(--gray);cursor:pointer;display:flex;align-items:center;gap:0.4rem;white-space:nowrap;">
+            <input type="file" accept=".pdf" style="display:none;" onchange="onPdfSelect(event,'${id}')" />
+            <span id="pdf-btn-${id}" style="background:rgba(212,130,10,0.12);border:1px solid var(--border);color:var(--gold);padding:0.25rem 0.6rem;font-size:0.62rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;transition:background 0.2s;">
+              + PDF
+            </span>
+          </label>
+          <span id="pdf-name-${id}" style="font-size:0.65rem;color:var(--gray);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+          <div id="pdf-spinner-${id}" style="display:none;width:12px;height:12px;border:2px solid rgba(212,130,10,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;"></div>
+        </div>
+        <input type="hidden" id="pdf-url-${id}" value="" />
+      </td>
       <td><button onclick="removeRow('${id}')" style="background:none;border:none;color:#e05555;cursor:pointer;font-size:1rem;padding:0.3rem;">✕</button></td>`;
     document.getElementById('clientsTableBody').appendChild(tr);
     updateBadge(id);
@@ -1023,6 +1038,39 @@ Qualquer dúvida, estou à disposição.</pre>
 
   function removeRow(id) { document.getElementById('row-' + id)?.remove(); clientRows = clientRows.filter(r => r !== id); }
   function clearAllRows() { document.getElementById('clientsTableBody').innerHTML = ''; clientRows = []; }
+
+  async function onPdfSelect(event, id) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const nameEl    = document.getElementById('pdf-name-' + id);
+    const spinner   = document.getElementById('pdf-spinner-' + id);
+    const urlInput  = document.getElementById('pdf-url-' + id);
+    const btnEl     = document.getElementById('pdf-btn-' + id);
+
+    nameEl.textContent = file.name.length > 16 ? file.name.slice(0,14) + '…' : file.name;
+    spinner.style.display = 'block';
+    btnEl.textContent = '...';
+
+    try {
+      const sanitize = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9._-]/g,'_').replace(/_+/g,'_');
+      const filePath = `email-reports/${Date.now()}_${sanitize(file.name)}`;
+      const { error: se } = await sb.storage.from('reports').upload(filePath, file, { contentType: 'application/pdf', upsert: false });
+      if (se) throw se;
+      const { data: urlData } = sb.storage.from('reports').getPublicUrl(filePath);
+      urlInput.value = urlData.publicUrl;
+      btnEl.textContent = '✓';
+      btnEl.style.color = '#4caf82';
+      btnEl.style.borderColor = 'rgba(76,175,130,0.4)';
+      btnEl.style.background = 'rgba(76,175,130,0.08)';
+    } catch(e) {
+      btnEl.textContent = '✕';
+      btnEl.style.color = '#e05555';
+      nameEl.textContent = 'Erro no upload';
+      console.error('PDF upload error:', e);
+    }
+    spinner.style.display = 'none';
+  }
 
   function updateBadge(id) {
     const input = document.getElementById('di-' + id);
@@ -1039,8 +1087,15 @@ Qualquer dúvida, estou à disposição.</pre>
     return clientRows.map(id => {
       const row = document.getElementById('row-' + id);
       if (!row) return null;
-      const inputs = row.querySelectorAll('input');
-      return { email: inputs[0].value.trim(), nome: inputs[1].value.trim(), desempenho: inputs[2].value.trim(), valor: inputs[3].value.trim() };
+      const inputs = row.querySelectorAll('input[type="email"], input[type="text"]');
+      const pdfUrl = document.getElementById('pdf-url-' + id)?.value || '';
+      return {
+        email:       inputs[0].value.trim(),
+        nome:        inputs[1].value.trim(),
+        desempenho:  inputs[2].value.trim(),
+        valor:       inputs[3].value.trim(),
+        link_relatorio: pdfUrl
+      };
     }).filter(r => r && r.email && r.nome);
   }
 
@@ -1049,7 +1104,15 @@ Qualquer dúvida, estou à disposição.</pre>
     const up  = num >= 100;
     const subj = document.getElementById(up ? 'subjectAcima' : 'subjectAbaixo').value;
     const body = document.getElementById(up ? 'templateAcima' : 'templateAbaixo').value;
-    const r = s => s.replace(/{{nome}}/g, client.nome).replace(/{{desempenho}}/g, client.desempenho).replace(/{{valor}}/g, client.valor);
+    const linkHtml = client.link_relatorio
+      ? `<p style="margin-top:16px;"><a href="${client.link_relatorio}" style="display:inline-block;background:#D4820A;color:#081537;padding:10px 22px;text-decoration:none;font-weight:700;font-size:13px;">↓ Baixar Relatório</a></p>`
+      : '';
+    const r = s => s
+      .replace(/{{nome}}/g, client.nome)
+      .replace(/{{desempenho}}/g, client.desempenho)
+      .replace(/{{valor}}/g, client.valor)
+      .replace(/{{link_relatorio}}/g, client.link_relatorio || '')
+      .replace(/{{btn_relatorio}}/g, linkHtml);
     return { subject: r(subj), body: r(body), up };
   }
 
