@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root {
       --navy:      #0D1E4E;
@@ -1008,6 +1009,164 @@
     ARROJADO: `Você busca possibilidade de maiores ganhos e aceita correr mais riscos. É um investidor que busca a boa rentabilidade ofertada pela renda variável, estando disposto a suportar mais risco na busca de melhores resultados.\n\nPrincipais produtos recomendados: Ações, Derivativos, Mercado Futuro, Fundos de Ações, Fundos Cambiais, Fundos Multimercado Arrojados.`
   };
 
+  // ── PDF GENERATION ──
+  function generatePdfBase64(title, bodyLines) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    const maxW = pageW - margin * 2;
+    let y = margin;
+
+    // Header with gold line
+    doc.setDrawColor(212, 130, 10);
+    doc.setLineWidth(0.8);
+    doc.line(margin, y, pageW - margin, y);
+    y += 6;
+
+    // Logo text
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(13, 30, 78);
+    doc.text('EH INVESTIMENTOS', margin, y);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(138, 155, 184);
+    doc.text('GESTÃO FINANCEIRA', margin, y + 5);
+    y += 14;
+
+    doc.setDrawColor(212, 130, 10);
+    doc.line(margin, y, pageW - margin, y);
+    y += 10;
+
+    // Title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(13, 30, 78);
+    const titleLines = doc.splitTextToSize(title, maxW);
+    doc.text(titleLines, pageW / 2, y, { align: 'center' });
+    y += titleLines.length * 7 + 8;
+
+    // Body
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(40, 40, 40);
+
+    for (const line of bodyLines) {
+      if (line.type === 'heading') {
+        if (y > pageH - 40) { doc.addPage(); y = margin; }
+        y += 4;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(13, 30, 78);
+        doc.text(line.text, margin, y);
+        y += 6;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(40, 40, 40);
+      } else if (line.type === 'divider') {
+        y += 2;
+        doc.setDrawColor(200, 212, 232);
+        doc.setLineWidth(0.3);
+        doc.line(margin, y, pageW - margin, y);
+        y += 4;
+      } else if (line.type === 'spacer') {
+        y += line.size || 4;
+      } else {
+        const wrapped = doc.splitTextToSize(line.text || '', maxW);
+        for (const wline of wrapped) {
+          if (y > pageH - 25) { doc.addPage(); y = margin; }
+          doc.text(wline, margin, y);
+          y += 5.5;
+        }
+      }
+    }
+
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(138, 155, 184);
+      doc.setDrawColor(212, 130, 10);
+      doc.setLineWidth(0.4);
+      doc.line(margin, pageH - 12, pageW - margin, pageH - 12);
+      doc.text(`EH Investimentos — Gestão Financeira`, margin, pageH - 7);
+      doc.text(`Página ${i} de ${pageCount}`, pageW - margin, pageH - 7, { align: 'right' });
+    }
+
+    return doc.output('datauristring').split(',')[1];
+  }
+
+  // ── DOCUMENT CONTENT BUILDERS ──
+  function buildSuitabilityLines(nome, cpf, hoje, perfil, pontos) {
+    const cpfFmt = cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    return [
+      { type: 'heading', text: 'DADOS DO INVESTIDOR' },
+      { text: `Data: ${hoje}` },
+      { text: `Nome: ${nome}` },
+      { text: `CPF: ${cpfFmt}` },
+      { type: 'spacer', size: 4 },
+      { type: 'heading', text: 'RESULTADO' },
+      { text: `Pontuação total: ${pontos} pontos` },
+      { text: `Perfil de Investidor: ${perfil}` },
+      { type: 'spacer', size: 4 },
+      { type: 'heading', text: 'DESCRIÇÃO DO PERFIL' },
+      ...PROFILE_DESC[perfil].split('
+').filter(l => l.trim()).map(l => ({ text: l })),
+      { type: 'spacer', size: 6 },
+      { type: 'divider' },
+      { type: 'spacer', size: 4 },
+      { text: 'Esta condição de perfil é resultante de informações repassadas pelo próprio cliente e o condiciona a investimentos voltados ao seu perfil de risco.' },
+      { type: 'spacer', size: 10 },
+      { text: `Local e Data: Belo Horizonte, ${hoje}` },
+      { type: 'spacer', size: 16 },
+      { text: '___________________________________________________' },
+      { text: `Cliente: ${nome}` },
+      { type: 'spacer', size: 12 },
+      { text: '___________________________________________________' },
+      { text: 'Gestor: Eduardo Barbosa Horta Dos Santos' },
+    ];
+  }
+
+  function buildContratoLines(nome, cpf, rg, ecivil, end, hoje, remuneracao, titulo) {
+    return [
+      { type: 'heading', text: 'PARTES' },
+      { text: `CONTRATANTE: ${nome}, ${ecivil ? ecivil.toLowerCase() : ''}, RG ${rg}, CPF ${cpf}, residente em ${end}.` },
+      { type: 'spacer', size: 3 },
+      { text: 'CONTRATADO: EDUARDO BARBOSA HORTA DOS SANTOS, CPF 026.489.996-20, Rua do Ouro, 1920, apt 502, Serra, Belo Horizonte MG, CEP 30.210-590.' },
+      { type: 'divider' },
+      { type: 'heading', text: 'CLÁUSULA 1 — OBJETO' },
+      { text: 'Prestação de serviço de consultoria de valores mobiliários, compreendendo orientação, recomendação e aconselhamento profissional, independente e individualizado sobre investimentos no mercado de valores mobiliários.' },
+      { type: 'divider' },
+      { type: 'heading', text: 'CLÁUSULA 2 — SERVIÇO DE CONSULTORIA' },
+      { text: 'O CONTRATADO disponibilizará relatórios com oportunidades de investimento, otimização de carteiras, acompanhamento de resultados e rebalanceamentos regulares. A adoção das recomendações é de total responsabilidade do CONTRATANTE.' },
+      { type: 'divider' },
+      { type: 'heading', text: 'CLÁUSULA 3 — REMUNERAÇÃO' },
+      { text: `O CONTRATANTE pagará ao CONTRATADO: ${remuneracao}` },
+      { type: 'spacer', size: 3 },
+      { text: 'Caso rescindido antes de 6 meses, será devido o valor equivalente a 6 meses. Atraso gera juros de 1%/mês + IPCA + multa de 2%.' },
+      { type: 'divider' },
+      { type: 'heading', text: 'CLÁUSULA 4 — DECLARAÇÕES E RESPONSABILIDADE' },
+      { text: 'O CONTRATANTE declara ciência de que as recomendações são opiniões independentes e a decisão final de investimento é de sua exclusiva responsabilidade. Resultados passados não garantem resultados futuros.' },
+      { type: 'divider' },
+      { type: 'heading', text: 'CLÁUSULA 5 — GARANTIAS' },
+      { text: 'O CONTRATADO garante melhores esforços na prestação dos serviços, em conformidade com os requisitos regulamentares e técnicos do mercado. Não garante resultados positivos. Dados da carteira serão mantidos por 5 anos.' },
+      { type: 'divider' },
+      { type: 'heading', text: 'CLÁUSULA 6 — VIGÊNCIA E DISPOSIÇÕES GERAIS' },
+      { text: 'Vigência por prazo indeterminado. Resilição com aviso prévio de 30 dias. Foro: Belo Horizonte/MG.' },
+      { type: 'spacer', size: 6 },
+      { text: `Belo Horizonte, ${hoje}` },
+      { type: 'spacer', size: 16 },
+      { text: '___________________________________________________' },
+      { text: `CONTRATANTE: ${nome}` },
+      { type: 'spacer', size: 12 },
+      { text: '___________________________________________________' },
+      { text: 'CONTRATADO: Eduardo Barbosa Horta Dos Santos' },
+    ];
+  }
+
   // ── BOOT ──
   sb.auth.onAuthStateChange((event, session) => {
     if (event === 'INITIAL_SESSION') {
@@ -1257,8 +1416,9 @@
       const email = cadastro?.email || currentUser.email;
       const hoje  = new Date().toLocaleDateString('pt-BR');
 
-      // Build suitability PDF content as base64 via HTML→ZapSign
-      const suitContent = buildSuitabilityDocHTML(nome, cpf, hoje, suitResult.perfil);
+      // Build suitability PDF
+      const suitLines = buildSuitabilityLines(nome, cpf, hoje, suitResult.perfil, suitResult.pontuacao);
+      const suitBase64 = generatePdfBase64(`RESULTADO DO TESTE DE SUITABILITY`, suitLines);
 
       // Send to ZapSign via proxy (CORS workaround)
       const zapResp = await fetch(ZAPSIGN_PROXY, {
@@ -1268,7 +1428,7 @@
           zapKey: ZAPSIGN_KEY,
           body: {
             name: `Suitability - ${nome}`,
-            base64_pdf: btoa(unescape(encodeURIComponent(suitContent))),
+            base64_pdf: suitBase64,
             signers: [{
               name: nome,
               email: email,
@@ -1447,7 +1607,12 @@
 
       const titulo = contractType === 'percentual' ? 'CONTRATO DE ADMINISTRAÇÃO DE CARTEIRA' : 'CONTRATO DE CONSULTORIA DE INVESTIMENTOS';
 
-      const contratoHTML = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+      // Build contract PDF
+      const contratoLines = buildContratoLines(nome, cpf, rg, ecivil, end, hoje, remuneracao, titulo);
+      const contratoBase64 = generatePdfBase64(titulo, contratoLines);
+
+      // KEEP this for reference but use base64 below
+      const contratoHTML_unused = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
         <style>body{font-family:Arial,sans-serif;font-size:11px;line-height:1.7;color:#111;margin:40px;} h2{text-align:center;font-size:13px;margin-bottom:20px;} h3{font-size:12px;margin:16px 0 6px;} p{margin:6px 0;} .sig{margin-top:50px;}</style>
         </head><body>
         <h2>${titulo}</h2>
@@ -1478,7 +1643,7 @@
           zapKey: ZAPSIGN_KEY,
           body: {
             name: `Contrato - ${nome}`,
-            base64_pdf: btoa(unescape(encodeURIComponent(contratoHTML))),
+            base64_pdf: contratoBase64,
             signers: [
               { name: nome, email: email, send_automatic_email: true },
               { name: 'Eduardo Barbosa Horta dos Santos', email: 'contato@eduardohorta.com.br', send_automatic_email: true }
