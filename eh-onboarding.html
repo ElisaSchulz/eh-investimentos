@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EH Investimentos — Bem-vindo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    :root {
+      --navy:      #0D1E4E;
+      --navy-dark: #081537;
+      --navy-mid:  #122460;
+      --gold:      #D4820A;
+      --gold-light:#E8A030;
+      --gold-pale: rgba(212,130,10,0.12);
+      --white:     #FFFFFF;
+      --gray:      #8A9BB8;
+      --gray-light:#C8D4E8;
+      --border:    rgba(212,130,10,0.22);
+      --border-dim:rgba(138,155,184,0.15);
+      --success:   #4caf82;
+      --error:     #e05555;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: var(--navy-dark);
+      color: var(--white);
+      min-height: 100vh;
+    }
+
+    /* ── AUTH GUARD ── */
+    #authGuard {
+      position: fixed; inset: 0; background: var(--navy-dark);
+      display: flex; align-items: center; justify-content: center; z-index: 9999;
+    }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid rgba(212,130,10,0.2);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── LAYOUT ── */
+    .page {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 6rem;
+    }
+
+    /* ── HEADER ── */
+    .ob-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border-dim);
+    }
+
+    .ob-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      text-decoration: none;
+    }
+
+    .ob-logo-text span:first-child {
+      display: block;
+      font-weight: 700;
+      font-size: 0.82rem;
+      letter-spacing: 0.1em;
+      color: var(--white);
+    }
+    .ob-logo-text span:last-child {
+      display: block;
+      font-weight: 300;
+      font-size: 0.58rem;
+      letter-spacing: 0.2em;
+      color: var(--gray);
+      text-transform: uppercase;
+    }
+
+    .ob-logout {
+      font-size: 0.68rem;
+      color: var(--gray);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: 'Montserrat', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: color 0.2s;
+    }
+    .ob-logout:hover { color: var(--gold); }
+
+    /* ── WELCOME ── */
+    .ob-welcome {
+      margin-bottom: 3rem;
+    }
+    .ob-welcome-tag {
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.8rem;
+    }
+    .ob-welcome-tag::before {
+      content: '';
+      display: block;
+      width: 20px; height: 1px;
+      background: var(--gold);
+    }
+    .ob-welcome h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 300;
+      line-height: 1.1;
+      margin-bottom: 0.8rem;
+    }
+    .ob-welcome h1 em { font-style: italic; color: var(--gold-light); }
+    .ob-welcome p {
+      font-size: 0.88rem;
+      color: var(--gray-light);
+      font-weight: 300;
+      line-height: 1.75;
+      max-width: 560px;
+    }
+
+    /* ── STEPS TRACKER ── */
+    .steps-tracker {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border-dim);
+      border: 1px solid var(--border-dim);
+      margin-bottom: 3rem;
+    }
+
+    .step-item {
+      background: var(--navy-dark);
+      padding: 1.2rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .step-num {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--border-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--gray);
+      transition: all 0.3s;
+    }
+
+    .step-item.done .step-num {
+      background: var(--success);
+      border-color: var(--success);
+      color: var(--white);
+    }
+
+    .step-item.active .step-num {
+      background: var(--gold-pale);
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    .step-label {
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gray);
+      transition: color 0.3s;
+    }
+
+    .step-item.active .step-label { color: var(--white); }
+    .step-item.done .step-label { color: var(--success); }
+
+    .step-status {
+      font-size: 0.6rem;
+      color: var(--gray);
+      font-weight: 300;
+    }
+    .step-item.done .step-status { color: var(--success); }
+    .step-item.active .step-status { color: var(--gold); }
+
+    /* ── PANELS ── */
+    .ob-panel { display: none; }
+    .ob-panel.active { display: block; }
+
+    .panel-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem;
+      font-weight: 300;
+      margin-bottom: 0.5rem;
+    }
+    .panel-title em { font-style: italic; color: var(--gold-light); }
+
+    .panel-desc {
+      font-size: 0.82rem;
+      color: var(--gray-light);
+      font-weight: 300;
+      line-height: 1.7;
+      margin-bottom: 2rem;
+    }
+
+    /* ── FORM SECTIONS ── */
+    .form-section {
+      background: rgba(18,36,96,0.3);
+      border: 1px solid var(--border-dim);
+      padding: 1.8rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .form-section-title {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .form-section-title::before {
+      content: '';
+      display: block;
+      width: 16px; height: 1px;
+      background: var(--gold);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .form-grid.cols-1 { grid-template-columns: 1fr; }
+
+    .form-field { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-field.span-2 { grid-column: span 2; }
+    .form-field.span-3 { grid-column: span 3; }
+
+    .form-field label {
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gray);
+    }
+
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(138,155,184,0.22);
+      color: var(--white);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 300;
+      padding: 0.75rem 0.9rem;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+      width: 100%;
+    }
+    .form-field input:focus,
+    .form-field select:focus,
+    .form-field textarea:focus {
+      border-color: var(--gold);
+      background: rgba(212,130,10,0.05);
+    }
+    .form-field input::placeholder,
+    .form-field textarea::placeholder { color: rgba(138,155,184,0.45); }
+    .form-field select option { background: var(--navy); }
+    .form-field textarea { resize: vertical; min-height: 80px; }
+
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .radio-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.7rem;
+      padding: 0.7rem 0.9rem;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .radio-option:hover { background: rgba(212,130,10,0.06); border-color: var(--border); }
+    .radio-option.selected { background: var(--gold-pale); border-color: var(--border); }
+
+    .radio-option input[type="radio"] { display: none; }
+
+    .radio-dot {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      border: 1px solid var(--border-dim);
+      flex-shrink: 0;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .radio-option.selected .radio-dot {
+      border-color: var(--gold);
+      background: var(--gold);
+    }
+    .radio-option.selected .radio-dot::after {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--navy-dark);
+    }
+
+    .radio-text {
+      font-size: 0.78rem;
+      color: var(--gray-light);
+      font-weight: 300;
+      line-height: 1.5;
+    }
+    .radio-option.selected .radio-text { color: var(--white); }
+
+    /* ── SUITABILITY QUESTIONS ── */
+    .suit-question {
+      background: rgba(18,36,96,0.3);
+      border: 1px solid var(--border-dim);
+      padding: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .suit-q-num {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.6rem;
+    }
+
+    .suit-q-text {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--white);
+      line-height: 1.5;
+      margin-bottom: 1.2rem;
+    }
+
+    /* ── CONTRACT PANEL ── */
+    .contract-type-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border-dim);
+      border: 1px solid var(--border-dim);
+      margin-bottom: 1.5rem;
+    }
+
+    .contract-type-btn {
+      background: var(--navy-dark);
+      padding: 1.2rem;
+      cursor: pointer;
+      border: none;
+      font-family: 'Montserrat', sans-serif;
+      text-align: left;
+      transition: background 0.2s;
+    }
+    .contract-type-btn.active { background: var(--gold-pale); border-bottom: 2px solid var(--gold); }
+    .contract-type-btn-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--white);
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+    .contract-type-btn.active .contract-type-btn-name { color: var(--gold-light); }
+    .contract-type-btn-desc {
+      font-size: 0.65rem;
+      color: var(--gray);
+      display: block;
+    }
+
+    .contract-preview {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-dim);
+      padding: 2rem;
+      font-size: 0.8rem;
+      line-height: 1.9;
+      color: var(--gray-light);
+      max-height: 420px;
+      overflow-y: auto;
+      margin-bottom: 1.5rem;
+    }
+    .contract-preview strong { color: var(--white); }
+    .contract-preview h4 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--white);
+      margin: 1.2rem 0 0.4rem;
+    }
+    .contract-preview h4:first-child { margin-top: 0; }
+
+    /* ── RESULT CARD ── */
+    .result-card {
+      border: 1px solid var(--border);
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .result-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px; height: 100%;
+    }
+    .result-card.conservador { background: rgba(76,175,130,0.08); }
+    .result-card.conservador::before { background: #4caf82; }
+    .result-card.moderado { background: rgba(212,130,10,0.08); }
+    .result-card.moderado::before { background: var(--gold); }
+    .result-card.arrojado { background: rgba(100,150,255,0.08); }
+    .result-card.arrojado::before { background: #6496FF; }
+
+    .result-perfil {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 400;
+      margin-bottom: 0.3rem;
+    }
+    .result-perfil.conservador { color: #4caf82; }
+    .result-perfil.moderado { color: var(--gold-light); }
+    .result-perfil.arrojado { color: #6496FF; }
+
+    .result-pontos {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gray);
+      margin-bottom: 1rem;
+    }
+
+    .result-desc {
+      font-size: 0.82rem;
+      color: var(--gray-light);
+      line-height: 1.75;
+      font-weight: 300;
+    }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: var(--gold);
+      color: var(--navy-dark);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      padding: 1rem 2rem;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      width: 100%;
+      margin-top: 1rem;
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--gold-light); transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: none;
+      color: var(--gray);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.8rem 1.5rem;
+      border: 1px solid var(--border-dim);
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+      margin-top: 0.6rem;
+    }
+    .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ── FEEDBACK ── */
+    .feedback {
+      font-size: 0.75rem;
+      padding: 0.7rem 1rem;
+      margin-top: 0.8rem;
+      display: none;
+      line-height: 1.5;
+    }
+    .feedback.success { background: rgba(76,175,130,0.1); border: 1px solid rgba(76,175,130,0.3); color: #80c080; display: block; }
+    .feedback.error { background: rgba(224,85,85,0.1); border: 1px solid rgba(224,85,85,0.3); color: #f08080; display: block; }
+    .feedback.info { background: rgba(212,130,10,0.1); border: 1px solid var(--border); color: var(--gold-light); display: block; }
+
+    /* ── ZAPSIGN WAITING ── */
+    .zapsign-wait {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 2.5rem;
+      background: rgba(18,36,96,0.3);
+      border: 1px solid var(--border-dim);
+      margin-bottom: 1.5rem;
+    }
+    .zapsign-wait svg { color: var(--gold); margin-bottom: 1rem; }
+    .zapsign-wait h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 400;
+      margin-bottom: 0.5rem;
+    }
+    .zapsign-wait p {
+      font-size: 0.82rem;
+      color: var(--gray-light);
+      font-weight: 300;
+      line-height: 1.7;
+      max-width: 400px;
+    }
+
+    /* ── COMPLETED ── */
+    .ob-completed {
+      text-align: center;
+      padding: 3rem 2rem;
+    }
+    .ob-completed-icon {
+      width: 72px; height: 72px;
+      background: rgba(76,175,130,0.12);
+      border: 1px solid rgba(76,175,130,0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      color: #4caf82;
+    }
+    .ob-completed h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.2rem;
+      font-weight: 300;
+      margin-bottom: 0.8rem;
+    }
+    .ob-completed h2 em { font-style: italic; color: var(--gold-light); }
+    .ob-completed p {
+      font-size: 0.88rem;
+      color: var(--gray-light);
+      font-weight: 300;
+      line-height: 1.75;
+      margin-bottom: 2rem;
+    }
+
+    /* ── PROGRESS BAR ── */
+    .ob-progress {
+      height: 2px;
+      background: var(--border-dim);
+      margin-bottom: 2.5rem;
+    }
+    .ob-progress-fill {
+      height: 100%;
+      background: linear-gradient(to right, var(--gold), var(--gold-light));
+      transition: width 0.5s ease;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid.cols-3 { grid-template-columns: 1fr; }
+      .form-field.span-2, .form-field.span-3 { grid-column: span 1; }
+      .steps-tracker { grid-template-columns: repeat(2, 1fr); }
+      .contract-type-selector { grid-template-columns: 1fr; }
+    }
+
+    /* checkbox group */
+    .checkbox-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .checkbox-option {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.5rem 0.7rem;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid transparent;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .checkbox-option:hover { background: rgba(212,130,10,0.06); }
+    .checkbox-option input { accent-color: var(--gold); }
+    .checkbox-option span { font-size: 0.78rem; color: var(--gray-light); }
+  </style>
+</head>
+<body>
+
+<div id="authGuard"><div class="spinner"></div></div>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="ob-header">
+    <a href="index.html" class="ob-logo">
+      <img src="Logo_EH.png" width="32" height="32" alt="EH" style="object-fit:contain;" />
+      <div class="ob-logo-text">
+        <span>EH INVESTIMENTOS</span>
+        <span>Gestão Financeira</span>
+      </div>
+    </a>
+    <button class="ob-logout" onclick="doLogout()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sair
+    </button>
+  </div>
+
+  <!-- WELCOME -->
+  <div class="ob-welcome">
+    <div class="ob-welcome-tag">Bem-vindo à EH Investimentos</div>
+    <h1>Vamos configurar<br/>seu <em>perfil de cliente</em></h1>
+    <p>Complete as etapas abaixo para ativar seu acesso completo ao portal. O processo leva cerca de 10 minutos.</p>
+  </div>
+
+  <!-- PROGRESS BAR -->
+  <div class="ob-progress">
+    <div class="ob-progress-fill" id="progressFill" style="width:0%"></div>
+  </div>
+
+  <!-- STEPS TRACKER -->
+  <div class="steps-tracker">
+    <div class="step-item active" id="step-1">
+      <div class="step-num">1</div>
+      <div class="step-label">Cadastro</div>
+      <div class="step-status">Em andamento</div>
+    </div>
+    <div class="step-item" id="step-2">
+      <div class="step-num">2</div>
+      <div class="step-label">Perfil API</div>
+      <div class="step-status">Pendente</div>
+    </div>
+    <div class="step-item" id="step-3">
+      <div class="step-num">3</div>
+      <div class="step-label">Contrato</div>
+      <div class="step-status">Pendente</div>
+    </div>
+    <div class="step-item" id="step-4">
+      <div class="step-num">4</div>
+      <div class="step-label">Concluído</div>
+      <div class="step-status">Pendente</div>
+    </div>
+  </div>
+
+  <!-- ═══ PANEL 1 — CADASTRO ═══ -->
+  <div class="ob-panel active" id="panel-1">
+    <div class="panel-title">Cadastro <em>pessoal</em></div>
+    <p class="panel-desc">Preencha seus dados pessoais e informações financeiras. Todas as informações são confidenciais e utilizadas apenas para fins de consultoria.</p>
+
+    <!-- Dados pessoais -->
+    <div class="form-section">
+      <div class="form-section-title">Dados Pessoais</div>
+      <div class="form-grid">
+        <div class="form-field span-2"><label>Nome completo *</label><input type="text" id="c_nome" placeholder="Seu nome completo" /></div>
+        <div class="form-field"><label>Nacionalidade *</label>
+          <select id="c_nacionalidade">
+            <option value="">Selecione</option>
+            <option>Brasileiro(a)</option>
+            <option>Outro</option>
+          </select>
+        </div>
+        <div class="form-field"><label>Estado civil *</label>
+          <select id="c_estado_civil">
+            <option value="">Selecione</option>
+            <option>Solteiro(a)</option>
+            <option>Casado(a)</option>
+            <option>União estável</option>
+            <option>Divorciado(a)</option>
+            <option>Viúvo(a)</option>
+          </select>
+        </div>
+        <div class="form-field"><label>Data de nascimento *</label><input type="date" id="c_nascimento" /></div>
+        <div class="form-field"><label>RG (número e órgão) *</label><input type="text" id="c_rg" placeholder="000000000 SSP/MG" /></div>
+        <div class="form-field"><label>CPF *</label><input type="text" id="c_cpf" placeholder="000.000.000-00" /></div>
+        <div class="form-field"><label>Telefone celular *</label><input type="tel" id="c_telefone" placeholder="(00) 00000-0000" /></div>
+        <div class="form-field"><label>Possui dependentes? *</label>
+          <select id="c_dependentes" onchange="toggleDependentes()">
+            <option value="">Selecione</option>
+            <option>Não</option>
+            <option>Sim</option>
+          </select>
+        </div>
+        <div class="form-field span-2" id="c_dependentes_field" style="display:none;">
+          <label>Dependentes (nome e idade)</label>
+          <input type="text" id="c_dependentes_detalhe" placeholder="Ex: Ana, 8 anos; Pedro, 12 anos" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Endereço -->
+    <div class="form-section">
+      <div class="form-section-title">Endereço Residencial</div>
+      <div class="form-grid">
+        <div class="form-field"><label>Tipo de logradouro *</label>
+          <select id="c_logradouro_tipo">
+            <option value="">Selecione</option>
+            <option>Rua</option>
+            <option>Avenida</option>
+            <option>Alameda</option>
+            <option>Estrada</option>
+            <option>Outro</option>
+          </select>
+        </div>
+        <div class="form-field"><label>Nome do logradouro *</label><input type="text" id="c_logradouro_nome" placeholder="Nome da rua/avenida" /></div>
+        <div class="form-field"><label>Número *</label><input type="text" id="c_numero" placeholder="000" /></div>
+        <div class="form-field"><label>Complemento</label><input type="text" id="c_complemento" placeholder="Apto, bloco, etc." /></div>
+        <div class="form-field"><label>Bairro *</label><input type="text" id="c_bairro" /></div>
+        <div class="form-field"><label>Cidade *</label><input type="text" id="c_cidade" /></div>
+        <div class="form-field"><label>Estado *</label><input type="text" id="c_estado" placeholder="MG" /></div>
+        <div class="form-field"><label>CEP *</label><input type="text" id="c_cep" placeholder="00000-000" /></div>
+      </div>
+    </div>
+
+    <!-- Profissão e Renda -->
+    <div class="form-section">
+      <div class="form-section-title">Profissão e Renda</div>
+      <div class="form-grid">
+        <div class="form-field"><label>Profissão ou ocupação *</label><input type="text" id="c_profissao" /></div>
+        <div class="form-field"><label>Tempo na profissão *</label>
+          <select id="c_tempo_profissao">
+            <option value="">Selecione</option>
+            <option>Menos de 1 ano</option>
+            <option>1 a 3 anos</option>
+            <option>3 a 5 anos</option>
+            <option>Mais de 5 anos</option>
+          </select>
+        </div>
+        <div class="form-field"><label>Renda mensal líquida (R$) *</label><input type="number" id="c_renda_mensal" placeholder="0,00" /></div>
+        <div class="form-field"><label>Renda mensal cônjuge (R$)</label><input type="number" id="c_renda_conjuge" placeholder="0,00" /></div>
+        <div class="form-field"><label>Renda extra anual total (R$)</label><input type="number" id="c_renda_extra_anual" placeholder="0,00" /></div>
+        <div class="form-field"><label>Renda familiar total (R$) *</label><input type="number" id="c_renda_familiar_total" placeholder="0,00" /></div>
+        <div class="form-field span-2"><label>Detalhe as fontes de renda extra</label><textarea id="c_renda_extra_detalhe" placeholder="Ex: Aluguel R$3.000/mês, dividendos..."></textarea></div>
+      </div>
+    </div>
+
+    <!-- Despesas -->
+    <div class="form-section">
+      <div class="form-section-title">Despesas e Orçamento</div>
+      <div class="form-grid">
+        <div class="form-field"><label>Despesas essenciais mensais (R$) *</label><input type="number" id="c_despesas_essenciais" placeholder="0,00" /></div>
+        <div class="form-field"><label>Despesas não essenciais mensais (R$) *</label><input type="number" id="c_despesas_nao_essenciais" placeholder="0,00" /></div>
+        <div class="form-field span-2"><label>Controla suas despesas? *</label>
+          <select id="c_controla_despesas">
+            <option value="">Selecione</option>
+            <option>Sim, em planilha</option>
+            <option>Sim, em aplicativo</option>
+            <option>Sim, de forma manual</option>
+            <option>Não controlo com frequência</option>
+          </select>
+        </div>
+        <div class="form-field"><label>Possui dívidas? *</label>
+          <select id="c_possui_dividas" onchange="toggleDividas()">
+            <option value="">Selecione</option>
+            <option>Não</option>
+            <option>Sim</option>
+          </select>
+        </div>
+        <div class="form-field" id="c_dividas_field" style="display:none;"><label>Detalhes das dívidas</label><textarea id="c_detalhe_dividas" placeholder="Tipo, valor, taxa e prazo"></textarea></div>
+      </div>
+    </div>
+
+    <!-- Patrimônio -->
+    <div class="form-section">
+      <div class="form-section-title">Patrimônio e Investimentos</div>
+      <div class="form-grid">
+        <div class="form-field"><label>Imóvel próprio? *</label>
+          <select id="c_imovel" onchange="toggleImovel()">
+            <option value="">Selecione</option>
+            <option>Sim, quitado</option>
+            <option>Sim, financiado</option>
+            <option>Não</option>
+          </select>
+        </div>
+        <div class="form-field" id="c_imovel_valor_field"><label>Valor aproximado do imóvel (R$)</label><input type="number" id="c_valor_imovel" placeholder="0,00" /></div>
+        <div class="form-field"><label>Possui veículo? *</label>
+          <select id="c_veiculo" onchange="toggleVeiculo()">
+            <option value="">Selecione</option>
+            <option>Sim</option>
+            <option>Não</option>
+          </select>
+        </div>
+        <div class="form-field" id="c_veiculo_valor_field"><label>Valor aproximado do veículo (R$)</label><input type="number" id="c_valor_veiculo" placeholder="0,00" /></div>
+        <div class="form-field"><label>Investimentos em liquidez (R$) *</label><input type="number" id="c_investimentos_liquidez" placeholder="Conta corrente, poupança, CDB diário" /></div>
+        <div class="form-field"><label>Total de investimentos (R$) *</label><input type="number" id="c_investimentos_total" placeholder="0,00" /></div>
+        <div class="form-field span-2"><label>Detalhe seus investimentos atuais</label><textarea id="c_investimentos_detalhe" placeholder="Ex: Tesouro Direto R$50k, CDB R$30k, Fundos R$100k..."></textarea></div>
+        <div class="form-field span-2"><label>Investe com assessoria ou corretora específica?</label><input type="text" id="c_assessoria_atual" placeholder="Ex: XP Investimentos, BTG Pactual..." /></div>
+      </div>
+    </div>
+
+    <!-- Seguros -->
+    <div class="form-section">
+      <div class="form-section-title">Seguros e Previdência</div>
+      <div class="form-grid">
+        <div class="form-field"><label>Possui seguro de vida? *</label>
+          <select id="c_seguro_vida" onchange="toggleSeguro()">
+            <option value="">Selecione</option>
+            <option>Sim</option>
+            <option>Não</option>
+          </select>
+        </div>
+        <div class="form-field" id="c_seguro_field"><label>Cobertura e beneficiários</label><input type="text" id="c_seguro_cobertura" placeholder="Ex: R$500k, beneficiária: cônjuge" /></div>
+        <div class="form-field"><label>Possui previdência privada? *</label>
+          <select id="c_previdencia" onchange="togglePrevidencia()">
+            <option value="">Selecione</option>
+            <option>Sim</option>
+            <option>Não</option>
+          </select>
+        </div>
+        <div class="form-field" id="c_prev_field"><label>Detalhes da previdência</label><input type="text" id="c_previdencia_detalhe" placeholder="PGBL, VGBL, valor investido..." /></div>
+      </div>
+    </div>
+
+    <!-- Objetivos -->
+    <div class="form-section">
+      <div class="form-section-title">Objetivos Financeiros</div>
+      <div class="form-grid cols-1">
+        <div class="form-field"><label>Principais objetivos financeiros *</label>
+          <div class="checkbox-group" id="c_objetivos_group">
+            <label class="checkbox-option"><input type="checkbox" value="Formar reserva de emergência" /><span>Formar reserva de emergência</span></label>
+            <label class="checkbox-option"><input type="checkbox" value="Quitar dívidas" /><span>Quitar dívidas</span></label>
+            <label class="checkbox-option"><input type="checkbox" value="Comprar um imóvel" /><span>Comprar um imóvel</span></label>
+            <label class="checkbox-option"><input type="checkbox" value="Aposentadoria / Independência financeira" /><span>Aposentadoria / Independência financeira</span></label>
+            <label class="checkbox-option"><input type="checkbox" value="Educação dos filhos" /><span>Educação dos filhos</span></label>
+            <label class="checkbox-option"><input type="checkbox" value="Viagens" /><span>Viagens</span></label>
+          </div>
+        </div>
+        <div class="form-field"><label>Descreva seus objetivos com detalhes (prazos, valores, prioridade) *</label><textarea id="c_objetivos_detalhe" rows="3" placeholder="Ex: Aposentadoria em 20 anos com R$5M, comprar imóvel em 5 anos por R$800k..."></textarea></div>
+        <div class="form-field"><label>Maior prioridade hoje *</label><input type="text" id="c_maior_prioridade" placeholder="Ex: Independência financeira" /></div>
+        <div class="form-field"><label>Tem grande despesa planejada nos próximos 12 meses? *</label>
+          <select id="c_grande_despesa">
+            <option value="">Selecione</option>
+            <option>Não</option>
+            <option>Sim</option>
+          </select>
+        </div>
+        <div class="form-field"><label>Possui dependentes financeiros fora do núcleo familiar? *</label>
+          <select id="c_dependentes_externos">
+            <option value="">Selecione</option>
+            <option>Não</option>
+            <option>Sim</option>
+          </select>
+        </div>
+        <div class="form-field"><label>Deseja estratégias de sucessão? *</label>
+          <select id="c_sucessao">
+            <option value="">Selecione</option>
+            <option>Sim</option>
+            <option>Não</option>
+            <option>Não sei, gostaria de entender melhor</option>
+          </select>
+        </div>
+        <div class="form-field"><label>Observações adicionais</label><textarea id="c_observacoes" rows="2" placeholder="Qualquer informação relevante..."></textarea></div>
+      </div>
+    </div>
+
+    <div class="feedback" id="fb-cadastro"></div>
+    <button class="btn-primary" onclick="saveCadastro()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+      Salvar e continuar
+    </button>
+  </div>
+
+  <!-- ═══ PANEL 2 — SUITABILITY ═══ -->
+  <div class="ob-panel" id="panel-2">
+    <div class="panel-title">Perfil de <em>Investidor</em></div>
+    <p class="panel-desc">Responda às perguntas abaixo com sinceridade. Não existem respostas certas ou erradas — o objetivo é identificar o perfil mais adequado ao seu momento de vida.</p>
+
+    <div id="suit-questions"></div>
+
+    <div id="suit-result" style="display:none;">
+      <div class="result-card" id="result-card">
+        <div class="result-perfil" id="result-perfil-label"></div>
+        <div class="result-pontos" id="result-pontos-label"></div>
+        <div class="result-desc" id="result-desc-text"></div>
+      </div>
+      <div class="feedback info">
+        O documento de Suitability será gerado automaticamente e enviado para sua assinatura digital via ZapSign. Verifique seu email após clicar em continuar.
+      </div>
+    </div>
+
+    <div class="feedback" id="fb-suit"></div>
+    <button class="btn-primary" id="btn-suit" onclick="calcularSuitability()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+      Calcular meu perfil
+    </button>
+  </div>
+
+  <!-- ═══ PANEL 3 — CONTRATO ═══ -->
+  <div class="ob-panel" id="panel-3">
+    <div class="panel-title">Assinatura do <em>Contrato</em></div>
+    <p class="panel-desc">Leia atentamente o contrato de prestação de serviços. Após confirmar, ele será enviado para sua assinatura digital via ZapSign.</p>
+
+    <div id="contract-content"></div>
+
+    <div class="feedback" id="fb-contrato"></div>
+    <button class="btn-primary" id="btn-contrato" onclick="enviarContrato()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+      Enviar para assinatura
+    </button>
+  </div>
+
+  <!-- ═══ PANEL 4 — CONCLUÍDO ═══ -->
+  <div class="ob-panel" id="panel-4">
+    <div class="ob-completed">
+      <div class="ob-completed-icon">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <h2>Cadastro <em>concluído!</em></h2>
+      <p>Seus documentos foram enviados para assinatura via ZapSign. Após a assinatura, seu acesso ao portal estará completamente ativado.<br/><br/>Você pode acessar o dashboard agora e já visualizar seus relatórios disponíveis.</p>
+      <button class="btn-primary" onclick="window.location.href='eh-cliente-dashboard.html'" style="max-width:320px;margin:0 auto;">
+        Acessar o Portal
+      </button>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+  const SUPABASE_URL = 'https://migyqowqjfhvdcrtryms.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pZ3lxb3dxamZodmRjcnRyeW1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxODU1NjIsImV4cCI6MjA5MDc2MTU2Mn0.kydlPAkhBukqNDeLCS9Uhg-D5jZF9EL8Wi2oCDnY4eI';
+  const ZAPSIGN_KEY  = 'a231a172-989b-44b8-87a9-94672de1d1f0';
+  const ZAPSIGN_URL  = 'https://api.zapsign.com.br/api/v1';
+  const ADMIN_EMAILS = ['elisacmazzo@gmail.com', 'contato@eduardohorta.com.br'];
+
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: false }
+  });
+
+  let currentUser  = null;
+  let currentStep  = 1;
+  let suitResult   = null;
+  let contractType = 'percentual';
+
+  // ── SCORING TABLE ──
+  const SCORING = {
+    1: { 'PÓS GRADUADO/MESTRADO/DOUTORADO':5, 'SUPERIOR':4, '2º GRAU':3, '1º GRAU':2 },
+    2: { 'APESAR DE NÃO TER FORMAÇÃO ACADÊMICA NA ÁREA FINANCEIRA, POSSUO EXPERIÊNCIA PROFISSIONAL PARA TOMAR MINHAS DECISÕES NO MERCADO FINANCEIRO.':8, 'SOU EXPERIENTE, DOMINO TOTALMENTE O MERCADO FINANCEIRO E TOMO DECISÕES, POIS TENHO FORMAÇÃO ACADÊMICA E EXPERIÊNCIA PROFISSIONAL.':6, 'TENHO FORMAÇÃO NA ÁREA FINANCEIRA, CONHEÇO AS REGRAS DO MERCADO FINANCEIRO, MAS NÃO TENHO EXPERIÊNCIA.':4, 'NÃO CONHEÇO OU CONHEÇO POUCO AS REGRAS DO MERCADO FINANCEIRO.':2 },
+    3: { 'NÃO POSSUO PLANOS PARA A UTILIZAÇÃO DESSES RECURSOS.':8, 'PRETENDO MANTER A MAIOR PARTE POR MAIS DE 3 ANOS, UTILIZANDO UMA PEQUENA PARCELA PARA EVENTUAIS EMERGÊNCIAS OU GASTOS IMEDIATOS. INVISTO PARA MINHA APOSENTADORIA.':6, 'PRETENDO UTILIZAR UMA PEQUENA PARTE EM ATÉ 1 ANO E O RESTANTE EM ATÉ 3 ANOS. INVISTO PARA FORMAR PATRIMÔNIO OU OBJETIVOS ESPECÍFICOS (VIAGENS, ADQUIRIR BENS, ETC.)':4, 'PRETENDO UTILIZAR A MAIOR PARTE EM ATÉ 1 ANO E POSSO USÁ-LO PARA EVENTUAIS EMERGÊNCIAS OU GASTOS IMEDIATOS':2 },
+    4: { 'OBTER RENTABILIDADE ELEVADA, ACEITANDO O RISCO DE OSCILAÇÕES E PERDAS EXPRESSIVAS EM ALGUNS PERÍODOS, COM A POSSIBILIDADE DE PERDA DE PRINCIPAL INVESTIDO.':8, 'OBTER RENTABILIDADE ACIMA DO CDI, ACEITANDO O RISCO DE MAIORES OSCILAÇÕES.':6, 'OBTER RENTABILIDADE UM POUCO ACIMA DO CDI, ACEITANDO O RISCO DE PEQUENAS OSCILAÇÕES.':4, 'PRESERVAR O CAPITAL INVESTIDO, SEM RISCO DE PERDAS.':2 },
+    5: { 'PERDAS SUPERIORES A 20%, MESMO QUE APENAS NO CURTO OU MÉDIO PRAZO, ME DEIXAM DESCONFORTÁVEL.':8, 'PERDER ENTRE 10% E 20%, MESMO QUE APENAS NO CURTO OU MÉDIO PRAZO, ME DEIXAM DESCONFORTÁVEL.':6, 'PERDER ATÉ 10%, MESMO QUE APENAS NO CURTO OU MÉDIO PRAZO, ME DEIXAM DESCONFORTÁVEL.':4, 'QUALQUER PERDA ME DEIXA DESCONFORTÁVEL.':2 },
+    6: { 'ACIMA DE R$ 50 MIL':5, 'DE R$ 10 MIL ATÉ R$ 50 MIL':4, 'DE R$ 5 MIL ATÉ R$ 10 MIL':3, 'ATÉ R$ 5 MIL':2 },
+    7: { 'ACIMA DE 50%':8, 'ENTRE 20% E 50%':6, 'ATÉ 20%':4, 'NENHUM':2 },
+    8: { 'ACIMA DE R$ 1.000.000':5, 'DE R$ 500.001 A R$ 1.000.000':4, 'DE R$ 100.001 A R$ 500.000':3, 'ATÉ R$ 100.000':2 },
+    9: { 'MAIS DO QUE 50% EM RENDA VARIÁVEL E O RESTANTE EM RENDA FIXA.':8, 'ENTRE 25% E 50% EM RENDA VARIÁVEL E O RESTANTE EM RENDA FIXA.':6, 'MENOS DE 25% EM RENDA VARIÁVEL E O RESTANTE EM RENDA FIXA.':4, 'SOMENTE INVISTO EM POUPANÇA E RENDA FIXA.':2 },
+    10: { 'NÃO PRECISO DOS RENDIMENTOS DOS MEUS INVESTIMENTOS E PRETENDO AUMENTAR O CAPITAL INVESTIDO.':8, 'NÃO PRECISO DOS RENDIMENTOS DOS MEUS INVESTIMENTOS E NÃO PRETENDO MEXER NO CAPITAL INVESTIDO.':6, 'EVENTUALMENTE POSSO PRECISAR DE UMA PEQUENA PARCELA DOS RENDIMENTOS PARA FAZER FRENTE AOS MEUS GASTOS.':4, 'CONTO COM OS RENDIMENTOS DESTE INVESTIMENTO PARA COMPLEMENTAR MINHA FONTE DE RENDA.':2 },
+    11: { 'POUPANÇA, RENDA FIXA, RENDA VARIÁVEL, MERCADO DE AÇÕES, DERIVATIVOS E/OU PRODUTOS ESTRUTURADOS (COM E SEM CAPITAL PROTEGIDO)':8, 'POUPANÇA, RENDA FIXA, RENDA VARIÁVEL E MERCADO DE AÇÕES':6, 'POUPANÇA, RENDA FIXA (EX.: CDB, TÍTULOS PÚBLICOS, LCI / LCA, FUNDOS DI)':4, 'POUPANÇA':2 },
+    12: { 'EFETUEI MAIS DE 24 APLICAÇÕES':5, 'EFETUEI DE 13 ATÉ 24 APLICAÇÕES':4, 'EFETUEI ATÉ 12 APLICAÇÕES':3, 'NÃO REALIZEI APLICAÇÕES':2 },
+    13: { 'OPEREI COM PRODUTOS DE RENDA FIXA E/OU RENDA VARIÁVEL E/OU DERIVATIVOS COM FINALIDADE DE ESPECULAÇÃO OU ALAVANCAGEM.':8, 'OPEREI COM PRODUTOS OU FUNDOS DE RENDA FIXA E/OU DE RENDA VARIÁVEL E/OU COM DERIVATIVOS COM FINALIDADE DE HEDGE':6, 'OPEREI APENAS COM PRODUTOS OU FUNDOS DE RENDA FIXA NESSE PERÍODO.':4, 'NÃO REALIZEI NENHUMA OPERAÇÃO.':2 }
+  };
+
+  const QUESTIONS = [
+    { n:1,  text:'Qual o seu grau de instrução?' },
+    { n:2,  text:'Como você classificaria a relação de sua formação com a sua experiência no mercado financeiro?' },
+    { n:3,  text:'Em qual prazo você pretende utilizar os recursos investidos?' },
+    { n:4,  text:'Qual é o seu principal objetivo ao investir?' },
+    { n:5,  text:'Você começa a se sentir desconfortável a partir de que percentual de perda do valor investido?' },
+    { n:6,  text:'Qual é a sua faixa de renda mensal declarada?' },
+    { n:7,  text:'Nos últimos 12 meses, que percentual de sua renda mensal você investiu?' },
+    { n:8,  text:'Qual o valor total do seu patrimônio incluindo aplicações financeiras e outros bens (exceto imóvel que reside)?' },
+    { n:9,  text:'Como é a distribuição do seu patrimônio no mercado financeiro?' },
+    { n:10, text:'Com relação aos rendimentos e capital investido, em qual dessas situações você se enquadra?' },
+    { n:11, text:'Quais operações e instrumentos financeiros você tem familiaridade e experiência quanto ao funcionamento e riscos?' },
+    { n:12, text:'Com qual frequência você realizou aplicações nos últimos 12 meses?' },
+    { n:13, text:'Que tipo de operações você realizou frequentemente nos últimos 12 meses?' }
+  ];
+
+  const PROFILE_DESC = {
+    CONSERVADOR: `Você prioriza a segurança como ponto decisivo para as suas aplicações. O ideal é manter percentual maior da sua carteira em produtos de baixo risco. Apesar de ser caracterizado como conservador, poderá investir uma pequena parte em renda variável, mantendo alto percentual em produtos de renda fixa e alta liquidez.\n\nPrincipais produtos recomendados: Títulos Públicos, LCI, LCA, CDB, Fundos de Renda Fixa, Fundos Multimercado Conservadores.`,
+    MODERADO: `Você deseja segurança nos investimentos, mas também quer produtos que proporcionem ganhos melhores no longo prazo. Seu objetivo principal é obter lucros acima dos padrões de renda fixa com exposição moderada à renda variável.\n\nPrincipais produtos recomendados: Fundos Multimercado, Fundos Imobiliários, Ações e Fundos de Ações.`,
+    ARROJADO: `Você busca possibilidade de maiores ganhos e aceita correr mais riscos. É um investidor que busca a boa rentabilidade ofertada pela renda variável, estando disposto a suportar mais risco na busca de melhores resultados.\n\nPrincipais produtos recomendados: Ações, Derivativos, Mercado Futuro, Fundos de Ações, Fundos Cambiais, Fundos Multimercado Arrojados.`
+  };
+
+  // ── BOOT ──
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'INITIAL_SESSION') {
+      if (!session) { window.location.href = 'eh-cliente-login.html'; return; }
+      currentUser = session.user;
+      document.getElementById('authGuard').style.display = 'none';
+      init();
+    }
+  });
+
+  async function init() {
+    buildSuitabilityQuestions();
+    await loadOnboardingState();
+  }
+
+  async function loadOnboardingState() {
+    try {
+      const { data } = await sb.from('onboarding').select('*').eq('user_id', currentUser.id).single();
+      if (data) {
+        if (data.completed || data.skip_onboarding) {
+          window.location.href = 'eh-cliente-dashboard.html';
+          return;
+        }
+        if (data.step_contrato) goToStep(4);
+        else if (data.step_suitability) { await loadContractPanel(); goToStep(3); }
+        else if (data.step_cadastro) goToStep(2);
+        else goToStep(1);
+      } else {
+        goToStep(1);
+      }
+    } catch(e) {
+      goToStep(1);
+    }
+  }
+
+  async function ensureOnboardingRow() {
+    const { data } = await sb.from('onboarding').select('id').eq('user_id', currentUser.id).single();
+    if (!data) {
+      await sb.from('onboarding').insert({ user_id: currentUser.id });
+    }
+  }
+
+  // ── STEP NAVIGATION ──
+  function goToStep(n) {
+    currentStep = n;
+    document.querySelectorAll('.ob-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + n).classList.add('active');
+
+    document.querySelectorAll('.step-item').forEach((el, i) => {
+      el.classList.remove('active', 'done');
+      const stepN = i + 1;
+      if (stepN < n) {
+        el.classList.add('done');
+        el.querySelector('.step-num').innerHTML = '✓';
+        el.querySelector('.step-status').textContent = 'Concluído';
+      } else if (stepN === n) {
+        el.classList.add('active');
+        el.querySelector('.step-status').textContent = 'Em andamento';
+      }
+    });
+
+    const pct = ((n - 1) / 3) * 100;
+    document.getElementById('progressFill').style.width = pct + '%';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── TOGGLE FIELDS ──
+  function toggleDependentes() {
+    const v = document.getElementById('c_dependentes').value;
+    document.getElementById('c_dependentes_field').style.display = v === 'Sim' ? 'contents' : 'none';
+  }
+  function toggleDividas() {
+    const v = document.getElementById('c_possui_dividas').value;
+    document.getElementById('c_dividas_field').style.display = v === 'Sim' ? 'flex' : 'none';
+  }
+  function toggleImovel() {
+    const v = document.getElementById('c_imovel').value;
+    document.getElementById('c_imovel_valor_field').style.display = v === 'Não' ? 'none' : 'flex';
+  }
+  function toggleVeiculo() {
+    const v = document.getElementById('c_veiculo').value;
+    document.getElementById('c_veiculo_valor_field').style.display = v === 'Sim' ? 'flex' : 'none';
+  }
+  function toggleSeguro() {
+    const v = document.getElementById('c_seguro_vida').value;
+    document.getElementById('c_seguro_field').style.display = v === 'Sim' ? 'flex' : 'none';
+  }
+  function togglePrevidencia() {
+    const v = document.getElementById('c_previdencia').value;
+    document.getElementById('c_prev_field').style.display = v === 'Sim' ? 'flex' : 'none';
+  }
+
+  // ── SAVE CADASTRO ──
+  async function saveCadastro() {
+    const required = ['c_nome','c_nacionalidade','c_estado_civil','c_nascimento','c_rg','c_cpf',
+      'c_telefone','c_logradouro_tipo','c_logradouro_nome','c_numero','c_bairro','c_cidade',
+      'c_estado','c_cep','c_profissao','c_tempo_profissao','c_renda_mensal','c_renda_familiar_total',
+      'c_despesas_essenciais','c_despesas_nao_essenciais','c_controla_despesas','c_possui_dividas',
+      'c_imovel','c_veiculo','c_investimentos_liquidez','c_investimentos_total','c_seguro_vida',
+      'c_previdencia','c_objetivos_detalhe','c_maior_prioridade','c_grande_despesa',
+      'c_dependentes_externos','c_sucessao'];
+
+    for (const id of required) {
+      const el = document.getElementById(id);
+      if (el && !el.value.trim()) {
+        showFb('fb-cadastro', 'Por favor, preencha todos os campos obrigatórios (*).', 'error');
+        el.focus();
+        return;
+      }
+    }
+
+    const objetivos = Array.from(document.querySelectorAll('#c_objetivos_group input:checked')).map(cb => cb.value).join(', ');
+
+    const btn = document.querySelector('#panel-1 .btn-primary');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+
+    try {
+      await ensureOnboardingRow();
+      const payload = {
+        user_id: currentUser.id,
+        nome_completo: v('c_nome'), nacionalidade: v('c_nacionalidade'),
+        estado_civil: v('c_estado_civil'), data_nascimento: v('c_nascimento'),
+        rg: v('c_rg'), cpf: v('c_cpf'), email: currentUser.email,
+        telefone: v('c_telefone'), logradouro_tipo: v('c_logradouro_tipo'),
+        logradouro_nome: v('c_logradouro_nome'), numero: v('c_numero'),
+        complemento: v('c_complemento'), bairro: v('c_bairro'),
+        cidade: v('c_cidade'), estado: v('c_estado'), cep: v('c_cep'),
+        profissao: v('c_profissao'), tempo_profissao: v('c_tempo_profissao'),
+        renda_mensal: num('c_renda_mensal'), renda_conjuge: num('c_renda_conjuge'),
+        renda_extra_anual: num('c_renda_extra_anual'), renda_extra_detalhe: v('c_renda_extra_detalhe'),
+        renda_familiar_total: num('c_renda_familiar_total'),
+        despesas_essenciais: num('c_despesas_essenciais'),
+        despesas_nao_essenciais: num('c_despesas_nao_essenciais'),
+        controla_despesas: v('c_controla_despesas'), categorias_gasto: '',
+        possui_dividas: v('c_possui_dividas'), detalhe_dividas: v('c_detalhe_dividas'),
+        imovel_proprio: v('c_imovel'), valor_imovel: num('c_valor_imovel'),
+        possui_veiculo: v('c_veiculo'), valor_veiculo: num('c_valor_veiculo'),
+        investimentos_liquidez: num('c_investimentos_liquidez'),
+        investimentos_detalhe: v('c_investimentos_detalhe'),
+        investimentos_total: num('c_investimentos_total'),
+        assessoria_atual: v('c_assessoria_atual'),
+        seguro_vida: v('c_seguro_vida'), seguro_cobertura: v('c_seguro_cobertura'),
+        previdencia: v('c_previdencia'), previdencia_detalhe: v('c_previdencia_detalhe'),
+        objetivos_financeiros: objetivos, objetivos_detalhe: v('c_objetivos_detalhe'),
+        maior_prioridade: v('c_maior_prioridade'),
+        possui_dependentes: v('c_dependentes'), dependentes_detalhe: v('c_dependentes_detalhe'),
+        dependentes_externos: v('c_dependentes_externos'),
+        grande_despesa_12m: v('c_grande_despesa'),
+        estrategia_sucessao: v('c_sucessao'), observacoes: v('c_observacoes'),
+        updated_at: new Date().toISOString()
+      };
+
+      const { error: ce } = await sb.from('cadastro_clientes').upsert(payload, { onConflict: 'user_id' });
+      if (ce) throw ce;
+
+      await sb.from('onboarding').update({ step_cadastro: true, updated_at: new Date().toISOString() }).eq('user_id', currentUser.id);
+
+      goToStep(2);
+    } catch(e) {
+      showFb('fb-cadastro', 'Erro ao salvar: ' + e.message, 'error');
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg> Salvar e continuar';
+  }
+
+  // ── BUILD SUITABILITY QUESTIONS ──
+  function buildSuitabilityQuestions() {
+    const container = document.getElementById('suit-questions');
+    container.innerHTML = QUESTIONS.map(q => {
+      const options = Object.keys(SCORING[q.n]);
+      return `
+        <div class="suit-question" id="suit-q-${q.n}">
+          <div class="suit-q-num">Pergunta ${q.n} de ${QUESTIONS.length}</div>
+          <div class="suit-q-text">${q.text}</div>
+          <div class="radio-group">
+            ${options.map((opt, i) => `
+              <label class="radio-option" onclick="selectRadio(this, ${q.n})">
+                <input type="radio" name="suit_${q.n}" value="${opt}" />
+                <div class="radio-dot"></div>
+                <div class="radio-text">${capitalizeFirst(opt)}</div>
+              </label>
+            `).join('')}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function selectRadio(label, qn) {
+    const group = label.closest('.radio-group');
+    group.querySelectorAll('.radio-option').forEach(l => l.classList.remove('selected'));
+    label.classList.add('selected');
+    label.querySelector('input').checked = true;
+  }
+
+  function capitalizeFirst(s) {
+    return s.charAt(0) + s.slice(1).toLowerCase();
+  }
+
+  // ── CALCULATE SUITABILITY ──
+  async function calcularSuitability() {
+    const respostas = {};
+    let totalPontos = 0;
+    let allAnswered = true;
+
+    for (const q of QUESTIONS) {
+      const checked = document.querySelector(`input[name="suit_${q.n}"]:checked`);
+      if (!checked) { allAnswered = false; break; }
+      const resp = checked.value;
+      respostas[q.n] = resp;
+      totalPontos += SCORING[q.n][resp] || 0;
+    }
+
+    if (!allAnswered) {
+      showFb('fb-suit', 'Por favor, responda todas as perguntas antes de continuar.', 'error');
+      return;
+    }
+
+    const perfil = totalPontos <= 48 ? 'CONSERVADOR' : totalPontos <= 74 ? 'MODERADO' : 'ARROJADO';
+    suitResult = { respostas, pontuacao: totalPontos, perfil };
+
+    // Show result
+    const card = document.getElementById('result-card');
+    card.className = 'result-card ' + perfil.toLowerCase();
+    document.getElementById('result-perfil-label').textContent = perfil.charAt(0) + perfil.slice(1).toLowerCase();
+    document.getElementById('result-perfil-label').className = 'result-perfil ' + perfil.toLowerCase();
+    document.getElementById('result-pontos-label').textContent = `${totalPontos} pontos`;
+    document.getElementById('result-desc-text').textContent = PROFILE_DESC[perfil];
+    document.getElementById('suit-result').style.display = 'block';
+
+    // Update button
+    document.getElementById('btn-suit').innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Enviar para assinatura via ZapSign`;
+    document.getElementById('btn-suit').onclick = enviarSuitability;
+  }
+
+  async function enviarSuitability() {
+    if (!suitResult) return;
+    const btn = document.getElementById('btn-suit');
+    btn.disabled = true; btn.textContent = 'Enviando para ZapSign...';
+
+    try {
+      const { data: cadastro } = await sb.from('cadastro_clientes').select('nome_completo, cpf, email').eq('user_id', currentUser.id).single();
+      const nome = cadastro?.nome_completo || currentUser.email;
+      const cpf  = cadastro?.cpf || '';
+      const email = cadastro?.email || currentUser.email;
+      const hoje  = new Date().toLocaleDateString('pt-BR');
+
+      // Build suitability PDF content as base64 via HTML→ZapSign
+      const suitContent = buildSuitabilityDocHTML(nome, cpf, hoje, suitResult.perfil);
+
+      // Send to ZapSign
+      const zapResp = await fetch(`${ZAPSIGN_URL}/docs/`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${ZAPSIGN_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: `Suitability - ${nome}`,
+          url_pdf: '',
+          base64_pdf: btoa(unescape(encodeURIComponent(suitContent))),
+          signers: [{
+            name: nome,
+            email: email,
+            phone_country: '55',
+            send_automatic_email: true,
+            send_automatic_whatsapp: false
+          }],
+          lang: 'pt-br',
+          disable_signer_emails: false,
+          signed_file_only_finished: false,
+          brand_logo: 'https://elisaschulz.github.io/eh-investimentos/Logo_EH.png',
+          brand_name: 'EH Investimentos'
+        })
+      });
+
+      const zapData = await zapResp.json();
+
+      if (!zapResp.ok) throw new Error(zapData.detail || JSON.stringify(zapData));
+
+      // Save to DB
+      await sb.from('suitability').upsert({
+        user_id: currentUser.id,
+        respostas: suitResult.respostas,
+        pontuacao: suitResult.pontuacao,
+        perfil: suitResult.perfil,
+        zapsign_token: zapData.token,
+        zapsign_status: 'pending',
+        created_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+
+      await sb.from('onboarding').update({ step_suitability: true, updated_at: new Date().toISOString() }).eq('user_id', currentUser.id);
+
+      // Load and go to contract
+      await loadContractPanel();
+      goToStep(3);
+
+    } catch(e) {
+      showFb('fb-suit', 'Erro ao enviar para ZapSign: ' + e.message, 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Enviar para assinatura via ZapSign';
+    }
+  }
+
+  // ── BUILD SUITABILITY DOC HTML (converted to base64 for ZapSign) ──
+  function buildSuitabilityDocHTML(nome, cpf, data, perfil) {
+    const cpfFmt = cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    const perfilTexto = PROFILE_DESC[perfil];
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+    <style>body{font-family:Arial,sans-serif;font-size:12px;line-height:1.6;color:#111;margin:40px;} h2{text-align:center;font-size:14px;} table{width:100%;border-collapse:collapse;margin:16px 0;} td,th{border:1px solid #ccc;padding:8px;} strong{font-weight:bold;} .sig{margin-top:60px;border-top:1px solid #000;width:60%;display:inline-block;}</style>
+    </head><body>
+    <h2>RESULTADO DO TESTE DE ANÁLISE DO PERFIL DO INVESTIDOR - SUITABILITY</h2>
+    <p><strong>DATA:</strong> ${data}</p>
+    <p><strong>NOME DO INVESTIDOR:</strong> ${nome}</p>
+    <p><strong>CPF:</strong> ${cpfFmt}</p>
+    <p><strong>OBSERVAÇÃO:</strong> O cliente foi avaliado de acordo com os critérios estabelecidos pelo suitability e, em virtude desta análise, informamos que o seu perfil foi enquadrado como:</p>
+    <table><tr><td style="text-align:center;font-size:16px;font-weight:bold;">${perfil}</td></tr></table>
+    <p>${perfilTexto.replace(/\n/g,'<br/>')}</p>
+    <p>Esta condição de perfil é resultante de uma série de informações repassadas pelo próprio cliente, e o condiciona a investimentos voltados ao seu perfil.</p>
+    <p><strong>LOCAL E DATA:</strong> Belo Horizonte, ${data}</p>
+    <br/><br/>
+    <p class="sig"></p><p><strong>CLIENTE:</strong> ${nome}</p>
+    <br/><br/>
+    <p class="sig"></p><p><strong>GESTOR:</strong> Eduardo Barbosa Horta Dos Santos</p>
+    </body></html>`;
+  }
+
+  // ── CONTRACT PANEL ──
+  async function loadContractPanel() {
+    const { data: cadastro } = await sb.from('cadastro_clientes').select('*').eq('user_id', currentUser.id).single();
+    const nome = cadastro?.nome_completo || '';
+    const cpf  = cadastro?.cpf ? cadastro.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '';
+    const rg   = cadastro?.rg || '';
+    const ecivil = cadastro?.estado_civil || '';
+    const end  = [cadastro?.logradouro_tipo, cadastro?.logradouro_nome, cadastro?.numero, cadastro?.complemento, cadastro?.bairro, cadastro?.cidade, cadastro?.estado, 'CEP ' + (cadastro?.cep || '')].filter(Boolean).join(', ');
+    const hoje = new Date().toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' });
+
+    const html = `
+      <div class="contract-type-selector">
+        <button class="contract-type-btn active" id="ct-pct" onclick="selectContractType('percentual')">
+          <span class="contract-type-btn-name">Taxa de Administração</span>
+          <span class="contract-type-btn-desc">Percentual anual sobre o patrimônio</span>
+        </button>
+        <button class="contract-type-btn" id="ct-fix" onclick="selectContractType('fixo')">
+          <span class="contract-type-btn-name">Mensalidade Fixa</span>
+          <span class="contract-type-btn-desc">Valor fixo mensal</span>
+        </button>
+      </div>
+      <div class="form-section" style="margin-bottom:1rem;">
+        <div class="form-section-title">Condições comerciais</div>
+        <div class="form-grid">
+          <div class="form-field" id="taxa-field">
+            <label>Taxa de administração (% ao ano)</label>
+            <input type="number" id="taxa_valor" value="1" step="0.01" min="0" max="10" onchange="updateContractPreview('${nome}','${cpf}','${rg}','${ecivil}','${end}','${hoje}')" />
+          </div>
+          <div class="form-field" id="mensalidade-field" style="display:none;">
+            <label>Mensalidade fixa (R$)</label>
+            <input type="number" id="mensalidade_valor" value="500" onchange="updateContractPreview('${nome}','${cpf}','${rg}','${ecivil}','${end}','${hoje}')" />
+          </div>
+        </div>
+      </div>
+      <div class="contract-preview" id="contract-preview"></div>`;
+
+    document.getElementById('contract-content').innerHTML = html;
+    updateContractPreview(nome, cpf, rg, ecivil, end, hoje);
+  }
+
+  function selectContractType(type) {
+    contractType = type;
+    document.getElementById('ct-pct').classList.toggle('active', type === 'percentual');
+    document.getElementById('ct-fix').classList.toggle('active', type === 'fixo');
+    document.getElementById('taxa-field').style.display = type === 'percentual' ? 'flex' : 'none';
+    document.getElementById('mensalidade-field').style.display = type === 'fixo' ? 'flex' : 'none';
+
+    const inputs = document.querySelectorAll('#contract-content input[onchange]');
+    inputs.forEach(inp => inp.dispatchEvent(new Event('change')));
+  }
+
+  function updateContractPreview(nome, cpf, rg, ecivil, end, hoje) {
+    const taxa = document.getElementById('taxa_valor')?.value || '1';
+    const mens = document.getElementById('mensalidade_valor')?.value || '500';
+    const remuneracao = contractType === 'percentual'
+      ? `${taxa}% de taxa de administração anualizada, calculada diariamente sobre o total sob administração, sendo paga mensalmente calculada pro rata die.`
+      : `R$ ${parseFloat(mens).toLocaleString('pt-BR', {minimumFractionDigits:2})} (${valorPorExtenso(mens)}) mensais, reajustados anualmente pelo IPCA.`;
+
+    const titulo = contractType === 'percentual' ? 'CONTRATO DE ADMINISTRAÇÃO DE CARTEIRA' : 'CONTRATO DE CONSULTORIA DE INVESTIMENTOS';
+
+    document.getElementById('contract-preview').innerHTML = `
+      <h4>${titulo}</h4>
+      <p>Pelo presente instrumento e na melhor forma de direito, as partes:</p>
+      <p><strong>${nome || '[NOME DO CLIENTE]'}</strong>, ${ecivil ? ecivil.toLowerCase() : 'brasileiro(a)'}, RG ${rg || '[RG]'}, CPF ${cpf || '[CPF]'}, residente em ${end || '[ENDEREÇO]'} ("CONTRATANTE"); e</p>
+      <p><strong>EDUARDO BARBOSA HORTA DOS SANTOS</strong>, pessoa física, CPF 026.489.996-20, residente na Rua do Ouro, 1920, apt 502, Bairro Serra, Belo Horizonte MG, CEP 30.210-590 ("CONTRATADO").</p>
+      <h4>CLÁUSULA 1 — OBJETO</h4>
+      <p>Constitui objeto deste contrato a prestação de serviço de consultoria de valores mobiliários, compreendido como o estudo de oportunidades de alocação de capital em títulos e valores mobiliários, orientação, recomendação e aconselhamento de forma profissional, independente e individualizada.</p>
+      <h4>CLÁUSULA 3 — REMUNERAÇÃO</h4>
+      <p>Em contrapartida à prestação dos serviços descritos neste CONTRATO, o CONTRATANTE pagará ao CONTRATADO: <strong>${remuneracao}</strong></p>
+      <p>Caso o contrato seja rescindido antes do prazo de 6 meses, será devido o pagamento referente ao valor contratado calculado para 6 meses. Na hipótese de atraso no pagamento, serão acrescidos juros moratórios de 1% ao mês e correção pelo IPCA, além de multa de 2%.</p>
+      <h4>CLÁUSULA 4 — DECLARAÇÕES E RESPONSABILIDADE</h4>
+      <p>O CONTRATANTE declara ciência de que as recomendações refletirão as opiniões de seus autores de forma independente, e que a decisão final de investimento é de sua exclusiva responsabilidade. Os desempenhos anteriores não são indicativos de resultados futuros.</p>
+      <h4>CLÁUSULA 6 — VIGÊNCIA</h4>
+      <p>Este Contrato vigorará por prazo indeterminado, contado da data de assinatura. Qualquer das partes pode resili-lo com aviso prévio mínimo de 30 dias. Fica eleito o foro de Belo Horizonte/MG.</p>
+      <p style="margin-top:1.5rem;"><strong>Belo Horizonte, ${hoje}</strong></p>
+      <p>___________________________________________________<br/><strong>CONTRATANTE:</strong> ${nome || '[NOME DO CLIENTE]'}</p>
+      <p>___________________________________________________<br/><strong>CONTRATADO:</strong> Eduardo Barbosa Horta Dos Santos</p>`;
+  }
+
+  function valorPorExtenso(v) {
+    const n = parseInt(v);
+    const map = {500:'Quinhentos',600:'Seiscentos',700:'Setecentos',800:'Oitocentos',900:'Novecentos',1000:'Mil'};
+    return map[n] ? map[n] + ' reais' : `${n} reais`;
+  }
+
+  // ── SEND CONTRACT ──
+  async function enviarContrato() {
+    const btn = document.getElementById('btn-contrato');
+    btn.disabled = true; btn.textContent = 'Enviando para ZapSign...';
+
+    try {
+      const { data: cadastro } = await sb.from('cadastro_clientes').select('*').eq('user_id', currentUser.id).single();
+      const nome  = cadastro?.nome_completo || '';
+      const email = cadastro?.email || currentUser.email;
+      const cpf   = cadastro?.cpf ? cadastro.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '';
+      const rg    = cadastro?.rg || '';
+      const ecivil = cadastro?.estado_civil || '';
+      const end   = [cadastro?.logradouro_tipo, cadastro?.logradouro_nome, cadastro?.numero, cadastro?.complemento, cadastro?.bairro, cadastro?.cidade, cadastro?.estado].filter(Boolean).join(', ');
+      const hoje  = new Date().toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' });
+      const taxa  = document.getElementById('taxa_valor')?.value || '1';
+      const mens  = document.getElementById('mensalidade_valor')?.value || '500';
+
+      const remuneracao = contractType === 'percentual'
+        ? `${taxa}% de taxa de administração anualizada, calculada diariamente sobre o total sob administração, sendo paga mensalmente calculada pro rata die.`
+        : `R$ ${parseFloat(mens).toLocaleString('pt-BR', {minimumFractionDigits:2})} (${valorPorExtenso(mens)}) mensais, reajustados anualmente pelo IPCA.`;
+
+      const titulo = contractType === 'percentual' ? 'CONTRATO DE ADMINISTRAÇÃO DE CARTEIRA' : 'CONTRATO DE CONSULTORIA DE INVESTIMENTOS';
+
+      const contratoHTML = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+        <style>body{font-family:Arial,sans-serif;font-size:11px;line-height:1.7;color:#111;margin:40px;} h2{text-align:center;font-size:13px;margin-bottom:20px;} h3{font-size:12px;margin:16px 0 6px;} p{margin:6px 0;} .sig{margin-top:50px;}</style>
+        </head><body>
+        <h2>${titulo}</h2>
+        <p>Pelo presente instrumento, as partes:</p>
+        <p><strong>${nome}</strong>, ${ecivil ? ecivil.toLowerCase() : ''}, RG ${rg}, CPF ${cpf}, residente em ${end} ("CONTRATANTE"); e</p>
+        <p><strong>EDUARDO BARBOSA HORTA DOS SANTOS</strong>, CPF 026.489.996-20, Rua do Ouro, 1920, apt 502, Serra, Belo Horizonte MG ("CONTRATADO").</p>
+        <h3>CLÁUSULA 1 — OBJETO</h3>
+        <p>Prestação de serviço de consultoria de valores mobiliários, compreendendo orientação, recomendação e aconselhamento profissional, independente e individualizado sobre investimentos no mercado de valores mobiliários.</p>
+        <h3>CLÁUSULA 2 — SERVIÇO DE CONSULTORIA</h3>
+        <p>O CONTRATADO disponibilizará relatórios com oportunidades de investimento, otimização de carteiras, acompanhamento de resultados e rebalanceamentos regulares. A adoção das recomendações é de total responsabilidade do CONTRATANTE.</p>
+        <h3>CLÁUSULA 3 — REMUNERAÇÃO</h3>
+        <p>O CONTRATANTE pagará ao CONTRATADO: <strong>${remuneracao}</strong> Caso rescindido antes de 6 meses, será devido o valor equivalente a 6 meses. Atraso gera juros de 1%/mês + IPCA + multa de 2%.</p>
+        <h3>CLÁUSULA 4 — DECLARAÇÕES E RESPONSABILIDADE</h3>
+        <p>O CONTRATANTE declara ciência de que as recomendações são opiniões independentes e a decisão final de investimento é de sua exclusiva responsabilidade. Resultados passados não garantem resultados futuros. Ambas as partes se comprometem ao sigilo das informações confidenciais.</p>
+        <h3>CLÁUSULA 5 — GARANTIAS</h3>
+        <p>O CONTRATADO garante melhores esforços na prestação dos serviços, em conformidade com os requisitos regulamentares e técnicos do mercado. Não garante resultados positivos. Dados da carteira serão mantidos por 5 anos.</p>
+        <h3>CLÁUSULA 6 — VIGÊNCIA E DISPOSIÇÕES GERAIS</h3>
+        <p>Vigência por prazo indeterminado. Resilição com aviso prévio de 30 dias. Foro: Belo Horizonte/MG.</p>
+        <p style="margin-top:30px;"><strong>Belo Horizonte, ${hoje}</strong></p>
+        <div class="sig"><p>___________________________________________________</p><p><strong>CONTRATANTE:</strong> ${nome}</p></div>
+        <div class="sig" style="margin-top:30px;"><p>___________________________________________________</p><p><strong>CONTRATADO:</strong> Eduardo Barbosa Horta Dos Santos</p></div>
+        </body></html>`;
+
+      const zapResp = await fetch(`${ZAPSIGN_URL}/docs/`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${ZAPSIGN_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: `Contrato - ${nome}`,
+          base64_pdf: btoa(unescape(encodeURIComponent(contratoHTML))),
+          signers: [
+            { name: nome, email: email, send_automatic_email: true },
+            { name: 'Eduardo Barbosa Horta dos Santos', email: 'contato@eduardohorta.com.br', send_automatic_email: true }
+          ],
+          lang: 'pt-br',
+          brand_name: 'EH Investimentos'
+        })
+      });
+
+      const zapData = await zapResp.json();
+      if (!zapResp.ok) throw new Error(zapData.detail || JSON.stringify(zapData));
+
+      await sb.from('contratos').upsert({
+        user_id: currentUser.id,
+        tipo: contractType,
+        taxa: parseFloat(taxa),
+        mensalidade: parseFloat(mens),
+        zapsign_token: zapData.token,
+        zapsign_status: 'pending',
+        created_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+
+      await sb.from('onboarding').update({ step_contrato: true, completed: true, updated_at: new Date().toISOString() }).eq('user_id', currentUser.id);
+
+      goToStep(4);
+
+    } catch(e) {
+      showFb('fb-contrato', 'Erro ao enviar para ZapSign: ' + e.message, 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg> Enviar para assinatura';
+    }
+  }
+
+  // ── HELPERS ──
+  function v(id) { return document.getElementById(id)?.value?.trim() || ''; }
+  function num(id) { const el = document.getElementById(id); return el && el.value ? parseFloat(el.value) : null; }
+
+  function showFb(id, msg, type) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'feedback ' + type;
+    el.textContent = msg;
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (type !== 'error') setTimeout(() => { el.className = 'feedback'; }, 6000);
+  }
+
+  async function doLogout() { await sb.auth.signOut(); window.location.href = 'eh-cliente-login.html'; }
+</script>
+</body>
+</html>

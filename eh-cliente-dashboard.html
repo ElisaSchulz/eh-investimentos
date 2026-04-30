@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- EH-DASHBOARD-v3-FIXED -->
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -283,6 +284,34 @@
     }
     .btn-download-ext:hover { background:var(--navy); }
 
+
+    /* ── ONBOARDING BANNER ── */
+    .ob-banner {
+      background: linear-gradient(135deg, rgba(212,130,10,0.12), rgba(212,130,10,0.06));
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--gold);
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 1.5rem;
+      display: none;
+    }
+    .ob-banner.visible { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .ob-banner-text { font-size: 0.82rem; color: var(--gray-light); font-weight: 300; line-height: 1.6; }
+    .ob-banner-text strong { color: var(--white); display: block; margin-bottom: 0.2rem; font-size: 0.88rem; }
+    .ob-banner-steps { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .ob-step-chip {
+      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.2rem 0.6rem; border-radius: 20px;
+    }
+    .ob-step-chip.done { background: rgba(76,175,130,0.15); color: #4caf82; border: 1px solid rgba(76,175,130,0.3); }
+    .ob-step-chip.pending { background: rgba(138,155,184,0.1); color: var(--gray); border: 1px solid var(--border-dim); }
+    .ob-banner-btn {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 0.6rem 1.2rem; background: var(--gold); color: var(--navy-dark);
+      border: none; cursor: pointer; font-family: 'Montserrat', sans-serif;
+      white-space: nowrap; transition: background 0.2s;
+    }
+    .ob-banner-btn:hover { background: var(--gold-light); }
+
     @media (max-width: 900px) {
       .sidebar { display: none; }
       .mobile-nav { display: flex; }
@@ -360,6 +389,10 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 017 7h2"/><path d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
     Extratos → Excel
   </button>
+  <button class="mobile-drawer-link" id="mobileClientesBtn" style="display:none;" onclick="showView('clientes',this);closeDrawer()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    Clientes
+  </button>
   <button class="mobile-drawer-link" id="mobileEmailsBtn" style="display:none;" onclick="showView('emails',this);closeDrawer()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
     Envio de Emails
@@ -405,6 +438,10 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
       Envio de Emails
     </button>
+    <button class="sidebar-link" onclick="showView('clientes',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Clientes
+    </button>
   </div>
   <div class="sidebar-bottom">
     <div class="sidebar-user">
@@ -427,6 +464,16 @@
 
     <!-- RELATÓRIOS -->
     <div class="view active" id="view-relatorios">
+      <!-- Onboarding banner -->
+      <div class="ob-banner" id="obBanner">
+        <div class="ob-banner-text">
+          <strong>⚠️ Complete seu cadastro</strong>
+          Você ainda tem etapas pendentes para ativar seu acesso completo ao portal.
+          <div class="ob-banner-steps" id="obBannerSteps"></div>
+        </div>
+        <button class="ob-banner-btn" onclick="window.location.href='eh-onboarding.html'">Continuar cadastro →</button>
+      </div>
+
       <div class="welcome-banner">
         <h2>Bem-vindo, <em id="welcomeName">Cliente</em></h2>
         <p>Acesse seus relatórios e acompanhe a evolução do seu patrimônio.</p>
@@ -487,6 +534,26 @@
       </div>
       <div class="section-header"><div class="section-title">Relatórios Publicados</div></div>
       <div class="reports-grid" id="adminReportsGrid"><div class="loading-state"><div class="spinner"></div> Carregando...</div></div>
+    </div>
+
+    <!-- CLIENTES (admin) -->
+    <div class="view" id="view-clientes">
+      <div class="welcome-banner">
+        <h2>Gestão de <em>Clientes</em></h2>
+        <p>Acompanhe o onboarding de cada cliente e gerencie os cadastros.</p>
+      </div>
+      <div class="section-header">
+        <div class="section-title">Status de Onboarding</div>
+        <div style="display:flex;gap:0.6rem;">
+          <button class="btn-upload" onclick="markAllOnboardingComplete()" style="background:rgba(76,175,130,0.15);color:#4caf82;border:1px solid rgba(76,175,130,0.3);font-size:0.62rem;">
+            ✓ Marcar todos como concluído
+          </button>
+        </div>
+      </div>
+      <div id="clientesGrid" style="display:flex;flex-direction:column;gap:1px;background:var(--border-dim);border:1px solid var(--border-dim);">
+        <div class="loading-state"><div class="spinner"></div> Carregando clientes...</div>
+      </div>
+      <div class="upload-feedback" id="clientesFb"></div>
     </div>
 
     <!-- EMAILS -->
@@ -783,7 +850,7 @@ Qualquer dúvida, estou à disposição.</pre>
     initDashboard();
   }
 
-  function initDashboard() {
+  async function initDashboard() {
     document.getElementById('authGuard').style.display = 'none';
     const email    = currentUser.email;
     const name     = currentUser.user_metadata?.full_name || email.split('@')[0];
@@ -806,10 +873,39 @@ Qualquer dúvida, estou à disposição.</pre>
       document.getElementById('mobileAdminSection').style.display = 'block';
       document.getElementById('mobileUploadBtn').style.display = 'flex';
       document.getElementById('mobileExtratosBtn').style.display = 'flex';
+      document.getElementById('mobileClientesBtn').style.display = 'flex';
       document.getElementById('mobileEmailsBtn').style.display = 'flex';
     }
     loadReports();
-    sb.from('profiles').upsert({ id: currentUser.id, email, full_name: name, updated_at: new Date().toISOString() }, { onConflict: 'id' }).catch(() => {});
+    checkOnboarding();
+    try { await sb.from('profiles').upsert({ id: currentUser.id, email, full_name: name, updated_at: new Date().toISOString() }, { onConflict: 'id' }); } catch(e) {}
+  }
+
+  // ── ONBOARDING CHECK ──
+  async function checkOnboarding() {
+    if (isAdmin) return; // admins skip onboarding
+    const banner = document.getElementById('obBanner');
+    const steps  = document.getElementById('obBannerSteps');
+    if (!banner || !steps) return;
+
+    // maybeSingle returns null (not error) when no row found
+    const { data } = await sb.from('onboarding').select('*').eq('user_id', currentUser.id).maybeSingle();
+
+    // Hide banner if onboarding complete
+    if (data && (data.completed || data.skip_onboarding)) return;
+
+    const stepDefs = [
+      { key: 'step_cadastro',    label: 'Cadastro' },
+      { key: 'step_suitability', label: 'Perfil API' },
+      { key: 'step_contrato',    label: 'Contrato' }
+    ];
+
+    steps.innerHTML = stepDefs.map(s => {
+      const done = data && data[s.key];
+      return `<span class="ob-step-chip ${done ? 'done' : 'pending'}">${done ? '✓' : '○'} ${s.label}</span>`;
+    }).join('');
+
+    banner.classList.add('visible');
   }
 
   // ── NAV ──
@@ -819,14 +915,96 @@ Qualquer dúvida, estou à disposição.</pre>
     document.querySelectorAll('.mobile-drawer-link').forEach(l => l.classList.remove('active'));
     document.getElementById('view-' + viewId).classList.add('active');
     if (btn) btn.classList.add('active');
-    const titles = { relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', extratos:'Extratos → Excel', emails:'Envio de Emails' };
+    const titles = { relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', extratos:'Extratos → Excel', emails:'Envio de Emails', clientes:'Gestão de Clientes' };
     const topbar = document.getElementById('topbarTitle');
     if (topbar) topbar.textContent = titles[viewId] || viewId;
     if (viewId === 'emails') { loadTemplates(); if (clientRows.length === 0) addClientRow(); }
     if (viewId === 'extratos') extLoadMappingFromSupabase();
+    if (viewId === 'clientes') loadClientesView();
   }
 
   async function doLogout() { await sb.auth.signOut(); window.location.href = 'eh-cliente-login.html'; }
+
+  // ── CLIENTES MANAGEMENT ──
+  async function loadClientesView() {
+    const grid = document.getElementById('clientesGrid');
+    if (!grid) return;
+    grid.innerHTML = '<div class="loading-state"><div class="spinner"></div> Carregando...</div>';
+    try {
+      const { data: profiles } = await sb.from('profiles').select('id, full_name, email, updated_at');
+      const { data: onboardings } = await sb.from('onboarding').select('*').order('updated_at', { ascending: false });
+      const obMap = {};
+      (onboardings || []).forEach(o => { obMap[o.user_id] = o; });
+
+      if (!profiles || profiles.length === 0) {
+        grid.innerHTML = '<div class="empty-state"><p>Nenhum cliente cadastrado ainda.</p></div>';
+        return;
+      }
+
+      grid.innerHTML = profiles.map(p => {
+        const ob = obMap[p.id] || {};
+        const steps = [
+          { label: 'Cadastro', done: ob.step_cadastro },
+          { label: 'API', done: ob.step_suitability },
+          { label: 'Contrato', done: ob.step_contrato }
+        ];
+        const completed = ob.completed || ob.skip_onboarding;
+        const chips = steps.map(s =>
+          `<span style="font-size:0.6rem;padding:0.15rem 0.5rem;border-radius:10px;font-weight:600;background:${s.done?'rgba(76,175,130,0.15)':'rgba(138,155,184,0.1)'};color:${s.done?'#4caf82':'var(--gray)'};border:1px solid ${s.done?'rgba(76,175,130,0.3)':'var(--border-dim)'};">${s.done?'✓':' ○'} ${s.label}</span>`
+        ).join('');
+        return `
+          <div style="background:var(--navy-dark);padding:1.2rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+            <div>
+              <div style="font-size:0.88rem;font-weight:500;color:var(--white);margin-bottom:0.2rem;">${p.full_name || p.email}</div>
+              <div style="font-size:0.68rem;color:var(--gray);margin-bottom:0.5rem;">${p.email}</div>
+              <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">${chips}</div>
+            </div>
+            <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+              ${completed
+                ? '<span style="font-size:0.65rem;color:#4caf82;font-weight:600;">✓ Onboarding completo</span>'
+                : `<button onclick="markOneComplete('${p.id}')" class="btn-upload" style="font-size:0.62rem;padding:0.4rem 0.8rem;background:rgba(212,130,10,0.15);color:var(--gold);border:1px solid var(--border);">Marcar completo</button>`
+              }
+              <button onclick="skipOnboarding('${p.id}')" class="btn-upload" style="font-size:0.62rem;padding:0.4rem 0.8rem;background:rgba(255,255,255,0.05);color:var(--gray);border:1px solid var(--border-dim);">${ob.skip_onboarding?'Reativar onboarding':'Pular onboarding'}</button>
+            </div>
+          </div>`;
+      }).join('');
+    } catch(e) {
+      grid.innerHTML = `<div class="empty-state"><p>Erro ao carregar: ${e.message}</p></div>`;
+    }
+  }
+
+  async function markOneComplete(userId) {
+    await sb.from('onboarding').upsert({ user_id: userId, completed: true, skip_onboarding: true, step_cadastro: true, step_suitability: true, step_contrato: true, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+    showFb2('clientesFb', '✓ Cliente marcado como concluído.', 'success');
+    loadClientesView();
+  }
+
+  async function skipOnboarding(userId) {
+    const { data } = await sb.from('onboarding').select('skip_onboarding').eq('user_id', userId).single();
+    const newVal = data ? !data.skip_onboarding : true;
+    await sb.from('onboarding').upsert({ user_id: userId, skip_onboarding: newVal, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+    showFb2('clientesFb', newVal ? 'Onboarding pulado para este cliente.' : 'Onboarding reativado.', 'success');
+    loadClientesView();
+  }
+
+  async function markAllOnboardingComplete() {
+    if (!confirm('Marcar TODOS os clientes como onboarding concluído? Isso inclui clientes antigos.')) return;
+    const { data: profiles } = await sb.from('profiles').select('id');
+    if (!profiles) return;
+    for (const p of profiles) {
+      await sb.from('onboarding').upsert({ user_id: p.id, completed: true, skip_onboarding: true, step_cadastro: true, step_suitability: true, step_contrato: true, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+    }
+    showFb2('clientesFb', `✓ ${profiles.length} cliente(s) marcados como concluído.`, 'success');
+    loadClientesView();
+  }
+
+  function showFb2(id, msg, type) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'upload-feedback ' + type;
+    el.textContent = msg;
+    setTimeout(() => { el.className = 'upload-feedback'; }, 5000);
+  }
 
   // ── REPORTS ──
   async function loadReports() {
@@ -1147,6 +1325,7 @@ Qualquer dúvida, estou à disposição.</pre>
     }).join('\n');
 
     return `<!DOCTYPE html>
+<!-- EH-DASHBOARD-v3-FIXED -->
 <html>
 <head><meta charset="UTF-8"/></head>
 <body style="font-family:Arial,sans-serif;font-size:14px;color:#222;line-height:1.7;max-width:600px;margin:0;padding:20px;">
