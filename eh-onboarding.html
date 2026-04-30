@@ -954,8 +954,9 @@
 <script>
   const SUPABASE_URL = 'https://migyqowqjfhvdcrtryms.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pZ3lxb3dxamZodmRjcnRyeW1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxODU1NjIsImV4cCI6MjA5MDc2MTU2Mn0.kydlPAkhBukqNDeLCS9Uhg-D5jZF9EL8Wi2oCDnY4eI';
-  const ZAPSIGN_KEY  = 'a231a172-989b-44b8-87a9-94672de1d1f0';
-  const ZAPSIGN_URL  = 'https://api.zapsign.com.br/api/v1';
+  const ZAPSIGN_KEY   = 'a231a172-989b-44b8-87a9-94672de1d1f0';
+  const ZAPSIGN_URL   = 'https://api.zapsign.com.br/api/v1';
+  const ZAPSIGN_PROXY = 'https://script.google.com/macros/s/AKfycbyZHcS8OajE9AtmjG-35SL6T6tzEQHbQ0a1d2HVQiwsmA4JgGA-4juQnbCzBXkFG8jd/exec';
   const ADMIN_EMAILS = ['elisacmazzo@gmail.com', 'contato@eduardohorta.com.br'];
 
   const { createClient } = supabase;
@@ -1259,32 +1260,31 @@
       // Build suitability PDF content as base64 via HTML→ZapSign
       const suitContent = buildSuitabilityDocHTML(nome, cpf, hoje, suitResult.perfil);
 
-      // Send to ZapSign
-      const zapResp = await fetch(`${ZAPSIGN_URL}/docs/`, {
+      // Send to ZapSign via proxy (CORS workaround)
+      const zapResp = await fetch(ZAPSIGN_PROXY, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${ZAPSIGN_KEY}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({
-          name: `Suitability - ${nome}`,
-          url_pdf: '',
-          base64_pdf: btoa(unescape(encodeURIComponent(suitContent))),
-          signers: [{
-            name: nome,
-            email: email,
-            phone_country: '55',
-            send_automatic_email: true,
-            send_automatic_whatsapp: false
-          }],
-          lang: 'pt-br',
-          disable_signer_emails: false,
-          signed_file_only_finished: false,
-          brand_logo: 'https://elisaschulz.github.io/eh-investimentos/Logo_EH.png',
-          brand_name: 'EH Investimentos'
+          zapKey: ZAPSIGN_KEY,
+          body: {
+            name: `Suitability - ${nome}`,
+            base64_pdf: btoa(unescape(encodeURIComponent(suitContent))),
+            signers: [{
+              name: nome,
+              email: email,
+              phone_country: '55',
+              send_automatic_email: true,
+              send_automatic_whatsapp: false
+            }],
+            lang: 'pt-br',
+            brand_name: 'EH Investimentos'
+          }
         })
       });
 
       const zapData = await zapResp.json();
-
-      if (!zapResp.ok) throw new Error(zapData.detail || JSON.stringify(zapData));
+      if (zapData.error) throw new Error(zapData.error);
+      if (!zapData.token) throw new Error(JSON.stringify(zapData));
 
       // Save to DB
       await sb.from('suitability').upsert({
@@ -1465,23 +1465,27 @@
         <div class="sig" style="margin-top:30px;"><p>___________________________________________________</p><p><strong>CONTRATADO:</strong> Eduardo Barbosa Horta Dos Santos</p></div>
         </body></html>`;
 
-      const zapResp = await fetch(`${ZAPSIGN_URL}/docs/`, {
+      const zapResp = await fetch(ZAPSIGN_PROXY, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${ZAPSIGN_KEY}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({
-          name: `Contrato - ${nome}`,
-          base64_pdf: btoa(unescape(encodeURIComponent(contratoHTML))),
-          signers: [
-            { name: nome, email: email, send_automatic_email: true },
-            { name: 'Eduardo Barbosa Horta dos Santos', email: 'contato@eduardohorta.com.br', send_automatic_email: true }
-          ],
-          lang: 'pt-br',
-          brand_name: 'EH Investimentos'
+          zapKey: ZAPSIGN_KEY,
+          body: {
+            name: `Contrato - ${nome}`,
+            base64_pdf: btoa(unescape(encodeURIComponent(contratoHTML))),
+            signers: [
+              { name: nome, email: email, send_automatic_email: true },
+              { name: 'Eduardo Barbosa Horta dos Santos', email: 'contato@eduardohorta.com.br', send_automatic_email: true }
+            ],
+            lang: 'pt-br',
+            brand_name: 'EH Investimentos'
+          }
         })
       });
 
       const zapData = await zapResp.json();
-      if (!zapResp.ok) throw new Error(zapData.detail || JSON.stringify(zapData));
+      if (zapData.error) throw new Error(zapData.error);
+      if (!zapData.token) throw new Error(JSON.stringify(zapData));
 
       await sb.from('contratos').upsert({
         user_id: currentUser.id,
