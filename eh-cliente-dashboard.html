@@ -579,6 +579,46 @@
             O template é selecionado automaticamente pelo desempenho e frequência de cobrança.
           </p>
 
+          <!-- ACCORDION GUIA -->
+          <div style="margin-bottom:1.5rem;">
+            <button onclick="toggleAccordion(this)" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:rgba(212,130,10,0.08);border:1px solid var(--border);color:var(--gray-light);font-family:'Montserrat',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;padding:0.75rem 1rem;cursor:pointer;transition:background 0.2s;">
+              <span>📋 Guia de Formatação</span>
+              <span class="accordion-arrow" style="transition:transform 0.2s;">▼</span>
+            </button>
+            <div class="accordion-content" style="display:none;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-top:none;padding:1.2rem;">
+              <p style="font-size:0.75rem;color:var(--gray);margin-bottom:1rem;line-height:1.6;">Use estas tags HTML diretamente no corpo do email:</p>
+              <table style="width:100%;border-collapse:collapse;font-size:0.75rem;">
+                <thead>
+                  <tr style="border-bottom:1px solid var(--border);">
+                    <th style="text-align:left;color:var(--gray);font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.8rem;font-size:0.62rem;">Formatação</th>
+                    <th style="text-align:left;color:var(--gray);font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.8rem;font-size:0.62rem;">Como escrever</th>
+                    <th style="text-align:left;color:var(--gray);font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.8rem;font-size:0.62rem;">Resultado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Negrito</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;strong&gt;texto&lt;/strong&gt;</code></td><td style="padding:0.5rem 0.8rem;color:var(--white);"><strong>texto</strong></td></tr>
+                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Itálico</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;em&gt;texto&lt;/em&gt;</code></td><td style="padding:0.5rem 0.8rem;color:var(--white);"><em>texto</em></td></tr>
+                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Cor dourada</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;span style="color:#D4820A"&gt;texto&lt;/span&gt;</code></td><td style="padding:0.5rem 0.8rem;"><span style="color:#D4820A;">texto</span></td></tr>
+                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Linha separadora</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;hr/&gt;</code></td><td style="padding:0.5rem 0.8rem;color:var(--gray);">— linha —</td></tr>
+                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Quebra de linha</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;br/&gt;</code></td><td style="padding:0.5rem 0.8rem;color:var(--gray);">pula linha</td></tr>
+                  <tr><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Variáveis</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">{{nome}} {{desempenho}} {{valor}}</code></td><td style="padding:0.5rem 0.8rem;color:var(--gray);">dados do cliente</td></tr>
+                </tbody>
+              </table>
+              <div style="margin-top:1rem;background:rgba(255,255,255,0.03);border:1px solid var(--border-dim);padding:1rem;">
+                <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);margin-bottom:0.6rem;">Exemplo</p>
+                <pre style="font-size:0.75rem;color:var(--gray-light);line-height:1.7;white-space:pre-wrap;">Olá &lt;strong&gt;{{nome}}&lt;/strong&gt;,
+
+Sua carteira rendeu &lt;strong&gt;&lt;span style="color:#D4820A"&gt;{{desempenho}} do CDI&lt;/span&gt;&lt;/strong&gt;.
+
+&lt;hr/&gt;
+
+Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
+
+{{btn_relatorio}}</pre>
+              </div>
+            </div>
+          </div>
+
           <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border);">Cobrança Mensal</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem;">
             <div>
