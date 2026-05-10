@@ -568,108 +568,49 @@
           Disparar Emails
         </button>
       </div>
-      <div class="email-tab-content active" id="tab-templates">
+            <div class="email-tab-content active" id="tab-templates">
         <div class="upload-panel">
-          <h3>Templates do Mês</h3>
+          <h3>Templates do Período</h3>
           <p style="font-size:0.8rem;color:var(--gray);margin-bottom:1rem;line-height:1.7;">
             Use <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{nome}}</code>,
             <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{desempenho}}</code>,
-            <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{valor}}</code>,
-            <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{link_relatorio}}</code> (URL do PDF) e
-            <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{btn_relatorio}}</code> (botão de download)
-            para personalizar cada email. O email suporta formatação HTML e já inclui a assinatura da EH automaticamente.
+            <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{valor}}</code> e
+            <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{btn_relatorio}}</code>.
+            O template é selecionado automaticamente pelo desempenho e frequência de cobrança.
           </p>
 
-          <!-- ACCORDION -->
-          <div style="margin-bottom:1.5rem;">
-            <button onclick="toggleAccordion(this)" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:rgba(212,130,10,0.08);border:1px solid var(--border);color:var(--gray-light);font-family:'Montserrat',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;padding:0.75rem 1rem;cursor:pointer;transition:background 0.2s;">
-              <span>📋 Guia de Formatação</span>
-              <span class="accordion-arrow" style="transition:transform 0.2s;">▼</span>
-            </button>
-            <div class="accordion-content" style="display:none;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-top:none;padding:1.2rem 1.2rem;">
-              <p style="font-size:0.75rem;color:var(--gray);margin-bottom:1rem;line-height:1.6;">Use estas tags HTML diretamente no corpo do email:</p>
-              <table style="width:100%;border-collapse:collapse;font-size:0.75rem;">
-                <thead>
-                  <tr style="border-bottom:1px solid var(--border);">
-                    <th style="text-align:left;color:var(--gray);font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.8rem;font-size:0.62rem;">Formatação</th>
-                    <th style="text-align:left;color:var(--gray);font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.8rem;font-size:0.62rem;">Como escrever</th>
-                    <th style="text-align:left;color:var(--gray);font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.8rem;font-size:0.62rem;">Resultado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr style="border-bottom:1px solid var(--border-dim);">
-                    <td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Negrito</td>
-                    <td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;strong&gt;texto&lt;/strong&gt;</code></td>
-                    <td style="padding:0.5rem 0.8rem;color:var(--white);"><strong>texto</strong></td>
-                  </tr>
-                  <tr style="border-bottom:1px solid var(--border-dim);">
-                    <td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Itálico</td>
-                    <td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;em&gt;texto&lt;/em&gt;</code></td>
-                    <td style="padding:0.5rem 0.8rem;color:var(--white);"><em>texto</em></td>
-                  </tr>
-                  <tr style="border-bottom:1px solid var(--border-dim);">
-                    <td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Cor dourada</td>
-                    <td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;span style="color:#D4820A"&gt;texto&lt;/span&gt;</code></td>
-                    <td style="padding:0.5rem 0.8rem;"><span style="color:#D4820A;">texto</span></td>
-                  </tr>
-                  <tr style="border-bottom:1px solid var(--border-dim);">
-                    <td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Linha separadora</td>
-                    <td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;hr/&gt;</code></td>
-                    <td style="padding:0.5rem 0.8rem;color:var(--gray);">— linha horizontal —</td>
-                  </tr>
-                  <tr style="border-bottom:1px solid var(--border-dim);">
-                    <td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Parágrafo</td>
-                    <td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;p&gt;texto&lt;/p&gt;</code></td>
-                    <td style="padding:0.5rem 0.8rem;color:var(--gray);">bloco de texto</td>
-                  </tr>
-                  <tr style="border-bottom:1px solid var(--border-dim);">
-                    <td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Quebra de linha</td>
-                    <td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;br/&gt;</code></td>
-                    <td style="padding:0.5rem 0.8rem;color:var(--gray);">pula uma linha</td>
-                  </tr>
-                  <tr>
-                    <td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Variáveis</td>
-                    <td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">{{nome}} {{desempenho}} {{valor}}</code></td>
-                    <td style="padding:0.5rem 0.8rem;color:var(--gray);">dados do cliente</td>
-                  </tr>
-                </tbody>
-              </table>
-              <div style="margin-top:1rem;background:rgba(255,255,255,0.03);border:1px solid var(--border-dim);padding:1rem;">
-                <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);margin-bottom:0.6rem;">Exemplo de template</p>
-                <pre style="font-size:0.75rem;color:var(--gray-light);line-height:1.7;white-space:pre-wrap;">Olá &lt;strong&gt;{{nome}}&lt;/strong&gt;,
-
-Sua carteira rendeu &lt;strong&gt;&lt;span style="color:#D4820A"&gt;{{desempenho}} do CDI&lt;/span&gt;&lt;/strong&gt; em março.
-
-&lt;hr/&gt;
-
-O valor do serviço neste mês foi de &lt;strong&gt;{{valor}}&lt;/strong&gt;.
-
-Qualquer dúvida, estou à disposição.</pre>
-              </div>
+          <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border);">Cobrança Mensal</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem;">
+            <div>
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.8rem;"><div style="width:8px;height:8px;background:#4caf82;border-radius:50%;"></div><span style="font-size:0.62rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--gray);">Acima do CDI</span></div>
+              <div class="upload-field" style="margin-bottom:0.5rem;"><label>Assunto</label><input type="text" id="subjectMensalAcima" placeholder="Resultado de Março — EH Investimentos" /></div>
+              <div class="upload-field"><label>Corpo</label><textarea id="templateMensalAcima" rows="8" placeholder="Olá {{nome}},&#10;&#10;Sua carteira rendeu {{desempenho}} do CDI em março.&#10;&#10;Valor do serviço: {{valor}}.&#10;&#10;{{btn_relatorio}}" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Montserrat',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;transition:border-color 0.2s;"></textarea></div>
+            </div>
+            <div>
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.8rem;"><div style="width:8px;height:8px;background:#e05555;border-radius:50%;"></div><span style="font-size:0.62rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--gray);">Abaixo do CDI</span></div>
+              <div class="upload-field" style="margin-bottom:0.5rem;"><label>Assunto</label><input type="text" id="subjectMensalAbaixo" placeholder="Resultado de Março — EH Investimentos" /></div>
+              <div class="upload-field"><label>Corpo</label><textarea id="templateMensalAbaixo" rows="8" placeholder="Olá {{nome}},&#10;&#10;Sua carteira rendeu {{desempenho}} do CDI em março.&#10;&#10;Valor do serviço: {{valor}}.&#10;&#10;{{btn_relatorio}}" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Montserrat',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;transition:border-color 0.2s;"></textarea></div>
             </div>
           </div>
+
+          <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border);">Cobrança Trimestral</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
             <div>
-              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.8rem;">
-                <div style="width:10px;height:10px;background:#4caf82;border-radius:50%;"></div>
-                <span style="font-size:0.65rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--gray);">Acima do CDI (≥ 100%)</span>
-              </div>
-              <div class="upload-field" style="margin-bottom:0.6rem;"><label>Assunto</label><input type="text" id="subjectAcima" placeholder="Resultado de Março — EH Investimentos" /></div>
-              <div class="upload-field"><label>Corpo</label><textarea id="templateAcima" rows="10" placeholder="Olá {{nome}},&#10;&#10;Sua carteira rendeu {{desempenho}} do CDI...&#10;&#10;Valor do serviço: {{valor}}." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Montserrat',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;transition:border-color 0.2s;"></textarea></div>
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.8rem;"><div style="width:8px;height:8px;background:#4caf82;border-radius:50%;"></div><span style="font-size:0.62rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--gray);">Acima do CDI</span></div>
+              <div class="upload-field" style="margin-bottom:0.5rem;"><label>Assunto</label><input type="text" id="subjectTrimestralAcima" placeholder="Resultado do 1º Trimestre — EH Investimentos" /></div>
+              <div class="upload-field"><label>Corpo</label><textarea id="templateTrimestralAcima" rows="8" placeholder="Olá {{nome}},&#10;&#10;Sua carteira rendeu {{desempenho}} do CDI no trimestre.&#10;&#10;Valor do serviço: {{valor}}.&#10;&#10;{{btn_relatorio}}" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Montserrat',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;transition:border-color 0.2s;"></textarea></div>
             </div>
             <div>
-              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.8rem;">
-                <div style="width:10px;height:10px;background:#e05555;border-radius:50%;"></div>
-                <span style="font-size:0.65rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--gray);">Abaixo do CDI (< 100%)</span>
-              </div>
-              <div class="upload-field" style="margin-bottom:0.6rem;"><label>Assunto</label><input type="text" id="subjectAbaixo" placeholder="Resultado de Março — EH Investimentos" /></div>
-              <div class="upload-field"><label>Corpo</label><textarea id="templateAbaixo" rows="10" placeholder="Olá {{nome}},&#10;&#10;Sua carteira rendeu {{desempenho}} do CDI...&#10;&#10;Valor do serviço: {{valor}}." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Montserrat',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;transition:border-color 0.2s;"></textarea></div>
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.8rem;"><div style="width:8px;height:8px;background:#e05555;border-radius:50%;"></div><span style="font-size:0.62rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--gray);">Abaixo do CDI</span></div>
+              <div class="upload-field" style="margin-bottom:0.5rem;"><label>Assunto</label><input type="text" id="subjectTrimestralAbaixo" placeholder="Resultado do 1º Trimestre — EH Investimentos" /></div>
+              <div class="upload-field"><label>Corpo</label><textarea id="templateTrimestralAbaixo" rows="8" placeholder="Olá {{nome}},&#10;&#10;Sua carteira rendeu {{desempenho}} do CDI no trimestre.&#10;&#10;Valor do serviço: {{valor}}.&#10;&#10;{{btn_relatorio}}" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Montserrat',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;transition:border-color 0.2s;"></textarea></div>
             </div>
           </div>
+
           <button class="btn-upload" onclick="saveTemplates()" style="margin-top:1.2rem;">Salvar Templates</button>
           <div class="upload-feedback" id="templateFeedback"></div>
         </div>
-      </div>
+      </div>      </div>
       <div class="email-tab-content" id="tab-disparar">
         <div class="upload-panel">
           <h3>Dados dos Clientes</h3>
@@ -679,7 +620,7 @@ Qualquer dúvida, estou à disposição.</pre>
           </div>
           <div style="overflow-x:auto;margin-top:0.8rem;">
             <table id="clientsTable">
-              <thead><tr><th>Email</th><th>Nome</th><th>% do CDI</th><th>Valor do Serviço</th><th>Relatório PDF</th><th></th></tr></thead>
+              <thead><tr><th>Email</th><th>Nome</th><th>% do CDI</th><th>Frequência</th><th>Valor do Serviço</th><th>Relatório PDF</th><th></th></tr></thead>
               <tbody id="clientsTableBody"></tbody>
             </table>
           </div>
@@ -805,7 +746,7 @@ Qualquer dúvida, estou à disposição.</pre>
   const SUPABASE_URL   = 'https://migyqowqjfhvdcrtryms.supabase.co';
   const SUPABASE_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pZ3lxb3dxamZodmRjcnRyeW1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxODU1NjIsImV4cCI6MjA5MDc2MTU2Mn0.kydlPAkhBukqNDeLCS9Uhg-D5jZF9EL8Wi2oCDnY4eI';
   const ADMIN_EMAILS   = ['elisacmazzo@gmail.com', 'contato@eduardohorta.com.br'];
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbw-7COxlPEIRj_qLn2yAsfh6Z2PUjdBYvtnpax3Ky2jXTGxOncU6Ao4xZAmf7Ng-BHs/exec';
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycby9W48Qfl8K9jDbg1-cSMpsjuTB-mzy2mn0OLrNBmyT4sq72mj3Xy7uQyU-NXaez41JBQ/exec';
 
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
@@ -1165,10 +1106,14 @@ Qualquer dúvida, estou à disposição.</pre>
 
   function saveTemplates() {
     localStorage.setItem('eh_tpl', JSON.stringify({
-      sa: document.getElementById('subjectAcima').value,
-      ta: document.getElementById('templateAcima').value,
-      sb2: document.getElementById('subjectAbaixo').value,
-      tb: document.getElementById('templateAbaixo').value,
+      sma: document.getElementById('subjectMensalAcima').value,
+      tma: document.getElementById('templateMensalAcima').value,
+      smb: document.getElementById('subjectMensalAbaixo').value,
+      tmb: document.getElementById('templateMensalAbaixo').value,
+      sta: document.getElementById('subjectTrimestralAcima').value,
+      tta: document.getElementById('templateTrimestralAcima').value,
+      stb: document.getElementById('subjectTrimestralAbaixo').value,
+      ttb: document.getElementById('templateTrimestralAbaixo').value,
     }));
     showFb('templateFeedback','✓ Templates salvos!','success');
   }
@@ -1176,10 +1121,14 @@ Qualquer dúvida, estou à disposição.</pre>
   function loadTemplates() {
     try {
       const d = JSON.parse(localStorage.getItem('eh_tpl') || '{}');
-      if (d.sa)  document.getElementById('subjectAcima').value   = d.sa;
-      if (d.ta)  document.getElementById('templateAcima').value  = d.ta;
-      if (d.sb2) document.getElementById('subjectAbaixo').value  = d.sb2;
-      if (d.tb)  document.getElementById('templateAbaixo').value = d.tb;
+      if (d.sma) document.getElementById('subjectMensalAcima').value      = d.sma;
+      if (d.tma) document.getElementById('templateMensalAcima').value     = d.tma;
+      if (d.smb) document.getElementById('subjectMensalAbaixo').value     = d.smb;
+      if (d.tmb) document.getElementById('templateMensalAbaixo').value    = d.tmb;
+      if (d.sta) document.getElementById('subjectTrimestralAcima').value  = d.sta;
+      if (d.tta) document.getElementById('templateTrimestralAcima').value = d.tta;
+      if (d.stb) document.getElementById('subjectTrimestralAbaixo').value = d.stb;
+      if (d.ttb) document.getElementById('templateTrimestralAbaixo').value= d.ttb;
     } catch(e) {}
   }
 
@@ -1194,6 +1143,12 @@ Qualquer dúvida, estou à disposição.</pre>
       <td>
         <input type="text" placeholder="ex: 103%" value="${data.desempenho||''}" id="di-${id}" oninput="updateBadge('${id}')" />
         <div id="db-${id}" style="margin-top:0.3rem;"></div>
+      </td>
+      <td>
+        <select style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.2);color:var(--white);font-family:'Montserrat',sans-serif;font-size:0.75rem;padding:0.45rem 0.5rem;outline:none;">
+          <option value="Mensal" ${(data.frequencia||'Mensal')==='Mensal'?'selected':''}>Mensal</option>
+          <option value="Trimestral" ${data.frequencia==='Trimestral'?'selected':''}>Trimestral</option>
+        </select>
       </td>
       <td><input type="text" placeholder="ex: R$ 1.500,00" value="${data.valor||''}" /></td>
       <td>
@@ -1267,11 +1222,13 @@ Qualquer dúvida, estou à disposição.</pre>
       if (!row) return null;
       const inputs = row.querySelectorAll('input[type="email"], input[type="text"]');
       const pdfUrl = document.getElementById('pdf-url-' + id)?.value || '';
+      const selects = row.querySelectorAll('select');
       return {
-        email:       inputs[0].value.trim(),
-        nome:        inputs[1].value.trim(),
-        desempenho:  inputs[2].value.trim(),
-        valor:       inputs[3].value.trim(),
+        email:          inputs[0].value.trim(),
+        nome:           inputs[1].value.trim(),
+        desempenho:     inputs[2].value.trim(),
+        frequencia:     selects[0]?.value || 'Mensal',
+        valor:          inputs[3].value.trim(),
         link_relatorio: pdfUrl
       };
     }).filter(r => r && r.email && r.nome);
@@ -1280,8 +1237,11 @@ Qualquer dúvida, estou à disposição.</pre>
   function applyTpl(client) {
     const num = parseFloat(client.desempenho.replace(',','.').replace('%',''));
     const up  = num >= 100;
-    const subj = document.getElementById(up ? 'subjectAcima' : 'subjectAbaixo').value;
-    const body = document.getElementById(up ? 'templateAcima' : 'templateAbaixo').value;
+    const freq = client.frequencia === 'Trimestral' ? 'Trimestral' : 'Mensal';
+    const subjId = `subject${freq}${up ? 'Acima' : 'Abaixo'}`;
+    const bodyId  = `template${freq}${up ? 'Acima' : 'Abaixo'}`;
+    const subj = document.getElementById(subjId)?.value || '';
+    const body = document.getElementById(bodyId)?.value || '';
     const linkHtml = client.link_relatorio
       ? `<p style="margin-top:16px;"><a href="${client.link_relatorio}" style="display:inline-block;background:#D4820A;color:#081537;padding:10px 22px;text-decoration:none;font-weight:700;font-size:13px;">↓ Baixar Relatório</a></p>`
       : '';
@@ -1291,7 +1251,7 @@ Qualquer dúvida, estou à disposição.</pre>
       .replace(/{{valor}}/g, client.valor)
       .replace(/{{link_relatorio}}/g, client.link_relatorio || '')
       .replace(/{{btn_relatorio}}/g, linkHtml);
-    return { subject: r(subj), body: r(body), up };
+    return { subject: r(subj), body: r(body), up, freq };
   }
 
   function previewEmails() {
@@ -1301,7 +1261,8 @@ Qualquer dúvida, estou à disposição.</pre>
     area.style.display = 'block';
     document.getElementById('previewList').innerHTML = clients.map(c => {
       const { subject, body, up } = applyTpl(c);
-      const badge = up ? '<span class="badge-acima">▲ Acima do CDI</span>' : '<span class="badge-abaixo">▼ Abaixo do CDI</span>';
+      const { up: up2, freq } = applyTpl(c);
+      const badge = `<span class="${up2?'badge-acima':'badge-abaixo'}">${up2?'▲':'▼'} ${up2?'Acima':'Abaixo'} CDI</span> <span style="font-size:0.6rem;color:var(--gray);margin-left:0.3rem;">${freq}</span>`;
       return `<div class="preview-card">
         <div class="preview-card-header">
           <div class="preview-meta"><strong>${c.nome}</strong> &lt;${c.email}&gt;<br/><strong>Assunto:</strong> ${subject}</div>
