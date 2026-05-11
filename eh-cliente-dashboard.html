@@ -668,14 +668,27 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
             <button class="btn-upload" onclick="addClientRow()" style="background:rgba(212,130,10,0.15);color:var(--gold);border:1px solid var(--border);">+ Adicionar linha</button>
             <button class="btn-upload" onclick="clearAllRows()" style="background:rgba(224,85,85,0.1);color:#f08080;border:1px solid rgba(224,85,85,0.3);">Limpar tudo</button>
           </div>
-          <div style="margin-top:1.5rem;display:flex;gap:1rem;flex-wrap:wrap;">
+          <div style="margin-top:1.5rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:center;">
             <button class="btn-upload" onclick="previewEmails()" style="background:rgba(255,255,255,0.08);color:var(--white);">Pré-visualizar</button>
+            <button class="btn-upload" onclick="salvarRascunho()" style="background:rgba(212,130,10,0.15);color:var(--gold);border:1px solid var(--border);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Salvar Rascunho
+            </button>
             <button class="btn-upload" id="sendBtn" onclick="sendAllEmails()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               Disparar Emails
             </button>
           </div>
           <div class="upload-feedback" id="sendFeedback"></div>
+
+          <!-- RASCUNHO SALVO -->
+          <div id="rascunhoSection" style="display:none;margin-top:1.5rem;">
+            <div class="section-header" style="margin-bottom:0.8rem;">
+              <div class="section-title">Rascunho Salvo</div>
+              <button onclick="carregarRascunho()" class="btn-upload" style="font-size:0.62rem;padding:0.4rem 0.8rem;background:rgba(212,130,10,0.15);color:var(--gold);border:1px solid var(--border);">↓ Carregar na tabela</button>
+            </div>
+            <div id="rascunhoGrid" style="background:var(--border-dim);border:1px solid var(--border-dim);"></div>
+          </div>
         </div>
         <div id="previewArea" style="display:none;">
           <div class="section-header"><div class="section-title">Pré-visualização</div></div>
@@ -899,7 +912,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const titles = { relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', extratos:'Extratos → Excel', emails:'Envio de Emails', clientes:'Gestão de Clientes' };
     const topbar = document.getElementById('topbarTitle');
     if (topbar) topbar.textContent = titles[viewId] || viewId;
-    if (viewId === 'emails') { loadTemplates(); if (clientRows.length === 0) addClientRow(); }
+    if (viewId === 'emails') { loadTemplates(); if (clientRows.length === 0) addClientRow(); loadRascunho(); }
     if (viewId === 'extratos') extLoadMappingFromSupabase();
     if (viewId === 'clientes') loadClientesView();
   }
@@ -1349,6 +1362,82 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     btn.style.background   = isOpen ? 'rgba(212,130,10,0.08)' : 'rgba(212,130,10,0.15)';
   }
 
+  // ── RASCUNHO ──
+  async function salvarRascunho() {
+    const clients = getClients();
+    if (!clients.length) { showFb('sendFeedback','Adicione pelo menos um cliente antes de salvar.','error'); return; }
+
+    // Delete existing pending drafts first
+    await sb.from('email_disparos').delete().eq('status','pendente').eq('created_by', currentUser.id);
+
+    // Insert all rows
+    const rows = clients.map(c => ({
+      email:          c.email,
+      nome:           c.nome,
+      desempenho:     c.desempenho,
+      frequencia:     c.frequencia || 'Mensal',
+      valor:          c.valor,
+      link_relatorio: c.link_relatorio || '',
+      status:         'pendente',
+      created_by:     currentUser.id,
+      created_at:     new Date().toISOString()
+    }));
+
+    const { error } = await sb.from('email_disparos').insert(rows);
+    if (error) { showFb('sendFeedback','Erro ao salvar: ' + error.message,'error'); return; }
+
+    showFb('sendFeedback', `✓ Rascunho salvo com ${clients.length} cliente(s). O Eduardo pode revisar e disparar.`, 'success');
+    await loadRascunho();
+  }
+
+  async function loadRascunho() {
+    const { data } = await sb.from('email_disparos').select('*').eq('status','pendente').order('created_at', { ascending: false });
+    const section = document.getElementById('rascunhoSection');
+    const grid    = document.getElementById('rascunhoGrid');
+    if (!data || data.length === 0) { section.style.display = 'none'; return; }
+
+    section.style.display = 'block';
+    grid.innerHTML = data.map(r => `
+      <div style="background:var(--navy-dark);padding:1rem 1.2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;border-bottom:1px solid var(--border-dim);">
+        <div>
+          <div style="font-size:0.82rem;font-weight:500;color:var(--white);">${r.nome} <span style="color:var(--gray);font-weight:300;">&lt;${r.email}&gt;</span></div>
+          <div style="font-size:0.68rem;color:var(--gray);margin-top:0.2rem;">
+            ${r.frequencia} · ${r.desempenho} do CDI · ${r.valor}
+            ${r.link_relatorio ? ' · <span style="color:var(--gold);">PDF anexado</span>' : ''}
+          </div>
+        </div>
+        <div style="display:flex;gap:0.5rem;">
+          <span style="font-size:0.62rem;padding:0.2rem 0.6rem;background:rgba(212,130,10,0.12);border:1px solid var(--border);color:var(--gold);font-weight:600;">PENDENTE</span>
+          <button onclick="deletarRascunhoItem('${r.id}')" style="background:none;border:none;color:#e05555;cursor:pointer;font-size:0.8rem;padding:0.2rem 0.5rem;">✕</button>
+        </div>
+      </div>`).join('');
+  }
+
+  async function carregarRascunho() {
+    const { data } = await sb.from('email_disparos').select('*').eq('status','pendente').order('created_at', { ascending: false });
+    if (!data || !data.length) return;
+    clearAllRows();
+    for (const r of data) {
+      addClientRow({ email: r.email, nome: r.nome, desempenho: r.desempenho, frequencia: r.frequencia, valor: r.valor });
+      // Restore PDF link in hidden input after row is added
+      const id = clientRows[clientRows.length - 1];
+      const urlInput = document.getElementById('pdf-url-' + id);
+      const nameEl   = document.getElementById('pdf-name-' + id);
+      const btnEl    = document.getElementById('pdf-btn-' + id);
+      if (urlInput && r.link_relatorio) {
+        urlInput.value = r.link_relatorio;
+        if (nameEl) nameEl.textContent = 'PDF salvo';
+        if (btnEl)  { btnEl.textContent = '✓'; btnEl.style.color = '#4caf82'; }
+      }
+    }
+    showFb('sendFeedback', `✓ ${data.length} cliente(s) carregados do rascunho.`, 'success');
+  }
+
+  async function deletarRascunhoItem(id) {
+    await sb.from('email_disparos').delete().eq('id', id);
+    await loadRascunho();
+  }
+
   async function sendAllEmails() {
     const clients = getClients();
     if (!clients.length) { alert('Adicione pelo menos um cliente.'); return; }
@@ -1377,6 +1466,12 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     }
     btn.disabled = false; btn.textContent = 'Disparar Emails';
     showFb('sendFeedback', errors.length ? `${sent} enviado(s). Erros: ${errors.join(' | ')}` : `✓ ${sent} email(s) enviado(s) com sucesso!`, errors.length ? 'error' : 'success');
+
+    // Mark rascunho as sent if no errors
+    if (!errors.length) {
+      await sb.from('email_disparos').update({ status: 'enviado', sent_at: new Date().toISOString() }).eq('status','pendente').eq('created_by', currentUser.id);
+      await loadRascunho();
+    }
   }
 
   // Paste from Excel
