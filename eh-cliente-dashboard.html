@@ -1245,6 +1245,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       if (se) throw se;
       const { data: urlData } = sb.storage.from('reports').getPublicUrl(filePath);
       urlInput.value = urlData.publicUrl;
+      urlInput.setAttribute('data-filename', file.name);
+      const displayName = file.name.length > 20 ? file.name.slice(0,18) + '…' : file.name;
+      nameEl.textContent = displayName;
       btnEl.textContent = '✓';
       btnEl.style.color = '#4caf82';
       btnEl.style.borderColor = 'rgba(76,175,130,0.4)';
@@ -1276,13 +1279,15 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       const inputs = row.querySelectorAll('input[type="email"], input[type="text"]');
       const pdfUrl = document.getElementById('pdf-url-' + id)?.value || '';
       const selects = row.querySelectorAll('select');
+      const pdfFilename = document.getElementById('pdf-url-' + id)?.getAttribute('data-filename') || '';
       return {
         email:          inputs[0].value.trim(),
         nome:           inputs[1].value.trim(),
         desempenho:     inputs[2].value.trim(),
         frequencia:     selects[0]?.value || 'Mensal',
         valor:          inputs[3].value.trim(),
-        link_relatorio: pdfUrl
+        link_relatorio: pdfUrl,
+        pdf_filename:   pdfFilename
       };
     }).filter(r => r && r.email && r.nome);
   }
@@ -1378,6 +1383,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       frequencia:     c.frequencia || 'Mensal',
       valor:          c.valor,
       link_relatorio: c.link_relatorio || '',
+      pdf_filename:   c.pdf_filename || '',
       status:         'pendente',
       created_by:     currentUser.id,
       created_at:     new Date().toISOString()
@@ -1403,7 +1409,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           <div style="font-size:0.82rem;font-weight:500;color:var(--white);">${r.nome} <span style="color:var(--gray);font-weight:300;">&lt;${r.email}&gt;</span></div>
           <div style="font-size:0.68rem;color:var(--gray);margin-top:0.2rem;">
             ${r.frequencia} · ${r.desempenho} do CDI · ${r.valor}
-            ${r.link_relatorio ? ' · <span style="color:var(--gold);">PDF anexado</span>' : ''}
+            ${r.link_relatorio ? ` · <span style="color:var(--gold);">📄 ${r.pdf_filename || 'PDF anexado'}</span>` : ''}
           </div>
         </div>
         <div style="display:flex;gap:0.5rem;">
@@ -1426,8 +1432,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       const btnEl    = document.getElementById('pdf-btn-' + id);
       if (urlInput && r.link_relatorio) {
         urlInput.value = r.link_relatorio;
-        if (nameEl) nameEl.textContent = 'PDF salvo';
-        if (btnEl)  { btnEl.textContent = '✓'; btnEl.style.color = '#4caf82'; }
+        urlInput.setAttribute('data-filename', r.pdf_filename || '');
+        const dn = r.pdf_filename ? (r.pdf_filename.length > 20 ? r.pdf_filename.slice(0,18)+'…' : r.pdf_filename) : 'PDF salvo';
+        if (nameEl) nameEl.textContent = dn;
+        if (btnEl)  { btnEl.textContent = '✓'; btnEl.style.color = '#4caf82'; btnEl.style.borderColor = 'rgba(76,175,130,0.4)'; btnEl.style.background = 'rgba(76,175,130,0.08)'; }
       }
     }
     showFb('sendFeedback', `✓ ${data.length} cliente(s) carregados do rascunho.`, 'success');
