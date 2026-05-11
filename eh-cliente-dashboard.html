@@ -685,7 +685,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           <div id="rascunhoSection" style="display:none;margin-top:1.5rem;">
             <div class="section-header" style="margin-bottom:0.8rem;">
               <div class="section-title">Rascunho Salvo</div>
-              <button onclick="carregarRascunho()" class="btn-upload" style="font-size:0.62rem;padding:0.4rem 0.8rem;background:rgba(212,130,10,0.15);color:var(--gold);border:1px solid var(--border);">↓ Carregar na tabela</button>
+              <div style="display:flex;gap:0.5rem;">
+                <button onclick="carregarRascunho()" class="btn-upload" style="font-size:0.62rem;padding:0.4rem 0.8rem;background:rgba(212,130,10,0.15);color:var(--gold);border:1px solid var(--border);">↓ Carregar na tabela</button>
+                <button onclick="apagarTodosRascunhos()" class="btn-upload" style="font-size:0.62rem;padding:0.4rem 0.8rem;background:rgba(224,85,85,0.1);color:#f08080;border:1px solid rgba(224,85,85,0.3);">✕ Apagar todos</button>
+              </div>
             </div>
             <div id="rascunhoGrid" style="background:var(--border-dim);border:1px solid var(--border-dim);"></div>
           </div>
@@ -1439,6 +1442,13 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       }
     }
     showFb('sendFeedback', `✓ ${data.length} cliente(s) carregados do rascunho.`, 'success');
+  }
+
+  async function apagarTodosRascunhos() {
+    if (!confirm('Apagar todos os rascunhos pendentes?')) return;
+    await sb.from('email_disparos').delete().eq('status','pendente');
+    await loadRascunho();
+    showFb('sendFeedback','✓ Todos os rascunhos apagados.','success');
   }
 
   async function deletarRascunhoItem(id) {
