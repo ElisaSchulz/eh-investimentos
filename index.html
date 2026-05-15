@@ -6,1230 +6,1186 @@
   <title>EH Investimentos — Gestão Financeira</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,300;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
-    :root {
-      --navy:       #0D1E4E;
-      --navy-dark:  #081537;
-      --navy-mid:   #122460;
-      --gold:       #D4820A;
-      --gold-light: #E8A030;
-      --gold-pale:  #F0C060;
-      --white:      #FFFFFF;
-      --gray:       #8A9BB8;
-      --gray-light: #C8D4E8;
-      --border:     rgba(212, 130, 10, 0.25);
+    :root{
+      --navy:#0D1E4E;
+      --navy-2:#0a1840;
+      --navy-3:#091438;
+      --navy-mid:#152a64;
+      --navy-warm:#1a2a5e;
+      --gold:#D4820A;
+      --gold-2:#E8A030;
+      --gold-pale:#F0C060;
+      --cream:#f3ede1;
+      --cream-2:#e4d5b0;
+      --cream-soft:#f3ede1cc;
+      --cream-faint:#f3ede166;
+      --rule:#f3ede122;
+      --rule-soft:#f3ede112;
+      --rule-strong:#f3ede140;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{background:var(--navy);color:var(--cream);font-family:'Source Serif 4',Georgia,serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+    .mono{font-family:'IBM Plex Mono',monospace;letter-spacing:.04em}
+    .sans{font-family:'IBM Plex Sans',sans-serif}
+    /* grain */
+    body::before{
+      content:'';position:fixed;inset:0;pointer-events:none;z-index:1000;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+      mix-blend-mode:overlay;opacity:.3
     }
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background: var(--navy-dark);
-      color: var(--white);
-      overflow-x: hidden;
+    /* MASTHEAD */
+    .masthead{
+      border-bottom:2px solid var(--rule-strong);
+      padding:18px 56px 14px;
+      display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:24px;
+      background:var(--navy);
+    }
+    .masthead-left,.masthead-right{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-soft);line-height:1.6}
+    .masthead-left{display:flex;flex-direction:column;gap:2px}
+    .masthead-right{text-align:right;display:flex;flex-direction:column;gap:2px}
+    .masthead-title{
+      font-family:'Source Serif 4',serif;
+      font-weight:400;font-size:46px;letter-spacing:.005em;line-height:1;
+      text-align:center;font-variant:small-caps;color:var(--cream);
+    }
+    .masthead-title em{font-style:italic;color:var(--gold);font-weight:500}
+    .masthead-sub{
+      font-family:'IBM Plex Mono',monospace;
+      font-size:10px;letter-spacing:.32em;text-transform:uppercase;
+      color:var(--cream-soft);text-align:center;margin-top:6px;
+    }
+    .masthead-rule{
+      border-top:.5px solid var(--rule-strong);
+      height:6px;
+      border-bottom:1.5px solid var(--rule-strong);
+      margin:0 56px;
     }
 
-    /* ─── NOISE TEXTURE ─── */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 1000;
-      opacity: 0.35;
+    /* NAV */
+    .navstrip{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:14px 56px;border-bottom:.5px solid var(--rule);
+      font-family:'IBM Plex Sans',sans-serif;font-size:12px;letter-spacing:.04em;
+      background:rgba(13,30,78,0.95);backdrop-filter:blur(16px);
+      position:sticky;top:0;z-index:100;
+    }
+    .navstrip-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+    .navstrip-logo-text span:first-child{display:block;font-family:'IBM Plex Sans',sans-serif;font-weight:700;font-size:13px;letter-spacing:.08em;color:var(--cream);}
+    .navstrip-logo-text span:last-child{display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--cream-soft);}
+    .navstrip-links{display:flex;gap:28px}
+    .navstrip a{color:var(--cream);text-decoration:none;font-weight:500}
+    .navstrip a:hover{color:var(--gold)}
+    .navstrip-cta{display:flex;gap:14px;align-items:center}
+    .navstrip-cta .pill{
+      border:1px solid var(--rule-strong);padding:7px 14px;text-decoration:none;color:var(--cream);
+      font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+    }
+    .navstrip-cta .pill:hover{border-color:var(--gold);color:var(--gold)}
+    .navstrip-cta .pill.solid{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+    .navstrip-cta .pill.solid:hover{background:var(--gold-2);border-color:var(--gold-2);color:var(--navy)}
+
+    /* HAMBURGER */
+    .hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px;}
+    .hamburger span{display:block;width:22px;height:2px;background:var(--cream);transition:all 0.3s;}
+    .hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+    .hamburger.open span:nth-child(2){opacity:0;}
+    .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+    /* MOBILE DRAWER */
+    .mobile-drawer{
+      position:fixed;inset:0;background:rgba(8,20,56,0.97);z-index:200;
+      display:flex;flex-direction:column;
+      transform:translateX(100%);transition:transform 0.35s cubic-bezier(.4,0,.2,1);
+    }
+    .mobile-drawer.open{transform:translateX(0);}
+    .mobile-drawer-inner{
+      display:flex;flex-direction:column;padding:80px 36px 40px;gap:0;
+      height:100%;overflow-y:auto;
+    }
+    .mobile-drawer-inner a{
+      font-family:'Source Serif 4',serif;font-size:32px;font-weight:300;
+      color:var(--cream);text-decoration:none;padding:16px 0;
+      border-bottom:1px solid var(--rule);letter-spacing:-.01em;
+      transition:color 0.2s;
+    }
+    .mobile-drawer-inner a:hover{color:var(--gold);}
+    .mobile-drawer-inner a.drawer-cta{
+      margin-top:32px;border:1px solid var(--gold);color:var(--gold);
+      font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.2em;
+      text-transform:uppercase;text-align:center;padding:16px;border-bottom:1px solid var(--gold);
+    }
+    .drawer-close{
+      position:absolute;top:20px;right:24px;
+      background:none;border:none;color:var(--cream-soft);font-size:24px;cursor:pointer;
+      font-family:'IBM Plex Mono',monospace;line-height:1;padding:8px;
     }
 
-    /* ─── NAV ─── */
-    nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 900;
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      align-items: center;
-      padding: 1.4rem 5vw;
-      background: rgba(8, 21, 55, 0.85);
-      backdrop-filter: blur(18px);
-      border-bottom: 1px solid var(--border);
-      transition: padding 0.3s;
+    /* ═══════════════════════════════
+       MOBILE — max-width: 768px
+    ═══════════════════════════════ */
+    @media(max-width:768px){
+
+      /* NAV */
+      .navstrip{padding:12px 20px;position:fixed;top:0;left:0;right:0;z-index:100;transition:transform 0.3s ease;}
+      .navstrip-links,.navstrip-cta{display:none;}
+      .hamburger{display:flex;}
+      .navstrip-logo-text span:last-child{display:none;}
+      body{padding-top:58px;}
+      .masthead,.masthead-rule{display:none;}
+
+      /* HERO */
+      .hero{padding:40px 20px 48px;display:flex;flex-direction:column;align-items:center;text-align:center;}
+      .hero > div{width:100%;max-width:100% !important;}
+      .hero h1{font-size:40px;line-height:1.05;margin-bottom:18px;}
+      .hero-deck{font-size:16px;margin-bottom:22px;max-width:100%;}
+      .hero-actions{flex-direction:column;width:100%;gap:10px;margin-bottom:28px;}
+      .hero-actions a{width:100%;text-align:center;justify-content:center;}
+      .hero-stats{grid-template-columns:repeat(3,1fr);gap:10px;max-width:100%;width:100%;}
+      .hero-stat .v{font-size:20px;}
+      .hero-stat .v.txt{font-size:15px;}
+      .hero-stat .l{font-size:8px;letter-spacing:.1em;}
+
+      /* SECTIONS */
+      section.editorial{padding:44px 20px;}
+      h2{font-size:32px !important;line-height:1.1 !important;}
+
+      /* CREDENTIALS — label full width + 2×2 grid */
+      .creds{display:grid !important;grid-template-columns:1fr 1fr !important;gap:0 !important;padding:0 !important;align-items:stretch;}
+      .creds-label{
+        grid-column:1 / -1 !important;display:block !important;
+        padding:12px 16px;font-size:9px;letter-spacing:.24em;
+        text-transform:uppercase;color:var(--gold);
+        font-family:'IBM Plex Mono',monospace;
+        border-bottom:1px solid var(--rule);max-width:none !important;
+      }
+      .creds-cell{
+        border:none !important;
+        border-top:1px solid var(--rule) !important;
+        padding:14px 14px !important;
+        border-left:none !important;
+      }
+      .creds-cell:nth-child(2),.creds-cell:nth-child(4){border-right:1px solid var(--rule) !important;}
+      .creds-cell .nm{font-size:8px;}
+      .creds-cell .vl{font-size:14px;}
+      .creds-cell .nb{font-size:9px;}
+
+      /* SOBRE — single column, photo below text */
+      .sobre-grid{display:flex !important;flex-direction:column !important;gap:0 !important;}
+      .sobre-text{order:1;width:100%;}
+      .sobre-text p{font-size:15px;max-width:100%;}
+      .founder-card{order:2;margin-top:36px;width:100%;}
+      .founder-portrait{aspect-ratio:4/3;margin:-32px -30px 20px;}
+      .founder-name{font-size:22px;}
+      .founder-bio{font-size:14px;}
+      .founder-creds{grid-template-columns:1fr 1fr 1fr;gap:8px;}
+
+      /* SERVICES — single column */
+      .services-header{display:flex !important;flex-direction:column !important;gap:12px;margin-bottom:24px;}
+      .services-header h2{max-width:100%;}
+      .services-header p{max-width:100%;font-size:15px;}
+      .services-grid{grid-template-columns:1fr !important;gap:14px;}
+      .svc{min-height:auto;padding:26px 22px;}
+      .svc h3{font-size:26px;}
+      .svc p{font-size:15px;max-width:100%;}
+      .svc .roman{font-size:80px;}
+      .svc .tag{font-size:9px;padding:5px 10px;}
+
+      /* PERFIL — single column, quote below */
+      .perfil-grid{display:flex !important;flex-direction:column !important;gap:0 !important;}
+      .perfil-text{order:1;width:100%;}
+      .perfil-text p{font-size:15px;max-width:100%;}
+      .perfil-quote{order:2;position:static !important;margin-top:36px;padding:24px 20px;width:100%;}
+      .perfil-quote blockquote{font-size:19px;line-height:1.4;}
+      .req-list li{font-size:14px;}
+
+      /* PROCESSO — single column */
+      .processo-timeline{grid-template-columns:1fr !important;gap:0;}
+      .processo-steps{grid-template-columns:1fr !important;}
+      .pt-item{padding:0 0 24px 0;border-bottom:1px solid var(--rule);margin-bottom:4px;}
+      .pt-last{border-bottom:none;padding-bottom:0;margin-bottom:0;}
+      .pt-num{width:48px;height:48px;font-size:32px;}
+      .pt-title{font-size:17px;}
+      .pt-desc{font-size:14px;}
+      .step{border-right:none;border-bottom:1px solid var(--rule);padding:20px 0;}
+      .step:last-child{border-bottom:none;}
+
+      /* CTA — single column */
+      .cta-grid{display:flex !important;flex-direction:column !important;gap:32px !important;}
+      .cta-text{order:1;width:100%;}
+      .cta-form{order:2;width:100%;padding:22px 18px;}
+      .cta-text p{font-size:16px;max-width:100%;}
+      .cta-form .inp{font-size:15px;}
+
+      /* FOOTER */
+      footer{padding:32px 20px 20px !important;}
+      .foot-grid{grid-template-columns:1fr !important;gap:28px;}
+      .foot-bot{flex-direction:column;align-items:flex-start;gap:6px;font-size:9px;}
+      footer > div{flex-direction:column !important;align-items:flex-start !important;gap:14px !important;}
     }
 
-    .nav-logo {
-      display: flex;
-      align-items: center;
-      gap: 0.9rem;
-      text-decoration: none;
+    @media(max-width:480px){
+      .hero h1{font-size:32px;}
+      h2{font-size:26px !important;}
+      .hero-stat .v{font-size:17px;}
+      .hero-stat .v.txt{font-size:13px;}
+      .perfil-quote blockquote{font-size:17px;}
+      .svc h3{font-size:22px;}
+      .founder-creds{grid-template-columns:1fr;}
     }
 
-    .nav-logo-icon {
-      width: 36px;
-      height: 36px;
-      flex-shrink: 0;
-    }
-
-    .nav-logo-text {
-      display: flex;
-      flex-direction: column;
-      line-height: 1.1;
-    }
-
-    .nav-logo-text span:first-child {
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 700;
-      font-size: 0.95rem;
-      letter-spacing: 0.08em;
-      color: var(--white);
-    }
-
-    .nav-logo-text span:last-child {
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 300;
-      font-size: 0.62rem;
-      letter-spacing: 0.2em;
-      color: var(--gray);
-      text-transform: uppercase;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 2.5rem;
-      list-style: none;
-      justify-content: center;
-    }
-
-    .nav-buttons {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-    }
-
-    .nav-links a {
-      font-size: 0.72rem;
-      font-weight: 500;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--gray-light);
-      text-decoration: none;
-      transition: color 0.2s;
-      position: relative;
-    }
-
-    .nav-links a::after {
-      content: '';
-      position: absolute;
-      bottom: -4px; left: 0; right: 0;
-      height: 1px;
-      background: var(--gold);
-      transform: scaleX(0);
-      transition: transform 0.2s;
-    }
-
-    .nav-links a:hover { color: var(--white); }
-    .nav-links a:hover::after { transform: scaleX(1); }
-
-    .nav-cta-ghost {
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--gold);
-      border: 1px solid var(--border);
-      padding: 0.65rem 1.5rem;
-      text-decoration: none;
-      transition: background 0.2s, color 0.2s;
-    }
-
-    .nav-cta-ghost:hover {
-      background: var(--gold-pale);
-      color: var(--gold-light);
-    }
-
-    .nav-cta {
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--navy-dark);
-      background: var(--gold);
-      padding: 0.65rem 1.5rem;
-      text-decoration: none;
-      transition: background 0.2s, transform 0.2s;
-    }
-
-    .nav-cta:hover { background: var(--gold-light); transform: translateY(-1px); }
-
-    /* ─── HERO ─── */
-    #hero {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 10rem 5vw 6rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .hero-bg {
-      position: absolute;
-      inset: 0;
+    /* HERO */
+    .hero{
+      padding:80px 56px 80px;
+      display:flex;flex-direction:column;align-items:center;text-align:center;gap:0;
+      border-bottom:1px solid var(--rule);
+      align-items:start;position:relative;overflow:hidden;
       background:
-        radial-gradient(ellipse 80% 60% at 70% 50%, rgba(18, 36, 96, 0.9) 0%, transparent 70%),
-        radial-gradient(ellipse 40% 40% at 15% 80%, rgba(212, 130, 10, 0.12) 0%, transparent 60%),
-        linear-gradient(160deg, var(--navy-dark) 0%, var(--navy) 50%, var(--navy-dark) 100%);
-    }
-
-    .hero-lines {
-      position: absolute;
-      inset: 0;
-      overflow: hidden;
-      pointer-events: none;
-    }
-
-    .hero-lines::before,
-    .hero-lines::after {
-      content: '';
-      position: absolute;
-      border: 1px solid rgba(212, 130, 10, 0.1);
-    }
-
-    .hero-lines::before {
-      width: 500px; height: 500px;
-      border-radius: 50%;
-      top: -100px; right: -100px;
-      animation: rotateSlow 40s linear infinite;
-    }
-
-    .hero-lines::after {
-      width: 300px; height: 300px;
-      border-radius: 50%;
-      bottom: 5%; right: 5%;
-      border-color: rgba(212, 130, 10, 0.06);
-      animation: rotateSlow 60s linear infinite reverse;
-    }
-
-    @keyframes rotateSlow {
-      to { transform: rotate(360deg); }
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 2;
-      max-width: 780px;
-      animation: fadeUp 1s ease both;
-    }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .hero-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.6rem;
-      font-size: 0.65rem;
-      font-weight: 600;
-      letter-spacing: 0.28em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 2rem;
-      animation: fadeUp 1s 0.1s ease both;
-    }
-
-    .hero-tag::before {
-      content: '';
-      display: block;
-      width: 32px;
-      height: 1px;
-      background: var(--gold);
-    }
-
-    h1 {
-      font-family: 'Cormorant Garamond', serif;
-      font-weight: 300;
-      font-size: clamp(3rem, 7vw, 5.5rem);
-      line-height: 1.05;
-      letter-spacing: -0.01em;
-      margin-bottom: 1.8rem;
-      animation: fadeUp 1s 0.2s ease both;
-    }
-
-    h1 em {
-      font-style: italic;
-      color: var(--gold-light);
-    }
-
-    .hero-desc {
-      font-size: 1rem;
-      font-weight: 300;
-      line-height: 1.8;
-      color: var(--gray-light);
-      max-width: 520px;
-      margin-bottom: 3rem;
-      animation: fadeUp 1s 0.35s ease both;
-    }
-
-    .hero-actions {
-      display: flex;
-      gap: 1.2rem;
-      align-items: center;
-      flex-wrap: wrap;
-      animation: fadeUp 1s 0.5s ease both;
-    }
-
-    .btn-primary {
-      display: inline-block;
-      background: var(--gold);
-      color: var(--navy-dark);
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      padding: 1rem 2.2rem;
-      text-decoration: none;
-      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
-      box-shadow: 0 0 0 0 rgba(212,130,10,0.4);
-    }
-
-    .btn-primary:hover {
-      background: var(--gold-light);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(212,130,10,0.3);
-    }
-
-    .btn-ghost {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.6rem;
-      color: var(--gray-light);
-      font-size: 0.72rem;
-      font-weight: 500;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    .btn-ghost svg { transition: transform 0.2s; }
-    .btn-ghost:hover { color: var(--white); }
-    .btn-ghost:hover svg { transform: translateX(4px); }
-
-    .hero-stat-row {
-      position: absolute;
-      bottom: 4rem; left: 5vw; right: 5vw;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      max-width: 600px;
-      border-top: 1px solid var(--border);
-      padding-top: 2rem;
-      z-index: 2;
-      animation: fadeUp 1s 0.7s ease both;
-    }
-
-    .hero-stat { padding-right: 2rem; }
-
-    .hero-stat-num {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2.4rem;
-      font-weight: 500;
-      color: var(--gold-light);
-      line-height: 1;
-    }
-
-    .hero-stat-num sup {
-      font-size: 1rem;
-      vertical-align: super;
-    }
-
-    .hero-stat-label {
-      font-size: 0.65rem;
-      font-weight: 500;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--gray);
-      margin-top: 0.4rem;
-    }
-
-    /* ─── SECTIONS ─── */
-    section { padding: 7rem 5vw; }
-
-    .section-tag {
-      font-size: 0.65rem;
-      font-weight: 600;
-      letter-spacing: 0.28em;
-      text-transform: uppercase;
-      color: var(--gold);
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      margin-bottom: 1.2rem;
-    }
-
-    .section-tag::before {
-      content: '';
-      display: block;
-      width: 24px;
-      height: 1px;
-      background: var(--gold);
-    }
-
-    h2 {
-      font-family: 'Cormorant Garamond', serif;
-      font-weight: 300;
-      font-size: clamp(2.2rem, 4.5vw, 3.5rem);
-      line-height: 1.1;
-      margin-bottom: 1.5rem;
-    }
-
-    h2 em { font-style: italic; color: var(--gold-light); }
-
-    /* ─── ABOUT ─── */
-    #sobre {
-      background: var(--navy);
-      position: relative;
-      overflow: hidden;
-    }
-
-    #sobre::before {
-      content: '';
-      position: absolute;
-      right: -200px; top: -200px;
-      width: 600px; height: 600px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(212,130,10,0.06) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .sobre-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6rem;
-      align-items: center;
-      position: relative;
-      z-index: 1;
-    }
-
-    .sobre-text p {
-      font-size: 0.95rem;
-      font-weight: 300;
-      line-height: 1.85;
-      color: var(--gray-light);
-      margin-bottom: 1.2rem;
-    }
-
-    .sobre-text p strong {
-      color: var(--white);
-      font-weight: 500;
-    }
-
-    .sobre-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--border);
-      padding: 3rem;
-      position: relative;
-    }
-
-    .sobre-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0;
-      width: 3px; height: 60px;
-      background: linear-gradient(to bottom, var(--gold), transparent);
-    }
-
-    .founder-name {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2rem;
-      font-weight: 400;
-      margin-bottom: 0.3rem;
-    }
-
-    .founder-title {
-      font-size: 0.68rem;
-      font-weight: 500;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 2rem;
-    }
-
-    .founder-bio {
-      font-size: 0.9rem;
-      line-height: 1.75;
-      color: var(--gray-light);
-      font-weight: 300;
-      border-top: 1px solid var(--border);
-      padding-top: 1.5rem;
-    }
-
-    /* ─── SERVICES ─── */
-    #servicos { background: var(--navy-dark); }
-
-    .services-header {
-      max-width: 600px;
-      margin-bottom: 4rem;
-    }
-
-    .services-header p {
-      font-size: 0.95rem;
-      line-height: 1.8;
-      color: var(--gray-light);
-      font-weight: 300;
-    }
-
-    .services-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1px;
-      background: var(--border);
-      border: 1px solid var(--border);
-    }
-
-    .service-card {
-      background: var(--navy-dark);
-      padding: 2.8rem 2.2rem;
-      position: relative;
-      overflow: hidden;
-      transition: background 0.3s;
-      cursor: default;
-    }
-
-    .service-card::after {
-      content: '';
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(to right, var(--gold), var(--gold-light));
-      transform: scaleX(0);
-      transition: transform 0.3s;
-      transform-origin: left;
-    }
-
-    .service-card:hover { background: rgba(18,36,96,0.7); }
-    .service-card:hover::after { transform: scaleX(1); }
-
-    .service-icon {
-      width: 44px;
-      height: 44px;
-      border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1.8rem;
-      color: var(--gold);
-      transition: background 0.3s, border-color 0.3s;
-    }
-
-    .service-card:hover .service-icon {
-      background: rgba(212,130,10,0.1);
-      border-color: var(--gold);
-    }
-
-    .service-num {
-      position: absolute;
-      top: 2.2rem; right: 2.2rem;
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 3rem;
-      font-weight: 300;
-      color: rgba(255,255,255,0.04);
-      line-height: 1;
-      transition: color 0.3s;
-    }
-
-    .service-card:hover .service-num { color: rgba(212,130,10,0.08); }
-
-    .service-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.4rem;
-      font-weight: 500;
-      margin-bottom: 1rem;
-    }
-
-    .service-desc {
-      font-size: 0.85rem;
-      line-height: 1.75;
-      color: var(--gray);
-      font-weight: 300;
-    }
-
-    /* ─── PERFIL DO INVESTIDOR ─── */
-    #perfil {
-      background: var(--navy);
-      position: relative;
-    }
-
-    .perfil-inner {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 5rem;
-      align-items: start;
-    }
-
-    .perfil-text p {
-      font-size: 0.95rem;
-      line-height: 1.85;
-      color: var(--gray-light);
-      font-weight: 300;
-      margin-bottom: 1.2rem;
-    }
-
-    .requisitos {
-      list-style: none;
-      margin-top: 2.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .requisitos li {
-      display: flex;
-      align-items: flex-start;
-      gap: 1rem;
-      font-size: 0.88rem;
-      color: var(--gray-light);
-      line-height: 1.6;
-    }
-
-    .requisito-icon {
-      flex-shrink: 0;
-      width: 20px;
-      height: 20px;
-      background: rgba(212,130,10,0.15);
-      border: 1px solid rgba(212,130,10,0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 2px;
-    }
-
-    .requisito-icon svg { color: var(--gold); }
-
-    .perfil-quote {
-      border-left: 2px solid var(--gold);
-      padding: 2.5rem 2.5rem;
-      background: rgba(255,255,255,0.02);
-      position: sticky;
-      top: 120px;
-    }
-
-    .perfil-quote blockquote {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.6rem;
-      font-weight: 300;
-      line-height: 1.5;
-      font-style: italic;
-      color: var(--gray-light);
-      margin-bottom: 1.5rem;
-    }
-
-    .perfil-quote cite {
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--gold);
-      font-style: normal;
-    }
-
-    /* ─── PROCESSO ─── */
-    #processo { background: var(--navy-dark); }
-
-    .processo-steps {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0;
-      margin-top: 4rem;
-      position: relative;
-    }
-
-    .processo-steps::before {
-      content: '';
-      position: absolute;
-      top: 22px; left: 10%; right: 10%;
-      height: 1px;
-      background: linear-gradient(to right, transparent, var(--border), var(--border), transparent);
-    }
-
-    .step {
-      padding: 0 1.5rem 0 0;
-      position: relative;
-    }
-
-    .step-dot {
-      width: 44px;
-      height: 44px;
-      border: 1px solid var(--gold);
-      background: var(--navy-dark);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1.8rem;
-      position: relative;
-      z-index: 1;
-      color: var(--gold);
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.2rem;
-      font-weight: 500;
-      transition: background 0.3s;
-    }
-
-    .step:hover .step-dot {
-      background: rgba(212,130,10,0.15);
-    }
-
-    .step-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.2rem;
-      font-weight: 500;
-      margin-bottom: 0.7rem;
-    }
-
-    .step-desc {
-      font-size: 0.82rem;
-      line-height: 1.7;
-      color: var(--gray);
-      font-weight: 300;
-    }
-
-    /* ─── CTA BAND ─── */
-    #contato {
-      background: linear-gradient(135deg, var(--navy-mid) 0%, var(--navy) 100%);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .cta-inner {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 4rem;
-      align-items: center;
-    }
-
-    .cta-text h2 { margin-bottom: 0.8rem; }
-
-    .cta-text p {
-      font-size: 0.95rem;
-      color: var(--gray-light);
-      font-weight: 300;
-      line-height: 1.7;
-    }
-
-    .cta-form {
-      display: flex;
-      flex-direction: column;
-      gap: 0.9rem;
-      min-width: 340px;
-    }
-
-    .form-input {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border);
-      color: var(--white);
-      font-family: 'Montserrat', sans-serif;
-      font-size: 0.8rem;
-      padding: 0.9rem 1.2rem;
-      outline: none;
-      transition: border-color 0.2s, background 0.2s;
-      width: 100%;
-    }
-
-    .form-input::placeholder { color: var(--gray); }
-    .form-input:focus {
-      border-color: var(--gold);
-      background: rgba(212,130,10,0.05);
-    }
-
-    .form-input option { background: var(--navy); }
-
-    /* ─── FOOTER ─── */
-    footer {
-      background: var(--navy-dark);
-      border-top: 1px solid var(--border);
-      padding: 4rem 5vw 2.5rem;
-    }
-
-    .footer-top {
-      display: grid;
-      grid-template-columns: 2fr 1fr 1fr;
-      gap: 4rem;
-      padding-bottom: 3rem;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 2rem;
-    }
-
-    .footer-brand p {
-      font-size: 0.85rem;
-      line-height: 1.75;
-      color: var(--gray);
-      font-weight: 300;
-      margin-top: 1.2rem;
-      max-width: 300px;
-    }
-
-    .footer-col h4 {
-      font-size: 0.65rem;
-      font-weight: 600;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 1.2rem;
-    }
-
-    .footer-col ul { list-style: none; }
-
-    .footer-col ul li {
-      margin-bottom: 0.6rem;
-    }
-
-    .footer-col ul li a {
-      font-size: 0.82rem;
-      color: var(--gray);
-      text-decoration: none;
-      font-weight: 300;
-      transition: color 0.2s;
-    }
-
-    .footer-col ul li a:hover { color: var(--white); }
-
-    .footer-bottom {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .footer-copy {
-      font-size: 0.72rem;
-      color: var(--gray);
-      font-weight: 300;
-    }
-
-    .footer-disclaimer {
-      font-size: 0.65rem;
-      color: rgba(138,155,184,0.6);
-      max-width: 500px;
-      text-align: right;
-      line-height: 1.5;
-    }
-
-    /* ─── DIVIDER ─── */
-    .gold-divider {
-      width: 40px;
-      height: 2px;
-      background: linear-gradient(to right, var(--gold), var(--gold-light));
-      margin: 1.5rem 0;
-    }
-
-    /* ─── SCROLL ANIMATIONS ─── */
-    /* Elements start visible. JS adds .will-animate only after load */
-    .will-animate {
-      opacity: 0;
-      transform: translateY(28px);
-      transition: opacity 0.65s ease, transform 0.65s ease;
-    }
-
-    .will-animate.in-view {
-      opacity: 1;
-      transform: none;
-    }
-
-    /* ─── RESPONSIVE ─── */
-    @media (max-width: 960px) {
-      .sobre-grid,
-      .perfil-inner,
-      .cta-inner { grid-template-columns: 1fr; gap: 3rem; }
-
-      .services-grid { grid-template-columns: 1fr 1fr; }
-
-      .processo-steps { grid-template-columns: 1fr 1fr; gap: 2.5rem; }
-      .processo-steps::before { display: none; }
-
-      .footer-top { grid-template-columns: 1fr; gap: 2.5rem; }
-      .footer-disclaimer { text-align: left; }
-      .footer-bottom { flex-direction: column; gap: 1rem; align-items: flex-start; }
-
-      .nav-links { display: none; }
-      .cta-form { min-width: auto; }
-      .perfil-quote { position: static; }
-    }
-
-    @media (max-width: 600px) {
-      .services-grid { grid-template-columns: 1fr; }
-      .processo-steps { grid-template-columns: 1fr; }
-      .hero-stat-row { grid-template-columns: 1fr; gap: 1.5rem; position: static; margin-top: 3rem; }
-    }
+        radial-gradient(ellipse 60% 50% at 15% 90%, rgba(212,130,10,.10) 0%, transparent 65%),
+        var(--navy);
+    }
+    .hero::after{
+      content:'';position:absolute;width:680px;height:680px;border:1px solid rgba(212,130,10,.06);border-radius:50%;
+      right:-180px;top:-260px;pointer-events:none;
+    }
+
+    .kicker{
+      font-family:'IBM Plex Mono',monospace;
+      font-size:10px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);
+      display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:28px;
+    }
+    .kicker::before{content:'';width:28px;height:1px;background:var(--gold)}
+    .hero h1{
+      font-family:'Source Serif 4',serif;font-weight:300;
+      font-size:94px;line-height:.96;letter-spacing:-.02em;color:var(--cream);
+      margin-bottom:28px;
+    }
+    .hero h1 em{font-style:italic;font-weight:400;color:var(--gold-2)}
+    .hero-deck{
+      font-family:'Source Serif 4',serif;font-weight:400;
+      font-size:20px;line-height:1.55;color:var(--cream-soft);
+      max-width:600px;margin-bottom:36px;margin-left:auto;margin-right:auto;
+    }
+    .hero-actions{display:flex;gap:14px;align-items:center;justify-content:center;margin-bottom:42px}
+    .btn-primary{
+      background:var(--gold);color:var(--navy);text-decoration:none;
+      padding:15px 28px;font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:13px;
+      letter-spacing:.06em;border:1px solid var(--gold);transition:background .2s, color .2s;
+    }
+    .btn-primary:hover{background:var(--gold-2);border-color:var(--gold-2)}
+    .btn-ghost{
+      background:transparent;color:var(--cream);text-decoration:none;
+      padding:15px 28px;font-family:'IBM Plex Sans',sans-serif;font-weight:500;font-size:13px;
+      letter-spacing:.06em;border:1px solid var(--rule-strong);transition:all .2s;
+      display:inline-flex;align-items:center;gap:8px;
+    }
+    .btn-ghost:hover{border-color:var(--cream);color:var(--cream)}
+
+    /* hero stats — built into hero */
+    .hero-stats{
+      display:grid;grid-template-columns:repeat(3,auto);gap:42px;
+      border-top:1px solid var(--rule);padding-top:24px;max-width:600px;margin:0 auto;
+    }
+    .hero-stat{display:flex;flex-direction:column;gap:4px}
+    .hero-stat .v{font-family:'Source Serif 4',serif;font-weight:400;font-size:32px;line-height:1;letter-spacing:-.01em;color:var(--gold-2)}
+    .hero-stat .v sup{font-size:16px;letter-spacing:0}
+    .hero-stat .v em{font-style:italic;color:var(--gold-2)}
+    .hero-stat .v.txt{font-size:24px;font-style:italic;font-weight:400}
+    .hero-stat .l{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--cream-soft);margin-top:6px}
+
+    /* hero right — quote frame */
+    .hero-frame{
+      border:1px solid var(--rule-strong);
+      background:var(--navy-2);
+      padding:36px 32px 28px;position:relative;
+      align-self:start;margin-top:48px;
+    }
+    .hero-frame::before{
+      content:'';position:absolute;top:-1px;left:-1px;width:60px;height:6px;background:var(--gold)
+    }
+    .hero-frame .fig{
+      font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.24em;text-transform:uppercase;
+      color:var(--gold);margin-bottom:20px;
+    }
+    .hero-frame blockquote{
+      font-family:'Source Serif 4',serif;font-weight:400;font-style:italic;
+      font-size:26px;line-height:1.3;letter-spacing:-.01em;color:var(--cream);
+      margin-bottom:24px;
+    }
+    .hero-frame blockquote::before{content:'“';color:var(--gold);font-size:42px;line-height:0;display:block;margin-bottom:-8px;margin-left:-4px}
+    .hero-frame cite{
+      font-family:'IBM Plex Mono',monospace;font-style:normal;
+      font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--cream-faint);
+      display:block;border-top:.5px solid var(--rule);padding-top:14px;
+    }
+    .hero-frame cite strong{color:var(--cream);font-weight:500}
+
+    /* CREDENTIALS BAND */
+    .creds{
+      display:grid;grid-template-columns:auto repeat(3,1fr);align-items:center;
+      padding:22px 56px;border-bottom:1px solid var(--rule);
+      background:var(--navy-3);gap:36px;
+    }
+    .creds-label{
+      font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.3em;text-transform:uppercase;
+      color:var(--gold);max-width:160px;line-height:1.4;
+    }
+    .creds-cell{
+      display:flex;flex-direction:column;gap:3px;
+      border-left:1px solid var(--rule);padding-left:22px;
+    }
+    .creds-cell .nm{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--cream-faint)}
+    .creds-cell .vl{font-family:'Source Serif 4',serif;font-size:19px;font-weight:500;letter-spacing:-.005em;color:var(--cream)}
+    .creds-cell .vl em{font-style:italic;color:var(--gold-2);font-weight:400}
+    .creds-cell .nb{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--cream-faint)}
+
+    /* SECTION SCAFFOLD */
+    section.editorial{padding:96px 56px;border-bottom:1px solid var(--rule);position:relative}
+    .section-tag{
+      font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);
+      display:flex;align-items:center;gap:10px;margin-bottom:18px;
+    }
+    .section-tag::before{content:'';width:28px;height:1px;background:var(--gold)}
+
+    h2{
+      font-family:'Source Serif 4',serif;font-weight:300;
+      font-size:62px;line-height:1.02;letter-spacing:-.02em;color:var(--cream);
+    }
+    h2 em{font-style:italic;font-weight:400;color:var(--gold-2)}
+
+    /* SOBRE */
+    .sobre-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:72px;align-items:start;margin-top:8px}
+    .sobre-text h2{margin-bottom:32px;max-width:680px}
+    .sobre-text p{font-family:'Source Serif 4',serif;font-size:17px;line-height:1.7;color:var(--cream-soft);margin-bottom:18px;font-weight:400;max-width:620px}
+    .sobre-text p:first-of-type{font-size:21px;line-height:1.55;color:var(--cream);font-weight:400}
+    .sobre-text p strong{color:var(--cream);font-weight:500}
+
+    /* Founder card */
+    .founder-card{
+      background:var(--navy-2);border:1px solid var(--rule-strong);
+      padding:32px 30px;position:relative;
+    }
+    .founder-card::before{
+      content:'';position:absolute;top:0;left:0;width:60px;height:4px;background:var(--gold)
+    }
+    .founder-portrait{
+      aspect-ratio:4/3;margin:-32px -30px 24px;
+      border-bottom:1px solid var(--rule-strong);
+      position:relative;overflow:hidden;background:var(--navy-mid);
+    }
+    .founder-name{
+      font-family:'Source Serif 4',serif;font-size:30px;font-weight:400;letter-spacing:-.01em;color:var(--cream);
+      margin-bottom:4px;
+    }
+    .founder-title{
+      font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;
+      color:var(--gold);margin-bottom:18px;
+    }
+    .founder-bio{
+      font-family:'Source Serif 4',serif;font-size:14.5px;line-height:1.7;color:var(--cream-soft);font-weight:400;
+      border-top:1px solid var(--rule);padding-top:16px;
+    }
+    .founder-creds{
+      display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;
+      border-top:1px solid var(--rule);padding-top:18px;margin-top:18px;
+    }
+    .founder-creds > div{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--cream-faint);line-height:1.5}
+    .founder-creds strong{display:block;color:var(--gold);font-size:9px;letter-spacing:.24em;text-transform:uppercase;font-weight:500;margin-bottom:4px}
+    .founder-creds span{display:block;font-family:'Source Serif 4',serif;font-size:13px;color:var(--cream);font-weight:500;letter-spacing:0;margin-bottom:2px}
+
+    /* SERVICES */
+    .services-header{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:end;margin-bottom:48px}
+    .services-header h2{max-width:560px}
+    .services-header p{font-family:'Source Serif 4',serif;font-size:16px;line-height:1.6;color:var(--cream-soft);font-weight:400;max-width:440px}
+
+    .services-grid{
+      display:grid;grid-template-columns:1fr 1fr;gap:18px;
+    }
+    .svc{
+      background:var(--navy-2);
+      border:1px solid var(--rule-strong);
+      padding:42px 38px 36px;
+      position:relative;overflow:hidden;
+      display:flex;flex-direction:column;
+      min-height:440px;
+      transition:border-color .25s, transform .25s, background .25s;
+    }
+    .svc:hover{border-color:var(--gold);background:var(--navy-warm);transform:translateY(-2px)}
+    .svc .roman{
+      position:absolute;top:32px;right:38px;
+      font-family:'Source Serif 4',serif;font-weight:300;font-style:italic;
+      font-size:140px;line-height:.85;color:var(--gold);opacity:.10;letter-spacing:-.04em;pointer-events:none;
+    }
+    .svc .chapter{
+      font-family:'Source Serif 4',serif;font-style:italic;font-weight:400;
+      font-size:16px;color:var(--gold);margin-bottom:8px;
+    }
+    .svc h3{
+      font-family:'Source Serif 4',serif;font-weight:400;font-size:38px;line-height:1.05;letter-spacing:-.015em;
+      color:var(--cream);margin-bottom:20px;
+    }
+    .svc h3 em{font-style:italic;color:var(--gold-2)}
+    .svc .tag{
+      display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--gold);
+      border:1px solid var(--gold);padding:6px 12px;margin-bottom:22px;
+    }
+    .svc p{font-family:'Source Serif 4',serif;font-size:15.5px;line-height:1.7;color:var(--cream-soft);max-width:460px;font-weight:400;flex:1}
+    .svc .foot{
+      margin-top:24px;padding-top:18px;border-top:1px solid var(--rule);
+      display:flex;justify-content:space-between;align-items:center;
+      font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--cream-faint);
+    }
+    .svc .foot a{color:var(--gold);text-decoration:none;font-weight:500;letter-spacing:.18em}
+    .svc .foot a:hover{color:var(--cream)}
+
+    /* PERFIL DO INVESTIDOR */
+    .perfil-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:72px;align-items:start;margin-top:8px}
+    .perfil-text h2{margin-bottom:28px}
+    .perfil-text p{font-family:'Source Serif 4',serif;font-size:17px;line-height:1.7;color:var(--cream-soft);margin-bottom:18px;font-weight:400;max-width:620px}
+
+    .req-block{margin-top:36px}
+    .req-block-title{
+      font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);
+      font-weight:500;margin-bottom:18px;display:flex;align-items:center;gap:10px;
+    }
+    .req-block-title::before{content:'';width:20px;height:1px;background:var(--gold)}
+    .req-list{list-style:none;display:flex;flex-direction:column;gap:14px}
+    .req-list li{
+      display:flex;align-items:flex-start;gap:14px;
+      font-family:'Source Serif 4',serif;font-size:15.5px;color:var(--cream-soft);line-height:1.55;
+    }
+    .req-list .check{
+      flex-shrink:0;width:20px;height:20px;
+      background:rgba(212,130,10,.12);border:1px solid var(--gold);
+      display:flex;align-items:center;justify-content:center;color:var(--gold);
+      margin-top:2px;
+    }
+    .req-list strong{color:var(--cream);font-weight:500}
+
+    .perfil-quote{
+      border:1px solid var(--rule-strong);
+      background:var(--navy-2);
+      padding:40px 36px;position:sticky;top:24px;position:relative;
+    }
+    .perfil-quote::before{
+      content:'';position:absolute;top:0;left:0;width:4px;height:60px;background:var(--gold)
+    }
+    .perfil-quote blockquote{
+      font-family:'Source Serif 4',serif;font-weight:300;font-style:italic;
+      font-size:30px;line-height:1.35;letter-spacing:-.015em;color:var(--cream);
+      margin-bottom:24px;
+    }
+    .perfil-quote blockquote::before{content:'“';color:var(--gold);font-size:60px;line-height:0;display:block;margin-bottom:-12px;margin-left:-6px}
+    .perfil-quote cite{
+      font-family:'IBM Plex Mono',monospace;font-style:normal;
+      font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);
+      display:block;border-top:1px solid var(--rule);padding-top:16px;
+    }
+    .perfil-quote cite strong{color:var(--cream);font-weight:500}
+
+    /* PROCESSO */
+    .processo-header{display:flex;justify-content:space-between;align-items:flex-end;gap:48px;margin-bottom:48px;flex-wrap:wrap}
+    .processo-header h2{max-width:640px}
+    .processo-steps{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+      border-top:1px solid var(--rule-strong);
+      position:relative;
+    }
+    .step{
+      padding:32px 48px 24px 24px;
+      border-right:1px solid var(--rule);
+      position:relative;
+    }
+    .step:last-child{border-right:none}
+    .step-marker{
+      display:flex;align-items:center;gap:14px;margin-bottom:24px;
+    }
+    .step-marker .num{
+      font-family:'Source Serif 4',serif;font-weight:400;font-style:italic;
+      font-size:42px;color:var(--gold);line-height:.9;letter-spacing:-.02em;
+    }
+    .step-marker .num::before{
+      content:'—';display:inline-block;margin-right:6px;color:var(--rule-strong);font-style:normal;
+    }
+    .step-title{
+      font-family:'Source Serif 4',serif;font-weight:400;font-size:22px;line-height:1.15;letter-spacing:-.01em;color:var(--cream);
+      margin-bottom:10px;max-width:90%;
+    }
+    .step-desc{
+      font-family:'Source Serif 4',serif;font-size:14.5px;line-height:1.65;color:var(--cream-soft);font-weight:400;max-width:90%;
+    }
+
+    /* PROCESSO TIMELINE */
+    .processo-timeline{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+      width:100%;
+    }
+    .pt-item{
+      display:flex;gap:24px;padding:0 32px 0 0;
+    }
+    .pt-left{
+      display:flex;flex-direction:column;align-items:center;flex-shrink:0;
+    }
+    .pt-num{
+      font-family:'Source Serif 4',serif;font-weight:400;font-style:italic;
+      font-size:48px;line-height:1;color:var(--gold);letter-spacing:-.02em;
+      width:64px;height:64px;
+      background:rgba(212,130,10,0.08);border:1px solid rgba(212,130,10,0.25);
+      display:flex;align-items:center;justify-content:center;
+      flex-shrink:0;
+    }
+    .pt-line{
+      display:none;
+    }
+    .pt-content{padding-top:8px;}
+    .pt-title{
+      font-family:'Source Serif 4',serif;font-weight:500;font-size:20px;
+      color:var(--cream);margin-bottom:10px;letter-spacing:-.01em;
+    }
+    .pt-desc{
+      font-family:'Source Serif 4',serif;font-size:15px;line-height:1.7;
+      color:var(--cream-soft);font-weight:400;
+    }
+
+    /* CTA */
+    .cta-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:64px;align-items:start}
+    .cta-text h2{margin-bottom:24px}
+    .cta-text p{font-family:'Source Serif 4',serif;font-size:18px;line-height:1.6;color:var(--cream-soft);font-weight:400;max-width:520px}
+    .cta-text .info{
+      margin-top:36px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--cream-soft);line-height:1.9;letter-spacing:.04em;
+    }
+    .cta-text .info strong{color:var(--cream);font-weight:500;display:block;font-family:'Source Serif 4',serif;font-size:16px;letter-spacing:-.005em;margin-top:8px;font-style:italic}
+
+    .cta-form{
+      background:var(--navy-2);border:1px solid var(--rule-strong);padding:34px 32px;
+      position:relative;
+    }
+    .cta-form::before{
+      content:'';position:absolute;top:0;left:0;width:60px;height:4px;background:var(--gold)
+    }
+    .cta-form-head{
+      display:flex;justify-content:space-between;align-items:baseline;
+      padding-bottom:14px;border-bottom:1px solid var(--rule);margin-bottom:22px;
+      font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--cream-faint);
+    }
+    .cta-form-head .em{color:var(--gold)}
+    .cta-form form{display:flex;flex-direction:column;gap:0}
+    .cta-form .inp{
+      background:transparent;border:none;border-bottom:1px solid var(--rule);
+      font-family:'IBM Plex Sans',sans-serif;font-size:14px;padding:15px 0;color:var(--cream);
+      outline:none;font-weight:400;
+    }
+    .cta-form .inp::placeholder{color:var(--cream-faint)}
+    .cta-form .inp:focus{border-bottom-color:var(--gold)}
+    .cta-form select.inp{background:var(--navy-2);color:var(--cream)}
+    .cta-form select.inp option{background:var(--navy)}
+    .cta-form button{
+      width:100%;margin-top:24px;
+      background:var(--gold);color:var(--navy);border:none;cursor:pointer;
+      padding:18px;font-family:'IBM Plex Sans',sans-serif;font-size:13px;letter-spacing:.06em;font-weight:600;
+      display:flex;justify-content:space-between;align-items:center;
+    }
+    .cta-form button:hover{background:var(--gold-2)}
+
+    /* FOOTER */
+    footer{padding:56px 56px 36px;background:var(--navy-3);border-top:1px solid var(--rule)}
+    .foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:56px;padding-bottom:40px;border-bottom:1px solid var(--rule);margin-bottom:22px}
+    .foot-brand .ws{display:flex;align-items:center;gap:14px}
+    .foot-brand .mk{
+      width:42px;height:42px;
+      background:var(--gold);color:var(--navy);
+      display:flex;align-items:center;justify-content:center;
+      font-family:'Source Serif 4',serif;font-weight:600;font-size:17px;
+    }
+    .foot-brand b{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:14px;letter-spacing:.08em;color:var(--cream)}
+    .foot-brand small{display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--cream-soft);margin-top:3px}
+    .foot-brand p{font-family:'Source Serif 4',serif;font-size:14px;line-height:1.7;color:var(--cream-faint);max-width:340px;margin-top:18px;font-weight:400}
+    footer h5{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;font-weight:500}
+    footer ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+    footer ul a{font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:var(--cream);text-decoration:none;font-weight:400}
+    footer ul a:hover{color:var(--gold)}
+    .foot-bot{display:flex;justify-content:space-between;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--cream-faint);letter-spacing:.06em;flex-wrap:wrap;gap:14px}
+    .foot-bot .reg{display:flex;gap:14px;align-items:center}
+    .foot-bot .reg em{font-style:italic;color:var(--gold);font-weight:500}
+
+    /* POPUP */
+    .popup-overlay{
+      position:fixed;inset:0;background:rgba(8,20,56,0.85);backdrop-filter:blur(8px);
+      z-index:999;display:flex;align-items:center;justify-content:center;padding:24px;
+      opacity:0;pointer-events:none;transition:opacity 0.3s;
+    }
+    .popup-overlay.show{opacity:1;pointer-events:all;}
+    .popup-box{
+      background:var(--navy-2);border:1px solid var(--rule-strong);
+      padding:48px 40px;max-width:480px;width:100%;text-align:center;position:relative;
+    }
+    .popup-box::before{content:'';position:absolute;top:0;left:0;width:60px;height:4px;background:var(--gold);}
+    .popup-icon{
+      width:64px;height:64px;border-radius:50%;
+      background:rgba(212,130,10,0.12);border:1px solid var(--gold);
+      display:flex;align-items:center;justify-content:center;
+      margin:0 auto 24px;color:var(--gold);
+    }
+    .popup-title{
+      font-family:'Source Serif 4',serif;font-size:28px;font-weight:400;
+      color:var(--cream);margin-bottom:12px;
+    }
+    .popup-desc{
+      font-family:'Source Serif 4',serif;font-size:15px;line-height:1.7;
+      color:var(--cream-soft);font-weight:400;margin-bottom:28px;
+    }
+    .popup-close{
+      font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+      color:var(--gold);background:none;border:1px solid var(--gold);
+      padding:10px 24px;cursor:pointer;transition:all 0.2s;
+    }
+    .popup-close:hover{background:var(--gold);color:var(--navy);}
   </style>
 </head>
 <body>
 
-  <!-- NAV -->
-  <nav id="navbar">
-    <a href="#hero" class="nav-logo">
-      <!-- Inline SVG replicating the EH icon -->
-      <img src="Logo_EH.png" class="nav-logo-icon" alt="EH Investimentos" />
-      <div class="nav-logo-text">
-        <span>EH INVESTIMENTOS</span>
-        <span>Gestão Financeira</span>
-      </div>
-    </a>
-    <ul class="nav-links">
-      <li><a href="#sobre">Sobre</a></li>
-      <li><a href="#servicos">Serviços</a></li>
-      <li><a href="#perfil">Perfil</a></li>
-      <li><a href="#processo">Processo</a></li>
-    </ul>
-    <div class="nav-buttons">
-      <a href="eh-cliente-login.html" class="nav-cta-ghost">Área do Cliente</a>
-      <a href="#contato" class="nav-cta">Fale Conosco</a>
+<!-- NAV -->
+<nav class="navstrip">
+  <a href="#" class="navstrip-logo">
+    <img src="Logo_EH.png" width="36" height="36" alt="EH" style="object-fit:contain;flex-shrink:0;" />
+    <div class="navstrip-logo-text">
+      <span>EH INVESTIMENTOS</span>
+      <span>Gestão Financeira</span>
     </div>
-  </nav>
+  </a>
+  <div class="navstrip-links">
+    <a href="#sobre">Sobre</a>
+    <a href="#servicos">Serviços</a>
+    <a href="#perfil">Perfil</a>
+    <a href="#processo">Processo</a>
+  </div>
+  <div class="navstrip-cta">
+    <a href="eh-cliente-login.html" class="pill">Área do Cliente</a>
+    <a href="#contato" class="pill solid">Fale Conosco</a>
+  </div>
+  <!-- Hamburger (mobile only) -->
+  <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
 
-  <!-- HERO -->
-  <section id="hero">
-    <div class="hero-bg"></div>
-    <div class="hero-lines"></div>
-    <div class="hero-content">
-      <div class="hero-tag">Gestão Financeira de Alta Performance</div>
-      <h1>
-        Patrimônio gerido com<br/>
-        <em>precisão e excelência</em>
-      </h1>
-      <p class="hero-desc">
-        A EH Investimentos oferece consultoria financeira personalizada para investidores profissionais, com estratégias sofisticadas e acompanhamento dedicado para preservar e multiplicar seu patrimônio.
+<!-- Mobile Drawer -->
+<div class="mobile-drawer" id="mobileDrawer">
+  <div class="mobile-drawer-inner">
+    <button class="drawer-close" onclick="toggleMenu()">✕</button>
+    <a href="#sobre" onclick="toggleMenu()">Sobre</a>
+    <a href="#servicos" onclick="toggleMenu()">Serviços</a>
+    <a href="#perfil" onclick="toggleMenu()">Perfil</a>
+    <a href="#processo" onclick="toggleMenu()">Processo</a>
+    <a href="#contato" onclick="toggleMenu()">Fale Conosco</a>
+    <a href="eh-cliente-login.html" class="drawer-cta">Área do Cliente</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div style="max-width:760px;width:100%;margin:0 auto;">
+    <div class="kicker">Consultoria Financeira Independente</div>
+    <h1>Gestão financeira<br/><em>feita para você</em></h1>
+    <p class="hero-deck">
+      A EH Investimentos oferece consultoria financeira personalizada com estratégias sofisticadas
+      e acompanhamento dedicado para preservar e crescer seu patrimônio.
+    </p>
+    <div class="hero-actions">
+      <a class="btn-primary" href="#contato">Iniciar Conversa</a>
+      <a class="btn-ghost" href="#sobre">Conhecer a EH&nbsp;&nbsp;→</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="v">25<sup>+</sup></span>
+        <span class="l">Anos de Experiência</span>
+      </div>
+      <div class="hero-stat">
+        <span class="v">100<em>%</em></span>
+        <span class="l">Independência</span>
+      </div>
+      <div class="hero-stat">
+        <span class="v txt"><em>Personalizado</em></span>
+        <span class="l">Para cada perfil</span>
+      </div>
+    </div>
+  </div>
+
+
+</section>
+
+<!-- CREDENTIALS BAND -->
+<section class="creds">
+  <div class="creds-label">Regulação<br/>&amp; credenciais</div>
+  <div class="creds-cell">
+    <div class="nm">CVM</div>
+    <div class="vl">Consultor de Valores</div>
+    <div class="nb">Registrado</div>
+  </div>
+  <div class="creds-cell">
+    <div class="nm">ANBIMA</div>
+    <div class="vl"><em>CGA</em></div>
+    <div class="nb">Certif. Gestores Anbima</div>
+  </div>
+  <div class="creds-cell">
+    <div class="nm">Independência</div>
+    <div class="vl">100% fee-based</div>
+    <div class="nb">Sem comissão de produto</div>
+  </div>
+</section>
+
+<!-- SOBRE -->
+<section class="editorial" id="sobre">
+  <div class="section-tag">Sobre Nós</div>
+  <div class="sobre-grid">
+    <div class="sobre-text">
+      <h2>Uma empresa fundada na<br/><em>confiança e individualidade</em></h2>
+      <p>
+        A <strong>EH Investimentos</strong> nasceu da convicção de que investidores merecem uma gestão
+        verdadeiramente independente, sem conflitos de interesse e com total transparência.
       </p>
-      <div class="hero-actions">
-        <a href="#contato" class="btn-primary">Iniciar Conversa</a>
-        <a href="#sobre" class="btn-ghost">
-          Conhecer a EH
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </a>
-      </div>
+      <p>
+        Atendemos tanto investidores em fase de <strong>crescimento patrimonial</strong> quanto investidores
+        focados na <strong>preservação do patrimônio conquistado</strong>, oferecendo estratégias adequadas
+        ao momento de vida de cada um.
+      </p>
+      <p>
+        Nossa abordagem combina análise rigorosa de mercado, planejamento patrimonial de longo prazo
+        e relacionamento próximo com cada cliente, garantindo decisões alinhadas aos seus objetivos
+        e ao seu perfil de risco.
+      </p>
     </div>
-    <div class="hero-stat-row">
-      <div class="hero-stat">
-        <div class="hero-stat-num">10<sup>+</sup></div>
-        <div class="hero-stat-label">Anos de Experiência</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hero-stat-num">R$1M<sup>+</sup></div>
-        <div class="hero-stat-label">Patrimônio Mínimo</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hero-stat-num">100%</div>
-        <div class="hero-stat-label">Independência</div>
-      </div>
-    </div>
-  </section>
 
-  <!-- SOBRE -->
-  <section id="sobre">
-    <div class="sobre-grid reveal">
-      <div class="sobre-text">
-        <div class="section-tag">Sobre Nós</div>
-        <h2>Uma firma fundada na <em>confiança e resultado</em></h2>
-        <div class="gold-divider"></div>
-        <p>
-          A <strong>EH Investimentos</strong> nasceu da convicção de que investidores de alto patrimônio merecem uma gestão verdadeiramente independente, sem conflitos de interesse e com total transparência.
-        </p>
-        <p>
-          Atuamos exclusivamente com <strong>investidores profissionais</strong> — aqueles que possuem mais de R$ 1 milhão em aplicações financeiras — oferecendo acesso a estratégias e produtos de investimento normalmente reservados às grandes fortunas.
-        </p>
-        <p>
-          Nossa abordagem combina análise rigorosa de mercado, planejamento patrimonial de longo prazo e relacionamento próximo com cada cliente, garantindo decisões alinhadas aos seus objetivos e ao seu perfil de risco.
-        </p>
+    <aside class="founder-card">
+      <div class="founder-portrait">
+        <!-- Background: diagonal gold lines + radial gradient -->
+        <div style="
+          position:absolute;inset:0;
+          background:
+            radial-gradient(ellipse 80% 60% at 50% 110%, rgba(212,130,10,0.18) 0%, transparent 70%),
+            radial-gradient(ellipse 60% 40% at 80% 20%, rgba(212,130,10,0.08) 0%, transparent 60%),
+            repeating-linear-gradient(
+              -45deg,
+              transparent,
+              transparent 18px,
+              rgba(212,130,10,0.06) 18px,
+              rgba(212,130,10,0.06) 19px
+            ),
+            linear-gradient(160deg, #0a1840 0%, #152a64 50%, #0D1E4E 100%);
+        "></div>
+        <!-- Decorative corner lines -->
+        <div style="position:absolute;top:16px;left:16px;width:40px;height:40px;border-top:1px solid rgba(212,130,10,0.5);border-left:1px solid rgba(212,130,10,0.5);"></div>
+        <div style="position:absolute;bottom:16px;right:16px;width:40px;height:40px;border-bottom:1px solid rgba(212,130,10,0.5);border-right:1px solid rgba(212,130,10,0.5);"></div>
+        <!-- Photo — white bg blends with mix-blend-mode -->
+        <img src="eduardo_horta.png" alt="Eduardo Horta" style="
+          position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+          width:85%;height:100%;object-fit:contain;object-position:bottom center;
+          mix-blend-mode:luminosity;filter:contrast(1.05);
+        " />
       </div>
-      <div class="sobre-card reveal">
-        <div class="founder-name">Eduardo Horta</div>
-        <div class="founder-title">Fundador & Gestor Principal</div>
-        <p class="founder-bio">
-          Com mais de 10 anos de experiência no mercado financeiro brasileiro, Eduardo Horta construiu uma trajetória sólida em gestão de patrimônio, análise de investimentos e planejamento financeiro para clientes de alta renda. Sua expertise atravessa renda fixa, renda variável, fundos alternativos e ativos internacionais, sempre com foco na preservação e crescimento sustentável do capital.
-        </p>
+      <div class="founder-name">Eduardo Horta</div>
+      <div class="founder-title">Fundador &amp; Gestor Principal</div>
+      <p class="founder-bio">
+        Com mais de 25 anos de experiência no mercado financeiro brasileiro, Eduardo Horta construiu
+        uma trajetória sólida em gestão de patrimônio, análise de investimentos e planejamento financeiro.
+        Sua expertise atravessa renda fixa, renda variável, fundos alternativos e ativos internacionais,
+        sempre com foco na preservação e crescimento sustentável do capital.
+      </p>
+      <div class="founder-creds">
+        <div>
+          <strong>CVM</strong>
+          <span>Consultor</span>
+          de Valores Mobiliários
+        </div>
+        <div>
+          <strong>ANBIMA</strong>
+          <span><em style="color:var(--gold-2)">CGA</em></span>
+          Certificação de Gestores
+        </div>
+        <div>
+          <strong>Atuação</strong>
+          <span>Desde 2001</span>
+          25+ anos de mercado
+        </div>
       </div>
-    </div>
-  </section>
+    </aside>
+  </div>
+</section>
 
-  <!-- SERVIÇOS -->
-  <section id="servicos">
-    <div class="services-header reveal">
-      <div class="section-tag">Serviços</div>
-      <h2>Soluções completas para o seu <em>patrimônio</em></h2>
-      <p>Cada serviço é estruturado para atender às demandas específicas de quem possui patrimônio significativo e busca maximizar seus resultados com responsabilidade.</p>
-    </div>
-    <div class="services-grid reveal">
-      <div class="service-card">
-        <span class="service-num">01</span>
-        <div class="service-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-          </svg>
-        </div>
-        <div class="service-title">Gestão de Carteiras</div>
-        <p class="service-desc">Construção e monitoramento de portfólios diversificados, com alocação estratégica entre classes de ativos nacionais e internacionais, ajustada ao seu perfil e objetivos.</p>
-      </div>
-      <div class="service-card">
-        <span class="service-num">02</span>
-        <div class="service-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 3v18h18"/>
-            <path d="M7 16l4-4 4 4 5-5"/>
-          </svg>
-        </div>
-        <div class="service-title">Planejamento Patrimonial</div>
-        <p class="service-desc">Estratégias de longo prazo para preservação, crescimento e sucessão do patrimônio, considerando aspectos fiscais, jurídicos e as particularidades da sua família.</p>
-      </div>
-      <div class="service-card">
-        <span class="service-num">03</span>
-        <div class="service-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 6v6l4 2"/>
-          </svg>
-        </div>
-        <div class="service-title">Assessoria em Renda Fixa</div>
-        <p class="service-desc">Acesso a títulos privados, debêntures, CRIs, CRAs e instrumentos de crédito estruturado com análise criteriosa de risco e retorno para proteger e rentabilizar o capital.</p>
-      </div>
-      <div class="service-card">
-        <span class="service-num">04</span>
-        <div class="service-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-          </svg>
-        </div>
-        <div class="service-title">Acesso a Ativos Alternativos</div>
-        <p class="service-desc">Fundos exclusivos, private equity, venture capital e investimentos no exterior — soluções sofisticadas normalmente inacessíveis ao investidor comum.</p>
-      </div>
-      <div class="service-card">
-        <span class="service-num">05</span>
-        <div class="service-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 00-3-3.87"/>
-            <path d="M16 3.13a4 4 0 010 7.75"/>
-          </svg>
-        </div>
-        <div class="service-title">Consultoria Personalizada</div>
-        <p class="service-desc">Relacionamento direto com Eduardo Horta, sem intermediários. Análises, relatórios periódicos e reuniões regulares para manter sua estratégia sempre alinhada ao cenário.</p>
-      </div>
-      <div class="service-card">
-        <span class="service-num">06</span>
-        <div class="service-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-            <path d="M1 10h22"/>
-          </svg>
-        </div>
-        <div class="service-title">Gestão Fiscal e Tributária</div>
-        <p class="service-desc">Orientação sobre estruturação eficiente de investimentos sob a ótica fiscal, minimizando a carga tributária dentro dos limites legais e maximizando o retorno líquido.</p>
-      </div>
-    </div>
-  </section>
+<!-- SERVICES -->
+<section class="editorial" id="servicos">
+  <div class="section-tag">Serviços</div>
+  <div class="services-header">
+    <h2>Soluções completas para<br/>o seu <em>patrimônio</em></h2>
+    <p>
+      Cada serviço é estruturado para atender às demandas específicas de cada momento da jornada patrimonial, com acompanhamento próximo e estratégias adequadas ao seu perfil.
+    </p>
+  </div>
 
-  <!-- PERFIL DO INVESTIDOR -->
-  <section id="perfil">
-    <div class="perfil-inner reveal">
-      <div class="perfil-text">
-        <div class="section-tag">Perfil do Investidor</div>
-        <h2>Para quem buscamos <em>atuar</em></h2>
-        <div class="gold-divider"></div>
-        <p>
-          A EH Investimentos foi desenhada para um segmento muito específico de investidores: aqueles que já construíram patrimônio relevante e buscam uma gestão profissional, discreta e verdadeiramente alinhada aos seus interesses.
-        </p>
-        <p>
-          Trabalhamos com um número restrito de clientes para garantir atenção exclusiva, profundidade de relacionamento e a qualidade que cada portfólio merece.
-        </p>
-        <ul class="requisitos">
+  <div class="services-grid">
+    <article class="svc">
+      <span class="roman">I</span>
+      <div class="chapter">Capítulo I</div>
+      <h3>Crescimento<br/><em>Patrimonial</em></h3>
+      <span class="tag">Para quem investe regularmente e quer construir patrimônio</span>
+      <p>
+        Para quem tem disciplina, horizonte longo e quer ver o patrimônio crescer com inteligência.
+        Estratégia estruturada, relatórios periódicos, e diversificação que evolui à medida que a
+        carteira amadurece.
+      </p>
+      <div class="foot">
+        <span>Relatórios periódicos</span>
+        <a href="#contato">Solicitar conversa →</a>
+      </div>
+    </article>
+
+    <article class="svc">
+      <span class="roman">II</span>
+      <div class="chapter">Capítulo II</div>
+      <h3>Gestão<br/><em>Patrimonial</em></h3>
+      <span class="tag">Para patrimônios a partir de R$ 600 mil</span>
+      <p>
+        Acompanhamento dedicado para patrimônios consolidados. Construção e monitoramento de uma
+        carteira diversificada — renda fixa, renda variável, fundos exclusivos, ativos internacionais —
+        sob política individual desenhada para cada investidor.
+      </p>
+      <div class="foot">
+        <span>Política individual</span>
+        <a href="#contato">Solicitar conversa →</a>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- PERFIL DO INVESTIDOR -->
+<section class="editorial" id="perfil">
+  <div class="section-tag">Perfil do Investidor</div>
+  <div class="perfil-grid">
+    <div class="perfil-text">
+      <h2>Para quem buscamos <em>atuar</em></h2>
+      <p>
+        A EH Investimentos foi desenhada para investidores em qualquer fase da jornada patrimonial —
+        seja para quem já construiu um patrimônio relevante e busca preservá-lo com inteligência,
+        seja para quem está em fase de crescimento e quer construir o futuro de forma consistente.
+      </p>
+
+      <div class="req-block">
+        <div class="req-block-title">Gestão Patrimonial</div>
+        <ul class="req-list">
           <li>
-            <div class="requisito-icon">
-              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="2 6 5 9 10 3"/>
-              </svg>
+            <div class="check">
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>
             </div>
-            <span>Patrimônio financeiro mínimo de <strong style="color:var(--white)">R$ 1.000.000</strong> em aplicações</span>
+            <span>Patrimônio financeiro a partir de <strong>R$ 600.000</strong> em aplicações</span>
           </li>
           <li>
-            <div class="requisito-icon">
-              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="2 6 5 9 10 3"/>
-              </svg>
+            <div class="check">
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>
             </div>
-            <span>Enquadramento como <strong style="color:var(--white)">Investidor Profissional</strong> conforme regulamentação CVM</span>
+            <span>Visão de <strong>longo prazo</strong> e comprometimento com a estratégia definida</span>
           </li>
           <li>
-            <div class="requisito-icon">
-              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="2 6 5 9 10 3"/>
-              </svg>
+            <div class="check">
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>
             </div>
-            <span>Visão de <strong style="color:var(--white)">longo prazo</strong> e comprometimento com a estratégia definida</span>
+            <span>Interesse em <strong>diversificação</strong> além dos produtos bancários convencionais</span>
           </li>
           <li>
-            <div class="requisito-icon">
-              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="2 6 5 9 10 3"/>
-              </svg>
+            <div class="check">
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>
             </div>
-            <span>Interesse em <strong style="color:var(--white)">diversificação sofisticada</strong> além dos produtos bancários convencionais</span>
-          </li>
-          <li>
-            <div class="requisito-icon">
-              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="2 6 5 9 10 3"/>
-              </svg>
-            </div>
-            <span>Valorização de um <strong style="color:var(--white)">relacionamento próximo</strong> e transparente com o gestor</span>
+            <span>Valorização de um <strong>relacionamento próximo</strong> e transparente com o gestor</span>
           </li>
         </ul>
       </div>
-      <div class="perfil-quote reveal">
-        <blockquote>
-          "Gerir patrimônio é muito mais do que escolher ativos. É compreender a história, os valores e os objetivos de vida de cada cliente."
-        </blockquote>
-        <cite>Eduardo Horta — Fundador, EH Investimentos</cite>
+
+      <div class="req-block">
+        <div class="req-block-title">Crescimento Patrimonial</div>
+        <ul class="req-list">
+          <li>
+            <div class="check">
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>
+            </div>
+            <span><strong>Disciplina e consistência</strong> nos aportes mensais</span>
+          </li>
+          <li>
+            <div class="check">
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>
+            </div>
+            <span>Comprometimento com uma estratégia de <strong>longo prazo</strong></span>
+          </li>
+          <li>
+            <div class="check">
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>
+            </div>
+            <span>Disposição para <strong>entender e acompanhar</strong> os próprios investimentos</span>
+          </li>
+          <li>
+            <div class="check">
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>
+            </div>
+            <span>Valorização de orientação <strong>profissional e independente</strong></span>
+          </li>
+        </ul>
       </div>
     </div>
-  </section>
 
-  <!-- PROCESSO -->
-  <section id="processo">
-    <div class="section-tag reveal">Processo</div>
-    <h2 class="reveal">Como trabalhamos <em>com você</em></h2>
-    <div class="gold-divider reveal"></div>
-    <div class="processo-steps reveal">
-      <div class="step">
-        <div class="step-dot">01</div>
-        <div class="step-title">Diagnóstico Inicial</div>
-        <p class="step-desc">Reunião aprofundada para entender seu perfil, objetivos, tolerância ao risco, horizonte de investimento e situação patrimonial atual.</p>
+    <aside class="perfil-quote">
+      <blockquote>
+        Gerir patrimônio é muito mais do que escolher ativos.
+        É <em style="font-style:italic;color:var(--gold-2)">compreender a história</em>,
+        os valores e os objetivos de vida de cada cliente.
+      </blockquote>
+      <cite>— <strong>Eduardo Horta</strong> · Fundador, EH Investimentos</cite>
+    </aside>
+  </div>
+</section>
+
+<!-- PROCESSO -->
+<section class="editorial" id="processo">
+  <div class="section-tag">Processo</div>
+  <h2 style="margin-bottom:56px;">Como trabalhamos<br/><em>com você</em></h2>
+  <div class="processo-timeline">
+    <div class="pt-item">
+      <div class="pt-left">
+        <div class="pt-num">01</div>
+        <div class="pt-line"></div>
       </div>
-      <div class="step">
-        <div class="step-dot">02</div>
-        <div class="step-title">Proposta Personalizada</div>
-        <p class="step-desc">Elaboramos uma política de investimento individual com alocação estratégica desenhada especificamente para o seu perfil e metas.</p>
-      </div>
-      <div class="step">
-        <div class="step-dot">03</div>
-        <div class="step-title">Implementação</div>
-        <p class="step-desc">Execução cuidadosa da estratégia, com seleção criteriosa de ativos, fundos e produtos adequados ao portfólio definido.</p>
-      </div>
-      <div class="step">
-        <div class="step-dot">04</div>
-        <div class="step-title">Monitoramento Contínuo</div>
-        <p class="step-desc">Acompanhamento diário da carteira, rebalanceamentos periódicos e relatórios transparentes para manter sua estratégia no caminho certo.</p>
+      <div class="pt-content">
+        <div class="pt-title">Diagnóstico Inicial</div>
+        <p class="pt-desc">Reunião aprofundada para entender seu perfil, objetivos, tolerância ao risco, horizonte de investimento e situação patrimonial atual.</p>
       </div>
     </div>
-  </section>
-
-  <!-- CONTATO / CTA -->
-  <section id="contato">
-    <div class="cta-inner reveal">
-      <div class="cta-text">
-        <div class="section-tag">Contato</div>
-        <h2>Pronto para uma gestão <em>de alto nível</em>?</h2>
-        <p>Entre em contato para uma conversa inicial sem compromisso. Avaliaremos juntos como a EH Investimentos pode contribuir para a evolução do seu patrimônio.</p>
+    <div class="pt-item">
+      <div class="pt-left">
+        <div class="pt-num">02</div>
+        <div class="pt-line"></div>
       </div>
-      <div class="cta-form">
-        <input class="form-input" type="text" placeholder="Seu nome completo" />
-        <input class="form-input" type="email" placeholder="E-mail" />
-        <input class="form-input" type="tel" placeholder="WhatsApp / Telefone" />
-        <select class="form-input">
-          <option value="" disabled selected>Patrimônio financeiro aproximado</option>
-          <option>R$ 1M – R$ 5M</option>
-          <option>R$ 5M – R$ 20M</option>
-          <option>R$ 20M – R$ 50M</option>
-          <option>Acima de R$ 50M</option>
+      <div class="pt-content">
+        <div class="pt-title">Proposta Personalizada</div>
+        <p class="pt-desc">Elaboramos uma política de investimento individual com alocação estratégica desenhada especificamente para o seu perfil e metas.</p>
+      </div>
+    </div>
+    <div class="pt-item">
+      <div class="pt-left">
+        <div class="pt-num">03</div>
+        <div class="pt-line"></div>
+      </div>
+      <div class="pt-content">
+        <div class="pt-title">Implementação</div>
+        <p class="pt-desc">Execução cuidadosa da estratégia, com seleção criteriosa de ativos, fundos e produtos adequados ao portfólio definido.</p>
+      </div>
+    </div>
+    <div class="pt-item pt-last">
+      <div class="pt-left">
+        <div class="pt-num">04</div>
+      </div>
+      <div class="pt-content">
+        <div class="pt-title">Monitoramento Contínuo</div>
+        <p class="pt-desc">Acompanhamento diário da carteira, rebalanceamentos periódicos e relatórios transparentes para manter sua estratégia no caminho certo.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="editorial" id="contato">
+  <div class="section-tag">Início de relacionamento</div>
+  <div class="cta-grid">
+    <div class="cta-text">
+      <h2>Uma conversa inicial,<br/><em>sem compromisso.</em></h2>
+      <p>
+        Entre em contato para uma conversa inicial sem compromisso. Avaliaremos juntos como a EH
+        Investimentos pode contribuir para a evolução do seu patrimônio.
+      </p>
+
+    </div>
+
+    <aside class="cta-form">
+      <div class="cta-form-head">
+        <span>Solicitação de conversa</span>
+      </div>
+      <form id="contactForm" onsubmit="submitForm(event)">
+        <input class="inp" id="f_nome" placeholder="Seu nome completo" required />
+        <input class="inp" id="f_email" placeholder="E-mail" type="email" required />
+        <input class="inp" id="f_tel" placeholder="WhatsApp / Telefone" />
+        <select class="inp" id="f_servico">
+          <option value="" disabled selected>Tipo de serviço de interesse</option>
+          <option>Gestão Patrimonial — a partir de R$ 600 mil</option>
+          <option>Crescimento Patrimonial — aportes regulares</option>
+          <option>Ainda não sei, quero entender as opções</option>
         </select>
-        <button class="btn-primary" style="width:100%;cursor:pointer;border:none;font-family:'Montserrat',sans-serif;" onclick="this.textContent='Mensagem enviada ✓';this.style.background='#5a9e5a';setTimeout(()=>{this.textContent='Agendar Conversa';this.style.background=''},3000)">
-          Agendar Conversa
-        </button>
+        <select class="inp" id="f_patrimonio">
+          <option value="" disabled selected>Patrimônio financeiro aproximado</option>
+          <option>Até R$ 50 mil</option>
+          <option>R$ 50 mil – R$ 150 mil</option>
+          <option>R$ 150 mil – R$ 300 mil</option>
+          <option>R$ 300 mil – R$ 600 mil</option>
+          <option>R$ 600 mil – R$ 1 milhão</option>
+          <option>R$ 1 milhão – R$ 2 milhões</option>
+          <option>R$ 2 milhões – R$ 5 milhões</option>
+          <option>R$ 5 milhões – R$ 10 milhões</option>
+          <option>Acima de R$ 10 milhões</option>
+        </select>
+        <textarea class="inp" id="f_msg" placeholder="Mensagem (opcional)" rows="3" style="resize:vertical;padding-top:12px;"></textarea>
+        <button type="submit" id="submitBtn"><span>Agendar Conversa</span><span>→</span></button>
+      </form>
+    </aside>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="padding:48px 56px 32px;background:var(--navy-3);border-top:1px solid var(--rule);">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap;padding-bottom:32px;border-bottom:1px solid var(--rule);margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <img src="Logo_EH.png" width="42" height="42" alt="EH" style="object-fit:contain;" />
+      <div>
+        <b style="font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:14px;letter-spacing:.08em;color:var(--cream);display:block;">EH INVESTIMENTOS</b>
+        <small style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--cream-soft);">Gestão Financeira</small>
       </div>
     </div>
-  </section>
+    <p style="font-family:'Source Serif 4',serif;font-size:14px;line-height:1.7;color:var(--cream-faint);max-width:400px;font-weight:400;">Consultoria financeira independente. Transparência, excelência e resultado no cuidado do seu patrimônio.</p>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--cream-faint);letter-spacing:.06em;flex-wrap:wrap;gap:12px;">
+    <span>© 2025 EH Investimentos. Todos os direitos reservados.</span>
+    <span>CVM · ANBIMA <em style="color:var(--gold);font-style:italic;">CGA</em> · Rentabilidade passada não é garantia de rentabilidade futura.</span>
+  </div>
+</footer>
 
-  <!-- FOOTER -->
-  <footer>
-    <div class="footer-top">
-      <div class="footer-brand">
-        <a href="#hero" class="nav-logo" style="display:inline-flex;">
-          <img src="Logo_EH.png" width="40" height="40" alt="EH Investimentos" style="object-fit:contain;" />
-          <div class="nav-logo-text" style="margin-left:0.8rem;">
-            <span>EH INVESTIMENTOS</span>
-            <span>Gestão Financeira</span>
-          </div>
-        </a>
-        <p>Consultoria financeira independente para investidores profissionais. Transparência, excelência e resultado no cuidado do seu patrimônio.</p>
-      </div>
-      <div class="footer-col">
-        <h4>Navegação</h4>
-        <ul>
-          <li><a href="#sobre">Sobre a EH</a></li>
-          <li><a href="#servicos">Serviços</a></li>
-          <li><a href="#perfil">Perfil do Investidor</a></li>
-          <li><a href="#processo">Processo</a></li>
-          <li><a href="#contato">Contato</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>Contato</h4>
-        <ul>
-          <li><a href="/cdn-cgi/l/email-protection#1f7c70716b7e6b705f7a777671697a6c6b76727a716b706c317c7072317d6d"><span class="__cf_email__" data-cfemail="11727e7f6570657e517479787f67746265787c747f657e623f727e7c3f7363">[email&#160;protected]</span></a></li>
-          <li><a href="tel:+5511999999999">+55 (11) 9 9999-9999</a></li>
-          <li><a href="#">São Paulo – SP, Brasil</a></li>
-          <li><a href="#">LinkedIn</a></li>
-        </ul>
-      </div>
+
+<!-- POPUP -->
+<div class="popup-overlay" id="popup">
+  <div class="popup-box">
+    <div class="popup-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
     </div>
-    <div class="footer-bottom">
-      <p class="footer-copy">© 2025 EH Investimentos. Todos os direitos reservados.</p>
-      <p class="footer-disclaimer">Este material é destinado exclusivamente a investidores profissionais conforme definição da Resolução CVM nº 30/2021. Rentabilidade passada não é garantia de rentabilidade futura.</p>
-    </div>
-  </footer>
+    <div class="popup-title">Mensagem enviada!</div>
+    <p class="popup-desc">Obrigado pelo seu contato. Recebemos as suas informações e entraremos em contato em breve para agendar a sua conversa gratuita.</p>
+    <button class="popup-close" onclick="closePopup()">Fechar</button>
+  </div>
+</div>
 
-  <script>
-    // Wait for full page load before hiding anything
-    window.addEventListener('load', function () {
+<script>
+  // ── NAV SHOW ON SCROLL UP ──
+  (function(){
+    var nav = document.querySelector('.navstrip');
+    var last = 0;
+    window.addEventListener('scroll', function(){
+      var cur = window.scrollY;
+      if (cur < 60) { nav.style.transform = 'translateY(0)'; }
+      else if (cur < last) { nav.style.transform = 'translateY(0)'; }
+      else { nav.style.transform = 'translateY(-100%)'; }
+      last = cur;
+    }, {passive:true});
+    nav.style.transition = 'transform 0.3s ease';
+  })();
 
-      // Collect all .reveal elements + stagger cards/steps
-      const targets = [];
+  // ── HAMBURGER ──
+  function toggleMenu(){
+    var btn = document.getElementById('hamburger');
+    var drawer = document.getElementById('mobileDrawer');
+    btn.classList.toggle('open');
+    drawer.classList.toggle('open');
+    document.body.style.overflow = drawer.classList.contains('open') ? 'hidden' : '';
+  }
 
-      document.querySelectorAll('.reveal').forEach(el => targets.push({ el, delay: 0 }));
+</script>
+<script>
+  const GAS_CONTACT = 'https://script.google.com/macros/s/AKfycby9W48Qfl8K9jDbg1-cSMpsjuTB-mzy2mn0OLrNBmyT4sq72mj3Xy7uQyU-NXaez41JBQ/exec';
 
-      document.querySelectorAll('.services-grid .service-card, .processo-steps .step').forEach((el, i) => {
-        el.style.transitionDelay = (i * 0.07) + 's';
-        if (!el.classList.contains('reveal')) targets.push({ el, delay: i * 70 });
-      });
+  window.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('contactForm');
+    if (!form) return;
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span>Enviando...</span><span>...</span>';
 
-      if (!('IntersectionObserver' in window)) {
-        // No support — just leave everything visible
-        return;
+      var nome       = document.getElementById('f_nome').value.trim();
+      var email      = document.getElementById('f_email').value.trim();
+      var tel        = document.getElementById('f_tel').value.trim();
+      var servico    = document.getElementById('f_servico').value || 'Não informado';
+      var patrimonio = document.getElementById('f_patrimonio').value || 'Não informado';
+      var msg        = document.getElementById('f_msg').value.trim();
+
+      var htmlBody = '<h2 style="color:#0D1E4E;font-family:Arial,sans-serif;font-size:18px;">Novo contato via site — EH Investimentos</h2>' +
+        '<table style="font-family:Arial,sans-serif;font-size:14px;border-collapse:collapse;margin-top:16px;">' +
+        '<tr><td style="padding:6px 20px 6px 0;color:#888;font-weight:600;">Nome</td><td>' + nome + '</td></tr>' +
+        '<tr><td style="padding:6px 20px 6px 0;color:#888;font-weight:600;">E-mail</td><td>' + email + '</td></tr>' +
+        '<tr><td style="padding:6px 20px 6px 0;color:#888;font-weight:600;">Telefone</td><td>' + (tel || 'Não informado') + '</td></tr>' +
+        '<tr><td style="padding:6px 20px 6px 0;color:#888;font-weight:600;">Serviço</td><td>' + servico + '</td></tr>' +
+        '<tr><td style="padding:6px 20px 6px 0;color:#888;font-weight:600;">Patrimônio</td><td>' + patrimonio + '</td></tr>' +
+        '<tr><td style="padding:6px 20px 6px 0;color:#888;font-weight:600;vertical-align:top;">Mensagem</td><td>' + (msg || '(sem mensagem)') + '</td></tr>' +
+        '</table>';
+
+      try {
+        await fetch(GAS_CONTACT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({
+            to_email: 'contato@ehinvestimentos.com.br',
+            subject: 'Novo contato via site — ' + nome,
+            html_message: htmlBody
+          })
+        });
+      } catch(err) {
+        console.warn('Email error:', err);
       }
 
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('in-view');
-            observer.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.08, rootMargin: '0px 0px -50px 0px' });
-
-      targets.forEach(({ el }) => {
-        el.classList.add('will-animate');
-        observer.observe(el);
-      });
-
-      // Hard failsafe: after 2s reveal everything no matter what
-      setTimeout(() => {
-        document.querySelectorAll('.will-animate:not(.in-view)').forEach(el => {
-          el.classList.add('in-view');
-        });
-      }, 2000);
+      form.reset();
+      btn.disabled = false;
+      btn.innerHTML = '<span>Agendar Conversa</span><span>→</span>';
+      showPopup();
     });
-  </script>
 
+    var overlay = document.getElementById('popup');
+    if (overlay) {
+      overlay.addEventListener('click', function(e) {
+        if (e.target === this) closePopup();
+      });
+    }
+  });
+
+  function showPopup() {
+    var el = document.getElementById('popup');
+    if (el) { el.classList.add('show'); document.body.style.overflow = 'hidden'; }
+  }
+
+  function closePopup() {
+    var el = document.getElementById('popup');
+    if (el) { el.classList.remove('show'); document.body.style.overflow = ''; }
+  }
+</script>
+<script>
+  (function(){
+    var nav = document.querySelector('.navstrip');
+    if (!nav) return;
+    var lastY = 0, ticking = false;
+    window.addEventListener('scroll', function(){
+      if (!ticking) {
+        requestAnimationFrame(function(){
+          var cur = window.scrollY;
+          nav.style.transform = (cur > 60 && cur > lastY) ? 'translateY(-100%)' : 'translateY(0)';
+          lastY = cur;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, {passive:true});
+  })();
+
+  function toggleMenu(){
+    var btn = document.getElementById('hamburger');
+    var drawer = document.getElementById('mobileDrawer');
+    if (!btn || !drawer) return;
+    btn.classList.toggle('open');
+    drawer.classList.toggle('open');
+    document.body.style.overflow = drawer.classList.contains('open') ? 'hidden' : '';
+  }
+</script>
 </body>
 </html>
