@@ -312,6 +312,44 @@
     }
     .ob-banner-btn:hover { background: var(--gold-light); }
 
+
+    /* ── CUSTOM TEMPLATE DROPDOWN ── */
+    .tpl-dd { position:relative; width:100%; }
+    .tpl-dd-btn {
+      width:100%; background:rgba(255,255,255,0.04);
+      border:1px solid rgba(138,155,184,0.2); color:var(--white);
+      font-family:'Montserrat',sans-serif; font-size:0.72rem;
+      padding:0.45rem 2rem 0.45rem 0.5rem; cursor:pointer;
+      text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      position:relative; outline:none; transition:border-color 0.2s;
+    }
+    .tpl-dd-btn:hover, .tpl-dd-btn.open { border-color:var(--gold); }
+    .tpl-dd-btn::after {
+      content:'▾'; position:absolute; right:0.5rem; top:50%;
+      transform:translateY(-50%); color:var(--gray); font-size:0.7rem;
+      transition:transform 0.2s;
+    }
+    .tpl-dd-btn.open::after { transform:translateY(-50%) rotate(180deg); }
+    .tpl-dd-list {
+      position:absolute; top:calc(100% + 2px); left:0; right:0; z-index:999;
+      background:var(--navy-mid); border:1px solid var(--border);
+      box-shadow:0 8px 24px rgba(0,0,0,0.5);
+      display:none; flex-direction:column; max-height:260px; overflow-y:auto;
+    }
+    .tpl-dd-list.open { display:flex; }
+    .tpl-dd-item {
+      padding:0.55rem 0.8rem; font-size:0.72rem; color:var(--gray-light);
+      cursor:pointer; display:flex; align-items:center; gap:0.6rem;
+      transition:background 0.15s; white-space:nowrap;
+      font-family:'Montserrat',sans-serif;
+    }
+    .tpl-dd-item:hover { background:rgba(212,130,10,0.12); color:var(--white); }
+    .tpl-dd-item.selected { color:var(--gold); background:rgba(212,130,10,0.08); }
+    .tpl-dd-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .tpl-dd-sep {
+      height:1px; background:var(--border-dim); margin:2px 0;
+    }
+
     @media (max-width: 900px) {
       .sidebar { display: none; }
       .mobile-nav { display: flex; }
@@ -864,6 +902,38 @@
     if (viewId === 'clientes') loadClientesView();
   }
 
+  // ── CUSTOM TEMPLATE DROPDOWN ──
+  function tplDdToggle(id) {
+    const list = document.getElementById('tpl-dd-list-' + id);
+    const btn  = document.querySelector('#tpl-dd-' + id + ' .tpl-dd-btn');
+    const isOpen = list.classList.contains('open');
+    // Close all others first
+    document.querySelectorAll('.tpl-dd-list.open').forEach(l => l.classList.remove('open'));
+    document.querySelectorAll('.tpl-dd-btn.open').forEach(b => b.classList.remove('open'));
+    if (!isOpen) { list.classList.add('open'); btn.classList.add('open'); }
+  }
+
+  function tplDdSelect(id, val, label, color) {
+    document.getElementById('tpl-val-' + id).value = val;
+    const btn = document.querySelector('#tpl-dd-' + id + ' .tpl-dd-btn');
+    btn.innerHTML = `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${color};margin-right:6px;vertical-align:middle;"></span>${label}`;
+    // Mark selected
+    document.querySelectorAll('#tpl-dd-list-' + id + ' .tpl-dd-item').forEach(el => {
+      el.classList.toggle('selected', el.dataset.val === val);
+    });
+    // Close
+    document.getElementById('tpl-dd-list-' + id).classList.remove('open');
+    btn.classList.remove('open');
+  }
+
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.tpl-dd')) {
+      document.querySelectorAll('.tpl-dd-list.open').forEach(l => l.classList.remove('open'));
+      document.querySelectorAll('.tpl-dd-btn.open').forEach(b => b.classList.remove('open'));
+    }
+  });
+
   async function doLogout() { await sb.auth.signOut(); window.location.href = 'eh-cliente-login.html'; }
 
   // ── CLIENTES MANAGEMENT ──
@@ -1249,17 +1319,31 @@
         </select>
       </td>
       <td>
-        <select id="tpl-sel-${id}" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.2);color:var(--white);font-family:'Montserrat',sans-serif;font-size:0.72rem;padding:0.45rem 0.5rem;outline:none;">
-          <option value="auto">— Auto —</option>
-          <option value="mensal_acima" ${data.template==='mensal_acima'?'selected':''}>Mensal · Acima CDI</option>
-          <option value="mensal_abaixo" ${data.template==='mensal_abaixo'?'selected':''}>Mensal · Abaixo CDI</option>
-          <option value="trimestral_acima" ${data.template==='trimestral_acima'?'selected':''}>Trimestral · Acima CDI</option>
-          <option value="trimestral_abaixo" ${data.template==='trimestral_abaixo'?'selected':''}>Trimestral · Abaixo CDI</option>
-          <option value="offshore" ${data.template==='offshore'?'selected':''}>Carteira Offshore</option>
-          <option value="cobranca_acima" ${data.template==='cobranca_acima'?'selected':''}>Cobrança · Acima CDI</option>
-          <option value="cobranca_abaixo" ${data.template==='cobranca_abaixo'?'selected':''}>Cobrança · Abaixo CDI</option>
-          <option value="personalizado" ${data.template==='personalizado'?'selected':''}>Personalizado</option>
-        </select>
+        <div class="tpl-dd" id="tpl-dd-${id}">
+<button type="button" class="tpl-dd-btn" onclick="tplDdToggle('${id}')"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4caf82;margin-right:6px;vertical-align:middle;"></span>Mensal</button>
+          <div class="tpl-dd-list" id="tpl-dd-list-${id}">
+            <div class="tpl-dd-item selected" data-val="mensal" onclick="tplDdSelect('${id}','mensal','Mensal','#4caf82')">
+              <span class="tpl-dd-dot" style="background:#4caf82"></span>Mensal
+              <span style="font-size:0.62rem;color:var(--gray);margin-left:auto;">auto ↑↓ CDI</span>
+            </div>
+            <div class="tpl-dd-item" data-val="trimestral" onclick="tplDdSelect('${id}','trimestral','Trimestral','#4caf82')">
+              <span class="tpl-dd-dot" style="background:#4caf82"></span>Trimestral
+              <span style="font-size:0.62rem;color:var(--gray);margin-left:auto;">auto ↑↓ CDI</span>
+            </div>
+            <div class="tpl-dd-item" data-val="cobranca" onclick="tplDdSelect('${id}','cobranca','Cobrança','#E8A030')">
+              <span class="tpl-dd-dot" style="background:#E8A030"></span>Cobrança
+              <span style="font-size:0.62rem;color:var(--gray);margin-left:auto;">auto ↑↓ CDI</span>
+            </div>
+            <div class="tpl-dd-sep"></div>
+            <div class="tpl-dd-item" data-val="offshore" onclick="tplDdSelect('${id}','offshore','Carteira Offshore','#6496FF')">
+              <span class="tpl-dd-dot" style="background:#6496FF"></span>Carteira Offshore
+            </div>
+            <div class="tpl-dd-item" data-val="personalizado" onclick="tplDdSelect('${id}','personalizado','Personalizado','#8A9BB8')">
+              <span class="tpl-dd-dot" style="background:#8A9BB8"></span>Personalizado
+            </div>
+          </div>
+          <input type="hidden" id="tpl-val-${id}" value="${data.template||'mensal'}" />
+        </div>
       </td>
       <td><input type="text" placeholder="ex: R$ 1.500,00" value="${data.valor||''}" /></td>
       <td>
@@ -1343,7 +1427,7 @@
         nome:           inputs[1].value.trim(),
         desempenho:     inputs[2].value.trim(),
         frequencia:     selects[0]?.value || 'Mensal',
-        template:       selects[1]?.value || 'auto',
+        template:       document.getElementById('tpl-val-' + id)?.value || 'mensal',
         valor:          inputs[3].value.trim(),
         link_relatorio: pdfUrl,
         pdf_filename:   pdfFilename
@@ -1354,11 +1438,18 @@
   function applyTpl(client) {
     const num = parseFloat((client.desempenho||'0').replace(',','.').replace('%',''));
     const up   = num >= 100;
-    const freq = client.frequencia === 'Trimestral' ? 'trimestral' : 'mensal';
-    // Manual override or auto-detect
-    const tplId = (client.template && client.template !== 'auto')
-      ? client.template
-      : `${freq}_${up ? 'acima' : 'abaixo'}`;
+    const perf = up ? 'acima' : 'abaixo';
+    const sel  = client.template || 'mensal';
+
+    // Templates that auto-select acima/abaixo based on desempenho
+    const autoTemplates = ['mensal', 'trimestral', 'cobranca'];
+    let tplId;
+    if (autoTemplates.includes(sel)) {
+      tplId = `${sel}_${perf}`;
+    } else {
+      // offshore, personalizado — fixed, ignore desempenho
+      tplId = sel;
+    }
     const tpl = templateData[tplId] || { assunto: '', corpo: '' };
     const linkHtml = client.link_relatorio
       ? `<p style="margin-top:16px;"><a href="${client.link_relatorio}" style="display:inline-block;background:#D4820A;color:#081537;padding:10px 22px;text-decoration:none;font-weight:700;font-size:13px;">↓ Baixar Relatório</a></p>`
