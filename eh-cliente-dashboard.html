@@ -1724,11 +1724,16 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const data = hasHeader ? lines.slice(1) : lines;
 
     // Detect column positions from header, or use defaults
-    const iEmail     = headerRow.findIndex(h => h.includes('email'))               ?? 0;
-    const iNome      = headerRow.findIndex(h => h.includes('nome'))                ?? 1;
-    const iDesemp    = headerRow.findIndex(h => h.includes('cdi') || h.includes('desempenho') || h.includes('%')) ?? 2;
-    const iTemplate  = headerRow.findIndex(h => h.includes('template'));
-    const iValor     = headerRow.findIndex(h => h.includes('valor') || h.includes('servi')) ?? 3;
+    const _iEmail    = headerRow.findIndex(h => h.includes('email'));
+    const _iNome     = headerRow.findIndex(h => h.includes('nome'));
+    const _iDesemp   = headerRow.findIndex(h => h.includes('cdi') || h.includes('desempenho') || h.includes('%'));
+    const _iTemplate = headerRow.findIndex(h => h.includes('template'));
+    const _iValor    = headerRow.findIndex(h => h.includes('valor') || h.includes('servi'));
+    const iEmail    = _iEmail    >= 0 ? _iEmail    : 0;
+    const iNome     = _iNome     >= 0 ? _iNome     : 1;
+    const iDesemp   = _iDesemp   >= 0 ? _iDesemp   : 2;
+    const iTemplate = _iTemplate;
+    const iValor    = _iValor    >= 0 ? _iValor    : 3;
 
     // Map template text to id
     const TPL_MAP = {
