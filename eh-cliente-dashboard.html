@@ -1410,6 +1410,23 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       </td>
       <td><button onclick="removeRow('${id}')" style="background:none;border:none;color:#e05555;cursor:pointer;font-size:1rem;padding:0.3rem;">✕</button></td>`;
     document.getElementById('clientsTableBody').appendChild(tr);
+    // Initialize template button label from data.template
+    if (data.template && data.template !== 'mensal') {
+      const tplDef = {
+        mensal:       { label:'Mensal',           color:'#4caf82' },
+        trimestral:   { label:'Trimestral',        color:'#4caf82' },
+        cobranca:     { label:'Cobrança',          color:'#E8A030' },
+        offshore:     { label:'Carteira Offshore', color:'#6496FF' },
+        personalizado:{ label:'Personalizado',     color:'#8A9BB8' },
+      };
+      const def = tplDef[data.template];
+      if (def) {
+        const btn = document.getElementById('tpl-btn-' + id);
+        if (btn) btn.innerHTML = `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${def.color};margin-right:6px;vertical-align:middle;"></span>${def.label}`;
+        const hiddenInput = document.getElementById('tpl-val-' + id);
+        if (hiddenInput) hiddenInput.value = data.template;
+      }
+    }
     updateBadge(id);
   }
 
@@ -1703,13 +1720,45 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const lines = text.trim().split('\n').filter(l => l.trim());
     if (!lines.length) return;
     const hasHeader = lines[0].toLowerCase().includes('email') || lines[0].toLowerCase().includes('nome');
+    const headerRow = hasHeader ? lines[0].toLowerCase().split('\t').map(c => c.trim()) : [];
     const data = hasHeader ? lines.slice(1) : lines;
+
+    // Detect column positions from header, or use defaults
+    const iEmail     = headerRow.findIndex(h => h.includes('email'))               ?? 0;
+    const iNome      = headerRow.findIndex(h => h.includes('nome'))                ?? 1;
+    const iDesemp    = headerRow.findIndex(h => h.includes('cdi') || h.includes('desempenho') || h.includes('%')) ?? 2;
+    const iTemplate  = headerRow.findIndex(h => h.includes('template'));
+    const iValor     = headerRow.findIndex(h => h.includes('valor') || h.includes('servi')) ?? 3;
+
+    // Map template text to id
+    const TPL_MAP = {
+      'mensal':      'mensal',
+      'trimestral':  'trimestral',
+      'cobrança':    'cobranca',
+      'cobranca':    'cobranca',
+      'offshore':    'offshore',
+      'personalizado': 'personalizado',
+    };
+
     clearAllRows();
     let added = 0;
     data.forEach(line => {
       const cols = line.split('\t').map(c => c.trim());
       if (cols.length < 2) return;
-      addClientRow({ email: cols[0]||'', nome: cols[1]||'', desempenho: cols[2]||'', valor: cols[3]||'' });
+
+      let tplVal = 'mensal';
+      if (iTemplate >= 0 && cols[iTemplate]) {
+        const raw = cols[iTemplate].toLowerCase().trim();
+        tplVal = TPL_MAP[raw] || 'mensal';
+      }
+
+      addClientRow({
+        email:      cols[iEmail >= 0 ? iEmail : 0] || '',
+        nome:       cols[iNome  >= 0 ? iNome  : 1] || '',
+        desempenho: cols[iDesemp >= 0 ? iDesemp : 2] || '',
+        valor:      cols[iValor >= 0 ? iValor : 3] || '',
+        template:   tplVal
+      });
       added++;
     });
     showFb('sendFeedback', `✓ ${added} cliente(s) importado(s).`, 'success');
