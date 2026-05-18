@@ -604,7 +604,7 @@
           </div>
           <div style="overflow-x:auto;margin-top:0.8rem;">
             <table id="clientsTable">
-              <thead><tr><th>Email</th><th>Nome</th><th>% do CDI</th><th>Frequência</th><th>Valor do Serviço</th><th>Relatório PDF</th><th></th></tr></thead>
+              <thead><tr><th>Email</th><th>Nome</th><th>% do CDI</th><th>Frequência</th><th>Template</th><th>Valor do Serviço</th><th>Relatório PDF</th><th></th></tr></thead>
               <tbody id="clientsTableBody"></tbody>
             </table>
           </div>
@@ -1248,6 +1248,19 @@
           <option value="Trimestral" ${data.frequencia==='Trimestral'?'selected':''}>Trimestral</option>
         </select>
       </td>
+      <td>
+        <select id="tpl-sel-${id}" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.2);color:var(--white);font-family:'Montserrat',sans-serif;font-size:0.72rem;padding:0.45rem 0.5rem;outline:none;">
+          <option value="auto">— Auto —</option>
+          <option value="mensal_acima" ${data.template==='mensal_acima'?'selected':''}>Mensal · Acima CDI</option>
+          <option value="mensal_abaixo" ${data.template==='mensal_abaixo'?'selected':''}>Mensal · Abaixo CDI</option>
+          <option value="trimestral_acima" ${data.template==='trimestral_acima'?'selected':''}>Trimestral · Acima CDI</option>
+          <option value="trimestral_abaixo" ${data.template==='trimestral_abaixo'?'selected':''}>Trimestral · Abaixo CDI</option>
+          <option value="offshore" ${data.template==='offshore'?'selected':''}>Carteira Offshore</option>
+          <option value="cobranca_acima" ${data.template==='cobranca_acima'?'selected':''}>Cobrança · Acima CDI</option>
+          <option value="cobranca_abaixo" ${data.template==='cobranca_abaixo'?'selected':''}>Cobrança · Abaixo CDI</option>
+          <option value="personalizado" ${data.template==='personalizado'?'selected':''}>Personalizado</option>
+        </select>
+      </td>
       <td><input type="text" placeholder="ex: R$ 1.500,00" value="${data.valor||''}" /></td>
       <td>
         <div style="display:flex;align-items:center;gap:0.5rem;">
@@ -1330,6 +1343,7 @@
         nome:           inputs[1].value.trim(),
         desempenho:     inputs[2].value.trim(),
         frequencia:     selects[0]?.value || 'Mensal',
+        template:       selects[1]?.value || 'auto',
         valor:          inputs[3].value.trim(),
         link_relatorio: pdfUrl,
         pdf_filename:   pdfFilename
@@ -1341,7 +1355,10 @@
     const num = parseFloat((client.desempenho||'0').replace(',','.').replace('%',''));
     const up   = num >= 100;
     const freq = client.frequencia === 'Trimestral' ? 'trimestral' : 'mensal';
-    const tplId = `${freq}_${up ? 'acima' : 'abaixo'}`;
+    // Manual override or auto-detect
+    const tplId = (client.template && client.template !== 'auto')
+      ? client.template
+      : `${freq}_${up ? 'acima' : 'abaixo'}`;
     const tpl = templateData[tplId] || { assunto: '', corpo: '' };
     const linkHtml = client.link_relatorio
       ? `<p style="margin-top:16px;"><a href="${client.link_relatorio}" style="display:inline-block;background:#D4820A;color:#081537;padding:10px 22px;text-decoration:none;font-weight:700;font-size:13px;">↓ Baixar Relatório</a></p>`
@@ -1352,7 +1369,7 @@
       .replace(/{{valor}}/g, client.valor||'')
       .replace(/{{link_relatorio}}/g, client.link_relatorio||'')
       .replace(/{{btn_relatorio}}/g, linkHtml);
-    return { subject: r(tpl.assunto), body: r(tpl.corpo), up, freq };
+    return { subject: r(tpl.assunto), body: r(tpl.corpo), up, freq, tplId };
   }
 
   function previewEmails() {
@@ -1362,8 +1379,10 @@
     area.style.display = 'block';
     document.getElementById('previewList').innerHTML = clients.map(c => {
       const { subject, body, up } = applyTpl(c);
-      const { up: up2, freq } = applyTpl(c);
-      const badge = `<span class="${up2?'badge-acima':'badge-abaixo'}">${up2?'▲':'▼'} ${up2?'Acima':'Abaixo'} CDI</span> <span style="font-size:0.6rem;color:var(--gray);margin-left:0.3rem;">${freq}</span>`;
+      const { up: up2, freq, tplId: resolvedTpl } = applyTpl(c);
+      const tplDef = TEMPLATE_DEFS.find(t => t.id === (c.template !== 'auto' ? c.template : (freq+'_'+(up2?'acima':'abaixo'))));
+      const tplName = tplDef ? tplDef.label : (c.template === 'auto' ? 'Auto' : c.template);
+      const badge = `<span class="${up2?'badge-acima':'badge-abaixo'}">${up2?'▲':'▼'} ${up2?'Acima':'Abaixo'} CDI</span> <span style="font-size:0.6rem;color:var(--gray);margin-left:0.3rem;">· ${tplName}</span>`;
       return `<div class="preview-card">
         <div class="preview-card-header">
           <div class="preview-meta"><strong>${c.nome}</strong> &lt;${c.email}&gt;<br/><strong>Assunto:</strong> ${subject}</div>
@@ -1431,6 +1450,7 @@
       created_by:     currentUser.id,
       created_at:     new Date().toISOString()
     }));
+    // Note: template selection is per-row in memory only, not persisted in rascunho
 
     const { error } = await sb.from('email_disparos').insert(rows);
     if (error) { showFb('sendFeedback','Erro ao salvar: ' + error.message,'error'); return; }
