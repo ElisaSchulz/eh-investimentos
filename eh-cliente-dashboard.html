@@ -1723,27 +1723,39 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const headerRow = hasHeader ? lines[0].toLowerCase().split('\t').map(c => c.trim()) : [];
     const data = hasHeader ? lines.slice(1) : lines;
 
-    // Detect column positions from header, or use defaults
-    const _iEmail    = headerRow.findIndex(h => h.includes('email'));
-    const _iNome     = headerRow.findIndex(h => h.includes('nome'));
-    const _iDesemp   = headerRow.findIndex(h => h.includes('cdi') || h.includes('desempenho') || h.includes('%'));
-    const _iTemplate = headerRow.findIndex(h => h.includes('template'));
-    const _iValor    = headerRow.findIndex(h => h.includes('valor') || h.includes('servi'));
-    const iEmail    = _iEmail    >= 0 ? _iEmail    : 0;
-    const iNome     = _iNome     >= 0 ? _iNome     : 1;
-    const iDesemp   = _iDesemp   >= 0 ? _iDesemp   : 2;
-    const iTemplate = _iTemplate;
-    const iValor    = _iValor    >= 0 ? _iValor    : 3;
-
-    // Map template text to id
+    // Template values recognised
     const TPL_MAP = {
-      'mensal':      'mensal',
-      'trimestral':  'trimestral',
-      'cobrança':    'cobranca',
-      'cobranca':    'cobranca',
-      'offshore':    'offshore',
+      'mensal':        'mensal',
+      'trimestral':    'trimestral',
+      'cobrança':      'cobranca',
+      'cobranca':      'cobranca',
+      'offshore':      'offshore',
       'personalizado': 'personalizado',
     };
+    const TPL_VALS = Object.keys(TPL_MAP);
+
+    // Detect column positions from header if present
+    let iEmail = 0, iNome = 1, iDesemp = 2, iValor = 3, iTemplate = -1;
+    if (hasHeader) {
+      headerRow.forEach((h, i) => {
+        if (h.includes('email'))                                          iEmail    = i;
+        else if (h.includes('nome'))                                      iNome     = i;
+        else if (h.includes('cdi')||h.includes('desempenho')||h.includes('%')) iDesemp = i;
+        else if (h.includes('template'))                                  iTemplate = i;
+        else if (h.includes('valor')||h.includes('servi'))                iValor    = i;
+      });
+    } else {
+      // No header — sniff template column by checking if any cell matches a template name
+      const firstLine = data[0]?.split('\t').map(c => c.trim().toLowerCase()) || [];
+      iTemplate = firstLine.findIndex(c => TPL_VALS.includes(c));
+      // With your format: email(0) nome(1) desempenho(2) blank(3) template(4) label(5)
+      // If template found at col 4, shift valor accordingly
+      if (iTemplate < 0 && firstLine.length >= 5) {
+        // Try col 4 across all rows
+        const col4vals = data.map(l => l.split('\t')[4]?.trim().toLowerCase()).filter(Boolean);
+        if (col4vals.length && col4vals.every(v => TPL_VALS.includes(v))) iTemplate = 4;
+      }
+    }
 
     clearAllRows();
     let added = 0;
@@ -1751,17 +1763,24 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       const cols = line.split('\t').map(c => c.trim());
       if (cols.length < 2) return;
 
+      // Resolve template: check dedicated column first, then sniff all cols
       let tplVal = 'mensal';
       if (iTemplate >= 0 && cols[iTemplate]) {
         const raw = cols[iTemplate].toLowerCase().trim();
         tplVal = TPL_MAP[raw] || 'mensal';
+      } else {
+        // Fallback: scan all columns for a template keyword
+        for (const col of cols) {
+          const raw = col.toLowerCase().trim();
+          if (TPL_MAP[raw]) { tplVal = TPL_MAP[raw]; break; }
+        }
       }
 
       addClientRow({
-        email:      cols[iEmail >= 0 ? iEmail : 0] || '',
-        nome:       cols[iNome  >= 0 ? iNome  : 1] || '',
-        desempenho: cols[iDesemp >= 0 ? iDesemp : 2] || '',
-        valor:      cols[iValor >= 0 ? iValor : 3] || '',
+        email:      cols[iEmail]  || '',
+        nome:       cols[iNome]   || '',
+        desempenho: cols[iDesemp] || '',
+        valor:      cols[iValor]  || '',
         template:   tplVal
       });
       added++;
