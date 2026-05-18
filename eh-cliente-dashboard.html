@@ -331,10 +331,11 @@
     }
     .tpl-dd-btn.open::after { transform:translateY(-50%) rotate(180deg); }
     .tpl-dd-list {
-      position:absolute; top:calc(100% + 2px); left:0; right:0; z-index:999;
+      position:fixed; z-index:9999;
       background:var(--navy-mid); border:1px solid var(--border);
-      box-shadow:0 8px 24px rgba(0,0,0,0.5);
+      box-shadow:0 8px 32px rgba(0,0,0,0.7);
       display:none; flex-direction:column; max-height:260px; overflow-y:auto;
+      min-width:220px;
     }
     .tpl-dd-list.open { display:flex; }
     .tpl-dd-item {
@@ -618,6 +619,46 @@
             Templates são salvos no Supabase e compartilhados entre admins.
           </p>
 
+          <!-- Formatting guide accordion -->
+          <div style="margin-bottom:1rem;">
+            <button onclick="toggleAccordion(this)" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:rgba(212,130,10,0.08);border:1px solid var(--border);color:var(--gray-light);font-family:'Montserrat',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;padding:0.75rem 1rem;cursor:pointer;transition:background 0.2s;">
+              <span>📋 Guia de Formatação</span>
+              <span class="accordion-arrow" style="transition:transform 0.2s;">▼</span>
+            </button>
+            <div class="accordion-content" style="display:none;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-top:none;padding:1.2rem;">
+              <p style="font-size:0.75rem;color:var(--gray);margin-bottom:1rem;line-height:1.6;">Use estas tags HTML diretamente no corpo do email:</p>
+              <table style="width:100%;border-collapse:collapse;font-size:0.75rem;">
+                <thead>
+                  <tr style="border-bottom:1px solid var(--border);">
+                    <th style="text-align:left;color:var(--gray);font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.8rem;font-size:0.62rem;">Formatação</th>
+                    <th style="text-align:left;color:var(--gray);font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.8rem;font-size:0.62rem;">Como escrever</th>
+                    <th style="text-align:left;color:var(--gray);font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.8rem;font-size:0.62rem;">Resultado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Negrito</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;strong&gt;texto&lt;/strong&gt;</code></td><td style="padding:0.5rem 0.8rem;color:var(--white);"><strong>texto</strong></td></tr>
+                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Itálico</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;em&gt;texto&lt;/em&gt;</code></td><td style="padding:0.5rem 0.8rem;color:var(--white);"><em>texto</em></td></tr>
+                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Cor dourada</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;span style="color:#D4820A"&gt;texto&lt;/span&gt;</code></td><td style="padding:0.5rem 0.8rem;"><span style="color:#D4820A;">texto</span></td></tr>
+                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Linha separadora</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;hr/&gt;</code></td><td style="padding:0.5rem 0.8rem;color:var(--gray);">— linha —</td></tr>
+                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Quebra de linha</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;br/&gt;</code></td><td style="padding:0.5rem 0.8rem;color:var(--gray);">pula linha</td></tr>
+                  <tr><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Variáveis</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">{{nome}} {{desempenho}} {{valor}}</code></td><td style="padding:0.5rem 0.8rem;color:var(--gray);">dados do cliente</td></tr>
+                </tbody>
+              </table>
+              <div style="margin-top:1rem;background:rgba(255,255,255,0.03);border:1px solid var(--border-dim);padding:1rem;">
+                <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);margin-bottom:0.6rem;">Exemplo</p>
+                <pre style="font-size:0.75rem;color:var(--gray-light);line-height:1.7;white-space:pre-wrap;">Olá &lt;strong&gt;{{nome}}&lt;/strong&gt;,
+
+Sua carteira rendeu &lt;strong&gt;&lt;span style="color:#D4820A"&gt;{{desempenho}} do CDI&lt;/span&gt;&lt;/strong&gt;.
+
+&lt;hr/&gt;
+
+Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
+
+{{btn_relatorio}}</pre>
+              </div>
+            </div>
+          </div>
+
           <div id="templateAccordion" style="display:flex;flex-direction:column;gap:1px;background:var(--border-dim);border:1px solid var(--border-dim);"></div>
 
           <div style="display:flex;gap:0.8rem;margin-top:1.2rem;flex-wrap:wrap;">
@@ -642,7 +683,7 @@
           </div>
           <div style="overflow-x:auto;margin-top:0.8rem;">
             <table id="clientsTable">
-              <thead><tr><th>Email</th><th>Nome</th><th>% do CDI</th><th>Frequência</th><th>Template</th><th>Valor do Serviço</th><th>Relatório PDF</th><th></th></tr></thead>
+              <thead><tr><th>Email</th><th>Nome</th><th>% do CDI</th><th>Template</th><th>Valor do Serviço</th><th>Relatório PDF</th><th></th></tr></thead>
               <tbody id="clientsTableBody"></tbody>
             </table>
           </div>
@@ -907,10 +948,24 @@
     const list = document.getElementById('tpl-dd-list-' + id);
     const btn  = document.querySelector('#tpl-dd-' + id + ' .tpl-dd-btn');
     const isOpen = list.classList.contains('open');
-    // Close all others first
-    document.querySelectorAll('.tpl-dd-list.open').forEach(l => l.classList.remove('open'));
+    document.querySelectorAll('.tpl-dd-list.open').forEach(l => { l.classList.remove('open'); });
     document.querySelectorAll('.tpl-dd-btn.open').forEach(b => b.classList.remove('open'));
-    if (!isOpen) { list.classList.add('open'); btn.classList.add('open'); }
+    if (!isOpen) {
+      const r = btn.getBoundingClientRect();
+      const listH = 260;
+      const spaceBelow = window.innerHeight - r.bottom;
+      list.style.width = r.width + 'px';
+      list.style.left  = r.left + 'px';
+      if (spaceBelow < listH) {
+        list.style.top    = 'auto';
+        list.style.bottom = (window.innerHeight - r.top + 2) + 'px';
+      } else {
+        list.style.top    = (r.bottom + 2) + 'px';
+        list.style.bottom = 'auto';
+      }
+      list.classList.add('open');
+      btn.classList.add('open');
+    }
   }
 
   function tplDdSelect(id, val, label, color) {
@@ -1306,17 +1361,11 @@
     const tr = document.createElement('tr');
     tr.id = 'row-' + id;
     tr.innerHTML = `
-      <td><input type="email" placeholder="email@exemplo.com" value="${data.email||''}" /></td>
+      <td><input type="text" placeholder="email@ex.com ou email1;email2" value="${data.email||''}" style="min-width:180px;" /></td>
       <td><input type="text" placeholder="Nome do cliente" value="${data.nome||''}" /></td>
       <td>
         <input type="text" placeholder="ex: 103%" value="${data.desempenho||''}" id="di-${id}" oninput="updateBadge('${id}')" />
         <div id="db-${id}" style="margin-top:0.3rem;"></div>
-      </td>
-      <td>
-        <select style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.2);color:var(--white);font-family:'Montserrat',sans-serif;font-size:0.75rem;padding:0.45rem 0.5rem;outline:none;">
-          <option value="Mensal" ${(data.frequencia||'Mensal')==='Mensal'?'selected':''}>Mensal</option>
-          <option value="Trimestral" ${data.frequencia==='Trimestral'?'selected':''}>Trimestral</option>
-        </select>
       </td>
       <td>
         <div class="tpl-dd" id="tpl-dd-${id}">
@@ -1426,7 +1475,6 @@
         email:          inputs[0].value.trim(),
         nome:           inputs[1].value.trim(),
         desempenho:     inputs[2].value.trim(),
-        frequencia:     selects[0]?.value || 'Mensal',
         template:       document.getElementById('tpl-val-' + id)?.value || 'mensal',
         valor:          inputs[3].value.trim(),
         link_relatorio: pdfUrl,
@@ -1436,7 +1484,7 @@
   }
 
   function applyTpl(client) {
-    const num = parseFloat((client.desempenho||'0').replace(',','.').replace('%',''));
+    const num  = parseFloat((client.desempenho||'0').replace(',','.').replace('%',''));
     const up   = num >= 100;
     const perf = up ? 'acima' : 'abaixo';
     const sel  = client.template || 'mensal';
@@ -1533,7 +1581,6 @@
       email:          c.email,
       nome:           c.nome,
       desempenho:     c.desempenho,
-      frequencia:     c.frequencia || 'Mensal',
       valor:          c.valor,
       link_relatorio: c.link_relatorio || '',
       pdf_filename:   c.pdf_filename || '',
@@ -1617,17 +1664,21 @@
     let sent = 0; const errors = [];
     for (const c of clients) {
       const { subject, body } = applyTpl(c);
+      // Support multiple emails separated by ; or ,
+      const emails = c.email.split(/[;,]/).map(e => e.trim()).filter(Boolean);
       try {
         // Convert plain text to HTML, preserving line breaks
         const htmlBody = buildHtmlEmail(body);
+        for (const toEmail of emails) {
         const res = await fetch(GAS_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ to_email: c.email, subject, html_message: htmlBody })
+          body: JSON.stringify({ to_email: toEmail, subject, html_message: htmlBody })
         });
         const result = await res.json();
         if (result.success) { sent++; }
-        else { errors.push(`${c.email}: ${result.error || 'Erro desconhecido'}`); }
+        else { errors.push(`${toEmail}: ${result.error || 'Erro desconhecido'}`); }
+        } // end for toEmail
       } catch(e) {
         errors.push(`${c.email}: ${e.message}`);
       }
