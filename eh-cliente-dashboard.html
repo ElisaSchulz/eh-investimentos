@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- EH-DASHBOARD-v3-FIXED -->
+<!-- EH-DASHBOARD-v5-TEMPLATE-PASTE -->
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -1562,7 +1562,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     }).join('\n');
 
     return `<!DOCTYPE html>
-<!-- EH-DASHBOARD-v3-FIXED -->
+<!-- EH-DASHBOARD-v5-TEMPLATE-PASTE -->
 <html>
 <head><meta charset="UTF-8"/></head>
 <body style="font-family:Arial,sans-serif;font-size:14px;color:#222;line-height:1.7;max-width:600px;margin:0;padding:20px;">
@@ -2325,8 +2325,14 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const wb=XLSX.utils.book_new();
     const isEQI=extCurrentBroker==='EQI';
     const header=isEQI?['CNPJ','Data','Descrição','Valor Bruto (R$)','Valor Líquido (R$)','Saldo (R$)','Tipo']:['CNPJ','Data Mov.','Data Liq.','Histórico','Valor (R$)','Saldo (R$)','Tipo'];
+
+    // Sort sheets alphabetically by sheetName
+    const sorted = [...extAllProcessedRows].sort((a, b) =>
+      a.sheetName.localeCompare(b.sheetName, 'pt-BR', { sensitivity: 'base' })
+    );
+
     const usedNames=new Set();
-    for (const sh of extAllProcessedRows) {
+    for (const sh of sorted) {
       let name=sh.sheetName.slice(0,31); let suffix=2;
       while(usedNames.has(name)){name=sh.sheetName.slice(0,28)+'_'+suffix++;} usedNames.add(name);
       let data;
