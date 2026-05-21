@@ -620,30 +620,57 @@
     sb.auth.onAuthStateChange((event, session) => {
       // Only act on INITIAL_SESSION to avoid reacting to other events
       if (event === 'INITIAL_SESSION') {
-        const hash = window.location.hash;
-        // If there's an invite/recovery token in the URL, handle it — don't redirect
+        const hash   = window.location.hash;
+        const search = window.location.search;
+        // If there's a token in the URL, let the load handler deal with it
         if (hash && hash.includes('access_token')) return;
+        if (search && (search.includes('token_hash') || search.includes('code'))) return;
         // Already logged in — go straight to dashboard
         if (session) window.location.href = 'eh-cliente-dashboard.html';
       }
     });
 
     // Handle invite/recovery token in URL
+    // Supabase can send tokens via hash (#access_token=) or query params (?token_hash=)
     window.addEventListener('load', async () => {
-      const hash = window.location.hash;
-      if (!hash || !hash.includes('access_token')) return;
+      const hash        = window.location.hash;
+      const queryParams = new URLSearchParams(window.location.search);
 
-      const params = new URLSearchParams(hash.substring(1));
-      const type        = params.get('type');
-      const accessToken = params.get('access_token');
-      const refreshToken = params.get('refresh_token') || '';
-
-      if ((type === 'invite' || type === 'recovery') && accessToken) {
-        history.replaceState(null, '', window.location.pathname);
-        const { data, error } = await sb.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-        if (!error && data.session) {
-          showSetPassword(type);
+      // ── FORMAT 1: hash-based (#access_token=...) — older Supabase format ──
+      if (hash && hash.includes('access_token')) {
+        const params      = new URLSearchParams(hash.substring(1));
+        const type        = params.get('type');
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token') || '';
+        if ((type === 'invite' || type === 'recovery') && accessToken) {
+          history.replaceState(null, '', window.location.pathname);
+          const { data, error } = await sb.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+          if (!error && data.session) showSetPassword(type);
         }
+        return;
+      }
+
+      // ── FORMAT 2: query-based (?token_hash=...&type=invite) — newer Supabase format ──
+      const tokenHash = queryParams.get('token_hash');
+      const type      = queryParams.get('type');
+      if (tokenHash && (type === 'invite' || type === 'recovery')) {
+        history.replaceState(null, '', window.location.pathname);
+        const { data, error } = await sb.auth.verifyOtp({ token_hash: tokenHash, type });
+        if (!error && data.session) showSetPassword(type);
+        return;
+      }
+
+      // ── FORMAT 3: code-based (?code=...) — PKCE flow ──
+      const code = queryParams.get('code');
+      if (code) {
+        history.replaceState(null, '', window.location.pathname);
+        const { data, error } = await sb.auth.exchangeCodeForSession(code);
+        if (!error && data.session) {
+          // Determine if invite or recovery from session
+          const meta = data.session.user?.user_metadata;
+          showSetPassword(meta?.invited_at ? 'invite' : 'recovery');
+        }
+        return;
       }
     });
 
