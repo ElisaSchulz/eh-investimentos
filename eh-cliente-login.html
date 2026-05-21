@@ -6,19 +6,34 @@
   <title>EH Investimentos — Área do Cliente</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,300;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     :root {
+      /* Navy & accent palette — aligned to index.html */
       --navy:       #0D1E4E;
-      --navy-dark:  #081537;
-      --navy-mid:   #122460;
+      --navy-2:     #0a1840;
+      --navy-3:     #091438;
+      --navy-mid:   #152a64;
+      --navy-warm:  #1a2a5e;
+      --navy-dark:  #091438;
       --gold:       #D4820A;
+      --gold-2:     #E8A030;
       --gold-light: #E8A030;
-      --white:      #FFFFFF;
-      --gray:       #8A9BB8;
-      --gray-light: #C8D4E8;
-      --border:     rgba(212, 130, 10, 0.25);
+      --gold-pale:  #F0C060;
+      --cream:      #f3ede1;
+      --cream-2:    #e4d5b0;
+      --cream-soft: #f3ede1cc;
+      --cream-faint:#f3ede166;
+      --rule:       #f3ede122;
+      --rule-soft:  #f3ede112;
+      --rule-strong:#f3ede140;
+      /* Aliases retained so any inline `var(--white)`, `var(--gray)`, etc.
+         resolve to consistent values from the new palette */
+      --white:      #f3ede1;
+      --gray:       #f3ede199;
+      --gray-light: #f3ede1cc;
+      --border:     #f3ede140;
       --error:      #e05555;
     }
 
@@ -26,15 +41,28 @@
     html, body { height: 100%; }
 
     body {
-      font-family: 'Montserrat', sans-serif;
-      background: var(--navy-dark);
-      color: var(--white);
+      font-family: 'IBM Plex Sans', sans-serif;
+      background: var(--navy);
+      color: var(--cream);
       display: flex;
       min-height: 100vh;
       overflow: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* Left panel */
+    /* Editorial grain — same overlay as index.html */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1000;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+      mix-blend-mode: overlay;
+      opacity: 0.25;
+    }
+
+    /* ── LEFT PANEL ── */
     .left-panel {
       flex: 1;
       display: flex;
@@ -42,8 +70,8 @@
       justify-content: space-between;
       padding: 3rem 4rem;
       background:
-        radial-gradient(ellipse 70% 60% at 30% 40%, rgba(18,36,96,0.95) 0%, transparent 70%),
-        linear-gradient(160deg, var(--navy-dark) 0%, var(--navy) 60%, var(--navy-mid) 100%);
+        radial-gradient(ellipse 60% 50% at 15% 90%, rgba(212,130,10,0.10) 0%, transparent 65%),
+        var(--navy);
       position: relative;
       overflow: hidden;
     }
@@ -51,21 +79,21 @@
     .left-panel::before {
       content: '';
       position: absolute;
-      width: 500px; height: 500px;
+      width: 680px; height: 680px;
       border-radius: 50%;
-      border: 1px solid rgba(212,130,10,0.08);
-      top: -150px; right: -150px;
-      animation: spin 50s linear infinite;
+      border: 1px solid rgba(212,130,10,0.06);
+      top: -260px; right: -180px;
+      pointer-events: none;
     }
 
     .left-panel::after {
       content: '';
       position: absolute;
-      width: 300px; height: 300px;
+      width: 320px; height: 320px;
       border-radius: 50%;
-      border: 1px solid rgba(212,130,10,0.05);
-      bottom: -80px; left: -80px;
-      animation: spin 70s linear infinite reverse;
+      border: 1px solid rgba(212,130,10,0.04);
+      bottom: -120px; left: -120px;
+      pointer-events: none;
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -73,7 +101,7 @@
     .panel-logo {
       display: flex;
       align-items: center;
-      gap: 0.9rem;
+      gap: 0.85rem;
       text-decoration: none;
       position: relative;
       z-index: 2;
@@ -82,156 +110,192 @@
     .panel-logo-text {
       display: flex;
       flex-direction: column;
-      line-height: 1.1;
+      line-height: 1.2;
     }
 
     .panel-logo-text span:first-child {
+      font-family: 'IBM Plex Sans', sans-serif;
       font-weight: 700;
-      font-size: 0.92rem;
-      letter-spacing: 0.1em;
-      color: var(--white);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      color: var(--cream);
     }
 
     .panel-logo-text span:last-child {
-      font-weight: 300;
-      font-size: 0.6rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 400;
+      font-size: 9px;
       letter-spacing: 0.22em;
-      color: var(--gray);
+      color: var(--cream-soft);
       text-transform: uppercase;
+      margin-top: 3px;
     }
 
     .panel-quote {
       position: relative;
       z-index: 2;
+      max-width: 560px;
     }
 
     .panel-quote blockquote {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(1.6rem, 2.5vw, 2.4rem);
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: clamp(1.7rem, 2.4vw, 2.4rem);
       font-weight: 300;
       font-style: italic;
-      line-height: 1.4;
-      color: var(--gray-light);
-      margin-bottom: 1.2rem;
+      line-height: 1.32;
+      letter-spacing: -0.01em;
+      color: var(--cream);
+      margin-bottom: 1.4rem;
+      position: relative;
+    }
+
+    .panel-quote blockquote::before {
+      content: '“';
+      display: block;
+      color: var(--gold);
+      font-family: 'Source Serif 4', serif;
+      font-size: 3.4rem;
+      line-height: 0;
+      margin-bottom: -0.4rem;
+      margin-left: -0.35rem;
     }
 
     .panel-quote blockquote em {
-      color: var(--gold-light);
+      color: var(--gold-2);
       font-style: italic;
     }
 
     .panel-quote cite {
-      font-size: 0.65rem;
-      font-weight: 600;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
       letter-spacing: 0.22em;
       text-transform: uppercase;
       color: var(--gold);
       font-style: normal;
+      display: block;
+      padding-top: 14px;
+      border-top: 1px solid var(--rule);
     }
 
     .panel-footer {
       position: relative;
       z-index: 2;
-      font-size: 0.68rem;
-      color: var(--gray);
-      font-weight: 300;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      color: var(--cream-faint);
+      font-weight: 400;
     }
 
-    /* Right panel — login form */
+    /* ── RIGHT PANEL — login form ── */
     .right-panel {
-      width: 480px;
+      width: 520px;
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
       justify-content: center;
       padding: 3rem 3.5rem;
-      background: var(--navy-dark);
-      border-left: 1px solid var(--border);
+      background: var(--navy-2);
+      border-left: 1px solid var(--rule-strong);
       position: relative;
+      overflow-y: auto;
     }
 
-    .form-header { margin-bottom: 2.5rem; }
+    .right-panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 60px; height: 4px;
+      background: var(--gold);
+    }
+
+    .form-header { margin-bottom: 2.4rem; }
 
     .form-tag {
-      font-size: 0.62rem;
-      font-weight: 600;
-      letter-spacing: 0.28em;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.32em;
       text-transform: uppercase;
       color: var(--gold);
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.8rem;
+      gap: 0.65rem;
+      margin-bottom: 1rem;
     }
 
     .form-tag::before {
       content: '';
       display: block;
-      width: 20px; height: 1px;
+      width: 28px; height: 1px;
       background: var(--gold);
     }
 
     .form-header h1 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2.2rem;
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 2.6rem;
       font-weight: 300;
-      line-height: 1.1;
-      margin-bottom: 0.5rem;
+      line-height: 1.02;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.7rem;
+      color: var(--cream);
     }
 
     .form-header p {
-      font-size: 0.8rem;
-      color: var(--gray);
-      font-weight: 300;
-      line-height: 1.6;
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 1rem;
+      color: var(--cream-soft);
+      font-weight: 400;
+      line-height: 1.55;
     }
 
-    .form-group {
-      margin-bottom: 1.1rem;
-    }
+    .form-group { margin-bottom: 1.4rem; }
 
     label {
       display: block;
-      font-size: 0.65rem;
-      font-weight: 600;
-      letter-spacing: 0.16em;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.24em;
       text-transform: uppercase;
-      color: var(--gray);
-      margin-bottom: 0.5rem;
+      color: var(--cream-faint);
+      margin-bottom: 0.65rem;
     }
 
     input[type="email"],
-    input[type="password"] {
+    input[type="password"],
+    input[type="text"] {
       width: 100%;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(138,155,184,0.25);
-      color: var(--white);
-      font-family: 'Montserrat', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 300;
-      padding: 0.9rem 1.1rem;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--rule-strong);
+      color: var(--cream);
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      padding: 0.85rem 0;
       outline: none;
-      transition: border-color 0.2s, background 0.2s;
+      transition: border-color 0.2s;
     }
 
     input:focus {
-      border-color: var(--gold);
-      background: rgba(212,130,10,0.05);
+      border-bottom-color: var(--gold);
     }
 
-    input::placeholder { color: rgba(138,155,184,0.5); }
+    input::placeholder { color: var(--cream-faint); }
 
     .password-wrap { position: relative; }
 
     .toggle-pw {
       position: absolute;
-      right: 1rem; top: 50%;
+      right: 0; top: 50%;
       transform: translateY(-50%);
       background: none;
       border: none;
       cursor: pointer;
-      color: var(--gray);
-      padding: 0;
+      color: var(--cream-faint);
+      padding: 0 0.2rem;
       display: flex;
       align-items: center;
       transition: color 0.2s;
@@ -242,17 +306,17 @@
     .btn-login {
       width: 100%;
       background: var(--gold);
-      color: var(--navy-dark);
-      font-family: 'Montserrat', sans-serif;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      padding: 1rem;
-      border: none;
+      color: var(--navy);
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: none;
+      padding: 1.05rem;
+      border: 1px solid var(--gold);
       cursor: pointer;
-      margin-top: 0.5rem;
-      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      margin-top: 0.6rem;
+      transition: background 0.2s, border-color 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -260,54 +324,71 @@
     }
 
     .btn-login:hover {
-      background: var(--gold-light);
-      transform: translateY(-1px);
-      box-shadow: 0 8px 24px rgba(212,130,10,0.25);
+      background: var(--gold-2);
+      border-color: var(--gold-2);
     }
 
     .btn-login:disabled {
       opacity: 0.6;
       cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
     }
 
     .spinner {
       width: 14px; height: 14px;
-      border: 2px solid rgba(8,21,55,0.3);
-      border-top-color: var(--navy-dark);
+      border: 2px solid rgba(13,30,78,0.3);
+      border-top-color: var(--navy);
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
     }
 
     .error-msg {
-      background: rgba(224,85,85,0.1);
-      border: 1px solid rgba(224,85,85,0.35);
+      background: rgba(224,85,85,0.08);
+      border: 1px solid rgba(224,85,85,0.30);
+      border-left: 3px solid #e05555;
       color: #f08080;
-      font-size: 0.78rem;
-      padding: 0.75rem 1rem;
-      margin-top: 1rem;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 400;
+      padding: 0.8rem 1rem;
+      margin-top: 1.1rem;
       display: none;
       line-height: 1.5;
     }
-
     .error-msg.show { display: block; }
+
+    .success-msg {
+      background: rgba(85,160,85,0.08);
+      border: 1px solid rgba(85,160,85,0.30);
+      border-left: 3px solid #80c080;
+      color: #80c080;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 400;
+      padding: 0.8rem 1rem;
+      margin-top: 1.1rem;
+      display: none;
+      line-height: 1.5;
+    }
+    .success-msg.show { display: block; }
 
     .forgot-link {
       display: block;
       text-align: center;
-      margin-top: 1.2rem;
-      font-size: 0.72rem;
-      color: var(--gray);
+      margin-top: 1.5rem;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--cream-soft);
       text-decoration: none;
       transition: color 0.2s;
+      letter-spacing: 0.02em;
     }
 
     .forgot-link:hover { color: var(--gold); }
 
     .divider {
       width: 40px; height: 1px;
-      background: var(--border);
+      background: var(--rule-strong);
       margin: 2rem auto;
     }
 
@@ -316,53 +397,41 @@
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
-      font-size: 0.65rem;
-      color: rgba(138,155,184,0.6);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      font-weight: 400;
+      letter-spacing: 0.20em;
+      text-transform: uppercase;
+      color: var(--cream-faint);
       text-align: center;
     }
 
-
-    /* Set password view */
     .set-password-view { display: none; }
-
-    /* Reset password view */
     .reset-view { display: none; }
     .login-view { display: block; }
 
     .back-link {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
-      font-size: 0.68rem;
-      color: var(--gray);
+      gap: 0.5rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.20em;
+      text-transform: uppercase;
+      color: var(--cream-faint);
       cursor: pointer;
       margin-bottom: 2rem;
       transition: color 0.2s;
       background: none;
       border: none;
       padding: 0;
-      font-family: 'Montserrat', sans-serif;
     }
 
     .back-link:hover { color: var(--gold); }
 
-    .success-msg {
-      background: rgba(85,160,85,0.1);
-      border: 1px solid rgba(85,160,85,0.35);
-      color: #80c080;
-      font-size: 0.78rem;
-      padding: 0.75rem 1rem;
-      margin-top: 1rem;
-      display: none;
-      line-height: 1.5;
-    }
-
-    .success-msg.show { display: block; }
-
     @media (max-width: 800px) {
       body { flex-direction: column; overflow: auto; min-height: 100vh; }
 
-      /* Left panel — compact header on mobile */
       .left-panel {
         flex: none;
         padding: 1.8rem 1.5rem 1.5rem;
@@ -374,27 +443,27 @@
       .panel-quote { display: none; }
       .panel-footer { display: none; }
 
-      /* Right panel — full width form */
       .right-panel {
         width: 100%;
         flex: 1;
         padding: 2rem 1.5rem 3rem;
         border-left: none;
-        border-top: 1px solid var(--border);
+        border-top: 1px solid var(--rule-strong);
       }
 
-      .form-header h1 { font-size: 1.8rem; }
+      .form-header h1 { font-size: 2rem; }
       .form-header { margin-bottom: 1.8rem; }
 
-      .btn-login { padding: 1rem; font-size: 0.75rem; }
+      .btn-login { padding: 1rem; }
 
       input[type="email"],
-      input[type="password"] { font-size: 0.9rem; padding: 0.95rem 1rem; }
+      input[type="password"],
+      input[type="text"] { font-size: 15px; padding: 0.9rem 0; }
     }
 
     @media (max-width: 400px) {
-      .right-panel { padding: 1.5rem 1.2rem 2.5rem; }
-      .form-header h1 { font-size: 1.6rem; }
+      .right-panel { padding: 1.6rem 1.3rem 2.5rem; }
+      .form-header h1 { font-size: 1.7rem; }
     }
   </style>
 </head>
@@ -412,13 +481,13 @@
 
     <div class="panel-quote">
       <blockquote>
-        "O verdadeiro valor de uma gestão<br/>de excelência está na <em>transparência</em><br/>que ela proporciona."
+        O verdadeiro valor de uma gestão<br/>de excelência está na <em>transparência</em><br/>que ela proporciona.
       </blockquote>
       <cite>Eduardo Horta — Fundador</cite>
     </div>
 
     <div class="panel-footer">
-      © 2025 EH Investimentos. Exclusivo para investidores qualificados.
+      © 2025 EH Investimentos.
     </div>
   </div>
 
