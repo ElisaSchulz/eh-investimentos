@@ -99,31 +99,65 @@
 
     /* MOBILE DRAWER */
     .mobile-drawer{
-      position:fixed;inset:0;background:rgba(8,20,56,0.97);z-index:200;
+      position:fixed;inset:0;background:var(--navy);z-index:200;
       display:flex;flex-direction:column;
       transform:translateX(100%);transition:transform 0.35s cubic-bezier(.4,0,.2,1);
     }
     .mobile-drawer.open{transform:translateX(0);}
-    .mobile-drawer-inner{
-      display:flex;flex-direction:column;padding:64px 28px 32px;gap:0;
-      height:100%;overflow-y:auto;
+    .drawer-head{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:14px 16px;border-bottom:.5px solid var(--rule);
+      flex-shrink:0;
     }
-    .mobile-drawer-inner a{
-      font-family:'Source Serif 4',serif;font-size:22px;font-weight:400;
-      color:var(--cream);text-decoration:none;padding:14px 0;
-      border-bottom:1px solid var(--rule);letter-spacing:-.005em;
-      transition:color 0.2s;
-    }
-    .mobile-drawer-inner a:hover{color:var(--gold);}
-    .mobile-drawer-inner a.drawer-cta{
-      margin-top:24px;border:1px solid var(--gold);color:var(--gold);
-      font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;
-      text-transform:uppercase;text-align:center;padding:14px;border-bottom:1px solid var(--gold);
+    .drawer-head-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+    .drawer-head-logo img{width:32px;height:32px;object-fit:contain;flex-shrink:0;}
+    .drawer-head-logo span{
+      font-family:'IBM Plex Sans',sans-serif;font-weight:700;
+      font-size:13px;letter-spacing:.08em;color:var(--cream);
     }
     .drawer-close{
-      position:absolute;top:20px;right:24px;
-      background:none;border:none;color:var(--cream-soft);font-size:24px;cursor:pointer;
-      font-family:'IBM Plex Mono',monospace;line-height:1;padding:8px;
+      background:none;border:none;color:var(--cream-soft);
+      font-family:'IBM Plex Mono',monospace;font-size:20px;line-height:1;
+      cursor:pointer;padding:8px 6px;transition:color 0.2s;
+    }
+    .drawer-close:hover{color:var(--gold);}
+    .mobile-drawer-inner{
+      display:flex;flex-direction:column;padding:24px 20px 28px;gap:0;
+      flex:1;overflow-y:auto;
+    }
+    .drawer-links{
+      display:flex;flex-direction:column;gap:2px;
+    }
+    .mobile-drawer-inner a.drawer-link{
+      font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:500;
+      color:var(--cream);text-decoration:none;padding:14px 4px;
+      letter-spacing:.01em;
+      border-bottom:.5px solid var(--rule);
+      transition:color 0.2s;
+    }
+    .mobile-drawer-inner a.drawer-link:hover{color:var(--gold);}
+    .drawer-cta-group{
+      display:flex;flex-direction:column;gap:10px;
+      margin-top:auto;padding-top:28px;
+    }
+    .mobile-drawer-inner a.drawer-pill{
+      display:flex;align-items:center;justify-content:center;
+      text-decoration:none;
+      padding:14px 22px;
+      font-family:'IBM Plex Sans',sans-serif;font-weight:500;font-size:13px;
+      letter-spacing:.06em;
+      border:1px solid var(--cream-faint);color:var(--cream);
+      transition:all .2s;
+    }
+    .mobile-drawer-inner a.drawer-pill:hover{
+      border-color:var(--cream);color:var(--cream);
+    }
+    .mobile-drawer-inner a.drawer-pill.solid{
+      background:var(--gold);color:var(--navy);
+      border-color:var(--gold);font-weight:600;
+    }
+    .mobile-drawer-inner a.drawer-pill.solid:hover{
+      background:var(--gold-2);border-color:var(--gold-2);color:var(--navy);
     }
 
     /* HERO */
@@ -731,14 +765,24 @@
 
 <!-- Mobile Drawer -->
 <div class="mobile-drawer" id="mobileDrawer">
+  <div class="drawer-head">
+    <a href="#" class="drawer-head-logo" onclick="toggleMenu()">
+      <img src="Logo_EH.png" alt="EH" />
+      <span>EH INVESTIMENTOS</span>
+    </a>
+    <button class="drawer-close" onclick="toggleMenu()" aria-label="Fechar menu">✕</button>
+  </div>
   <div class="mobile-drawer-inner">
-    <button class="drawer-close" onclick="toggleMenu()">✕</button>
-    <a href="#sobre" onclick="toggleMenu()">Sobre</a>
-    <a href="#servicos" onclick="toggleMenu()">Serviços</a>
-    <a href="#perfil" onclick="toggleMenu()">Perfil</a>
-    <a href="#processo" onclick="toggleMenu()">Processo</a>
-    <a href="#contato" onclick="toggleMenu()">Fale Conosco</a>
-    <a href="eh-cliente-login.html" class="drawer-cta">Área do Cliente</a>
+    <div class="drawer-links">
+      <a href="#sobre" class="drawer-link" onclick="toggleMenu()">Sobre</a>
+      <a href="#servicos" class="drawer-link" onclick="toggleMenu()">Serviços</a>
+      <a href="#perfil" class="drawer-link" onclick="toggleMenu()">Perfil</a>
+      <a href="#processo" class="drawer-link" onclick="toggleMenu()">Processo</a>
+    </div>
+    <div class="drawer-cta-group">
+      <a href="eh-cliente-login.html" class="drawer-pill">Área do Cliente</a>
+      <a href="#contato" class="drawer-pill solid" onclick="toggleMenu()">Fale Conosco</a>
+    </div>
   </div>
 </div>
 
@@ -887,7 +931,7 @@
       <span class="roman">I</span>
       <div class="chapter">Capítulo I</div>
       <h3>Crescimento<br/><em>Patrimonial</em></h3>
-      <span class="tag">Para quem investe regularmente e quer construir patrimônio</span>
+      <span class="tag">PARA QUEM PODE INVESTIR REGULARMENTE E QUER CONSTRUIR PATRIMÔNIO</span>
       <p>
         Para quem tem disciplina, horizonte longo e quer ver o patrimônio crescer com inteligência.
         Estratégia estruturada, relatórios periódicos, e diversificação que evolui à medida que a
@@ -902,7 +946,8 @@
     <article class="svc featured">
       <span class="roman">II</span>
       <div class="chapter">Capítulo II</div>
-      <h3>Gestão<br/><em>Patrimonial</em></h3>
+      <h3>Gestão de
+Investimentos</h3>
       <span class="tag">Para patrimônios a partir de R$ 600 mil</span>
       <p>
         Acompanhamento dedicado para patrimônios consolidados. Construção e monitoramento de uma
@@ -930,7 +975,7 @@
       </p>
 
       <div class="req-block">
-        <div class="req-block-title">Gestão Patrimonial</div>
+        <div class="req-block-title">GESTÃO DE INVESTIMENTOS</div>
         <ul class="req-list">
           <li>
             <div class="check">

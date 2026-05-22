@@ -528,6 +528,11 @@
 
       <a class="forgot-link" onclick="showReset()" style="cursor:pointer;">Esqueci minha senha</a>
 
+      <div style="text-align:center;margin-top:1rem;">
+        <span style="font-size:0.78rem;color:var(--text-muted);">Ainda não tem acesso? </span>
+        <a onclick="showSolicitar()" style="cursor:pointer;font-size:0.78rem;color:var(--gold);font-weight:600;text-decoration:none;">Solicitar acesso</a>
+      </div>
+
       <div class="divider"></div>
       <div class="security-note">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -566,6 +571,46 @@
       <div class="success-msg" id="resetSuccessMsg"></div>
     </div>
 
+
+    <!-- SOLICITAR ACESSO VIEW -->
+    <div class="reset-view" id="solicitarView">
+      <button class="back-link" onclick="showLogin()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Voltar ao login
+      </button>
+
+      <div class="form-header">
+        <div class="form-tag">Primeiro acesso</div>
+        <h1>Solicitar<br/>Acesso</h1>
+        <p>Preencha seus dados e entraremos em contato para iniciar o processo de cadastro.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="solNome">Nome completo</label>
+        <input type="text" id="solNome" placeholder="Seu nome completo" />
+      </div>
+      <div class="form-group">
+        <label for="solEmail">E-mail</label>
+        <input type="email" id="solEmail" placeholder="seu@email.com" />
+      </div>
+      <div class="form-group">
+        <label for="solTelefone">WhatsApp / Telefone</label>
+        <input type="tel" id="solTelefone" placeholder="(00) 00000-0000" />
+      </div>
+      <div class="form-group">
+        <label for="solMensagem">Mensagem (opcional)</label>
+        <textarea id="solMensagem" placeholder="Como podemos ajudar?" rows="3" style="width:100%;background:var(--input-bg, rgba(255,255,255,0.05));border:1px solid var(--input-border, rgba(255,255,255,0.1));color:var(--text-primary, #fff);padding:0.75rem 1rem;font-family:inherit;font-size:0.9rem;resize:vertical;outline:none;border-radius:4px;"></textarea>
+      </div>
+
+      <button class="btn-login" id="solBtn" onclick="doSolicitar()">
+        <span id="solBtnText">Enviar solicitação</span>
+      </button>
+
+      <div class="error-msg" id="solErrorMsg"></div>
+      <div class="success-msg" id="solSuccessMsg"></div>
+    </div>
 
     <!-- SET PASSWORD VIEW (invite / recovery) -->
     <div class="set-password-view" id="setPasswordView">
@@ -620,57 +665,30 @@
     sb.auth.onAuthStateChange((event, session) => {
       // Only act on INITIAL_SESSION to avoid reacting to other events
       if (event === 'INITIAL_SESSION') {
-        const hash   = window.location.hash;
-        const search = window.location.search;
-        // If there's a token in the URL, let the load handler deal with it
+        const hash = window.location.hash;
+        // If there's an invite/recovery token in the URL, handle it — don't redirect
         if (hash && hash.includes('access_token')) return;
-        if (search && (search.includes('token_hash') || search.includes('code'))) return;
         // Already logged in — go straight to dashboard
         if (session) window.location.href = 'eh-cliente-dashboard.html';
       }
     });
 
     // Handle invite/recovery token in URL
-    // Supabase can send tokens via hash (#access_token=) or query params (?token_hash=)
     window.addEventListener('load', async () => {
-      const hash        = window.location.hash;
-      const queryParams = new URLSearchParams(window.location.search);
+      const hash = window.location.hash;
+      if (!hash || !hash.includes('access_token')) return;
 
-      // ── FORMAT 1: hash-based (#access_token=...) — older Supabase format ──
-      if (hash && hash.includes('access_token')) {
-        const params      = new URLSearchParams(hash.substring(1));
-        const type        = params.get('type');
-        const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token') || '';
-        if ((type === 'invite' || type === 'recovery') && accessToken) {
-          history.replaceState(null, '', window.location.pathname);
-          const { data, error } = await sb.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-          if (!error && data.session) showSetPassword(type);
-        }
-        return;
-      }
+      const params = new URLSearchParams(hash.substring(1));
+      const type        = params.get('type');
+      const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token') || '';
 
-      // ── FORMAT 2: query-based (?token_hash=...&type=invite) — newer Supabase format ──
-      const tokenHash = queryParams.get('token_hash');
-      const type      = queryParams.get('type');
-      if (tokenHash && (type === 'invite' || type === 'recovery')) {
+      if ((type === 'invite' || type === 'recovery') && accessToken) {
         history.replaceState(null, '', window.location.pathname);
-        const { data, error } = await sb.auth.verifyOtp({ token_hash: tokenHash, type });
-        if (!error && data.session) showSetPassword(type);
-        return;
-      }
-
-      // ── FORMAT 3: code-based (?code=...) — PKCE flow ──
-      const code = queryParams.get('code');
-      if (code) {
-        history.replaceState(null, '', window.location.pathname);
-        const { data, error } = await sb.auth.exchangeCodeForSession(code);
+        const { data, error } = await sb.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
         if (!error && data.session) {
-          // Determine if invite or recovery from session
-          const meta = data.session.user?.user_metadata;
-          showSetPassword(meta?.invited_at ? 'invite' : 'recovery');
+          showSetPassword(type);
         }
-        return;
       }
     });
 
@@ -685,6 +703,14 @@
       document.getElementById('loginView').style.display = 'block';
       document.getElementById('resetView').style.display = 'none';
       document.getElementById('setPasswordView').style.display = 'none';
+      document.getElementById('solicitarView').style.display = 'none';
+    }
+
+    function showSolicitar() {
+      document.getElementById('loginView').style.display = 'none';
+      document.getElementById('resetView').style.display = 'none';
+      document.getElementById('setPasswordView').style.display = 'none';
+      document.getElementById('solicitarView').style.display = 'block';
     }
 
     function showSetPassword(type) {
@@ -763,6 +789,64 @@
     }
 
     // ── PASSWORD RESET REQUEST ──
+    const GAS_URL_LOGIN = 'https://script.google.com/macros/s/AKfycby9W48Qfl8K9jDbg1-cSMpsjuTB-mzy2mn0OLrNBmyT4sq72mj3Xy7uQyU-NXaez41JBQ/exec';
+
+    async function doSolicitar() {
+      const nome     = document.getElementById('solNome').value.trim();
+      const email    = document.getElementById('solEmail').value.trim();
+      const telefone = document.getElementById('solTelefone').value.trim();
+      const mensagem = document.getElementById('solMensagem').value.trim();
+      const btn      = document.getElementById('solBtn');
+      const btnText  = document.getElementById('solBtnText');
+      const errorMsg = document.getElementById('solErrorMsg');
+      const successMsg = document.getElementById('solSuccessMsg');
+
+      errorMsg.classList.remove('show');
+      successMsg.classList.remove('show');
+
+      if (!nome || !email) {
+        errorMsg.textContent = 'Por favor, preencha nome e e-mail.';
+        errorMsg.classList.add('show');
+        return;
+      }
+
+      btn.disabled = true;
+      btnText.textContent = 'Enviando...';
+
+      const htmlBody = `
+        <h2 style="color:#0D1E4E;font-family:Arial,sans-serif;font-size:18px;">Nova solicitação de acesso — EH Investimentos</h2>
+        <table style="font-family:Arial,sans-serif;font-size:14px;border-collapse:collapse;margin-top:16px;">
+          <tr><td style="padding:6px 20px 6px 0;color:#888;font-weight:600;">Nome</td><td>${nome}</td></tr>
+          <tr><td style="padding:6px 20px 6px 0;color:#888;font-weight:600;">E-mail</td><td>${email}</td></tr>
+          <tr><td style="padding:6px 20px 6px 0;color:#888;font-weight:600;">Telefone</td><td>${telefone || 'Não informado'}</td></tr>
+          <tr><td style="padding:6px 20px 6px 0;color:#888;font-weight:600;vertical-align:top;">Mensagem</td><td>${mensagem || '(sem mensagem)'}</td></tr>
+        </table>`;
+
+      try {
+        await fetch(GAS_URL_LOGIN, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({
+            to_email: 'contato@ehinvestimentos.com.br',
+            subject: 'Solicitação de acesso — ' + nome,
+            html_message: htmlBody
+          })
+        });
+        successMsg.textContent = 'Solicitação enviada! Entraremos em contato em breve.';
+        successMsg.classList.add('show');
+        document.getElementById('solNome').value = '';
+        document.getElementById('solEmail').value = '';
+        document.getElementById('solTelefone').value = '';
+        document.getElementById('solMensagem').value = '';
+      } catch(e) {
+        errorMsg.textContent = 'Erro ao enviar. Tente novamente.';
+        errorMsg.classList.add('show');
+      }
+
+      btn.disabled = false;
+      btnText.textContent = 'Enviar solicitação';
+    }
+
     async function doReset() {
       const email = document.getElementById('resetEmail').value.trim();
       const btn = document.getElementById('resetBtn');
@@ -784,7 +868,7 @@
 
       // redirectTo: full URL of this login page
       // Update this URL when you change the domain
-      const loginUrl = 'https://ehinvestimentos.com.br/eh-cliente-login.html';
+      const loginUrl = 'https://ehinvestimentos.com.br/eh-investimentos/eh-cliente-login.html';
       const { error } = await sb.auth.resetPasswordForEmail(email, {
         redirectTo: loginUrl
       });
