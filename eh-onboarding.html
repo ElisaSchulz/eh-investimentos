@@ -1938,15 +1938,16 @@
 
     const html = `
       ${devBadge}
-      <div class="contract-type-selector" aria-disabled="true">
-        <button class="contract-type-btn ${!isFixo ? 'active' : ''}" type="button" disabled style="cursor:default;opacity:${!isFixo ? '1' : '.45'};">
+      <div class="contract-type-selector" aria-disabled="true" style="grid-template-columns:1fr;">
+        ${!isFixo ? `
+        <button class="contract-type-btn active" type="button" disabled style="cursor:default;">
           <span class="contract-type-btn-name">Taxa de Administração</span>
           <span class="contract-type-btn-desc">Percentual anual sobre o patrimônio</span>
-        </button>
-        <button class="contract-type-btn ${isFixo ? 'active' : ''}" type="button" disabled style="cursor:default;opacity:${isFixo ? '1' : '.45'};">
+        </button>` : `
+        <button class="contract-type-btn active" type="button" disabled style="cursor:default;">
           <span class="contract-type-btn-name">Mensalidade Fixa</span>
           <span class="contract-type-btn-desc">Valor fixo mensal</span>
-        </button>
+        </button>`}
       </div>
       <div class="form-section" style="margin-bottom:1rem;">
         <div class="form-section-title">Condições comerciais</div>
