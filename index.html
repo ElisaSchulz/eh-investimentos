@@ -735,6 +735,28 @@
       .hero h1{font-size:32px;}
     }
   </style>
+
+<script>
+  // Redireciona para login qualquer token ou erro do Supabase que chegue na página principal
+  (function() {
+    const search = window.location.search;
+    const hash   = window.location.hash;
+    const hasToken = (
+      search.includes('token_hash') ||
+      search.includes('access_token') ||
+      search.includes('type=invite') ||
+      search.includes('type=recovery') ||
+      search.includes('code=') ||
+      hash.includes('access_token') ||
+      hash.includes('type=invite') ||
+      hash.includes('error=') ||
+      hash.includes('error_code=')
+    );
+    if (hasToken) {
+      window.location.replace('eh-cliente-login.html' + search + hash);
+    }
+  })();
+</script>
 </head>
 <body>
 

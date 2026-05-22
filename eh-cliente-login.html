@@ -675,20 +675,66 @@
 
     // Handle invite/recovery token in URL
     window.addEventListener('load', async () => {
-      const hash = window.location.hash;
-      if (!hash || !hash.includes('access_token')) return;
+      const hash        = window.location.hash;
+      const queryParams = new URLSearchParams(window.location.search);
 
-      const params = new URLSearchParams(hash.substring(1));
-      const type        = params.get('type');
-      const accessToken = params.get('access_token');
-      const refreshToken = params.get('refresh_token') || '';
-
-      if ((type === 'invite' || type === 'recovery') && accessToken) {
+      // Handle errors (expired link, access denied etc)
+      if (hash && hash.includes('error=')) {
+        const errParams = new URLSearchParams(hash.substring(1));
+        const errorCode = errParams.get('error_code') || '';
+        const errorDesc = errParams.get('error_description') || 'Link invalido ou expirado.';
         history.replaceState(null, '', window.location.pathname);
-        const { data, error } = await sb.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        const errorEl = document.getElementById('errorMsg');
+        if (errorEl) {
+          errorEl.textContent = errorCode === 'otp_expired'
+            ? 'O link de acesso expirou. Entre em contato com a EH Investimentos para receber um novo convite.'
+            : decodeURIComponent(errorDesc.replace(/_/g, ' '));
+          errorEl.classList.add('show');
+        }
+        return;
+      }
+
+      // ── FORMAT 1: hash-based (#access_token=...) ──
+      if (hash && hash.includes('access_token')) {
+        const params       = new URLSearchParams(hash.substring(1));
+        const type         = params.get('type');
+        const accessToken  = params.get('access_token');
+        const refreshToken = params.get('refresh_token') || '';
+        if ((type === 'invite' || type === 'recovery') && accessToken) {
+          history.replaceState(null, '', window.location.pathname);
+          const { data, error } = await sb.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+          if (!error && data.session) showSetPassword(type);
+        }
+        return;
+      }
+
+      // ── FORMAT 2: query-based (?token_hash=...&type=invite) ──
+      const tokenHash = queryParams.get('token_hash');
+      const type      = queryParams.get('type');
+      if (tokenHash && (type === 'invite' || type === 'recovery')) {
+        history.replaceState(null, '', window.location.pathname);
+        const { data, error } = await sb.auth.verifyOtp({ token_hash: tokenHash, type });
         if (!error && data.session) {
           showSetPassword(type);
+        } else {
+          const errorEl = document.getElementById('errorMsg');
+          if (errorEl) {
+            errorEl.textContent = 'Link inválido ou expirado. Entre em contato com a EH Investimentos.';
+            errorEl.classList.add('show');
+          }
         }
+        return;
+      }
+
+      // ── FORMAT 3: code-based (?code=...) ──
+      const code = queryParams.get('code');
+      if (code) {
+        history.replaceState(null, '', window.location.pathname);
+        const { data, error } = await sb.auth.exchangeCodeForSession(code);
+        if (!error && data.session) {
+          showSetPassword('invite');
+        }
+        return;
       }
     });
 
