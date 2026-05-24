@@ -2162,12 +2162,25 @@
 
   function maskPhone(el) {
     el.addEventListener('input', function() {
-      let v = this.value.replace(/\D/g,'').slice(0,13);
-      if (v.length <= 2) v = '+' + v;
-      else if (v.length <= 4) v = '+' + v.slice(0,2) + ' (' + v.slice(2);
-      else if (v.length <= 9) v = '+' + v.slice(0,2) + ' (' + v.slice(2,4) + ') ' + v.slice(4);
-      else v = '+' + v.slice(0,2) + ' (' + v.slice(2,4) + ') ' + v.slice(4,9) + '-' + v.slice(9);
-      this.value = v;
+      // Strip everything except digits
+      let v = this.value.replace(/\D/g,'');
+      // Limit to 13 digits (55 + 2 DDD + 9 number)
+      v = v.slice(0,13);
+      // Format: +55 (00) 00000-0000
+      let r = '';
+      if (v.length === 0) { this.value = ''; return; }
+      r = '+' + v.slice(0,2);
+      if (v.length > 2) r += ' (' + v.slice(2,4);
+      if (v.length > 4) r += ') ' + v.slice(4,9);
+      if (v.length > 9) r += '-' + v.slice(9,13);
+      this.value = r;
+    });
+    // Pre-fill +55 on focus if empty
+    el.addEventListener('focus', function() {
+      if (!this.value) this.value = '+55 ';
+    });
+    el.addEventListener('blur', function() {
+      if (this.value === '+55 ' || this.value === '+55') this.value = '';
     });
   }
 
@@ -2180,26 +2193,40 @@
   }
 
   function maskMoney(el) {
-    el.addEventListener('input', function() {
-      let v = this.value.replace(/\D/g,'');
-      if (!v) { this.value = ''; return; }
-      v = (parseInt(v) / 100).toFixed(2);
-      v = v.replace('.',',');
-      v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g,'$1.');
-      this.value = v;
+    el.addEventListener('input', function(e) {
+      // Get cursor position
+      let v = this.value.replace(/[^\d,]/g,'');
+      // Only digits
+      let digits = this.value.replace(/\D/g,'');
+      if (!digits) { this.value = ''; return; }
+      // Pad to at least 3 digits for cents
+      digits = digits.replace(/^0+/,'') || '0';
+      // Last 2 digits are cents
+      let intPart, centPart;
+      if (digits.length <= 2) {
+        intPart = '0';
+        centPart = digits.padStart(2,'0');
+      } else {
+        intPart = digits.slice(0, digits.length - 2);
+        centPart = digits.slice(-2);
+      }
+      // Add thousand separators
+      intPart = intPart.replace(/(\d)(?=(\d{3})+(?!\d))/g,'$1.');
+      this.value = intPart + ',' + centPart;
     });
     el.addEventListener('focus', function() {
       if (!this.value) this.value = '';
     });
+    el.addEventListener('blur', function() {
+      if (this.value === '0,00') this.value = '';
+    });
   }
 
   function maskRG(el) {
+    // RG has no fixed format — just allow free text (numbers, letters, spaces, slashes)
     el.addEventListener('input', function() {
-      let v = this.value.replace(/[^\dA-Za-z]/g,'').slice(0,9);
-      if (v.length > 2) v = v.slice(0,2) + '.' + v.slice(2);
-      if (v.length > 6) v = v.slice(0,6) + '.' + v.slice(6);
-      if (v.length > 10) v = v.slice(0,10) + '-' + v.slice(10);
-      this.value = v;
+      // Only remove truly invalid characters, keep letters for órgão (SSP/MG etc)
+      this.value = this.value.replace(/[^\dA-Za-zÀ-ú\s.\/\-]/g,'');
     });
   }
 
