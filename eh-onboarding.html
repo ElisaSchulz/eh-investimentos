@@ -917,10 +917,16 @@
         <span>Gestão Financeira</span>
       </div>
     </a>
-    <button class="ob-logout" onclick="doLogout()">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <a href="eh-cliente-dashboard.html" class="ob-logout" style="text-decoration:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Ir para o portal
+      </a>
+      <button class="ob-logout" onclick="doLogout()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       Sair
     </button>
+    </div>
   </div>
 
   <!-- WELCOME -->
@@ -1506,6 +1512,7 @@
   async function init() {
     buildSuitabilityQuestions();
     await loadOnboardingState();
+    applyMasks();
   }
 
   async function loadOnboardingState() {
@@ -1640,24 +1647,24 @@
         user_id: currentUser.id,
         nome_completo: v('c_nome'), nacionalidade: v('c_nacionalidade'),
         estado_civil: v('c_estado_civil'), data_nascimento: v('c_nascimento'),
-        rg: v('c_rg'), cpf: v('c_cpf'), email: currentUser.email,
+        rg: v('c_rg'), cpf: parseCPF('c_cpf'), email: currentUser.email,
         telefone: v('c_telefone'), logradouro_tipo: v('c_logradouro_tipo'),
         logradouro_nome: v('c_logradouro_nome'), numero: v('c_numero'),
         complemento: v('c_complemento'), bairro: v('c_bairro'),
         cidade: v('c_cidade'), estado: v('c_estado'), cep: v('c_cep'),
         profissao: v('c_profissao'), tempo_profissao: v('c_tempo_profissao'),
-        renda_mensal: num('c_renda_mensal'), renda_conjuge: num('c_renda_conjuge'),
-        renda_extra_anual: num('c_renda_extra_anual'), renda_extra_detalhe: v('c_renda_extra_detalhe'),
-        renda_familiar_total: num('c_renda_familiar_total'),
-        despesas_essenciais: num('c_despesas_essenciais'),
-        despesas_nao_essenciais: num('c_despesas_nao_essenciais'),
+        renda_mensal: parseMaskedNum('c_renda_mensal'), renda_conjuge: parseMaskedNum('c_renda_conjuge'),
+        renda_extra_anual: parseMaskedNum('c_renda_extra_anual'), renda_extra_detalhe: v('c_renda_extra_detalhe'),
+        renda_familiar_total: parseMaskedNum('c_renda_familiar_total'),
+        despesas_essenciais: parseMaskedNum('c_despesas_essenciais'),
+        despesas_nao_essenciais: parseMaskedNum('c_despesas_nao_essenciais'),
         controla_despesas: v('c_controla_despesas'), categorias_gasto: '',
         possui_dividas: v('c_possui_dividas'), detalhe_dividas: v('c_detalhe_dividas'),
-        imovel_proprio: v('c_imovel'), valor_imovel: num('c_valor_imovel'),
-        possui_veiculo: v('c_veiculo'), valor_veiculo: num('c_valor_veiculo'),
-        investimentos_liquidez: num('c_investimentos_liquidez'),
+        imovel_proprio: v('c_imovel'), valor_imovel: parseMaskedNum('c_valor_imovel'),
+        possui_veiculo: v('c_veiculo'), valor_veiculo: parseMaskedNum('c_valor_veiculo'),
+        investimentos_liquidez: parseMaskedNum('c_investimentos_liquidez'),
         investimentos_detalhe: v('c_investimentos_detalhe'),
-        investimentos_total: num('c_investimentos_total'),
+        investimentos_total: parseMaskedNum('c_investimentos_total'),
         bancos_utilizados: bancos_utilizados,
         instituicoes_investimento: instituicoes_investimento,
         bancos_obs: v('c_bancos_obs'),
@@ -2122,6 +2129,15 @@
   // ── HELPERS ──
   function v(id) { return document.getElementById(id)?.value?.trim() || ''; }
   function num(id) { const el = document.getElementById(id); return el && el.value ? parseFloat(el.value) : null; }
+  function parseMaskedNum(id) {
+    const el = document.getElementById(id);
+    if (!el || !el.value) return null;
+    // Remove dots used as thousand separators, replace comma with dot
+    const clean = el.value.replace(/\./g,'').replace(',','.');
+    const n = parseFloat(clean);
+    return isNaN(n) ? null : n;
+  }
+  function parseCPF(id) { return v(id).replace(/[^\d]/g,''); }
 
   function showFb(id, msg, type) {
     const el = document.getElementById(id);
@@ -2130,6 +2146,82 @@
     el.textContent = msg;
     el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     if (type !== 'error') setTimeout(() => { el.className = 'feedback'; }, 6000);
+  }
+
+
+  // ── INPUT MASKS ──
+  function maskCPF(el) {
+    el.addEventListener('input', function() {
+      let v = this.value.replace(/\D/g,'').slice(0,11);
+      v = v.replace(/(\d{3})(\d)/,'$1.$2');
+      v = v.replace(/(\d{3})(\d)/,'$1.$2');
+      v = v.replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+      this.value = v;
+    });
+  }
+
+  function maskPhone(el) {
+    el.addEventListener('input', function() {
+      let v = this.value.replace(/\D/g,'').slice(0,13);
+      if (v.length <= 2) v = '+' + v;
+      else if (v.length <= 4) v = '+' + v.slice(0,2) + ' (' + v.slice(2);
+      else if (v.length <= 9) v = '+' + v.slice(0,2) + ' (' + v.slice(2,4) + ') ' + v.slice(4);
+      else v = '+' + v.slice(0,2) + ' (' + v.slice(2,4) + ') ' + v.slice(4,9) + '-' + v.slice(9);
+      this.value = v;
+    });
+  }
+
+  function maskCEP(el) {
+    el.addEventListener('input', function() {
+      let v = this.value.replace(/\D/g,'').slice(0,8);
+      v = v.replace(/(\d{5})(\d)/,'$1-$2');
+      this.value = v;
+    });
+  }
+
+  function maskMoney(el) {
+    el.addEventListener('input', function() {
+      let v = this.value.replace(/\D/g,'');
+      if (!v) { this.value = ''; return; }
+      v = (parseInt(v) / 100).toFixed(2);
+      v = v.replace('.',',');
+      v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g,'$1.');
+      this.value = v;
+    });
+    el.addEventListener('focus', function() {
+      if (!this.value) this.value = '';
+    });
+  }
+
+  function maskRG(el) {
+    el.addEventListener('input', function() {
+      let v = this.value.replace(/[^\dA-Za-z]/g,'').slice(0,9);
+      if (v.length > 2) v = v.slice(0,2) + '.' + v.slice(2);
+      if (v.length > 6) v = v.slice(0,6) + '.' + v.slice(6);
+      if (v.length > 10) v = v.slice(0,10) + '-' + v.slice(10);
+      this.value = v;
+    });
+  }
+
+  function applyMasks() {
+    const cpfEl    = document.getElementById('c_cpf');
+    const telEl    = document.getElementById('c_telefone');
+    const cepEl    = document.getElementById('c_cep');
+    const rgEl     = document.getElementById('c_rg');
+
+    if (cpfEl)  maskCPF(cpfEl);
+    if (telEl)  maskPhone(telEl);
+    if (cepEl)  maskCEP(cepEl);
+    if (rgEl)   maskRG(rgEl);
+
+    // Money fields
+    ['c_renda_mensal','c_renda_conjuge','c_renda_extra_anual','c_renda_familiar_total',
+     'c_despesas_essenciais','c_despesas_nao_essenciais',
+     'c_valor_imovel','c_valor_veiculo',
+     'c_investimentos_liquidez','c_investimentos_total'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) maskMoney(el);
+    });
   }
 
   async function doLogout() { await sb.auth.signOut(); window.location.href = 'eh-cliente-login.html'; }
