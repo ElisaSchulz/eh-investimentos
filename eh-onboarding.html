@@ -1048,10 +1048,10 @@
             <option>Mais de 5 anos</option>
           </select>
         </div>
-        <div class="form-field"><label>Renda mensal líquida (R$) *</label><input type="number" id="c_renda_mensal" placeholder="0,00" oninput="calcRendaFamiliarAnual()" /></div>
-        <div class="form-field"><label>Renda mensal cônjuge (R$)</label><input type="number" id="c_renda_conjuge" placeholder="0,00" oninput="calcRendaFamiliarAnual()" /></div>
-        <div class="form-field"><label>Renda extra anual total (R$)</label><input type="number" id="c_renda_extra_anual" placeholder="0,00" oninput="calcRendaFamiliarAnual()" /></div>
-        <div class="form-field"><label>Renda familiar anual (R$) <span class="calc-hint">· calculado</span></label><input type="number" id="c_renda_familiar_total" placeholder="0,00" readonly /></div>
+        <div class="form-field"><label>Renda mensal líquida (R$) *</label><input type="text" inputmode="numeric" id="c_renda_mensal" placeholder="0,00" /></div>
+        <div class="form-field"><label>Renda mensal cônjuge (R$)</label><input type="text" inputmode="numeric" id="c_renda_conjuge" placeholder="0,00" /></div>
+        <div class="form-field"><label>Renda extra anual total (R$)</label><input type="text" inputmode="numeric" id="c_renda_extra_anual" placeholder="0,00" /></div>
+        <div class="form-field"><label>Renda familiar anual (R$) <span class="calc-hint">· calculado</span></label><input type="number" id="c_renda_familiar_total" placeholder="0,00" readonly type="text" /></div>
         <div class="form-field span-2"><label>Detalhe as fontes de renda extra</label><textarea id="c_renda_extra_detalhe" placeholder="Ex: 13º salário R$8.000, bônus/PLR anual R$15.000, aluguel R$3.000/mês, dividendos R$500/mês, freelances, comissões, restituição IR..."></textarea></div>
       </div>
     </div>
@@ -1060,8 +1060,8 @@
     <div class="form-section">
       <div class="form-section-title">Despesas e Orçamento</div>
       <div class="form-grid">
-        <div class="form-field"><label>Despesas essenciais mensais (R$) *<span class="info-tip" tabindex="0" data-tip="Gastos fixos e indispensáveis: moradia (aluguel, financiamento, condomínio, IPTU), contas (água, luz, gás, internet), alimentação/supermercado, transporte (combustível, ônibus), saúde (plano, medicamentos), educação (escola, faculdade), seguros obrigatórios e despesas com filhos/dependentes.">i</span></label><input type="number" id="c_despesas_essenciais" placeholder="0,00" /></div>
-        <div class="form-field"><label>Despesas não essenciais mensais (R$) *<span class="info-tip" tabindex="0" data-tip="Gastos opcionais ou variáveis: restaurantes/delivery, lazer, viagens, streaming e assinaturas, vestuário, eletrônicos, presentes, hobbies, salão de beleza, academia, cursos extras e compras por impulso.">i</span></label><input type="number" id="c_despesas_nao_essenciais" placeholder="0,00" /></div>
+        <div class="form-field"><label>Despesas essenciais mensais (R$) *<span class="info-tip" tabindex="0" data-tip="Gastos fixos e indispensáveis: moradia (aluguel, financiamento, condomínio, IPTU), contas (água, luz, gás, internet), alimentação/supermercado, transporte (combustível, ônibus), saúde (plano, medicamentos), educação (escola, faculdade), seguros obrigatórios e despesas com filhos/dependentes.">i</span></label><input type="text" inputmode="numeric" id="c_despesas_essenciais" placeholder="0,00" /></div>
+        <div class="form-field"><label>Despesas não essenciais mensais (R$) *<span class="info-tip" tabindex="0" data-tip="Gastos opcionais ou variáveis: restaurantes/delivery, lazer, viagens, streaming e assinaturas, vestuário, eletrônicos, presentes, hobbies, salão de beleza, academia, cursos extras e compras por impulso.">i</span></label><input type="text" inputmode="numeric" id="c_despesas_nao_essenciais" placeholder="0,00" /></div>
         <div class="form-field span-2"><label>Controla suas despesas? *</label>
           <select id="c_controla_despesas">
             <option value="">Selecione</option>
@@ -1094,7 +1094,7 @@
             <option>Não</option>
           </select>
         </div>
-        <div class="form-field" id="c_imovel_valor_field"><label>Valor aproximado do imóvel (R$)</label><input type="number" id="c_valor_imovel" placeholder="0,00" /></div>
+        <div class="form-field" id="c_imovel_valor_field"><label>Valor aproximado do imóvel (R$)</label><input type="text" inputmode="numeric" id="c_valor_imovel" placeholder="0,00" /></div>
         <div class="form-field"><label>Possui veículo? *</label>
           <select id="c_veiculo" onchange="toggleVeiculo()">
             <option value="">Selecione</option>
@@ -1102,9 +1102,9 @@
             <option>Não</option>
           </select>
         </div>
-        <div class="form-field" id="c_veiculo_valor_field"><label>Valor aproximado do veículo (R$)</label><input type="number" id="c_valor_veiculo" placeholder="0,00" /></div>
-        <div class="form-field"><label>Investimentos em liquidez (R$) *</label><input type="number" id="c_investimentos_liquidez" placeholder="Conta corrente, poupança, CDB diário" /></div>
-        <div class="form-field"><label>Total de investimentos (R$) *</label><input type="number" id="c_investimentos_total" placeholder="0,00" /></div>
+        <div class="form-field" id="c_veiculo_valor_field"><label>Valor aproximado do veículo (R$)</label><input type="text" inputmode="numeric" id="c_valor_veiculo" placeholder="0,00" /></div>
+        <div class="form-field"><label>Investimentos em liquidez (R$) *</label><input type="text" inputmode="numeric" id="c_investimentos_liquidez" placeholder="Conta corrente, poupança, CDB diário" /></div>
+        <div class="form-field"><label>Total de investimentos (R$) *</label><input type="text" inputmode="numeric" id="c_investimentos_total" placeholder="0,00" /></div>
         <div class="form-field span-2"><label>Detalhe seus investimentos atuais</label><textarea id="c_investimentos_detalhe" placeholder="Ex: Tesouro Direto R$50k, CDB R$30k, Fundos R$100k..."></textarea></div>
         <div class="form-field span-2"><label>Bancos / contas que utiliza no dia a dia *</label>
           <div class="checkbox-group" id="c_bancos_group">
@@ -1576,13 +1576,29 @@
   }
 
   // ── CALCULATED FIELDS ──
+  function parseMoneyField(id) {
+    const el = document.getElementById(id);
+    if (!el || !el.value) return 0;
+    const clean = el.value.replace(/\./g,'').replace(',','.');
+    return parseFloat(clean) || 0;
+  }
+
   function calcRendaFamiliarAnual() {
-    const mensal  = parseFloat(document.getElementById('c_renda_mensal')?.value)  || 0;
-    const conjuge = parseFloat(document.getElementById('c_renda_conjuge')?.value) || 0;
-    const extra   = parseFloat(document.getElementById('c_renda_extra_anual')?.value) || 0;
-    const total = (mensal * 12) + (conjuge * 12) + extra;
+    function parseBR(id) {
+      const el = document.getElementById(id);
+      if (!el || !el.value.trim()) return 0;
+      // Remove thousand dots, replace decimal comma with dot
+      const clean = el.value.trim().replace(/\./g,'').replace(',','.');
+      return parseFloat(clean) || 0;
+    }
+    const mensal  = parseBR('c_renda_mensal');
+    const conjuge = parseBR('c_renda_conjuge');
+    const extra   = parseBR('c_renda_extra_anual');
+    const total   = (mensal * 12) + (conjuge * 12) + extra;
     const out = document.getElementById('c_renda_familiar_total');
-    if (out) out.value = total > 0 ? total.toFixed(2) : '';
+    if (out) out.value = total > 0
+      ? total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      : '';
   }
 
   // ── TOGGLE FIELDS ──
@@ -2132,7 +2148,6 @@
   function parseMaskedNum(id) {
     const el = document.getElementById(id);
     if (!el || !el.value) return null;
-    // Remove dots used as thousand separators, replace comma with dot
     const clean = el.value.replace(/\./g,'').replace(',','.');
     const n = parseFloat(clean);
     return isNaN(n) ? null : n;
@@ -2193,32 +2208,21 @@
   }
 
   function maskMoney(el) {
-    el.addEventListener('input', function(e) {
-      // Get cursor position
-      let v = this.value.replace(/[^\d,]/g,'');
-      // Only digits
-      let digits = this.value.replace(/\D/g,'');
-      if (!digits) { this.value = ''; return; }
-      // Pad to at least 3 digits for cents
-      digits = digits.replace(/^0+/,'') || '0';
-      // Last 2 digits are cents
-      let intPart, centPart;
-      if (digits.length <= 2) {
-        intPart = '0';
-        centPart = digits.padStart(2,'0');
-      } else {
-        intPart = digits.slice(0, digits.length - 2);
-        centPart = digits.slice(-2);
-      }
-      // Add thousand separators
-      intPart = intPart.replace(/(\d)(?=(\d{3})+(?!\d))/g,'$1.');
-      this.value = intPart + ',' + centPart;
-    });
-    el.addEventListener('focus', function() {
-      if (!this.value) this.value = '';
+    el.addEventListener('input', function() {
+      // While typing: allow digits, comma, dot only
+      this.value = this.value.replace(/[^\d.,]/g,'');
     });
     el.addEventListener('blur', function() {
-      if (this.value === '0,00') this.value = '';
+      let v = this.value.trim();
+      if (!v) { this.value = ''; return; }
+      // Remove thousand dots, replace decimal comma with dot
+      let clean = v.replace(/\./g,'').replace(',','.');
+      let n = parseFloat(clean);
+      if (isNaN(n)) { this.value = ''; return; }
+      // Format in pt-BR
+      this.value = n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      // Recalculate totals after formatting
+      if (typeof calcRendaFamiliarAnual === 'function') calcRendaFamiliarAnual();
     });
   }
 
@@ -2231,21 +2235,22 @@
   }
 
   function applyMasks() {
-    const cpfEl    = document.getElementById('c_cpf');
-    const telEl    = document.getElementById('c_telefone');
-    const cepEl    = document.getElementById('c_cep');
-    const rgEl     = document.getElementById('c_rg');
+    const cpfEl = document.getElementById('c_cpf');
+    const telEl = document.getElementById('c_telefone');
+    const cepEl = document.getElementById('c_cep');
+    const rgEl  = document.getElementById('c_rg');
 
-    if (cpfEl)  maskCPF(cpfEl);
-    if (telEl)  maskPhone(telEl);
-    if (cepEl)  maskCEP(cepEl);
-    if (rgEl)   maskRG(rgEl);
+    if (cpfEl) maskCPF(cpfEl);
+    if (telEl) maskPhone(telEl);
+    if (cepEl) maskCEP(cepEl);
+    if (rgEl)  maskRG(rgEl);
 
-    // Money fields
-    ['c_renda_mensal','c_renda_conjuge','c_renda_extra_anual','c_renda_familiar_total',
-     'c_despesas_essenciais','c_despesas_nao_essenciais',
-     'c_valor_imovel','c_valor_veiculo',
-     'c_investimentos_liquidez','c_investimentos_total'].forEach(id => {
+    const moneyIds = ['c_renda_mensal','c_renda_conjuge','c_renda_extra_anual',
+      'c_despesas_essenciais','c_despesas_nao_essenciais',
+      'c_valor_imovel','c_valor_veiculo',
+      'c_investimentos_liquidez','c_investimentos_total'];
+
+    moneyIds.forEach(id => {
       const el = document.getElementById(id);
       if (el) maskMoney(el);
     });
