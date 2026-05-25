@@ -1235,28 +1235,75 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
       grid.innerHTML = profiles.map(p => {
         const ob = obMap[p.id] || {};
-        const steps = [
-          { label: 'Cadastro', done: ob.step_cadastro },
-          { label: 'API', done: ob.step_suitability },
-          { label: 'Contrato', done: ob.step_contrato }
-        ];
         const completed = ob.completed || ob.skip_onboarding;
-        const chips = steps.map(s =>
-          `<span style="font-size:0.6rem;padding:0.15rem 0.5rem;border-radius:10px;font-weight:600;background:${s.done?'rgba(76,175,130,0.10)':'transparent'};color:${s.done?'#6cc596':'var(--gray)'};border:1px solid ${s.done?'rgba(76,175,130,0.3)':'var(--border-dim)'};">${s.done?'✓':' ○'} ${s.label}</span>`
+
+        // ── Step chips (status visual)
+        const stepDefs = [
+          { key: 'cadastro',    label: 'Cadastro',    done: !!ob.step_cadastro },
+          { key: 'suitability', label: 'Perfil API',  done: !!ob.step_suitability },
+          { key: 'contrato',    label: 'Contrato',    done: !!ob.step_contrato }
+        ];
+        const chips = stepDefs.map(s =>
+          `<span style="font-size:0.6rem;padding:0.15rem 0.5rem;border-radius:10px;font-weight:600;
+            background:${s.done ? 'rgba(76,175,130,0.10)' : 'transparent'};
+            color:${s.done ? '#6cc596' : 'var(--gray)'};
+            border:1px solid ${s.done ? 'rgba(76,175,130,0.3)' : 'var(--border-dim)'};">
+            ${s.done ? '✓' : '○'} ${s.label}</span>`
         ).join('');
+
+        // ── Action row: primary button
+        const primaryBtn = completed
+          ? `<span style="font-size:0.62rem;padding:0.35rem 0.7rem;background:rgba(76,175,130,0.12);color:#4caf82;border:1px solid rgba(76,175,130,0.3);font-family:'IBM Plex Mono',monospace;font-weight:600;letter-spacing:0.06em;">✓ COMPLETO</span>`
+          : `<button onclick="markOneComplete('${p.id}')" class="btn-upload" style="font-size:0.62rem;padding:0.4rem 0.8rem;background:rgba(212,130,10,0.15);color:var(--gold);border:1px solid var(--border);">Marcar completo</button>`;
+
+        // ── Step-reset buttons (shown for all cards)
+        // Reabrir uma etapa zera ela e todas as seguintes (lógica sequencial)
+        const resetBtnStyle = (active) => `font-size:0.6rem;padding:0.28rem 0.65rem;font-family:'IBM Plex Mono',monospace;font-weight:500;letter-spacing:0.04em;cursor:${active?'pointer':'default'};
+          background:${active ? 'rgba(224,85,85,0.08)' : 'rgba(243,237,225,0.03)'};
+          color:${active ? '#f08080' : 'var(--border-dim)'};
+          border:1px solid ${active ? 'rgba(224,85,85,0.3)' : 'var(--border-dim)'};
+          transition:background 0.15s;`;
+
+        const canResetCadastro    = !!ob.step_cadastro;
+        const canResetSuitability = !!ob.step_suitability;
+        const canResetContrato    = !!ob.step_contrato || completed;
+
+        const stepResetRow = `
+          <div style="padding:0.6rem 1.5rem;background:rgba(9,20,56,0.5);border-top:1px solid var(--border-dim);display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:0.58rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gray);margin-right:0.3rem;">Reabrir etapa:</span>
+            <button
+              ${canResetCadastro || completed ? `onclick="resetStep('${p.id}','cadastro')"` : 'disabled'}
+              style="${resetBtnStyle(canResetCadastro || completed)}"
+              title="Zera as 3 etapas — cliente volta ao início">
+              ↩ Cadastro
+            </button>
+            <button
+              ${canResetSuitability || completed ? `onclick="resetStep('${p.id}','suitability')"` : 'disabled'}
+              style="${resetBtnStyle(canResetSuitability || completed)}"
+              title="Zera Perfil API e Contrato — mantém Cadastro">
+              ↩ Perfil API
+            </button>
+            <button
+              ${canResetContrato ? `onclick="resetStep('${p.id}','contrato')"` : 'disabled'}
+              style="${resetBtnStyle(canResetContrato)}"
+              title="Zera apenas o Contrato — mantém Cadastro e Perfil API">
+              ↩ Contrato
+            </button>
+          </div>`;
+
         return `
-          <div style="background:var(--navy-dark);padding:1.2rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
-            <div>
-              <div style="font-size:0.88rem;font-weight:500;color:var(--white);margin-bottom:0.2rem;">${p.full_name || p.email}</div>
-              <div style="font-size:0.68rem;color:var(--gray);margin-bottom:0.5rem;">${p.email}</div>
-              <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">${chips}</div>
+          <div style="background:var(--navy-dark);">
+            <div style="padding:1.1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+              <div>
+                <div style="font-size:0.88rem;font-weight:500;color:var(--white);margin-bottom:0.2rem;">${p.full_name || p.email}</div>
+                <div style="font-size:0.68rem;color:var(--gray);margin-bottom:0.5rem;">${p.email}</div>
+                <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">${chips}</div>
+              </div>
+              <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                ${primaryBtn}
+              </div>
             </div>
-            <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-              ${completed
-                ? `<button onclick="unmarkComplete('${p.id}')" class="btn-upload" style="font-size:0.62rem;padding:0.4rem 0.8rem;background:rgba(76,175,130,0.12);color:#4caf82;border:1px solid rgba(76,175,130,0.3);">✓ Completo — Desfazer</button>`
-                : `<button onclick="markOneComplete('${p.id}')" class="btn-upload" style="font-size:0.62rem;padding:0.4rem 0.8rem;background:rgba(212,130,10,0.15);color:var(--gold);border:1px solid var(--border);">Marcar completo</button>`
-              }
-            </div>
+            ${stepResetRow}
           </div>`;
       }).join('');
     } catch(e) {
@@ -1310,10 +1357,30 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     loadClientesView();
   }
 
-  async function unmarkComplete(userId) {
-    if (!confirm('Desfazer o onboarding concluído deste cliente? Ele voltará a ver o banner de cadastro pendente.')) return;
-    await sb.from('onboarding').upsert({ user_id: userId, completed: false, skip_onboarding: false, step_cadastro: false, step_suitability: false, step_contrato: false, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
-    showFb2('clientesFb', 'Onboarding reaberto para este cliente.', 'success');
+  async function resetStep(userId, step) {
+    const labels = { cadastro: 'Cadastro', suitability: 'Perfil API', contrato: 'Contrato' };
+    const label  = labels[step] || 'etapa';
+    const msgs   = {
+      cadastro:    'Reabrir Cadastro vai zerar as 3 etapas — o cliente volta ao início do onboarding.',
+      suitability: 'Reabrir Perfil API vai zerar API e Contrato — o cliente mantém o Cadastro feito.',
+      contrato:    'Reabrir Contrato — o cliente vai precisar assinar novamente. Cadastro e Perfil API são mantidos.'
+    };
+    if (!confirm(msgs[step] + '\n\nConfirmar?')) return;
+
+    // Monta o update respeitando a sequência
+    const update = { user_id: userId, completed: false, skip_onboarding: false, updated_at: new Date().toISOString() };
+    if (step === 'cadastro') {
+      update.step_cadastro = false; update.step_suitability = false; update.step_contrato = false;
+    } else if (step === 'suitability') {
+      update.step_suitability = false; update.step_contrato = false;
+      // step_cadastro permanece como estava
+    } else if (step === 'contrato') {
+      update.step_contrato = false;
+      // step_cadastro e step_suitability permanecem como estavam
+    }
+
+    await sb.from('onboarding').upsert(update, { onConflict: 'user_id' });
+    showFb2('clientesFb', `↩ ${label} reaberto para o cliente.`, 'success');
     loadClientesView();
   }
 

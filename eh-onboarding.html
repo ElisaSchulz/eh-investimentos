@@ -1051,7 +1051,7 @@
         <div class="form-field"><label>Renda mensal líquida (R$) *</label><input type="text" inputmode="numeric" id="c_renda_mensal" placeholder="0,00" /></div>
         <div class="form-field"><label>Renda mensal cônjuge (R$)</label><input type="text" inputmode="numeric" id="c_renda_conjuge" placeholder="0,00" /></div>
         <div class="form-field"><label>Renda extra anual total (R$)</label><input type="text" inputmode="numeric" id="c_renda_extra_anual" placeholder="0,00" /></div>
-        <div class="form-field"><label>Renda familiar anual (R$) <span class="calc-hint">· calculado</span></label><input type="text" id="c_renda_familiar_total" placeholder="0,00" readonly /></div>
+        <div class="form-field"><label>Renda familiar anual (R$) <span class="calc-hint">· calculado</span></label><input type="number" id="c_renda_familiar_total" placeholder="0,00" readonly type="text" /></div>
         <div class="form-field span-2"><label>Detalhe as fontes de renda extra</label><textarea id="c_renda_extra_detalhe" placeholder="Ex: 13º salário R$8.000, bônus/PLR anual R$15.000, aluguel R$3.000/mês, dividendos R$500/mês, freelances, comissões, restituição IR..."></textarea></div>
       </div>
     </div>
@@ -1496,7 +1496,6 @@
     currentUser = { id: 'dev-user', email: 'dev@local' };
     document.getElementById('authGuard').style.display = 'none';
     buildSuitabilityQuestions();
-    applyMasks();
     goToStep(1);
     mountDevBar();
   } else {
@@ -1806,13 +1805,20 @@
           body: {
             name: `Suitability - ${nome}`,
             base64_pdf: suitBase64,
-            signers: [{
-              name: nome,
-              email: email,
-              phone_country: '55',
-              send_automatic_email: true,
-              send_automatic_whatsapp: false
-            }],
+            signers: [
+              {
+                name: nome,
+                email: email,
+                phone_country: '55',
+                send_automatic_email: true,
+                send_automatic_whatsapp: false
+              },
+              {
+                name: 'Eduardo Barbosa Horta dos Santos',
+                email: 'contato@ehinvestimentos.com.br',
+                send_automatic_email: true
+              }
+            ],
             lang: 'pt-br',
             brand_name: 'EH Investimentos',
             sandbox: true
