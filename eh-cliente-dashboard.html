@@ -544,6 +544,27 @@
       .modal-box { padding: 2rem 1.4rem; }
       .welcome-banner h2 { font-size: 1.45rem; }
     }
+
+    /* ── PERFIL ── */
+    .perfil-card { background: var(--navy-2); border: 1px solid var(--rule-strong); padding: 2rem 2.2rem 2.2rem; margin-bottom: 1.4rem; position: relative; }
+    .perfil-card::before { content: ''; position: absolute; top: 0; left: 0; width: 48px; height: 3px; background: var(--gold); }
+    .perfil-card-title { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.4rem; display: flex; align-items: center; gap: 0.6rem; }
+    .perfil-card-title::before { content: ''; display: block; width: 18px; height: 1px; background: var(--gold); }
+    .perfil-field { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.2rem; }
+    .perfil-field label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--cream-soft); }
+    .perfil-field input { background: rgba(13,30,78,0.55); border: 1px solid var(--rule-strong); color: var(--cream); font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; padding: 0.75rem 0.9rem; outline: none; transition: border-color 0.2s, background 0.2s; width: 100%; max-width: 420px; }
+    .perfil-field input:focus { border-color: var(--gold); background: rgba(212,130,10,0.06); }
+    .perfil-field input::placeholder { color: var(--cream-faint); }
+    .perfil-field input[readonly] { background: rgba(13,30,78,0.3); border-color: var(--rule); color: var(--cream-soft); cursor: not-allowed; }
+    .perfil-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-width: 420px; }
+    .perfil-row .perfil-field { margin-bottom: 0; }
+    .perfil-row .perfil-field input { max-width: 100%; }
+    .perfil-save-btn { display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 1.5rem; background: var(--gold); color: var(--navy); font-family: 'IBM Plex Sans', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; padding: 0.8rem 1.6rem; border: 1px solid var(--gold); cursor: pointer; transition: background 0.2s, opacity 0.2s; }
+    .perfil-save-btn:hover { background: var(--gold-2); border-color: var(--gold-2); }
+    .perfil-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .perfil-fb { font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; padding: 0.65rem 0.9rem; margin-top: 0.9rem; display: none; max-width: 420px; }
+    .perfil-fb.success { background: rgba(85,160,85,0.08); border: 1px solid rgba(85,160,85,0.3); border-left: 3px solid #80c080; color: #80c080; display: block; }
+    .perfil-fb.error   { background: rgba(224,85,85,0.08);  border: 1px solid rgba(224,85,85,0.3);  border-left: 3px solid #e05555; color: #f08080; display: block; }
   </style>
 </head>
 <body>
@@ -590,6 +611,10 @@
   <button class="mobile-drawer-link" onclick="showView('cartas',this);closeDrawer()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
     Cartas Mensais
+  </button>
+  <button class="mobile-drawer-link" onclick="showView('perfil',this);closeDrawer()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    Meu Perfil
   </button>
   <div class="mobile-drawer-divider" id="mobileAdminDivider" style="display:none;"></div>
   <div class="mobile-drawer-section" id="mobileAdminSection" style="display:none;">Administração</div>
@@ -638,6 +663,10 @@
     <button class="sidebar-link" onclick="showView('cartas',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
       Cartas Mensais
+    </button>
+    <button class="sidebar-link" onclick="showView('perfil',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      Meu Perfil
     </button>
   </div>
   <div class="sidebar-section" id="adminMenuSection" style="display:none;">
@@ -740,6 +769,52 @@
       <div class="welcome-banner"><h2>Cartas <em>Mensais</em></h2><p>Comunicados mensais da EH Investimentos.</p></div>
       <div class="section-header"><div class="section-title">Cartas Publicadas</div></div>
       <div class="reports-grid" id="cartasGrid"><div class="loading-state"><div class="spinner"></div> Carregando...</div></div>
+    </div>
+    <!-- MEU PERFIL -->
+    <div class="view" id="view-perfil">
+      <div class="section-header" style="margin-bottom:2rem;">
+        <div class="section-title">Meu Perfil</div>
+      </div>
+
+      <div class="perfil-card">
+        <div class="perfil-card-title">Nome de exibição</div>
+        <div class="perfil-field">
+          <label>Nome completo</label>
+          <input type="text" id="perfil-nome" placeholder="Seu nome" autocomplete="name" />
+        </div>
+        <div class="perfil-field">
+          <label>E-mail da conta</label>
+          <input type="text" id="perfil-email-readonly" readonly />
+        </div>
+        <button class="perfil-save-btn" onclick="saveNome()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Salvar nome
+        </button>
+        <div class="perfil-fb" id="fb-nome"></div>
+      </div>
+
+      <div class="perfil-card">
+        <div class="perfil-card-title">Alterar senha</div>
+        <div class="perfil-field">
+          <label>Senha atual</label>
+          <input type="password" id="perfil-senha-atual" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <div class="perfil-row">
+          <div class="perfil-field">
+            <label>Nova senha</label>
+            <input type="password" id="perfil-senha-nova" placeholder="Min. 6 caracteres" autocomplete="new-password" />
+          </div>
+          <div class="perfil-field">
+            <label>Confirmar</label>
+            <input type="password" id="perfil-senha-confirm" placeholder="Repita a senha" autocomplete="new-password" />
+          </div>
+        </div>
+        <button class="perfil-save-btn" onclick="saveSenha()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          Atualizar senha
+        </button>
+        <div class="perfil-fb" id="fb-senha"></div>
+      </div>
     </div>
 
     <!-- UPLOAD -->
@@ -1161,12 +1236,13 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.querySelectorAll('.mobile-drawer-link').forEach(l => l.classList.remove('active'));
     document.getElementById('view-' + viewId).classList.add('active');
     if (btn) btn.classList.add('active');
-    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', extratos:'Extratos → Excel', emails:'Envio de Emails', clientes:'Gestão de Clientes' };
+    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', extratos:'Extratos → Excel', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' };
     const topbar = document.getElementById('topbarTitle');
     if (topbar) topbar.textContent = titles[viewId] || viewId;
     if (viewId === 'emails') { loadTemplates().then(() => buildTemplateAccordion()); if (clientRows.length === 0) addClientRow(); loadRascunho(); }
     if (viewId === 'extratos') extLoadMappingFromSupabase();
     if (viewId === 'clientes') loadClientesView();
+    if (viewId === 'perfil') populatePerfil();
   }
 
   // ── CUSTOM TEMPLATE DROPDOWN ──
@@ -1217,6 +1293,82 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
   async function doLogout() { await sb.auth.signOut(); window.location.href = 'eh-cliente-login.html'; }
 
+  // ── PERFIL ──
+  function populatePerfil() {
+    const name  = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+    const email = currentUser.email;
+    const nEl = document.getElementById('perfil-nome');
+    const eEl = document.getElementById('perfil-email-readonly');
+    if (nEl) nEl.value = name;
+    if (eEl) eEl.value = email;
+    ['perfil-senha-atual','perfil-senha-nova','perfil-senha-confirm'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    ['fb-nome','fb-senha'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.className = 'perfil-fb';
+    });
+  }
+
+  function setPerfilFb(id, msg, type) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'perfil-fb ' + type;
+    if (type === 'success') setTimeout(() => { el.className = 'perfil-fb'; }, 5000);
+  }
+
+  async function saveNome() {
+    const btn  = document.querySelector('#view-perfil .perfil-card:first-of-type .perfil-save-btn');
+    const name = document.getElementById('perfil-nome')?.value.trim();
+    if (!name) { setPerfilFb('fb-nome', 'Informe um nome.', 'error'); return; }
+    btn.disabled = true; btn.textContent = 'Salvando…';
+    const { error } = await sb.auth.updateUser({ data: { full_name: name } });
+    if (error) {
+      setPerfilFb('fb-nome', 'Erro: ' + error.message, 'error');
+    } else {
+      const initials = name.substring(0, 2).toUpperCase();
+      document.getElementById('userAvatar').textContent  = initials;
+      document.getElementById('userName').textContent    = name;
+      document.getElementById('welcomeName').textContent = name;
+      const mun = document.getElementById('mobileUserName');
+      if (mun) mun.textContent = name;
+      currentUser.user_metadata = { ...currentUser.user_metadata, full_name: name };
+      setPerfilFb('fb-nome', '\u2713 Nome atualizado com sucesso.', 'success');
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar nome';
+  }
+
+  async function saveSenha() {
+    const btn     = document.querySelector('#view-perfil .perfil-card:last-of-type .perfil-save-btn');
+    const atual   = document.getElementById('perfil-senha-atual')?.value;
+    const nova    = document.getElementById('perfil-senha-nova')?.value;
+    const confirm = document.getElementById('perfil-senha-confirm')?.value;
+    if (!atual)           { setPerfilFb('fb-senha', 'Informe a senha atual.', 'error'); return; }
+    if (nova.length < 6)  { setPerfilFb('fb-senha', 'A nova senha precisa ter no m\u00ednimo 6 caracteres.', 'error'); return; }
+    if (nova !== confirm) { setPerfilFb('fb-senha', 'As senhas n\u00e3o coincidem.', 'error'); return; }
+    btn.disabled = true; btn.textContent = 'Verificando…';
+    const { error: authErr } = await sb.auth.signInWithPassword({ email: currentUser.email, password: atual });
+    if (authErr) {
+      setPerfilFb('fb-senha', 'Senha atual incorreta.', 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Atualizar senha';
+      return;
+    }
+    btn.textContent = 'Salvando…';
+    const { error } = await sb.auth.updateUser({ password: nova });
+    if (error) {
+      setPerfilFb('fb-senha', 'Erro: ' + error.message, 'error');
+    } else {
+      ['perfil-senha-atual','perfil-senha-nova','perfil-senha-confirm'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+      setPerfilFb('fb-senha', '\u2713 Senha atualizada com sucesso.', 'success');
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Atualizar senha';
+  }
+
   // ── CLIENTES MANAGEMENT ──
   async function loadClientesView() {
     const grid = document.getElementById('clientesGrid');
@@ -1236,61 +1388,26 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       grid.innerHTML = profiles.map(p => {
         const ob = obMap[p.id] || {};
         const completed = ob.completed || ob.skip_onboarding;
-
-        // ── Step chips (status visual)
         const stepDefs = [
-          { key: 'cadastro',    label: 'Cadastro',    done: !!ob.step_cadastro },
-          { key: 'suitability', label: 'Perfil API',  done: !!ob.step_suitability },
-          { key: 'contrato',    label: 'Contrato',    done: !!ob.step_contrato }
+          { key: 'cadastro',    label: 'Cadastro',   done: !!ob.step_cadastro },
+          { key: 'suitability', label: 'Perfil API', done: !!ob.step_suitability },
+          { key: 'contrato',    label: 'Contrato',   done: !!ob.step_contrato }
         ];
         const chips = stepDefs.map(s =>
-          `<span style="font-size:0.6rem;padding:0.15rem 0.5rem;border-radius:10px;font-weight:600;
-            background:${s.done ? 'rgba(76,175,130,0.10)' : 'transparent'};
-            color:${s.done ? '#6cc596' : 'var(--gray)'};
-            border:1px solid ${s.done ? 'rgba(76,175,130,0.3)' : 'var(--border-dim)'};">
-            ${s.done ? '✓' : '○'} ${s.label}</span>`
+          `<span style="font-size:0.6rem;padding:0.15rem 0.5rem;border-radius:10px;font-weight:600;background:${s.done?'rgba(76,175,130,0.10)':'transparent'};color:${s.done?'#6cc596':'var(--gray)'};border:1px solid ${s.done?'rgba(76,175,130,0.3)':'var(--border-dim)'};">${s.done?'✓':'○'} ${s.label}</span>`
         ).join('');
-
-        // ── Action row: primary button
         const primaryBtn = completed
           ? `<span style="font-size:0.62rem;padding:0.35rem 0.7rem;background:rgba(76,175,130,0.12);color:#4caf82;border:1px solid rgba(76,175,130,0.3);font-family:'IBM Plex Mono',monospace;font-weight:600;letter-spacing:0.06em;">✓ COMPLETO</span>`
           : `<button onclick="markOneComplete('${p.id}')" class="btn-upload" style="font-size:0.62rem;padding:0.4rem 0.8rem;background:rgba(212,130,10,0.15);color:var(--gold);border:1px solid var(--border);">Marcar completo</button>`;
-
-        // ── Step-reset buttons (shown for all cards)
-        // Reabrir uma etapa zera ela e todas as seguintes (lógica sequencial)
-        const resetBtnStyle = (active) => `font-size:0.6rem;padding:0.28rem 0.65rem;font-family:'IBM Plex Mono',monospace;font-weight:500;letter-spacing:0.04em;cursor:${active?'pointer':'default'};
-          background:${active ? 'rgba(224,85,85,0.08)' : 'rgba(243,237,225,0.03)'};
-          color:${active ? '#f08080' : 'var(--border-dim)'};
-          border:1px solid ${active ? 'rgba(224,85,85,0.3)' : 'var(--border-dim)'};
-          transition:background 0.15s;`;
-
-        const canResetCadastro    = !!ob.step_cadastro;
-        const canResetSuitability = !!ob.step_suitability;
-        const canResetContrato    = !!ob.step_contrato || completed;
-
-        const stepResetRow = `
-          <div style="padding:0.6rem 1.5rem;background:rgba(9,20,56,0.5);border-top:1px solid var(--border-dim);display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:0.58rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gray);margin-right:0.3rem;">Reabrir etapa:</span>
-            <button
-              ${canResetCadastro || completed ? `onclick="resetStep('${p.id}','cadastro')"` : 'disabled'}
-              style="${resetBtnStyle(canResetCadastro || completed)}"
-              title="Zera as 3 etapas — cliente volta ao início">
-              ↩ Cadastro
-            </button>
-            <button
-              ${canResetSuitability || completed ? `onclick="resetStep('${p.id}','suitability')"` : 'disabled'}
-              style="${resetBtnStyle(canResetSuitability || completed)}"
-              title="Zera Perfil API e Contrato — mantém Cadastro">
-              ↩ Perfil API
-            </button>
-            <button
-              ${canResetContrato ? `onclick="resetStep('${p.id}','contrato')"` : 'disabled'}
-              style="${resetBtnStyle(canResetContrato)}"
-              title="Zera apenas o Contrato — mantém Cadastro e Perfil API">
-              ↩ Contrato
-            </button>
-          </div>`;
-
+        const rBtn = (key, label, active, title) =>
+          `<button ${active ? `onclick="resetStep('${p.id}','${key}')"` : 'disabled'}
+            title="${title}"
+            style="font-size:0.6rem;padding:0.28rem 0.65rem;font-family:'IBM Plex Mono',monospace;font-weight:500;letter-spacing:0.04em;cursor:${active?'pointer':'default'};background:${active?'rgba(224,85,85,0.08)':'rgba(243,237,225,0.03)'};color:${active?'#f08080':'var(--border-dim)'};border:1px solid ${active?'rgba(224,85,85,0.3)':'var(--border-dim)'};">
+            ↩ ${label}
+          </button>`;
+        const canC = !!ob.step_cadastro || completed;
+        const canS = !!ob.step_suitability || completed;
+        const canK = !!ob.step_contrato || completed;
         return `
           <div style="background:var(--navy-dark);">
             <div style="padding:1.1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
@@ -1299,11 +1416,14 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
                 <div style="font-size:0.68rem;color:var(--gray);margin-bottom:0.5rem;">${p.email}</div>
                 <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">${chips}</div>
               </div>
-              <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-                ${primaryBtn}
-              </div>
+              <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">${primaryBtn}</div>
             </div>
-            ${stepResetRow}
+            <div style="padding:0.55rem 1.5rem;background:rgba(9,20,56,0.5);border-top:1px solid var(--border-dim);display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:0.58rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gray);margin-right:0.2rem;">Reabrir:</span>
+              ${rBtn('cadastro',    'Cadastro',   canC, 'Zera as 3 etapas — cliente volta ao início')}
+              ${rBtn('suitability', 'Perfil API', canS, 'Zera API e Contrato — mantém Cadastro')}
+              ${rBtn('contrato',    'Contrato',   canK, 'Zera apenas o Contrato — mantém Cadastro e API')}
+            </div>
           </div>`;
       }).join('');
     } catch(e) {
@@ -1358,29 +1478,19 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   async function resetStep(userId, step) {
-    const labels = { cadastro: 'Cadastro', suitability: 'Perfil API', contrato: 'Contrato' };
-    const label  = labels[step] || 'etapa';
-    const msgs   = {
+    const msgs = {
       cadastro:    'Reabrir Cadastro vai zerar as 3 etapas — o cliente volta ao início do onboarding.',
-      suitability: 'Reabrir Perfil API vai zerar API e Contrato — o cliente mantém o Cadastro feito.',
-      contrato:    'Reabrir Contrato — o cliente vai precisar assinar novamente. Cadastro e Perfil API são mantidos.'
+      suitability: 'Reabrir Perfil API vai zerar API e Contrato — Cadastro é mantido.',
+      contrato:    'Reabrir Contrato — o cliente vai assinar novamente. Cadastro e API são mantidos.'
     };
     if (!confirm(msgs[step] + '\n\nConfirmar?')) return;
-
-    // Monta o update respeitando a sequência
     const update = { user_id: userId, completed: false, skip_onboarding: false, updated_at: new Date().toISOString() };
-    if (step === 'cadastro') {
-      update.step_cadastro = false; update.step_suitability = false; update.step_contrato = false;
-    } else if (step === 'suitability') {
-      update.step_suitability = false; update.step_contrato = false;
-      // step_cadastro permanece como estava
-    } else if (step === 'contrato') {
-      update.step_contrato = false;
-      // step_cadastro e step_suitability permanecem como estavam
-    }
-
+    if (step === 'cadastro')    { update.step_cadastro = false; update.step_suitability = false; update.step_contrato = false; }
+    else if (step === 'suitability') { update.step_suitability = false; update.step_contrato = false; }
+    else if (step === 'contrato')    { update.step_contrato = false; }
     await sb.from('onboarding').upsert(update, { onConflict: 'user_id' });
-    showFb2('clientesFb', `↩ ${label} reaberto para o cliente.`, 'success');
+    const labels = { cadastro: 'Cadastro', suitability: 'Perfil API', contrato: 'Contrato' };
+    showFb2('clientesFb', `\u21A9 ${labels[step]} reaberto para o cliente.`, 'success');
     loadClientesView();
   }
 
