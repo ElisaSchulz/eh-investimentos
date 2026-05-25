@@ -783,7 +783,7 @@
           <label>E-mail da conta</label>
           <input type="text" id="perfil-email-readonly" readonly />
         </div>
-        <button class="perfil-save-btn" onclick="saveNome()">
+        <button id="btn-save-nome" class="perfil-save-btn" onclick="saveNome()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
           Salvar nome
         </button>
@@ -805,7 +805,7 @@
             <input type="password" id="perfil-senha-confirm" placeholder="Repita a senha" autocomplete="new-password" />
           </div>
         </div>
-        <button class="perfil-save-btn" onclick="saveSenha()">
+        <button id="btn-save-senha" class="perfil-save-btn" onclick="saveSenha()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
           Atualizar senha
         </button>
@@ -1313,7 +1313,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   async function saveNome() {
-    const btn  = document.querySelector('#view-perfil .perfil-card:first-of-type .perfil-save-btn');
+    const btn = document.getElementById('btn-save-nome');
     const name = document.getElementById('perfil-nome')?.value.trim();
     if (!name) { setPerfilFb('fb-nome', 'Informe um nome.', 'error'); return; }
     btn.disabled = true; btn.textContent = 'Salvando\u2026';
@@ -1328,7 +1328,11 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     }
 
     // Sincroniza tabela profiles (painel admin e tela inicial)
-    try { await sb.from('profiles').update({ full_name: name }).eq('id', currentUser.id); } catch(e) {}
+    const { error: profErr } = await sb.from('profiles').upsert(
+      { id: currentUser.id, email: currentUser.email, full_name: name, updated_at: new Date().toISOString() },
+      { onConflict: 'id' }
+    );
+    if (profErr) { setPerfilFb('fb-nome', 'Nome salvo, mas erro ao sincronizar perfil: ' + profErr.message, 'error'); btn.disabled = false; btn.innerHTML = saveNomeIcon(); return; }
 
     // Atualiza UI imediatamente sem recarregar
     const initials = name.substring(0, 2).toUpperCase();
@@ -1352,7 +1356,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   async function saveSenha() {
-    const btn     = document.querySelector('#view-perfil .perfil-card:last-of-type .perfil-save-btn');
+    const btn = document.getElementById('btn-save-senha');
     const atual   = document.getElementById('perfil-senha-atual')?.value;
     const nova    = document.getElementById('perfil-senha-nova')?.value;
     const confirm = document.getElementById('perfil-senha-confirm')?.value;
