@@ -2699,11 +2699,13 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         : m[2].replace(/\s/g,'');
       map[name] = cnpj;
     }
+    console.log('[DEBUG] cnpjMap construido:', JSON.stringify(map));
     return map;
   }
   function extFundCNPJLookup(fundName, cnpjMap, mapping) {
     // Normaliza espaços (PDF.js pode fragmentar nomes com espaços extras)
     const u = fundName.toUpperCase().replace(/\s+/g,' ').trim();
+    console.log('[DEBUG] lookup fundName:', u, '| keys:', Object.keys(cnpjMap));
     // Busca exata primeiro
     if (cnpjMap[u]) return cnpjMap[u];
     // Busca por substring (nome do fundo contido na chave ou vice-versa)
