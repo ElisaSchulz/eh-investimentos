@@ -2596,7 +2596,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     return '—';
   }
   function extGetSheetName(text, filename) {
-    const flat = text.replace(/\n/g,' ').replace(/\s+/g,' ');
+    const flat = extFixFragments(text.replace(/\n/g,' ').replace(/\s+/g,' '));
     const anchor = flat.match(/(.{5,80}?)\s+CPF\/CNPJ/);
     if (anchor) { const words = anchor[1].trim().split(/\s+/).filter(w => /^[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÀÇ]{2,}$/.test(w)); if (words.length >= 2) return words.slice(-4).join(' ').slice(0,31); }
     const anchor2 = flat.match(/(.{5,80}?)\s+CPF\b/);
@@ -2619,7 +2619,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     return 'Outro';
   }
   function extParseXP(text) {
-    const flat = text.replace(/\n/g,' ').replace(/\s{2,}/g,' ');
+    const flat = extFixFragments(text.replace(/\n/g,' ').replace(/\s{2,}/g,' '));
     const re = /(\d{2}\/\d{2}\/\d{4})\s+(\d{2}\/\d{2}\/\d{4})\s+(.+?)\s+R\$\s*([-\d.,]+)\s+R\$\s*([-\d.,]+)/g;
     const rows = []; let m;
     while ((m = re.exec(flat)) !== null) {
@@ -2649,7 +2649,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     return 'Outro';
   }
   function extParseEQIFundMovs(text) {
-    const flat = text.replace(/\n/g,' ').replace(/\s{2,}/g,' ');
+    const flat = extFixFragments(text.replace(/\n/g,' ').replace(/\s{2,}/g,' '));
     const result = {};
     const parts = flat.split(/ovimenta.{0,5}o\s*[-–]\s*/i);
     for (let pi = 1; pi < parts.length; pi++) {
@@ -2686,13 +2686,19 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   // Normaliza string para comparação: remove espaços, uppercase
   // Resolve fragmentação do PDF.js: "P ORTO DI C R P R" == "PORTO DI CRPR"
   function extNormKey(s) { return s.replace(/\s+/g,'').toUpperCase(); }
+  // Corrige fragmentação do PDF.js: "C lasse" -> "Classe", "C R P R" -> "CRPR"
+  function extFixFragments(text) {
+    // Junta letra maiúscula isolada com palavra minúscula seguinte: "C lasse" -> "Classe"
+    let t = text.replace(/\b([A-Z])\s+([a-záéíóúâêîôûãõàç]\w*)/g, '$1$2');
+    // Junta sequências de letras maiúsculas isoladas: "C R P R" -> "CRPR"
+    t = t.replace(/\b([A-Z])\s+(?=[A-Z]\b)/g, '$1');
+    return t;
+  }
 
   function extBuildFundCNPJMap(text) {
-    const flat = text.replace(/\n/g,' ').replace(/\s{2,}/g,' ');
+    // Aplica correção de fragmentação antes de qualquer processamento
+    const flat = extFixFragments(text.replace(/\n/g,' ').replace(/\s{2,}/g,' '));
     const map = {};
-    // LOG: mostra amostra do flat e onde "Classe" aparece
-    const _ci = flat.indexOf('lasse');
-    console.log('[DBG] flat len:', flat.length, '| Classe@', _ci, '| amostra:', JSON.stringify(flat.slice(Math.max(0,_ci-40), _ci+100)));
     const re = /([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9\s\.\-\*]{2,120}?)\s*[-–]\s*Classe\s+CNPJ\s*:?\s*(\d[\d\s\.\-\/]{10,25}\d)/gi;
     let m;
     while ((m = re.exec(flat)) !== null) {
@@ -2720,7 +2726,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     return extLookupCNPJ(fundName, mapping);
   }
   function extParseEQIComeCotas(text, mapping) {
-    const flat = text.replace(/\n/g,' ').replace(/\s{2,}/g,' ');
+    const flat = extFixFragments(text.replace(/\n/g,' ').replace(/\s{2,}/g,' '));
     const comeCotas = [];
     // Monta dicionário nome->CNPJ a partir do texto completo do PDF
     const cnpjMap = extBuildFundCNPJMap(text);
@@ -2792,7 +2798,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     return null;
   }
   function extParseEQICC(text, fundMovs, mapping) {
-    const flat = text.replace(/\n/g,' ').replace(/\s{2,}/g,' ');
+    const flat = extFixFragments(text.replace(/\n/g,' ').replace(/\s{2,}/g,' '));
     const ccStartMatch = flat.match(/orrente\s*[-–]?\s*[Mm].{0,10}ovimenta/i);
     if (!ccStartMatch) { extLog('Seção Conta Corrente não encontrada','err'); return []; }
     const ccStart = ccStartMatch.index; const afterCC = flat.slice(ccStart);
