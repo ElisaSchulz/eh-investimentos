@@ -2686,22 +2686,41 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   function extBuildFundCNPJMap(text) {
     const flat = text.replace(/\n/g,' ').replace(/\s{2,}/g,' ');
     const map = {};
-    const re = /([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9\s\.\-]{2,80}?)\s*[-–]\s*Classe\s+CNPJ:\s*(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/gi;
+    // Regex tolerante a espaços entre os componentes do CNPJ (PDF.js fragmenta cada item)
+    // Ex: "18 . 719 . 154 / 0001 - 01" ou "18.719.154/0001-01"
+    const re = /([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9\s\.\-]{2,80}?)\s*[-–]\s*Classe\s+CNPJ\s*:?\s*(\d{2}\s*[.\s]\s*\d{3}\s*[.\s]\s*\d{3}\s*[\/\s]\s*\d{4}\s*[-\s]\s*\d{2})(?![\d])/gi;
     let m;
     while ((m = re.exec(flat)) !== null) {
-      // Normaliza: uppercase, remove prefixo "Fundo de Investimento - Detalhamento - "
       let name = m[1].trim().toUpperCase().replace(/^FUNDO DE INVESTIMENTO\s*[-–]\s*DETALHAMENTO\s*[-–]\s*/i,'');
-      map[name] = m[2];
+      // Normaliza CNPJ: remove espaços e reconstrói no formato XX.XXX.XXX/XXXX-XX
+      const digits = m[2].replace(/[^\d]/g,'');
+      const cnpj = digits.length === 14
+        ? digits.slice(0,2)+'.'+digits.slice(2,5)+'.'+digits.slice(5,8)+'/'+digits.slice(8,12)+'-'+digits.slice(12,14)
+        : m[2].replace(/\s/g,'');
+      map[name] = cnpj;
     }
     return map;
   }
   function extFundCNPJLookup(fundName, cnpjMap, mapping) {
-    const u = fundName.toUpperCase();
+    // Normaliza espaços (PDF.js pode fragmentar nomes com espaços extras)
+    const u = fundName.toUpperCase().replace(/\s+/g,' ').trim();
     // Busca exata primeiro
     if (cnpjMap[u]) return cnpjMap[u];
     // Busca por substring (nome do fundo contido na chave ou vice-versa)
     for (const [key, cnpj] of Object.entries(cnpjMap)) {
       if (key.includes(u) || u.includes(key)) return cnpj;
+    }
+    // Busca por palavras significativas (>=4 chars) - tolerante a variações de nome
+    const words = u.split(/\s+/).filter(w => w.length >= 4);
+    if (words.length > 0) {
+      let bestKey = null, bestScore = 0;
+      for (const [key, cnpj] of Object.entries(cnpjMap)) {
+        const score = words.filter(w => key.includes(w)).length;
+        if (score > bestScore && score >= Math.ceil(words.length * 0.6)) {
+          bestScore = score; bestKey = key;
+        }
+      }
+      if (bestKey) return cnpjMap[bestKey];
     }
     // Fallback: mapeamento manual
     return extLookupCNPJ(fundName, mapping);
