@@ -2681,9 +2681,36 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   // Extrai come-cotas das seções "Fundo de Investimento - Movimentação"
+  // Constrói dicionário {nome_normalizado -> cnpj} varrendo o texto inteiro
+  // Usa o padrão "NOME DO FUNDO - Classe CNPJ: XX.XXX.XXX/XXXX-XX" presente nas seções de Posição e Detalhamento
+  function extBuildFundCNPJMap(text) {
+    const flat = text.replace(/\n/g,' ').replace(/\s{2,}/g,' ');
+    const map = {};
+    const re = /([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9\s\.\-]{2,80}?)\s*[-–]\s*Classe\s+CNPJ:\s*(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/gi;
+    let m;
+    while ((m = re.exec(flat)) !== null) {
+      // Normaliza: uppercase, remove prefixo "Fundo de Investimento - Detalhamento - "
+      let name = m[1].trim().toUpperCase().replace(/^FUNDO DE INVESTIMENTO\s*[-–]\s*DETALHAMENTO\s*[-–]\s*/i,'');
+      map[name] = m[2];
+    }
+    return map;
+  }
+  function extFundCNPJLookup(fundName, cnpjMap, mapping) {
+    const u = fundName.toUpperCase();
+    // Busca exata primeiro
+    if (cnpjMap[u]) return cnpjMap[u];
+    // Busca por substring (nome do fundo contido na chave ou vice-versa)
+    for (const [key, cnpj] of Object.entries(cnpjMap)) {
+      if (key.includes(u) || u.includes(key)) return cnpj;
+    }
+    // Fallback: mapeamento manual
+    return extLookupCNPJ(fundName, mapping);
+  }
   function extParseEQIComeCotas(text, mapping) {
     const flat = text.replace(/\n/g,' ').replace(/\s{2,}/g,' ');
     const comeCotas = [];
+    // Monta dicionário nome->CNPJ a partir do texto completo do PDF
+    const cnpjMap = extBuildFundCNPJMap(text);
     // Separa por seção de movimentação de fundo
     const parts = flat.split(/ovimenta.{0,5}o\s*[-–]\s*/i);
     for (let pi = 1; pi < parts.length; pi++) {
@@ -2695,8 +2722,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       // Limita até os totais
       const totalIdx = part.search(/[Tt]\s*otal\s+de\s+[Aa]|[Tt]\s*otal\s+de\s+[Rr]/i);
       const secText = totalIdx >= 0 ? part.slice(0, totalIdx) : part;
-      // Busca CNPJ do fundo no mapeamento
-      const cnpj = extLookupCNPJ(fundName, mapping);
+      // Busca CNPJ no dicionário construído do PDF (mais confiável que o mapeamento manual)
+      const cnpj = extFundCNPJLookup(fundName, cnpjMap, mapping);
       // Encontra todas as linhas de come-cotas (RESGATE IR REF. APLIC. ... COME COTAS)
       const dates = [...secText.matchAll(/\d{2}\/\d{2}\/\d{2,4}/g)];
       for (let di = 0; di < dates.length; di++) {
