@@ -2683,48 +2683,39 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   // Extrai come-cotas das seções "Fundo de Investimento - Movimentação"
   // Constrói dicionário {nome_normalizado -> cnpj} varrendo o texto inteiro
   // Usa o padrão "NOME DO FUNDO - Classe CNPJ: XX.XXX.XXX/XXXX-XX" presente nas seções de Posição e Detalhamento
+  // Normaliza string para comparação: remove espaços, uppercase
+  // Resolve fragmentação do PDF.js: "P ORTO DI C R P R" == "PORTO DI CRPR"
+  function extNormKey(s) { return s.replace(/\s+/g,'').toUpperCase(); }
+
   function extBuildFundCNPJMap(text) {
     const flat = text.replace(/\n/g,' ').replace(/\s{2,}/g,' ');
-    const map = {};
-    // Regex tolerante a espaços entre os componentes do CNPJ (PDF.js fragmenta cada item)
-    // Ex: "18 . 719 . 154 / 0001 - 01" ou "18.719.154/0001-01"
-    const re = /([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9\s\.\-]{2,80}?)\s*[-–]\s*Classe\s+CNPJ\s*:?\s*(\d{2}\s*[.\s]\s*\d{3}\s*[.\s]\s*\d{3}\s*[\/\s]\s*\d{4}\s*[-\s]\s*\d{2})(?![\d])/gi;
+    const map = {}; // chave: extNormKey(nome), valor: {cnpj, name}
+    // Regex tolerante a espaços entre componentes do CNPJ e entre letras do nome
+    // Captura tudo entre o início da linha/seção e "- Classe CNPJ: NN.NNN.NNN/NNNN-NN"
+    const re = /([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9\s\.\-\*]{2,120}?)\s*[-–]\s*Classe\s+CNPJ\s*:?\s*(\d[\d\s\.\-\/]{10,25}\d)/gi;
     let m;
     while ((m = re.exec(flat)) !== null) {
-      let name = m[1].trim().toUpperCase().replace(/^FUNDO DE INVESTIMENTO\s*[-–]\s*DETALHAMENTO\s*[-–]\s*/i,'');
-      // Normaliza CNPJ: remove espaços e reconstrói no formato XX.XXX.XXX/XXXX-XX
+      let rawName = m[1].trim().toUpperCase();
+      rawName = rawName.replace(/^FUNDO\s+DE\s+INVESTIMENTO\s*[-–]\s*DETALHAMENTO\s*[-–]\s*/i,'');
+      rawName = rawName.replace(/^FUNDO\s+DE\s+INVESTIMENTO\s*[-–]\s*POSIÇÃO\s*[-–]\s*/i,'');
+      // Normaliza CNPJ: extrai 14 dígitos e formata
       const digits = m[2].replace(/[^\d]/g,'');
-      const cnpj = digits.length === 14
-        ? digits.slice(0,2)+'.'+digits.slice(2,5)+'.'+digits.slice(5,8)+'/'+digits.slice(8,12)+'-'+digits.slice(12,14)
-        : m[2].replace(/\s/g,'');
-      map[name] = cnpj;
+      if (digits.length !== 14) continue;
+      const cnpj = digits.slice(0,2)+'.'+digits.slice(2,5)+'.'+digits.slice(5,8)+'/'+digits.slice(8,12)+'-'+digits.slice(12,14);
+      const key = extNormKey(rawName);
+      if (key.length >= 4) map[key] = cnpj;
     }
-    console.log('[DEBUG] cnpjMap construido:', JSON.stringify(map));
     return map;
   }
   function extFundCNPJLookup(fundName, cnpjMap, mapping) {
-    // Normaliza espaços (PDF.js pode fragmentar nomes com espaços extras)
-    const u = fundName.toUpperCase().replace(/\s+/g,' ').trim();
-    console.log('[DEBUG] lookup fundName:', u, '| keys:', Object.keys(cnpjMap));
-    // Busca exata primeiro
-    if (cnpjMap[u]) return cnpjMap[u];
-    // Busca por substring (nome do fundo contido na chave ou vice-versa)
+    const norm = extNormKey(fundName);
+    // 1. Busca exata normalizada (resolve fragmentação de espaços)
+    if (cnpjMap[norm]) return cnpjMap[norm];
+    // 2. Busca por substring normalizada
     for (const [key, cnpj] of Object.entries(cnpjMap)) {
-      if (key.includes(u) || u.includes(key)) return cnpj;
+      if (key.includes(norm) || norm.includes(key)) return cnpj;
     }
-    // Busca por palavras significativas (>=4 chars) - tolerante a variações de nome
-    const words = u.split(/\s+/).filter(w => w.length >= 4);
-    if (words.length > 0) {
-      let bestKey = null, bestScore = 0;
-      for (const [key, cnpj] of Object.entries(cnpjMap)) {
-        const score = words.filter(w => key.includes(w)).length;
-        if (score > bestScore && score >= Math.ceil(words.length * 0.6)) {
-          bestScore = score; bestKey = key;
-        }
-      }
-      if (bestKey) return cnpjMap[bestKey];
-    }
-    // Fallback: mapeamento manual
+    // 3. Fallback: mapeamento manual
     return extLookupCNPJ(fundName, mapping);
   }
   function extParseEQIComeCotas(text, mapping) {
