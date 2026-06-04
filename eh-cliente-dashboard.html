@@ -2689,9 +2689,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
   function extBuildFundCNPJMap(text) {
     const flat = text.replace(/\n/g,' ').replace(/\s{2,}/g,' ');
-    const map = {}; // chave: extNormKey(nome), valor: {cnpj, name}
-    // Regex tolerante a espaços entre componentes do CNPJ e entre letras do nome
-    // Captura tudo entre o início da linha/seção e "- Classe CNPJ: NN.NNN.NNN/NNNN-NN"
+    const map = {};
+    // LOG: mostra amostra do flat e onde "Classe" aparece
+    const _ci = flat.indexOf('lasse');
+    console.log('[DBG] flat len:', flat.length, '| Classe@', _ci, '| amostra:', JSON.stringify(flat.slice(Math.max(0,_ci-40), _ci+100)));
     const re = /([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9\s\.\-\*]{2,120}?)\s*[-–]\s*Classe\s+CNPJ\s*:?\s*(\d[\d\s\.\-\/]{10,25}\d)/gi;
     let m;
     while ((m = re.exec(flat)) !== null) {
