@@ -2679,6 +2679,65 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     }
     return result;
   }
+
+  // Extrai come-cotas das seções "Fundo de Investimento - Movimentação"
+  function extParseEQIComeCotas(text, mapping) {
+    const flat = text.replace(/\n/g,' ').replace(/\s{2,}/g,' ');
+    const comeCotas = [];
+    // Separa por seção de movimentação de fundo
+    const parts = flat.split(/ovimenta.{0,5}o\s*[-–]\s*/i);
+    for (let pi = 1; pi < parts.length; pi++) {
+      const part = parts[pi];
+      // Nome do fundo no início da seção
+      const nameMatch = part.match(/^([A-Za-z][A-Za-z0-9\s\.\-ÁÉÍÓÚÂÊÎÔÛÃÕÀÇáéíóúâêîôûãõàç]{2,80}?)(?=\s+\d{2}\/\d{2}\/|\s+[Dd]\s*[Aa])/);
+      if (!nameMatch) continue;
+      const fundName = nameMatch[1].trim();
+      // Limita até os totais
+      const totalIdx = part.search(/[Tt]\s*otal\s+de\s+[Aa]|[Tt]\s*otal\s+de\s+[Rr]/i);
+      const secText = totalIdx >= 0 ? part.slice(0, totalIdx) : part;
+      // Busca CNPJ do fundo no mapeamento
+      const cnpj = extLookupCNPJ(fundName, mapping);
+      // Encontra todas as linhas de come-cotas (RESGATE IR REF. APLIC. ... COME COTAS)
+      const dates = [...secText.matchAll(/\d{2}\/\d{2}\/\d{2,4}/g)];
+      for (let di = 0; di < dates.length; di++) {
+        const dPos = dates[di].index;
+        const dEnd = di+1 < dates.length ? dates[di+1].index : secText.length;
+        const seg = secText.slice(dPos, dEnd);
+        const segU = seg.toUpperCase();
+        // Apenas linhas de come-cotas
+        if (!segU.includes('COME') || !segU.includes('COTAS')) continue;
+        if (!segU.includes('RESGATE') && !segU.includes('IR REF')) continue;
+        let dateStr = dates[di][0];
+        if (dateStr.length === 8) { const p = dateStr.split('/'); dateStr = `${p[0]}/${p[1]}/20${p[2]}`; }
+        // Extrai números financeiros: Qtd Cotas, Valor Cota, Valor Bruto, IR, IOF, Valor Liq
+        const finNums = (seg.match(/-?[\d\.]+,\d+/g)||[]).filter(n => extIsFinancialEQI(n));
+        // Para come-cotas: Valor Bruto = IR (todo o valor bruto é IR), Valor Liq = "-"
+        // Formato típico: qtd_cotas  val_cota  val_bruto  IR  IOF(-)  val_liq(-)
+        // Pelo menos 2 números financeiros (bruto + IR)
+        if (finNums.length < 2) continue;
+        const valBruto = Math.abs(extParseAmountEQI(finNums[0]));
+        const valIR = Math.abs(extParseAmountEQI(finNums[1]));
+        // Descrição: extrai a parte da transação (entre a data e os números)
+        let desc = seg.slice(dateStr.length).replace(/-?[\d\.]+,\d+/g,'').replace(/\s+/g,' ').trim();
+        desc = desc.replace(/[-–\s.]+$/,'').trim();
+        if (!desc || desc.length < 4) desc = `COME COTAS - ${fundName.slice(0,40)}`;
+        comeCotas.push({
+          dataMov: dateStr,
+          dataLiq: dateStr,
+          historico: desc,
+          valor: -valBruto,   // negativo: saída de cotas (imposto)
+          valorLiq: -valIR,
+          saldo: 0,
+          tipo: 'Come-Cotas',
+          cnpj: cnpj,
+          isGross: true,
+          needsGross: false,
+          fundName: fundName
+        });
+      }
+    }
+    return comeCotas;
+  }
   function extFindEQIGross(fundMovs, ccDesc, ccValor, ccTipo) {
     const absLiq = Math.abs(ccValor); const targetTipo = ccTipo==='Resgate'?'RESGATE':'AMORTIZAÇÃO';
     const u = ccDesc.toUpperCase(); let fundHint = '';
@@ -2735,8 +2794,19 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     Object.entries(fundMovs).forEach(([name,movs]) => extLog(`  · ${name.slice(0,45)} (${movs.length} mov.)`,''));
     const rows = extParseEQICC(text, fundMovs, mapping);
     const notMatched = rows.filter(r=>r.needsGross&&!r.isGross);
-    if (notMatched.length>0) extLog(`${notMatched.length} linha(s) sem bruto — valor líquido mantido`,'warn');
-    return rows;
+    if (notMatched.length>0) extLog(`${notMatched.length} linha(s) sem bruto — valor liquido mantido`,'warn');
+    const comeCotas = extParseEQIComeCotas(text, mapping);
+    if (comeCotas.length > 0) {
+      extLog(`Come-Cotas encontrados: ${comeCotas.length} lancamento(s)`, 'ok');
+      comeCotas.forEach(c => extLog(`  · ${c.dataMov} ${c.fundName.slice(0,35)} — IR R$ ${Math.abs(c.valorLiq).toFixed(2).replace('.',',')}`, ''));
+    }
+    const allRows = [...rows, ...comeCotas];
+    allRows.sort((a,b) => {
+      const pa = a.dataMov.split('/').reverse().join('');
+      const pb = b.dataMov.split('/').reverse().join('');
+      return pa.localeCompare(pb);
+    });
+    return allRows;
   }
 
   // ── Process ──
