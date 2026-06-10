@@ -2027,7 +2027,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       .replace(/{{valor}}/g, client.valor||'')
       .replace(/{{link_relatorio}}/g, client.link_relatorio||'')
       .replace(/{{btn_relatorio}}/g, linkHtml);
-    return { subject: r(tpl.assunto), body: r(tpl.corpo), up, freq, tplId };
+    return { subject: r(tpl.assunto), body: r(tpl.corpo), up, freq: sel, tplId };
   }
 
   function previewEmails() {
