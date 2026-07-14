@@ -2598,10 +2598,23 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   function extGetSheetName(text, filename) {
     const flat = extFixFragments(text.replace(/\n/g,' ').replace(/\s+/g,' '));
     const anchor = flat.match(/(.{5,80}?)\s+CPF\/CNPJ/);
-    if (anchor) { const words = anchor[1].trim().split(/\s+/).filter(w => /^[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÀÇ]{2,}$/.test(w)); if (words.length >= 2) return words.slice(-4).join(' ').slice(0,31); }
+    if (anchor) { const name = extPickClientName(anchor[1]); if (name) return name; }
     const anchor2 = flat.match(/(.{5,80}?)\s+CPF\b/);
-    if (anchor2) { const words = anchor2[1].trim().split(/\s+/).filter(w => /^[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÀÇ]{2,}$/.test(w)); if (words.length >= 2) return words.slice(-4).join(' ').slice(0,31); }
+    if (anchor2) { const name = extPickClientName(anchor2[1]); if (name) return name; }
     return filename.replace(/\.pdf$/i,'').replace(/[_-]/g,' ').slice(0,31);
+  }
+  // Nome do cliente = última sequência contígua de palavras totalmente em maiúsculas
+  // antes do CPF (sem limite de 4 palavras — nomes longos mantêm o primeiro nome)
+  function extPickClientName(prefix) {
+    const isName = w => /^[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÀÇ]{2,}$/.test(w);
+    const runs = []; let cur = [];
+    for (const w of prefix.trim().split(/\s+/)) {
+      if (isName(w)) cur.push(w);
+      else { if (cur.length) runs.push(cur); cur = []; }
+    }
+    if (cur.length) runs.push(cur);
+    const valid = runs.filter(r => r.length >= 2);
+    return valid.length ? valid[valid.length-1].join(' ').slice(0,31) : null;
   }
 
   // ── XP Parser ──
@@ -2691,7 +2704,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     // Junta letra maiúscula isolada com palavra minúscula seguinte: "C lasse" -> "Classe"
     let t = text.replace(/\b([A-Z])\s+([a-záéíóúâêîôûãõàç]\w*)/g, '$1$2');
     // Junta sequências de letras maiúsculas isoladas: "C R P R" -> "CRPR"
-    t = t.replace(/\b([A-Z])\s+(?=[A-Z]\b)/g, '$1');
+    // (exceto "R$": "C/C R$ 1,00" não pode virar "C/CR$ 1,00", senão o parser XP perde a linha seguinte)
+    t = t.replace(/\b([A-Z])\s+(?=[A-Z]\b(?!\$))/g, '$1');
     return t;
   }
 
@@ -2785,7 +2799,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     return comeCotas;
   }
   function extFindEQIGross(fundMovs, ccDesc, ccValor, ccTipo) {
-    const absLiq = Math.abs(ccValor); const targetTipo = ccTipo==='Resgate'?'RESGATE':'AMORTIZAÇÃO';
+    const absLiq = Math.abs(ccValor); const targetTipo = ccTipo==='Resgate'?'RESGATE':(ccTipo==='Integralização'?'APLICAÇÃO':'AMORTIZAÇÃO');
     const u = ccDesc.toUpperCase(); let fundHint = '';
     const m1 = u.match(/(?:RESGATE|AQUISICAO|AQUISIÇÃO)\s+DE\s+COTAS\s+(?:NO\s+FUNDO\s+[-–]?\s*)(\w[\w\s]+)/);
     if (m1) fundHint = m1[1].trim();
@@ -2803,7 +2817,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     if (!ccStartMatch) { extLog('Seção Conta Corrente não encontrada','err'); return []; }
     const ccStart = ccStartMatch.index; const afterCC = flat.slice(ccStart);
     const endA=afterCC.search(/[Ss]\s*aldo\s+[Ff]\s*inal/i); const endB=afterCC.search(/[Tt]\s*otal\s+de\s+[Cc]/i);
-    const endOffset=Math.min(endA>=0?endA:Infinity,endB>=0?endB:Infinity,10000);
+    const endOffset=Math.min(endA>=0?endA:Infinity,endB>=0?endB:Infinity,50000);
     const ccText=flat.slice(ccStart,ccStart+endOffset); const ccDates=[...ccText.matchAll(/\d{2}\/\d{2}\/\d{2,4}/g)];
     extLog(`Seção CC: ${ccText.length} chars, ${ccDates.length} datas`,'ok');
     const rows=[];
@@ -2812,20 +2826,24 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       const seg=ccText.slice(dPos,dEnd).trim(); const dateStr=ccDates[i][0];
       let dateNorm=dateStr; if(dateNorm.length===8){const p=dateNorm.split('/');dateNorm=`${p[0]}/${p[1]}/20${p[2]}`;}
       const finNums=(seg.match(/-?[\d\.]+,\d+/g)||[]).filter(n=>extIsFinancialEQI(n));
-      const hasBareTrailingDash=/[-–]\s*$/.test(seg.replace(/-?[\d\.]+,\d+/g,'').trim());
+      // Saldo "-": aceita traço no fim do segmento OU logo após o valor (transação na última
+      // linha da página fica com rodapé/cabeçalho colado depois do traço e era descartada)
+      const hasBareTrailingDash=/[-–]\s*$/.test(seg.replace(/-?[\d\.]+,\d+/g,'').trim())||/-?[\d\.]+,\d{2}\s+[-–](?:\s|$)/.test(seg);
       let valor,saldo;
       if(finNums.length>=2){valor=extParseAmountEQI(finNums[0]);saldo=extParseAmountEQI(finNums[1]);}
       else if(finNums.length===1&&hasBareTrailingDash){valor=extParseAmountEQI(finNums[0]);saldo=null;}
       else continue;
       let desc=seg.slice(dateStr.length).replace(/-?[\d\.]+,\d+/g,'').replace(/\s+/g,' ').trim();
       desc=desc.replace(/^\d{9}\s*[-–]\s*/,'');
-      const bleedIdx=desc.search(/\s+[Dd]\s*is[cl]|[Ss]eção com|[Oo]uvidoria/i);
+      const bleedIdx=desc.search(/\s+[Dd]\s*is[cl]|[Ss]eção com|[Oo]uvidoria|Extrato\s+d|Per[íi]odo\s+de\s+\d/i);
       if(bleedIdx>4) desc=desc.slice(0,bleedIdx);
       desc=desc.replace(/[-–\s.]+$/,'').trim();
       if(desc.length<4&&i>0){const prevSeg=ccText.slice(ccDates[i-1].index,dPos);const prevFin=[...prevSeg.matchAll(/-?[\d\.]+,\d+/g)].filter(m=>extIsFinancialEQI(m[0]));if(prevFin.length>0){const le=prevFin[prevFin.length-1].index+prevFin[prevFin.length-1][0].length;let orp=prevSeg.slice(le).replace(/\s+/g,' ').trim();orp=orp.replace(/[-–\s.]+$/,'').replace(/^[-–\s]+/,'').trim();if(orp.length>=4)desc=orp;}}
       if(!desc||desc.length<4||desc.length>200) continue;
       if(/^[Ss]aldo\s+[Aa]|[Dd]isclai|[Tt]otal\s+de|^[Ss]aldo\s+[Ff]|^[Ss]aldo\s+[Cc]|endimento\s+[Pp]rovisionado/i.test(desc)) continue;
-      const tipo=extClassifyTipoEQI(desc); const needsGross=(tipo==='Resgate'||tipo==='Amortização');
+      // Integralização (compra de cotas, ex. FIDC com IOF): busca o valor bruto (líquido de IOF)
+      // na seção "Fundo de Investimento - Movimentação", igual já é feito com resgates/amortizações
+      const tipo=extClassifyTipoEQI(desc); const needsGross=(tipo==='Resgate'||tipo==='Amortização'||tipo==='Integralização');
       let valorFinal=valor; let isGross=!needsGross;
       if(needsGross){const found=extFindEQIGross(fundMovs,desc,valor,tipo);if(found!==null){valorFinal=valor<0?-found:found;isGross=true;}}
       const cnpj=['IRRF','IOF'].includes(tipo)?'—':extLookupCNPJ(desc,mapping);
