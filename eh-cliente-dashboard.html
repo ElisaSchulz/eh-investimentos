@@ -956,6 +956,34 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
             </div>
           </div>
 
+          <!-- GERADOR DE TEMPLATES DO MÊS -->
+          <div style="margin-bottom:1.4rem;border:1px solid var(--border);background:rgba(212,130,10,0.05);padding:1.3rem 1.3rem 1.1rem;position:relative;">
+            <p style="font-size:0.72rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);margin-bottom:0.6rem;">⚡ Gerador — Texto do Mês</p>
+            <p style="font-size:0.75rem;color:var(--gray);line-height:1.6;margin-bottom:1.1rem;">
+              Escreva o comentário do mês <strong style="color:var(--white);">uma única vez</strong> e clique em gerar: os 7 templates
+              (Mensal, Trimestral e Cobrança — acima/abaixo do CDI — e Personalizado) são montados automaticamente com a saudação,
+              o parágrafo de pagamento e o encerramento padrão. O template <strong style="color:var(--white);">Offshore não é alterado</strong>.
+              Depois de gerar, revise cada template abaixo (pode ajustar o que quiser) e clique em <strong style="color:var(--white);">Salvar todos os templates</strong>.
+            </p>
+            <div class="upload-field" style="margin-bottom:0.9rem;">
+              <label>Assunto do mês (aplicado aos 7 templates — deixe vazio para manter os assuntos atuais)</label>
+              <input type="text" id="gen-assunto" placeholder="ex: EH Investimentos — Fechamento de Junho" oninput="markTplUnsaved()" />
+            </div>
+            <div class="upload-field" style="margin-bottom:0.9rem;">
+              <label>Comentário do mês (análise do mercado — muda todo mês)</label>
+              <textarea id="gen-comentario" rows="6" placeholder="ex: Junho foi um mês onde a volatilidade..." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'IBM Plex Sans',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
+            </div>
+            <div class="upload-field" style="margin-bottom:0.9rem;">
+              <label>Parágrafo — carteira ACIMA do CDI</label>
+              <textarea id="gen-acima" rows="3" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'IBM Plex Sans',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
+            </div>
+            <div class="upload-field" style="margin-bottom:1.1rem;">
+              <label>Parágrafo — carteira ABAIXO do CDI</label>
+              <textarea id="gen-abaixo" rows="3" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'IBM Plex Sans',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
+            </div>
+            <button class="btn-upload" onclick="gerarTemplatesDoMes()" style="background:var(--gold);color:var(--navy-dark);">⚡ Gerar os 7 templates</button>
+          </div>
+
           <div id="templateAccordion" style="display:flex;flex-direction:column;gap:1px;background:var(--border-dim);border:1px solid var(--border-dim);"></div>
 
           <div style="display:flex;gap:0.8rem;margin-top:1.2rem;flex-wrap:wrap;">
@@ -1823,6 +1851,17 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       updated_at: new Date().toISOString(),
       updated_by: currentUser.id
     }));
+    // Salva também os campos do gerador (texto do mês) como linhas extras
+    GEN_FIELD_IDS.forEach(fieldId => {
+      rows.push({
+        id: fieldId.replace('-','_'),
+        nome: 'Gerador — ' + fieldId.replace('gen-',''),
+        assunto: '',
+        corpo: (document.getElementById(fieldId)?.value || '').trim(),
+        updated_at: new Date().toISOString(),
+        updated_by: currentUser.id
+      });
+    });
 
     const { error } = await sb.from('email_templates').upsert(rows, { onConflict: 'id' });
     if (error) {
@@ -1846,15 +1885,69 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
   async function loadTemplates() {
     const { data, error } = await sb.from('email_templates').select('*');
-    if (error || !data) return;
+    if (error || !data) { fillGenFields(); return; }
     data.forEach(row => {
       templateData[row.id] = { assunto: row.assunto || '', corpo: row.corpo || '' };
     });
     buildTemplateAccordion();
+    fillGenFields();
     const dot = document.getElementById('templateSaveDot');
     const txt = document.getElementById('templateSaveText');
     if (dot) dot.className = 'save-dot saved';
     if (txt) txt.textContent = data.length > 0 ? 'Sincronizado com Supabase' : '';
+  }
+
+  // ── GERADOR DE TEMPLATES DO MÊS ──
+  // Blocos fixos que raramente mudam; o comentário do mês é o único texto novo a cada envio.
+  const GEN_FIXO = {
+    saudacao: 'Olá, <strong>{{nome}}</strong>,\n\nBom dia!',
+    pagamento: {
+      mensal:        'O valor para pagamento do mês é de <strong>{{valor}}</strong>. Pix 31988381101 . Eduardo Barbosa Horta dos Santos.',
+      trimestral:    'Fechamos mais um trimestre. O valor para pagamento é de <strong>{{valor}}</strong>. Pix 31988381101 . Eduardo Barbosa Horta dos Santos.',
+      cobranca:      'Não identificamos o pagamento referente ao mês passado. Caso tenha realizado, favor enviar comprovante. Caso contrário, o valor para pagamento do mês é de <strong>{{valor}}</strong>. Pix <strong>31988381101</strong>. Eduardo Barbosa Horta dos Santos.',
+      personalizado: 'O valor para pagamento do mês é de <strong>{{valor}}</strong>.\nPIX: contato@ehinvestimentos.com.br\nNome da conta: Elisa Schulz da Costa Mazzo'
+    },
+    encerramento: 'Ficamos à disposição para maiores esclarecimentos.\n\n<em>PARA INFORMAÇÕES MAIS DETALHADAS SOBRE O MERCADO, LEIA NOSSA CARTA MENSAL.</em>\n\nMuito obrigado e um abraço,\n\n{{btn_relatorio}}'
+  };
+  const GEN_DEFAULTS = {
+    acima:  '<strong>Sua carteira tem uma boa diversificação e proteção que ajudou bem a superar o CDI de forma satisfatória. Segue bem no acumulado.</strong>',
+    abaixo: '<strong>Algumas diversificações na sua carteira seguraram um pouco o resultado, ficando o rendimento levemente abaixo do CDI. Isso não compromete o trabalho e seguimos com a estratégia de longo prazo e retornos médios. O resultado segue bem no acumulado.</strong>'
+  };
+  const GEN_FIELD_IDS = ['gen-assunto','gen-comentario','gen-acima','gen-abaixo'];
+
+  function fillGenFields() {
+    const g = id => document.getElementById(id);
+    if (g('gen-assunto')    && !g('gen-assunto').value)    g('gen-assunto').value    = templateData['gen_assunto']?.corpo    || '';
+    if (g('gen-comentario') && !g('gen-comentario').value) g('gen-comentario').value = templateData['gen_comentario']?.corpo || '';
+    if (g('gen-acima')      && !g('gen-acima').value)      g('gen-acima').value      = templateData['gen_acima']?.corpo      || GEN_DEFAULTS.acima;
+    if (g('gen-abaixo')     && !g('gen-abaixo').value)     g('gen-abaixo').value     = templateData['gen_abaixo']?.corpo     || GEN_DEFAULTS.abaixo;
+  }
+
+  function gerarTemplatesDoMes() {
+    const assunto    = document.getElementById('gen-assunto').value.trim();
+    const comentario = document.getElementById('gen-comentario').value.trim();
+    const acima      = document.getElementById('gen-acima').value.trim()  || GEN_DEFAULTS.acima;
+    const abaixo     = document.getElementById('gen-abaixo').value.trim() || GEN_DEFAULTS.abaixo;
+    if (!comentario) { showFb('templateFeedback', 'Escreva o comentário do mês antes de gerar.', 'error'); return; }
+    const junta = parts => parts.filter(Boolean).join('\n\n');
+    const gerados = {
+      mensal_acima:      junta([GEN_FIXO.saudacao, comentario, acima,  GEN_FIXO.pagamento.mensal,        GEN_FIXO.encerramento]),
+      mensal_abaixo:     junta([GEN_FIXO.saudacao, comentario, abaixo, GEN_FIXO.pagamento.mensal,        GEN_FIXO.encerramento]),
+      trimestral_acima:  junta([GEN_FIXO.saudacao, comentario, acima,  GEN_FIXO.pagamento.trimestral,    GEN_FIXO.encerramento]),
+      trimestral_abaixo: junta([GEN_FIXO.saudacao, comentario, abaixo, GEN_FIXO.pagamento.trimestral,    GEN_FIXO.encerramento]),
+      cobranca_acima:    junta([GEN_FIXO.saudacao, comentario, acima,  GEN_FIXO.pagamento.cobranca,      GEN_FIXO.encerramento]),
+      cobranca_abaixo:   junta([GEN_FIXO.saudacao, comentario, abaixo, GEN_FIXO.pagamento.cobranca,      GEN_FIXO.encerramento]),
+      personalizado:     junta([GEN_FIXO.saudacao, comentario, acima,  GEN_FIXO.pagamento.personalizado, GEN_FIXO.encerramento]),
+    };
+    Object.entries(gerados).forEach(([tplId, corpo]) => {
+      const bodyEl = document.getElementById('body-' + tplId);
+      if (bodyEl) bodyEl.value = corpo;
+      if (assunto) { const s = document.getElementById('subj-' + tplId); if (s) s.value = assunto; }
+      const statusEl = document.getElementById('tpl-status-' + tplId);
+      if (statusEl) statusEl.textContent = '● gerado — revisar e salvar';
+    });
+    markTplUnsaved();
+    showFb('templateFeedback', '✓ 7 templates gerados (Offshore mantido). Revise abaixo e clique em "Salvar todos os templates".', 'success');
   }
 
   function addClientRow(data = {}) {
@@ -1913,6 +2006,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       <td><button onclick="removeRow('${id}')" style="background:none;border:none;color:#e05555;cursor:pointer;font-size:1rem;padding:0.3rem;">✕</button></td>`;
     document.getElementById('clientsTableBody').appendChild(tr);
     // Initialize template button label from data.template
+    // (usa tplDdSelect, que atualiza rótulo do botão, item selecionado e valor oculto —
+    //  antes procurava um elemento "tpl-btn-" inexistente e o rótulo ficava sempre "Mensal")
     if (data.template && data.template !== 'mensal') {
       const tplDef = {
         mensal:       { label:'Mensal',           color:'#4caf82' },
@@ -1922,12 +2017,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         personalizado:{ label:'Personalizado',     color:'#8A9BB8' },
       };
       const def = tplDef[data.template];
-      if (def) {
-        const btn = document.getElementById('tpl-btn-' + id);
-        if (btn) btn.innerHTML = `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${def.color};margin-right:6px;vertical-align:middle;"></span>${def.label}`;
-        const hiddenInput = document.getElementById('tpl-val-' + id);
-        if (hiddenInput) hiddenInput.value = data.template;
-      }
+      if (def) tplDdSelect(id, data.template, def.label, def.color);
     }
     updateBadge(id);
   }
@@ -2054,12 +2144,14 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
   function buildHtmlEmail(text) {
     // Convert plain text with basic HTML tags to a full HTML email
-    // Replace newlines with <br> for lines not already HTML
-    const lines = text.split('\n');
+    // Normaliza: 2+ linhas em branco seguidas viram uma só (templates antigos usavam espaço duplo)
+    const normalized = (text || '').replace(/\r/g,'').replace(/\n{3,}/g,'\n\n');
+    const lines = normalized.split('\n');
     const body = lines.map(line => {
       if (line.trim() === '') return '<br/>';
-      // If line already contains HTML tags, leave it
-      if (/<[a-z][\s\S]*>/i.test(line)) return line;
+      // Elementos de bloco (p, div, hr...) já quebram linha sozinhos; o resto (inclusive
+      // linhas com <strong>/<em>) precisa de <br/> — antes linhas com qualquer tag ficavam sem quebra
+      if (/^\s*<(p|div|hr|table|ul|ol|h[1-6]|blockquote)[\s>\/]/i.test(line.trim())) return line;
       return line + '<br/>';
     }).join('\n');
 
@@ -2101,13 +2193,14 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       nome:           c.nome,
       desempenho:     c.desempenho,
       valor:          c.valor,
+      frequencia:     c.template || 'mensal',
       link_relatorio: c.link_relatorio || '',
       pdf_filename:   c.pdf_filename || '',
       status:         'pendente',
       created_by:     currentUser.id,
       created_at:     new Date().toISOString()
     }));
-    // Note: template selection is per-row in memory only, not persisted in rascunho
+    // O template escolhido é persistido na coluna "frequencia" do rascunho
 
     const { error } = await sb.from('email_disparos').insert(rows);
     if (error) { showFb('sendFeedback','Erro ao salvar: ' + error.message,'error'); return; }
@@ -2144,7 +2237,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     if (!data || !data.length) return;
     clearAllRows();
     for (const r of data) {
-      addClientRow({ email: r.email, nome: r.nome, desempenho: r.desempenho, frequencia: r.frequencia, valor: r.valor });
+      addClientRow({ email: r.email, nome: r.nome, desempenho: r.desempenho, template: r.frequencia || 'mensal', valor: r.valor });
       // Restore PDF link in hidden input after row is added
       const id = clientRows[clientRows.length - 1];
       const urlInput = document.getElementById('pdf-url-' + id);
@@ -2217,6 +2310,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   document.addEventListener('paste', e => {
     if (!document.getElementById('view-emails')?.classList.contains('active')) return;
     if (!document.getElementById('tab-disparar')?.classList.contains('active')) return;
+    // Colar dentro de um campo (ex: corrigir o email de um cliente) segue o comportamento
+    // normal do navegador — NÃO importa a tabela nem apaga as linhas existentes
+    if (e.target && e.target.closest && e.target.closest('input, textarea, select')) return;
     const text = e.clipboardData.getData('text/plain');
     if (!text) return;
     const lines = text.trim().split('\n').filter(l => l.trim());
@@ -2224,7 +2320,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const TPL_MAP = {
       'mensal':'mensal', 'trimestral':'trimestral',
       'cobrança':'cobranca', 'cobranca':'cobranca',
-      'offshore':'offshore', 'personalizado':'personalizado',
+      'offshore':'offshore', 'carteiraoffshore':'offshore',
+      'personalizado':'personalizado', 'emailpersonalizado':'personalizado',
     };
 
     const hasHeader = lines[0].toLowerCase().includes('email') || lines[0].toLowerCase().includes('nome');
@@ -2236,21 +2333,23 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       const cols = line.split('\t').map(c => c.trim());
       if (cols.length < 2) return;
 
-      // Find template value by scanning ALL columns
+      // Localiza a coluna do template (se existir) e REMOVE-A das demais colunas,
+      // para que o "Valor do Servi\u00e7o" seja lido da coluna certa
+      // (formato: Email | Nome | % do CDI | Template | Valor do Servi\u00e7o)
       let tplVal = 'mensal';
-      for (const col of cols) {
-        const key = col.toLowerCase().trim().replace(/\s+/g, '');
-        if (TPL_MAP[key]) { tplVal = TPL_MAP[key]; break; }
-        // Also try normalized (remove accents)
-        const norm = col.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-        if (TPL_MAP[norm]) { tplVal = TPL_MAP[norm]; break; }
+      let rest = cols;
+      for (let ci = 0; ci < cols.length; ci++) {
+        const norm = cols[ci].toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'');
+        const key  = cols[ci].toLowerCase().trim().replace(/\s+/g,'');
+        const hit  = TPL_MAP[key] || TPL_MAP[norm];
+        if (hit) { tplVal = hit; rest = cols.filter((_, i) => i !== ci); break; }
       }
 
       addClientRow({
-        email:      cols[0] || '',
-        nome:       cols[1] || '',
-        desempenho: cols[2] || '',
-        valor:      cols[3] || '',
+        email:      rest[0] || '',
+        nome:       rest[1] || '',
+        desempenho: rest[2] || '',
+        valor:      rest[3] || '',
         template:   tplVal
       });
       added++;
