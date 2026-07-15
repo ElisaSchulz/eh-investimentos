@@ -3413,9 +3413,11 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     { cnpj:"29.250.121/0001-73", nome:"DAYCOVAL CLASSIC 30 FI RF CP" },
     { cnpj:"37.806.055/0001-01", nome:"EVEREST HIGH YIELD FIC FIM CP E1" },
     { cnpj:"38.065.069/0001-76", nome:"EXES FIC FIM CP" },
+    // SRM Exodus: no extrato as séries vêm todas com -20, mas a Elisa usa CNPJs distintos
+    // de propósito na planilha dela (a cota varia por série) — mantemos os CNPJs dela
     { cnpj:"55.912.292/0001-20", nome:"FIC FIDC SRM EXODUS SR2" },
-    { cnpj:"55.912.292/0001-20", nome:"FIC FIDC SRM EXODUS SR3" },
-    { cnpj:"55.912.292/0001-20", nome:"FIC FIDC SRM EXODUS SR4" },
+    { cnpj:"55.912.292/0001-21", nome:"FIC FIDC SRM EXODUS SR3" },
+    { cnpj:"55.912.292/0001-22", nome:"FIC FIDC SRM EXODUS SR4" },
     { cnpj:"49.343.067/0001-18", nome:"FIP IE BTG ENERGY" },
     { cnpj:"63.342.714/0001-06", nome:"FRANKLIN BSP CRÉDITO ESTRUTURADO GLOBAL" },
     { cnpj:"28.320.600/0001-56", nome:"FRANKLIN CLEARBRIDGE AÇÕES EUA GROWTH" },
@@ -3529,7 +3531,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     s = s.replace(/\bHIGH YIELD\b/g, 'HY').replace(/\bBOSSA NOVA\b/g, 'BOSSANOVA')
          .replace(/\bBN\b/g, 'BOSSANOVA').replace(/\bSNR\b/g, 'SENIOR')
          .replace(/\bADV\b/g, 'ADVISORY').replace(/\bPOS FIXADO\b/g, 'POSFIXADO');
-    s = s.replace(/\b([A-Z]{1,3}) (\d{1,3})\b/g, '$1$2');
+    // Cola prefixo de série ("SR 2" -> SR2, "SEN 3" -> SEN3) e letra isolada ("M 8" -> M8).
+    // NÃO cola palavras genéricas ("LTD 4" fica "LTD","4" — o 4 é o número da série)
+    s = s.replace(/\b(SR|SEN) (\d{1,3})\b/g, '$1$2').replace(/\b([A-Z]) (\d{1,3})\b/g, '$1$2');
     return s.split(' ').filter(Boolean);
   }
 
@@ -3595,9 +3599,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   const ctMasterTokens = CT_FUNDOS_MASTER.map(m => ({ ...m, tokens: ctNormName(m.nome) }));
 
   // ── Modelo "Para Colar": colunas na ordem exata da planilha da Elisa (exemplo.xlsx) ──
-  // Linha 1 = nomes, linha 2 = CNPJs, linha 3 = data + cotas (é a linha que se copia).
-  // Os CNPJs abaixo são os DA PLANILHA (SRM SR3/SR4 usam -21/-22 só para distinguir colunas;
-  // no extrato as três séries vêm com -20 — por isso o alinhamento também compara a série do nome).
+  // Linha 1 = nomes, linha 2 = CNPJs, linhas 3+ = uma linha por data de cota (copiar e colar).
+  // Os CNPJs abaixo são os DA PLANILHA (SRM SR3/SR4 usam -21/-22 de propósito — a cota varia
+  // por série; no extrato as três séries vêm com -20, por isso o alinhamento também compara
+  // a série do nome: SEN 2 -> SR2, SEN 3 -> SR3, "- 4" -> SR4).
   const CT_PASTE_TEMPLATE = [
     { cnpj:"61.700.255/0001-51", nome:"AGROFIN MILENIO FIAGRO" },
     { cnpj:"54.869.435/0001-04", nome:"ARX CHILLON RECEBÍVEIS FII" },
@@ -3831,18 +3836,26 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     ws2['!cols'] = [20, 48, 40, 12, 16].map(w => ({ wch: w }));
     XLSX.utils.book_append_sheet(wb, ws2, 'Fundos Únicos');
 
-    // Aba "Para Colar": mesmo layout da planilha da Elisa (linha 1 nomes, linha 2 CNPJs,
-    // linha 3 data + cotas) — copiar a linha 3 e colar na planilha de destino
-    const row1 = [''], row2 = [''], row3 = [ctMostCommonDate()];
+    // Aba "Para Colar": mesmo layout da planilha da Elisa (linha 1 nomes, linha 2 CNPJs).
+    // A partir da linha 3, UMA LINHA POR DATA DE COTA: cada cota aparece na linha da sua
+    // própria data (ex: Brasol com cota de 29/06 sai na linha 29/06, os demais na de 30/06).
+    const row1 = [''], row2 = [''];
     const usados = new Set();
+    const hits = [];
     for (const col of CT_PASTE_TEMPLATE) {
       row1.push(col.nome);
       row2.push(col.cnpj);
       const hit = ctMatchTemplateCol(col, uniq);
-      row3.push(hit ? hit.cota : '');
+      hits.push(hit);
       if (hit) usados.add(hit.cnpj + '|' + ctSquash(hit.fundo));
     }
-    const data3 = [row1, row2, row3];
+    const data3 = [row1, row2];
+    const dtKey = d => { const p = (d || '').split('/'); return p.length === 3 ? p[2] + p[1] + p[0] : d; };
+    const datas = [...new Set(hits.filter(Boolean).map(h => h.dataCota))].sort((a, b) => dtKey(a).localeCompare(dtKey(b)));
+    if (!datas.length) data3.push([ctMostCommonDate()]);
+    for (const d of datas) {
+      data3.push([d, ...hits.map(h => (h && h.dataCota === d) ? h.cota : '')]);
+    }
     const fora = uniq.filter(r => !usados.has(r.cnpj + '|' + ctSquash(r.fundo)));
     if (fora.length) {
       data3.push([], ['Fundos encontrados nos extratos mas sem coluna no modelo:']);
