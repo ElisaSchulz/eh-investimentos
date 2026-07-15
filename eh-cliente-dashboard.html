@@ -2415,7 +2415,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       // (formato: Email | Nome | % do CDI | Template | Valor do Servi\u00e7o)
       let tplVal = 'mensal';
       let rest = cols;
-      for (let ci = 0; ci < cols.length; ci++) {
+      // Começa em ci=2 para nunca confundir Email/Nome com template
+      // (ex: cliente chamada "Elisa" não deve ativar o template "Elisa (PIX Elisa)")
+      for (let ci = 2; ci < cols.length; ci++) {
         const norm = cols[ci].toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'');
         const key  = cols[ci].toLowerCase().trim().replace(/\s+/g,'');
         const hit  = TPL_MAP[key] || TPL_MAP[norm];
