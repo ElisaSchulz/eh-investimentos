@@ -3545,10 +3545,36 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
   function ctTokenMatch(a, b) {
     if (a === b) return true;
-    const sa = a.match(/^(?:SR|SEN)(\d+)$/), sb = b.match(/^(?:SR|SEN)(\d+)$/);
+    // séries equivalentes: SEN3 == SR3 == 3
+    const sa = a.match(/^(?:SR|SEN)?(\d+)$/), sb = b.match(/^(?:SR|SEN)?(\d+)$/);
     if (sa && sb) return sa[1] === sb[1];
     if (a.length >= 3 && b.length >= 3 && (a.startsWith(b) || b.startsWith(a))) return true;
     return false;
+  }
+
+  // Números de série presentes no nome (SR2, SEN 3, "- 4", 30, 90, 180...)
+  function ctSeriesSet(tokens) {
+    const s = new Set();
+    for (const t of tokens) {
+      const m = t.match(/^(?:SR|SEN)(\d+)$/) || t.match(/^(\d+)$/);
+      if (m) s.add(m[1]);
+    }
+    return s;
+  }
+  // Conflito: ambos os nomes têm número de série e nenhum coincide (SR2 vs SEN 3)
+  function ctSeriesConflict(ta, tb) {
+    const a = ctSeriesSet(ta), b = ctSeriesSet(tb);
+    if (!a.size || !b.size) return false;
+    return ![...a].some(x => b.has(x));
+  }
+
+  // Marca = primeiro token não estrutural. Um match só vale se a marca de um dos nomes
+  // aparecer no outro (evita "XP Renda Imobiliária" casar com "Manatí Renda Imobiliária")
+  function ctBrand(tokens) { return tokens.find(t => !CT_STOP_TOKENS.has(t)) || tokens[0]; }
+  function ctBrandCompatible(ta, tb) {
+    const ba = ctBrand(ta), bb = ctBrand(tb);
+    if (!ba || !bb) return true;
+    return tb.some(t => ctTokenMatch(ba, t)) || ta.some(t => ctTokenMatch(bb, t));
   }
 
   function ctMatchScore(tokensA, tokensB) {
@@ -3568,11 +3594,78 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
   const ctMasterTokens = CT_FUNDOS_MASTER.map(m => ({ ...m, tokens: ctNormName(m.nome) }));
 
+  // ── Modelo "Para Colar": colunas na ordem exata da planilha da Elisa (exemplo.xlsx) ──
+  // Linha 1 = nomes, linha 2 = CNPJs, linha 3 = data + cotas (é a linha que se copia).
+  // Os CNPJs abaixo são os DA PLANILHA (SRM SR3/SR4 usam -21/-22 só para distinguir colunas;
+  // no extrato as três séries vêm com -20 — por isso o alinhamento também compara a série do nome).
+  const CT_PASTE_TEMPLATE = [
+    { cnpj:"61.700.255/0001-51", nome:"AGROFIN MILENIO FIAGRO" },
+    { cnpj:"54.869.435/0001-04", nome:"ARX CHILLON RECEBÍVEIS FII" },
+    { cnpj:"54.511.022/0001-45", nome:"AZ QUEST INFRA-YIELD IV FIP INFRA" },
+    { cnpj:"61.258.419/0001-32", nome:"AZ-AXS ENERGIA FIP-EI RL" },
+    { cnpj:"55.219.936/0001-08", nome:"BLUEOAK SPECIAL SIT. I FIC FIP" },
+    { cnpj:"61.250.889/0001-50", nome:"BRASIL ENERGIA FII RESP LIMITADA" },
+    { cnpj:"63.104.203/0001-48", nome:"BRASOL ENERGIA RENOVÁVEL" },
+    { cnpj:"60.027.987/0001-60", nome:"BTG CREDITO IMOBILIARIO CDI" },
+    { cnpj:"60.922.008/0001-37", nome:"BTG PACTUAL PRIME LOGÍSTICA FII" },
+    { cnpj:"57.469.492/0001-86", nome:"BTG PACTUAL REAL STATE HEDGE FUND" },
+    { cnpj:"55.912.292/0001-20", nome:"FIC FIDC SRM EXODUS SR2" },
+    { cnpj:"55.912.292/0001-21", nome:"FIC FIDC SRM EXODUS SR3" },
+    { cnpj:"55.912.292/0001-22", nome:"FIC FIDC SRM EXODUS SR4" },
+    { cnpj:"49.343.067/0001-18", nome:"FIP IE BTG ENERGY" },
+    { cnpj:"64.118.207/0001-48", nome:"JIVEMAUÁ BN CRÉDITO SEC II FIDC SUB. SNR" },
+    { cnpj:"63.441.263/0001-56", nome:"MANATI RENDA IMOBILIÁRIA" },
+    { cnpj:"43.741.195/0001-33", nome:"MAUÁ CAPITAL CRÉDITO ESTRUTURADO" },
+    { cnpj:"65.511.886/0001-83", nome:"MAUÁ CAPITAL CRÉDITO LIQUIDEZ 180 FII" },
+    { cnpj:"62.526.654/0001-00", nome:"MAUÁ LAJES CORPORATIVAS FEEDER FII" },
+    { cnpj:"62.603.652/0001-78", nome:"MAUÁ PLANTA FII RL" },
+    { cnpj:"46.153.220/0001-56", nome:"NEWAVE ENERGIA I ADV FIP" },
+    { cnpj:"63.932.359/0001-17", nome:"PACKEM SR2 FIAGRO CETIP" },
+    { cnpj:"65.813.874/0001-03", nome:"POLO CAPITAL YIELD" },
+    { cnpj:"57.593.613/0001-05", nome:"RIZA EQUITUS REAL ESTATE FII RL" },
+    { cnpj:"64.299.705/0001-34", nome:"ROOT CAPITAL FICUS FIDC RL" },
+    { cnpj:"52.746.497/0001-95", nome:"SCORE EQI PREC FIDC RESPONSABILIDADE LIM" },
+    { cnpj:"60.743.809/0001-35", nome:"VALORA AGRO RENDA SR1 FIAGRO" },
+    { cnpj:"60.743.809/0001-36", nome:"VALORA AGRO RENDA SR2 FIAGRO" },
+    { cnpj:"64.125.652/0001-35", nome:"VALORA INFRA DÍVIDA CDI" },
+    { cnpj:"64.124.715/0001-39", nome:"VALORA INFRA DÍVIDA PRÉ" },
+    { cnpj:"53.779.703/0001-26", nome:"XP CREDIT OPPORTUNITIES FIDC" },
+    { cnpj:"61.424.730/0001-04", nome:"XP RENDA IMOBILIÁRIA FEEDER FII RL" },
+    { cnpj:"39.669.815/0001-01", nome:"XP SELECTION ALTERNATIVO FIP MULTI - CLASSE A" },
+    { cnpj:"56.873.069/0001-84", nome:"EV ENERGIA FIC FIP INFRA RESP LIMITADA" },
+  ];
+
+  // Encontra a cota para uma coluna do modelo: CNPJ igual (sem conflito de série no nome);
+  // se não achar, busca aproximada por nome com os mesmos critérios da lista mestre.
+  function ctMatchTemplateCol(col, uniq) {
+    const colTokens = ctNormName(col.nome);
+    const scoreOf = r => ctMatchScore(colTokens, ctNormName(r.fundo));
+    const cands = uniq.filter(r => r.cnpj === col.cnpj && !ctSeriesConflict(colTokens, ctNormName(r.fundo)));
+    if (cands.length === 1) return cands[0];
+    if (cands.length > 1) return cands.reduce((a, b) => scoreOf(b) > scoreOf(a) ? b : a);
+    let best = null, bestS = 0, second = 0;
+    for (const r of uniq) {
+      const rt = ctNormName(r.fundo);
+      if (ctSeriesConflict(colTokens, rt) || !ctBrandCompatible(colTokens, rt)) continue;
+      const s = scoreOf(r);
+      if (s > bestS) { second = bestS; bestS = s; best = r; }
+      else if (s > second) { second = s; }
+    }
+    return (best && bestS >= 0.55 && (bestS - second) >= 0.03) ? best : null;
+  }
+
+  function ctMostCommonDate() {
+    const c = {}; let best = '', n = 0;
+    for (const r of ctRows) { c[r.dataCota] = (c[r.dataCota] || 0) + 1; if (c[r.dataCota] > n) { n = c[r.dataCota]; best = r.dataCota; } }
+    return best;
+  }
+
   function ctMasterLookup(fundName) {
     const tokens = ctNormName(fundName);
     if (!tokens.length) return null;
     let best = null, bestScore = 0, second = 0;
     for (const m of ctMasterTokens) {
+      if (ctSeriesConflict(tokens, m.tokens) || !ctBrandCompatible(tokens, m.tokens)) continue;
       const s = ctMatchScore(tokens, m.tokens);
       if (s > bestScore) { second = bestScore; bestScore = s; best = m; }
       else if (s > second) { second = s; }
@@ -3737,6 +3830,28 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const ws2 = XLSX.utils.aoa_to_sheet(data2);
     ws2['!cols'] = [20, 48, 40, 12, 16].map(w => ({ wch: w }));
     XLSX.utils.book_append_sheet(wb, ws2, 'Fundos Únicos');
+
+    // Aba "Para Colar": mesmo layout da planilha da Elisa (linha 1 nomes, linha 2 CNPJs,
+    // linha 3 data + cotas) — copiar a linha 3 e colar na planilha de destino
+    const row1 = [''], row2 = [''], row3 = [ctMostCommonDate()];
+    const usados = new Set();
+    for (const col of CT_PASTE_TEMPLATE) {
+      row1.push(col.nome);
+      row2.push(col.cnpj);
+      const hit = ctMatchTemplateCol(col, uniq);
+      row3.push(hit ? hit.cota : '');
+      if (hit) usados.add(hit.cnpj + '|' + ctSquash(hit.fundo));
+    }
+    const data3 = [row1, row2, row3];
+    const fora = uniq.filter(r => !usados.has(r.cnpj + '|' + ctSquash(r.fundo)));
+    if (fora.length) {
+      data3.push([], ['Fundos encontrados nos extratos mas sem coluna no modelo:']);
+      data3.push(['Data Cota', 'Fundo', 'CNPJ', 'Valor Cota']);
+      fora.forEach(r => data3.push([r.dataCota, r.fundo, r.cnpj, r.cota]));
+    }
+    const ws3 = XLSX.utils.aoa_to_sheet(data3);
+    ws3['!cols'] = [{ wch: 12 }, ...CT_PASTE_TEMPLATE.map(() => ({ wch: 15 }))];
+    XLSX.utils.book_append_sheet(wb, ws3, 'Para Colar');
 
     XLSX.writeFile(wb, `cotas_fundos_${new Date().toISOString().slice(0,10)}.xlsx`);
   }
