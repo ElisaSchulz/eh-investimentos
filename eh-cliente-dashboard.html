@@ -626,6 +626,10 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 017 7h2"/><path d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
     Extratos → Excel
   </button>
+  <button class="mobile-drawer-link" id="mobileCotasBtn" style="display:none;" onclick="showView('cotas',this);closeDrawer()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+    Cotas dos Fundos
+  </button>
   <button class="mobile-drawer-link" id="mobileClientesBtn" style="display:none;" onclick="showView('clientes',this);closeDrawer()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
     Clientes
@@ -678,6 +682,10 @@
     <button class="sidebar-link" onclick="showView('extratos',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 017 7h2"/><path d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
       Extratos → Excel
+    </button>
+    <button class="sidebar-link" onclick="showView('cotas',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+      Cotas dos Fundos
     </button>
     <button class="sidebar-link" onclick="showView('emails',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -1183,6 +1191,50 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       </div>
     </div>
 
+    <!-- COTAS DOS FUNDOS VIEW (admin only) -->
+    <div class="view" id="view-cotas">
+      <div class="welcome-banner">
+        <h2>Cotas <em>dos Fundos</em></h2>
+        <p>Extraia o CNPJ, nome e valor da cota dos fundos de investimento a partir dos extratos dos clientes — XP (Posição Consolidada) e EQI/BTG (Extrato da Conta Investimento). A corretora é detectada automaticamente em cada PDF.</p>
+      </div>
+
+      <!-- Upload -->
+      <div class="upload-panel">
+        <h3>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          1. Extratos PDF (XP e EQI/BTG juntos)
+        </h3>
+        <div class="extrato-upload-zone" id="ctUploadZone">
+          <input type="file" id="ctFileInput" accept=".pdf" multiple />
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--gold);margin:0 auto 0.6rem;display:block;"><path d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
+          <div style="font-size:0.85rem;color:var(--gray-light);margin-bottom:0.3rem;">Arraste os PDFs aqui</div>
+          <div style="font-size:0.68rem;color:var(--gray);">ou clique para selecionar · vários arquivos aceitos</div>
+        </div>
+        <div class="file-list-ext" id="ctFileList"></div>
+      </div>
+
+      <!-- Process -->
+      <button class="btn-process-ext" id="ctBtnProcess" onclick="ctProcessAll()" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+        <span id="ctBtnLabel">Extrair cotas</span>
+      </button>
+
+      <div class="ext-status-box" id="ctStatusBox"></div>
+
+      <!-- Preview -->
+      <div class="ext-preview-section" id="ctPreviewSection">
+        <div class="section-header"><div class="section-title">2. Preview & Download</div></div>
+        <div class="ext-chips" id="ctSummaryChips"></div>
+        <div class="ext-preview-wrap">
+          <table class="ext-preview-table" id="ctPreviewTable"></table>
+        </div>
+        <button class="btn-download-ext" id="ctBtnDownload" onclick="ctDownloadExcel()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Baixar Excel
+        </button>
+      </div>
+    </div>
+
   </div>
 </main>
 
@@ -1258,6 +1310,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       document.getElementById('mobileAdminSection').style.display = 'block';
       document.getElementById('mobileUploadBtn').style.display = 'flex';
       document.getElementById('mobileExtratosBtn').style.display = 'flex';
+      document.getElementById('mobileCotasBtn').style.display = 'flex';
       document.getElementById('mobileClientesBtn').style.display = 'flex';
       document.getElementById('mobileEmailsBtn').style.display = 'flex';
     }
@@ -1300,11 +1353,12 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.querySelectorAll('.mobile-drawer-link').forEach(l => l.classList.remove('active'));
     document.getElementById('view-' + viewId).classList.add('active');
     if (btn) btn.classList.add('active');
-    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', extratos:'Extratos → Excel', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' };
+    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', extratos:'Extratos → Excel', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' };
     const topbar = document.getElementById('topbarTitle');
     if (topbar) topbar.textContent = titles[viewId] || viewId;
     if (viewId === 'emails') { loadTemplates().then(() => buildTemplateAccordion()); if (clientRows.length === 0) addClientRow(); loadRascunho(); }
     if (viewId === 'extratos') extLoadMappingFromSupabase();
+    if (viewId === 'cotas') ctLoadXpMapping();
     if (viewId === 'clientes') loadClientesView();
     if (viewId === 'perfil') populatePerfil();
   }
@@ -3160,7 +3214,302 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     XLSX.writeFile(wb,`extratos_${extCurrentBroker.toLowerCase()}_${today}.xlsx`);
   }
 
+  // ══════════ COTAS DOS FUNDOS (admin) ══════════
+  // Extrai CNPJ, nome e valor da cota dos fundos de investimento dos extratos.
+  // BTG: seção "Fundo de Investimento - Posição - Portfólio de fundos" (nome + CNPJ + Cotação Atual).
+  // XP:  tabelas "Ativo | Data Cota | Valor Cota | Qtd Cotas" — o extrato XP não traz CNPJ,
+  //      então o CNPJ é completado pela tabela de mapeamento XP (mesma do Extratos → Excel).
 
+  let ctSelectedFiles = [];
+  let ctRows = [];
+  let ctXpMapping = null;
+
+  async function ctLoadXpMapping() {
+    try {
+      const { data, error } = await sb.from('cnpj_mapping_xp').select('*');
+      if (error) throw error;
+      ctXpMapping = (data && data.length > 0) ? data.map(r => ({ key: r.key, cnpj: r.cnpj || '' })) : DEFAULT_MAPPING_XP;
+    } catch(e) {
+      ctXpMapping = DEFAULT_MAPPING_XP;
+    }
+  }
+
+  // ── Extração: linhas por coordenada Y, células ordenadas por X ──
+  async function ctExtractPages(file) {
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+    const pages = [];
+    for (let p = 1; p <= pdf.numPages; p++) {
+      const page = await pdf.getPage(p);
+      const tc = await page.getTextContent();
+      const rows = [];
+      for (const it of tc.items) {
+        if (!it.str || !it.str.trim()) continue;
+        const y = Math.round(it.transform[5]);
+        let row = rows.find(r => Math.abs(r.y - y) <= 2);
+        if (!row) { row = { y, cells: [] }; rows.push(row); }
+        row.cells.push({ x: it.transform[4], s: it.str });
+      }
+      rows.sort((a, b) => b.y - a.y);
+      pages.push(rows.map(r => ctNormLine(r.cells.sort((a, b) => a.x - b.x).map(c => c.s).join(' '))));
+    }
+    return pages;
+  }
+
+  // Normaliza uma linha: remove  , colapsa espaços e cola pontuação entre dígitos
+  // ("550 . 626313" -> "550.626313", "30 / 06 / 2026" -> "30/06/2026", "0001 - 77" -> "0001-77")
+  function ctNormLine(s) {
+    s = s.replace(/ /g, '').replace(/\s+/g, ' ').trim();
+    let prev;
+    do { prev = s; s = s.replace(/(\d)\s*([.,\/-])\s*(\d)/g, '$1$2$3'); } while (s !== prev);
+    return s.replace(/R\s*\$/g, 'R$');
+  }
+  function ctSquash(s) { return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ''); }
+  function ctBrNum(s) { return parseFloat(s.replace(/\./g, '').replace(',', '.')); }
+  function ctDecimalsBR(s) { return (s.split(',')[1] || '').length; }
+  function ctCleanName(name) {
+    return extFixFragments(name).replace(/\(\s+/g, '(').replace(/\s+\)/g, ')').replace(/\s+/g, ' ').trim();
+  }
+  function ctFullYear(d) {
+    const p = d.split('/');
+    return p[2].length === 2 ? `${p[0]}/${p[1]}/20${p[2]}` : d;
+  }
+
+  function ctParseDoc(pages) {
+    const all = pages.flat();
+    const sq = ctSquash(all.join(' '));
+    const kind = sq.includes('portfoliodefundos') ? 'BTG' : (sq.includes('valorcota') && sq.includes('qtdcotas')) ? 'XP' : 'DESCONHECIDO';
+    const out = { kind, cliente: '', conta: '', funds: [] };
+    if (kind === 'BTG') ctParseBTG(pages, all, out);
+    else if (kind === 'XP') ctParseXPCotas(pages, all, out);
+    return out;
+  }
+
+  function ctParseBTG(pages, all, out) {
+    // Cliente e conta na página 1
+    const p1 = pages[0] || [];
+    for (let i = 0; i < p1.length; i++) {
+      if (/^CPF[\s\d.\-]/.test(p1[i])) {
+        for (let j = i - 1; j >= 0; j--) {
+          const cand = p1[j];
+          if (cand.length >= 5 && /^[A-ZÀ-Ü0-9 .'-]+$/.test(cand) && /[A-ZÀ-Ü]{3}/.test(cand)) { out.cliente = cand; break; }
+        }
+      }
+      const m = p1[i].match(/investimento\s+(\d{5,})/i);
+      if (m) out.conta = m[1];
+    }
+    // Seção Posição - Portfólio de fundos: linha do fundo (nome + CNPJ) seguida da linha de dados.
+    // Na linha de dados, quantidade e cotação são os dois primeiros números com 4+ casas decimais.
+    let inPos = false, pendingFund = null;
+    for (const line of all) {
+      const key = ctSquash(line);
+      if (key.includes('portfoliodefundos')) { inPos = true; continue; }
+      if (key.includes('totalemfundos')) { inPos = false; pendingFund = null; continue; }
+      if (!inPos) continue;
+      const cm = line.match(/CNPJ\s*:?\s*(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/i);
+      if (cm && !key.includes('detalhamento')) {
+        const name = line.slice(0, cm.index).replace(/\s*-\s*C\s?lasse\b.*$/i, '').replace(/\s*-\s*$/, '').trim();
+        pendingFund = { cnpj: cm[1], nome: ctCleanName(name) };
+        continue;
+      }
+      const dm = line.match(/^(\d{2}\/\d{2}\/\d{2,4})\s+(.*)$/);
+      if (dm && pendingFund) {
+        const nums = dm[2].match(/[\d.]+,\d+|\d+/g) || [];
+        const qi = nums.findIndex(n => n.includes(',') && ctDecimalsBR(n) >= 4);
+        if (qi >= 0 && nums[qi + 1]) {
+          out.funds.push({ ...pendingFund, dataCota: ctFullYear(dm[1]), qtd: ctBrNum(nums[qi]), cota: ctBrNum(nums[qi + 1]) });
+        }
+        pendingFund = null;
+      }
+    }
+  }
+
+  function ctParseXPCotas(pages, all, out) {
+    for (const line of all) {
+      const m = line.match(/Cliente:\s*(.+?)\s*Conta:\s*(\d+)/);
+      if (m) { out.cliente = m[1]; out.conta = m[2]; break; }
+    }
+    // Linhas de fundo: "Nome dd/mm/aaaa <valor cota (decimal com ponto)> <qtd (pt-BR)> R$..."
+    // Nomes longos quebram em 2 linhas: a linha de dados começa direto na data e o nome
+    // fica na linha anterior (às vezes com continuação na linha seguinte, ex: "Sênior").
+    for (const pg of pages) {
+      let lastText = null;
+      for (let i = 0; i < pg.length; i++) {
+        const line = pg[i];
+        const full = line.match(/^(.+?)\s(\d{2}\/\d{2}\/\d{4})\s(\d+\.\d+)\s([\d.]*\d,\d+|\d+)\sR\$/);
+        const dataOnly = line.match(/^(\d{2}\/\d{2}\/\d{4})\s(\d+\.\d+)\s([\d.]*\d,\d+|\d+)\sR\$/);
+        if (full) {
+          out.funds.push({ cnpj: '', nome: ctCleanName(full[1]), dataCota: full[2], cota: parseFloat(full[3]), qtd: ctBrNum(full[4]) });
+          lastText = null;
+        } else if (dataOnly && lastText) {
+          let nome = lastText;
+          const next = pg[i + 1];
+          if (next && /^[A-Za-zÀ-ü' -]+$/.test(next) && next.length < 40) nome += ' ' + next;
+          out.funds.push({ cnpj: '', nome: ctCleanName(nome), dataCota: dataOnly[1], cota: parseFloat(dataOnly[2]), qtd: ctBrNum(dataOnly[3]) });
+          lastText = null;
+        } else if (/[A-Za-z]/.test(line) && !/R\$|Posição Consolidada|Data Cota|DETALHADA/i.test(line)) {
+          lastText = line;
+        } else {
+          lastText = null;
+        }
+      }
+    }
+    // Completa CNPJ pela tabela de mapeamento XP (trecho do nome -> CNPJ)
+    const mapping = ctXpMapping || DEFAULT_MAPPING_XP;
+    for (const f of out.funds) {
+      const u = f.nome.toUpperCase();
+      for (const m of mapping) {
+        if (m.key && m.cnpj && u.includes(m.key.toUpperCase())) { f.cnpj = m.cnpj; break; }
+      }
+    }
+  }
+
+  // ── UI: upload ──
+  const ctUploadZone = document.getElementById('ctUploadZone');
+  const ctFileInput  = document.getElementById('ctFileInput');
+  ctUploadZone.addEventListener('click', () => ctFileInput.click());
+  ctUploadZone.addEventListener('dragover', e => { e.preventDefault(); ctUploadZone.classList.add('drag-over'); });
+  ctUploadZone.addEventListener('dragleave', () => ctUploadZone.classList.remove('drag-over'));
+  ctUploadZone.addEventListener('drop', e => {
+    e.preventDefault(); ctUploadZone.classList.remove('drag-over');
+    const pdfs = [...e.dataTransfer.files].filter(f => f.type === 'application/pdf');
+    if (pdfs.length) ctSetFiles(pdfs);
+  });
+  ctFileInput.addEventListener('change', () => { if (ctFileInput.files.length) ctSetFiles([...ctFileInput.files]); });
+
+  function ctSetFiles(files) {
+    ctSelectedFiles = files;
+    const list = document.getElementById('ctFileList');
+    list.innerHTML = '';
+    files.forEach(f => {
+      const div = document.createElement('div');
+      div.className = 'file-item-ext';
+      div.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--gold);flex-shrink:0;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span class="file-item-ext-name">${f.name}</span>
+        <span class="file-item-ext-status file-status-wait" id="cts_${f.name.replace(/\W/g,'_')}">aguardando</span>`;
+      list.appendChild(div);
+    });
+    document.getElementById('ctBtnProcess').disabled = false;
+    document.getElementById('ctBtnLabel').textContent = files.length === 1 ? 'Extrair cotas' : `Extrair cotas de ${files.length} extratos`;
+  }
+
+  function ctSetFileStatus(file, status, cls) {
+    const el = document.getElementById('cts_' + file.name.replace(/\W/g, '_'));
+    if (el) { el.textContent = status; el.className = 'file-item-ext-status ' + (cls || ''); }
+  }
+
+  function ctLog(msg, type='') {
+    const box = document.getElementById('ctStatusBox');
+    const cls = type==='ok'?'ext-log-ok':type==='warn'?'ext-log-warn':type==='err'?'ext-log-err':type==='head'?'ext-log-head':'';
+    box.innerHTML += `<div class="${cls}">› ${msg}</div>`;
+    box.scrollTop = box.scrollHeight;
+  }
+
+  // ── Processamento ──
+  async function ctProcessAll() {
+    if (!ctSelectedFiles.length) return;
+    if (!ctXpMapping) await ctLoadXpMapping();
+    const btn = document.getElementById('ctBtnProcess');
+    btn.disabled = true;
+    const box = document.getElementById('ctStatusBox');
+    box.innerHTML = ''; box.classList.add('visible');
+    document.getElementById('ctPreviewSection').classList.remove('visible');
+    ctRows = [];
+    ctLog(`Processando ${ctSelectedFiles.length} arquivo(s)...`, 'head');
+
+    for (const file of ctSelectedFiles) {
+      ctSetFileStatus(file, 'lendo...', 'file-status-proc');
+      try {
+        const pages = await ctExtractPages(file);
+        const doc = ctParseDoc(pages);
+        if (doc.kind === 'DESCONHECIDO') {
+          ctSetFileStatus(file, 'formato não reconhecido', 'file-status-err');
+          ctLog(`${file.name}: formato não reconhecido (não é Posição XP nem Extrato BTG).`, 'err');
+          continue;
+        }
+        if (!doc.funds.length) {
+          ctSetFileStatus(file, 'sem fundos', 'file-status-warn');
+          ctLog(`${file.name} (${doc.kind}): nenhum fundo de investimento encontrado.`, 'warn');
+          continue;
+        }
+        for (const f of doc.funds) {
+          ctRows.push({
+            arquivo: file.name, cliente: doc.cliente || '—', conta: doc.conta || '—',
+            corretora: doc.kind === 'BTG' ? 'EQI/BTG' : 'XP',
+            cnpj: f.cnpj || '', fundo: f.nome, dataCota: f.dataCota, cota: f.cota, qtd: f.qtd
+          });
+        }
+        ctSetFileStatus(file, `${doc.funds.length} fundo(s)`, 'file-status-ok');
+        ctLog(`${file.name} (${doc.kind}) — ${doc.cliente || 'cliente não identificado'}: ${doc.funds.length} fundo(s).`, 'ok');
+      } catch(e) {
+        ctSetFileStatus(file, 'erro', 'file-status-err');
+        ctLog(`${file.name}: erro — ${e.message}`, 'err');
+      }
+    }
+
+    const semCnpj = ctRows.filter(r => !r.cnpj).length;
+    if (semCnpj) ctLog(`${semCnpj} fundo(s) XP sem CNPJ — complete a Tabela CNPJ (XP) em "Extratos → Excel" e reprocesse.`, 'warn');
+    ctLog(`Total: ${ctRows.length} posição(ões) em fundos.`, 'head');
+    btn.disabled = false;
+    if (ctRows.length) ctRenderPreview();
+  }
+
+  function ctFmtCota(n) { return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 8 }); }
+
+  // Fundos únicos: dedupe por CNPJ (ou nome normalizado quando sem CNPJ)
+  function ctUniqueFunds() {
+    const seen = new Map();
+    for (const r of ctRows) {
+      const key = r.cnpj || ctSquash(r.fundo);
+      if (!seen.has(key)) seen.set(key, r);
+    }
+    return [...seen.values()].sort((a, b) => a.fundo.localeCompare(b.fundo, 'pt-BR'));
+  }
+
+  function ctRenderPreview() {
+    document.getElementById('ctPreviewSection').classList.add('visible');
+    const uniq = ctUniqueFunds();
+    const nClientes = new Set(ctRows.map(r => r.arquivo)).size;
+    const semCnpj = ctRows.filter(r => !r.cnpj).length;
+    document.getElementById('ctSummaryChips').innerHTML = `
+      <div class="ext-chip">Extratos <span>${nClientes}</span></div>
+      <div class="ext-chip">Posições <span>${ctRows.length}</span></div>
+      <div class="ext-chip">Fundos únicos <span>${uniq.length}</span></div>
+      <div class="ext-chip">Sem CNPJ <span style="color:${semCnpj ? '#E8A030' : '#4caf82'}">${semCnpj}</span></div>`;
+    const table = document.getElementById('ctPreviewTable');
+    table.innerHTML = `<thead><tr><th>Cliente</th><th>Corretora</th><th>CNPJ</th><th>Fundo</th><th>Data Cota</th><th>Valor Cota</th></tr></thead>`;
+    const tbody = document.createElement('tbody');
+    ctRows.slice(0, 80).forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="td-sheet">${r.cliente}</td><td>${r.corretora}</td><td class="${r.cnpj ? 'td-cnpj' : 'td-na'}">${r.cnpj || '—'}</td><td title="${r.fundo}">${r.fundo.length > 45 ? r.fundo.slice(0, 44) + '…' : r.fundo}</td><td>${r.dataCota}</td><td class="td-pos">${ctFmtCota(r.cota)}</td>`;
+      tbody.appendChild(tr);
+    });
+    if (ctRows.length > 80) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td colspan="6" style="text-align:center;color:var(--gray);padding:0.8rem;font-size:0.68rem;">… e mais ${ctRows.length - 80} posições no Excel</td>`;
+      tbody.appendChild(tr);
+    }
+    table.appendChild(tbody);
+  }
+
+  function ctDownloadExcel() {
+    if (!ctRows.length) return;
+    const wb = XLSX.utils.book_new();
+    const header = ['Arquivo', 'Cliente', 'Conta', 'Corretora', 'CNPJ', 'Fundo', 'Data Cota', 'Valor Cota', 'Qtd Cotas'];
+    const data = [header, ...ctRows.map(r => [r.arquivo, r.cliente, r.conta, r.corretora, r.cnpj, r.fundo, r.dataCota, r.cota, r.qtd])];
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [30, 26, 12, 10, 20, 48, 12, 16, 16].map(w => ({ wch: w }));
+    XLSX.utils.book_append_sheet(wb, ws, 'Cotas');
+
+    const uniq = ctUniqueFunds();
+    const data2 = [['CNPJ', 'Fundo', 'Data Cota', 'Valor Cota'], ...uniq.map(r => [r.cnpj, r.fundo, r.dataCota, r.cota])];
+    const ws2 = XLSX.utils.aoa_to_sheet(data2);
+    ws2['!cols'] = [20, 48, 12, 16].map(w => ({ wch: w }));
+    XLSX.utils.book_append_sheet(wb, ws2, 'Fundos Únicos');
+
+    XLSX.writeFile(wb, `cotas_fundos_${new Date().toISOString().slice(0,10)}.xlsx`);
+  }
 
 </script>
 </body>
