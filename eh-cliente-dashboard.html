@@ -3354,14 +3354,234 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         }
       }
     }
-    // Completa CNPJ pela tabela de mapeamento XP (trecho do nome -> CNPJ)
-    const mapping = ctXpMapping || DEFAULT_MAPPING_XP;
-    for (const f of out.funds) {
-      const u = f.nome.toUpperCase();
-      for (const m of mapping) {
-        if (m.key && m.cnpj && u.includes(m.key.toUpperCase())) { f.cnpj = m.cnpj; break; }
-      }
+  }
+
+  // ── Resolução de CNPJ (para fundos sem CNPJ no extrato, ex: XP) ──
+  // Prioridade: 1) CNPJ do próprio extrato  2) Tabela CNPJ XP (Supabase)  3) Lista mestre (fuzzy)
+  function ctResolveCnpj(f) {
+    if (f.cnpj) return { cnpj: f.cnpj, fonte: 'Extrato', oficial: '' };
+    const u = f.nome.toUpperCase();
+    for (const m of (ctXpMapping || DEFAULT_MAPPING_XP)) {
+      if (m.key && m.cnpj && u.includes(m.key.toUpperCase())) return { cnpj: m.cnpj, fonte: 'Tabela XP', oficial: '' };
     }
+    const hit = ctMasterLookup(f.nome);
+    if (hit) return { cnpj: hit.cnpj, fonte: 'Lista mestre', oficial: hit.nome };
+    return { cnpj: '', fonte: '', oficial: '' };
+  }
+
+  // ── Lista mestre de fundos (CNPJ + nome oficial) ──
+  const CT_FUNDOS_MASTER = [
+    { cnpj:"48.096.589/0001-08", nome:"ABSOLUTE ATENAS ADVISORY FIC FI RF CP" },
+    { cnpj:"48.122.126/0001-65", nome:"ABSOLUTE CRETA ADVISORY FIC FIRF CP" },
+    { cnpj:"57.027.498/0001-01", nome:"ABSOLUTE HIDRA CDI PLUS FIC FI INFRA RF" },
+    { cnpj:"29.044.189/0001-04", nome:"AF INVEST GERAES 30" },
+    { cnpj:"61.700.255/0001-51", nome:"AGROFIN MILENIO FIAGRO" },
+    { cnpj:"12.987.743/0001-86", nome:"ALASKA BLACK FIC FIA" },
+    { cnpj:"20.441.301/0001-68", nome:"ARTESANAL CP FIDC RL" },
+    { cnpj:"57.555.376/0001-80", nome:"ARTESANAL CDI+ FIC FIDC II" },
+    { cnpj:"61.080.452/0001-15", nome:"ARZ ALPINE BAIN CAPITAL" },
+    { cnpj:"63.823.402/0001-06", nome:"ARZ CONFIDAS DWIGHT REAL ESTATE CREDIT PÓS-FIXADO FIM IE RL" },
+    { cnpj:"54.869.435/0001-04", nome:"ARX CHILLON RECEBÍVEIS FII" },
+    { cnpj:"41.888.219/0001-56", nome:"ARX DENALI ADV." },
+    { cnpj:"32.319.627/0001-04", nome:"ARX ELBRUS ADV. DEB. INC." },
+    { cnpj:"52.286.231/0001-07", nome:"ARX FUJI FIC DE FIF RF CP RL" },
+    { cnpj:"32.225.663/0001-09", nome:"ARX HEDGE FC FUNDOS INC INVEST INFRA RF" },
+    { cnpj:"41.888.492/0001-80", nome:"ARX VINSON ADV." },
+    { cnpj:"34.218.678/0001-67", nome:"AUGME 180 FIC FIM CP" },
+    { cnpj:"52.285.852/0001-76", nome:"AUGME 30 II CIC CIRF CP LP" },
+    { cnpj:"61.258.419/0001-32", nome:"AZ-AXS ENERGIA FIP-EI RL" },
+    { cnpj:"34.370.777/0001-60", nome:"AZ QUEST ALTRO ADVISORY FIC FIM CP" },
+    { cnpj:"22.100.009/0001-07", nome:"AZ QUEST ALTRO FIC FIM CP" },
+    { cnpj:"54.511.022/0001-45", nome:"AZ QUEST INFRA-YIELD IV FIP INFRA" },
+    { cnpj:"61.848.349/0001-72", nome:"AZ QUEST PANORAMA" },
+    { cnpj:"36.352.498/0001-07", nome:"AZ QUEST SUPRA FIC FIM CP" },
+    { cnpj:"55.219.936/0001-08", nome:"BLUEOAK SPECIAL SIT. I FIC FIP" },
+    { cnpj:"09.636.393/0001-07", nome:"BNP PARIBAS MATCH DI FIRF REFERENCIADO CP" },
+    { cnpj:"61.250.889/0001-50", nome:"BRASIL ENERGIA FII RESP LIMITADA" },
+    { cnpj:"63.104.203/0001-48", nome:"BRASOL ENERGIA RENOVÁVEL" },
+    { cnpj:"35.726.300/0001-37", nome:"BRAVE 90 FIC FIM CP" },
+    { cnpj:"60.027.987/0001-60", nome:"BTG CREDITO IMOBILIARIO CDI" },
+    { cnpj:"48.330.198/0001-06", nome:"BTG MULTIGESTOR CREDIT PLUS FIM CRPR" },
+    { cnpj:"60.571.986/0001-81", nome:"BTG PACTUAL APOLO FI FIDC RL" },
+    { cnpj:"14.171.644/0001-57", nome:"BTG PACTUAL CRÉDITO CORPORATIVO CP" },
+    { cnpj:"60.922.008/0001-37", nome:"BTG PACTUAL PRIME LOGÍSTICA FII" },
+    { cnpj:"57.469.492/0001-86", nome:"BTG PACTUAL REAL STATE HEDGE FUND" },
+    { cnpj:"23.272.391/0001-07", nome:"CAPITÂNIA RADAR FIM CP LP" },
+    { cnpj:"36.318.479/0001-56", nome:"COMPASS YIELD 30 FIRF CP LP" },
+    { cnpj:"53.189.745/0001-07", nome:"CREDITO CONSIG PREFIX FIC FIDC RL SEN2" },
+    { cnpj:"34.309.551/0001-53", nome:"DAHLIA TOTAL RETURN ADV" },
+    { cnpj:"29.250.121/0001-73", nome:"DAYCOVAL CLASSIC 30 FI RF CP" },
+    { cnpj:"37.806.055/0001-01", nome:"EVEREST HIGH YIELD FIC FIM CP E1" },
+    { cnpj:"38.065.069/0001-76", nome:"EXES FIC FIM CP" },
+    { cnpj:"55.912.292/0001-20", nome:"FIC FIDC SRM EXODUS SR2" },
+    { cnpj:"55.912.292/0001-20", nome:"FIC FIDC SRM EXODUS SR3" },
+    { cnpj:"55.912.292/0001-20", nome:"FIC FIDC SRM EXODUS SR4" },
+    { cnpj:"49.343.067/0001-18", nome:"FIP IE BTG ENERGY" },
+    { cnpj:"63.342.714/0001-06", nome:"FRANKLIN BSP CRÉDITO ESTRUTURADO GLOBAL" },
+    { cnpj:"28.320.600/0001-56", nome:"FRANKLIN CLEARBRIDGE AÇÕES EUA GROWTH" },
+    { cnpj:"36.729.755/0001-79", nome:"GALAPAGOS DRAGON FIC FIM CP" },
+    { cnpj:"42.934.790/0001-22", nome:"GRÃO YIELD FIC FIDC" },
+    { cnpj:"35.088.108/0001-62", nome:"HASHDEX 40 NASDAQ CRYPTO" },
+    { cnpj:"47.612.274/0001-03", nome:"HASHDEX CRYPTO DINÂMICO LB FICFIM" },
+    { cnpj:"45.089.346/0001-46", nome:"HEADLINE XP VENTURE CAPITAL" },
+    { cnpj:"49.995.610/0001-61", nome:"INTER INSTITUIÇÕES FINANCEIRAS FI RF CP" },
+    { cnpj:"32.756.812/0001-58", nome:"IRIDIUM TITAN ADV. FIC FI RF CP" },
+    { cnpj:"23.956.069/0001-99", nome:"JGP CORPORATE CP LP - FEEDER III" },
+    { cnpj:"28.767.162/0001-79", nome:"JGP CRÉDITO ADV. FIM CP" },
+    { cnpj:"55.204.781/0001-28", nome:"JGP ECOSSISTEMA FIC FDS INC INV INFRA II" },
+    { cnpj:"43.121.036/0001-36", nome:"JIVE BOSSA NOVA HY ADVISORY" },
+    { cnpj:"46.322.919/0001-00", nome:"JIVE BOSSANOVA HY FIC FIDC CP" },
+    { cnpj:"58.893.662/0001-18", nome:"JIVE BOSSANOVA90" },
+    { cnpj:"60.103.810/0001-03", nome:"JIVEMAUÁ BN CRÉDITO SEC I FIDC" },
+    { cnpj:"63.912.733/0001-12", nome:"JIVEMAUÁ BN CRÉDITO SEC II FIDC VAREJO" },
+    { cnpj:"64.118.207/0001-48", nome:"JIVEMAUÁ BN CRÉDITO SEC II FIDC SUB. SNR" },
+    { cnpj:"39.573.883/0001-64", nome:"KAPITALO TARKUS ADV." },
+    { cnpj:"63.950.243/0001-00", nome:"KINEA SPECIAL OPPORTUNITIES" },
+    { cnpj:"61.605.300/0001-99", nome:"LESTE RENDA BTS" },
+    { cnpj:"50.716.952/0001-84", nome:"M8 CREDIT ADVANCED FIC FIM CP" },
+    { cnpj:"26.841.302/0001-86", nome:"M8 CREDIT OPPORTUNITIES FIC FIM CP" },
+    { cnpj:"11.435.287/0001-07", nome:"MAG RENDA FIXA FIF CI RL" },
+    { cnpj:"63.441.263/0001-56", nome:"MANATI RENDA IMOBILIÁRIA" },
+    { cnpj:"43.741.195/0001-33", nome:"MAUÁ CAPITAL CRÉDITO ESTRUTURADO" },
+    { cnpj:"65.511.886/0001-83", nome:"MAUÁ CAPITAL CRÉDITO LIQUIDEZ 180 FII" },
+    { cnpj:"62.526.654/0001-00", nome:"MAUÁ LAJES CORPORATIVAS FEEDER FII" },
+    { cnpj:"62.603.652/0001-78", nome:"MAUÁ PLANTA FII RL" },
+    { cnpj:"15.585.932/0001-10", nome:"MORE CRÉDITO FIC FIM CP" },
+    { cnpj:"33.913.562/0001-85", nome:"MS GLOBAL OPPORTUNITIES DÓLAR ADVISORY FIC FIA IE" },
+    { cnpj:"46.153.220/0001-56", nome:"NEWAVE ENERGIA I ADV FIP" },
+    { cnpj:"43.551.206/0001-12", nome:"ORRAM 60 FICFIDC" },
+    { cnpj:"14.171.578/0001-15", nome:"OURO PRETO FIC FIDC" },
+    { cnpj:"63.932.359/0001-17", nome:"PACKEM SR2 FIAGRO CETIP" },
+    { cnpj:"64.768.982/0001-49", nome:"PATRIA INFRAESTRUTURA CREDITO DI III" },
+    { cnpj:"57.609.674/0001-05", nome:"PATRIMONIAL ANDERMATT FIC FIDC RL" },
+    { cnpj:"33.269.968/0001-77", nome:"PATRIMONIAL ASPEN FICFIDC RL" },
+    { cnpj:"56.267.236/0001-43", nome:"PATRIMONIAL CHAMONIX HY FIDC RL" },
+    { cnpj:"61.516.572/0001-12", nome:"PDIVER GAMA PEARL DIVER FIM RL" },
+    { cnpj:"54.635.245/0001-14", nome:"PERSEVERA PLANO & PLANO FII RL" },
+    { cnpj:"54.519.721/0001-31", nome:"POLIGONO APLHA" },
+    { cnpj:"65.813.874/0001-03", nome:"POLO CAPITAL YIELD" },
+    { cnpj:"31.455.879/0001-90", nome:"POLO CRÉDITO CORPORATIVO ADV FIRF CP LP" },
+    { cnpj:"43.164.438/0001-18", nome:"POLO CRÉDITO ESTRUTURADO 90" },
+    { cnpj:"18.719.154/0001-01", nome:"PORTO SEGURO DI CP" },
+    { cnpj:"63.085.032/0001-57", nome:"RBR INFRA CRÉDITO CDI FIP RL" },
+    { cnpj:"10.500.884/0001-05", nome:"REAL INVESTOR FIA BDR" },
+    { cnpj:"57.593.613/0001-05", nome:"RIZA EQUITUS REAL ESTATE FII RL" },
+    { cnpj:"42.260.903/0001-51", nome:"RIZA STATHEROS FIC FIM CRÉDITO PRIVADO" },
+    { cnpj:"64.299.705/0001-34", nome:"ROOT CAPITAL FICUS FIDC RL" },
+    { cnpj:"34.431.415/0001-31", nome:"ROOT CAPITAL HIGH YIELD FICFIM CP" },
+    { cnpj:"34.431.610/0001-61", nome:"ROOT CAPITAL HIGH YIELD ADVISORY" },
+    { cnpj:"18.623.722/0001-68", nome:"SAFRA DEB. INCENTIVADAS CP" },
+    { cnpj:"52.746.497/0001-95", nome:"SCORE EQI PREC FIDC RESPONSABILIDADE LIM" },
+    { cnpj:"13.054.728/0001-48", nome:"SOLIS CAPITAL ANTARES FIC FIM CP" },
+    { cnpj:"34.780.531/0001-66", nome:"SOLIS CAPITAL ANTARES LIGHT FIC FIM CP" },
+    { cnpj:"35.648.999/0001-64", nome:"SPX SEAHAWK ADV" },
+    { cnpj:"35.505.971/0001-78", nome:"SPX SEAHAWK FIC FIRF CP" },
+    { cnpj:"13.823.084/0001-05", nome:"SULAMÉRICA CRÉDITO ATIVO" },
+    { cnpj:"54.201.573/0001-02", nome:"TERRAMAGNA FC FIAGRO FIDC" },
+    { cnpj:"55.054.815/0001-45", nome:"TERRAMAGNA II FC FIAGRO FIDC" },
+    { cnpj:"06.866.051/0001-87", nome:"TIVIO INSTITUCIONAL RF CP FI" },
+    { cnpj:"60.743.809/0001-35", nome:"VALORA AGRO RENDA SR1 FIAGRO" },
+    { cnpj:"60.743.809/0001-36", nome:"VALORA AGRO RENDA SR2 FIAGRO" },
+    { cnpj:"17.313.316/0001-36", nome:"VALORA HORIZON HIGH YIELD" },
+    { cnpj:"64.125.652/0001-35", nome:"VALORA INFRA DÍVIDA CDI" },
+    { cnpj:"64.124.715/0001-39", nome:"VALORA INFRA DÍVIDA PRÉ" },
+    { cnpj:"59.657.690/0001-07", nome:"VALORA VANGUARD FIC FIDC" },
+    { cnpj:"47.684.408/0001-93", nome:"VINLAND CREDITO HIGH GRADE FIC CP" },
+    { cnpj:"28.320.756/0001-37", nome:"WESTERN ASSET TOTAL CREDIT ADVISORY FIC FIRF CP" },
+    { cnpj:"45.756.473/0001-51", nome:"XP BALANCEADO FMP - FGTS CARTEIRA LIVRE" },
+    { cnpj:"53.779.703/0001-26", nome:"XP CREDIT OPPORTUNITIES FIDC" },
+    { cnpj:"61.802.352/0001-55", nome:"XP CRÉDITO ESTRUTURADO 90 FIDC RL" },
+    { cnpj:"26.803.233/0001-16", nome:"XP DEBENTURES INCENTIVADAS HEDGE CP FIM LP" },
+    { cnpj:"18.993.924/0001-00", nome:"XP LONG BIASED FIC FIM RL" },
+    { cnpj:"30.068.713/0001-58", nome:"XP MACRO PLUS FIC FIM" },
+    { cnpj:"61.424.730/0001-04", nome:"XP RENDA IMOBILIÁRIA FEEDER FII RL" },
+    { cnpj:"39.669.815/0001-01", nome:"XP SELECTION ALTERNATIVO FIP MULTI - CLASSE A" },
+    { cnpj:"58.729.502/0001-38", nome:"XP STRATEGY FIFM CP RL" },
+    // Fundos Previdência
+    { cnpj:"37.355.605/0001-05", nome:"ABSOLUTE ENDURANCE XP SEG FICFIA PREV" },
+    { cnpj:"32.318.938/0001-40", nome:"ARX DENALI XP SEG PREV FIC FIRF CP" },
+    { cnpj:"32.847.001/0001-62", nome:"AZ QUEST LUCE ADV. PREV. XP SEG FIC FIRF CP" },
+    { cnpj:"41.610.532/0001-28", nome:"BOLSA AMERICANA 40 XP SEG PREV FIM" },
+    { cnpj:"49.227.982/0001-48", nome:"ITAÚ HY II PREV SEG FIM CP" },
+    { cnpj:"32.319.225/0001-00", nome:"JGP CRÉDITO PREV ADV XP SEG FIC FIRF CP" },
+    { cnpj:"40.679.129/0001-92", nome:"KAPITALO K10 GLOBAL PREV XP ADV" },
+    { cnpj:"43.636.203/0001-81", nome:"KINEA ALPES PREV XP SEG MM CP" },
+    { cnpj:"41.035.989/0001-56", nome:"REAL INVESTOR 100 XP SEG ADV FIC FIA" },
+    { cnpj:"48.940.997/0001-96", nome:"ROOT CAPITAL CRÉDITO HG PREV XP SEG FIC FIRF CP" },
+    { cnpj:"32.239.012/0001-60", nome:"SPARTA PREV. ADV. XP SEG. FIC FIRF CP" },
+    { cnpj:"43.636.185/0001-38", nome:"SPX SEAHAWK XP SEG PREV FIC FIM CP" },
+    { cnpj:"61.038.314/0001-78", nome:"SULAMÉRICA CRÉDITO ESG XP SEG PREV FIC RF CP IS RL" },
+    { cnpj:"45.299.196/0001-03", nome:"SULAMÉRICA PRESTIGE STRATEGIE PREV XP" },
+    { cnpj:"30.994.931/0001-13", nome:"VERDE AM SCENA ADV. XP SEGUROS PREV" },
+    { cnpj:"44.230.868/0001-53", nome:"VINCI CRÉDITO PREV ADV FIRF CP" },
+    { cnpj:"30.910.166/0001-06", nome:"XP CORPORATE LIGHT CP XP SEG PREV FIC FIM RL" },
+    { cnpj:"36.352.610/0001-00", nome:"XP CRÉDITO ESTRUTURADO XP SEG PREV FIC FIRF" },
+  ];
+
+  // ── Fuzzy matcher (nome do extrato -> fundo da lista mestre) ──
+  // Tokens estruturais (FIC, FIDC, CP...) pesam pouco; ADVISORY e numerais de série
+  // (II, SR2, 90, 180...) distinguem classes do mesmo fundo e pesam mais.
+  const CT_STOP_TOKENS = new Set(['FIC','FIF','FIM','FIDC','FII','FIA','FIRF','FIP','FI','FICFIM','FICFIDC','FICFIA','FIFM','FCFIF','CIC','CIRF','FC','FDS','FMP','RF','CP','LP','RL','DI','MM','CI','IE','EI','IS','PREV','SEG','SEGUROS','RESP','LTD','LIM','LIMITADA','RESPONSABILIDADE','CLASSE','SUBCLASSE','SUB','REFERENCIADO','CRPR','PCO','INV','INVEST','INC','FUNDOS','DE','DA','DO','E','CETIP','FIAGRO','MODELO','SR','SEN','FEEDER','FIR','REF','EF']);
+
+  function ctNormName(name) {
+    let s = name.toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    s = s.replace(/[^A-Z0-9]+/g, ' ').trim();
+    s = s.replace(/\bHIGH YIELD\b/g, 'HY').replace(/\bBOSSA NOVA\b/g, 'BOSSANOVA')
+         .replace(/\bBN\b/g, 'BOSSANOVA').replace(/\bSNR\b/g, 'SENIOR')
+         .replace(/\bADV\b/g, 'ADVISORY').replace(/\bPOS FIXADO\b/g, 'POSFIXADO');
+    s = s.replace(/\b([A-Z]{1,3}) (\d{1,3})\b/g, '$1$2');
+    return s.split(' ').filter(Boolean);
+  }
+
+  function ctTokenWeight(t) {
+    if (CT_STOP_TOKENS.has(t)) return 0.15;
+    if (/^(SR|SEN)\d+$/.test(t)) return 2;
+    if (/^(I{1,3}|IV|V|VI{1,3})$/.test(t)) return 2;
+    if (/^\d+$/.test(t)) return 2;
+    if (/\d/.test(t) && /[A-Z]/.test(t)) return 3;
+    if (t.length <= 2) return 0.3;
+    return 3;
+  }
+
+  function ctTokenMatch(a, b) {
+    if (a === b) return true;
+    const sa = a.match(/^(?:SR|SEN)(\d+)$/), sb = b.match(/^(?:SR|SEN)(\d+)$/);
+    if (sa && sb) return sa[1] === sb[1];
+    if (a.length >= 3 && b.length >= 3 && (a.startsWith(b) || b.startsWith(a))) return true;
+    return false;
+  }
+
+  function ctMatchScore(tokensA, tokensB) {
+    let total = 0, matched = 0;
+    for (const ta of tokensA) {
+      const w = ctTokenWeight(ta);
+      total += w;
+      if (tokensB.some(tb => ctTokenMatch(ta, tb))) matched += w;
+    }
+    for (const tb of tokensB) {
+      const w = ctTokenWeight(tb);
+      total += w;
+      if (tokensA.some(ta => ctTokenMatch(tb, ta))) matched += w;
+    }
+    return total ? matched / total : 0;
+  }
+
+  const ctMasterTokens = CT_FUNDOS_MASTER.map(m => ({ ...m, tokens: ctNormName(m.nome) }));
+
+  function ctMasterLookup(fundName) {
+    const tokens = ctNormName(fundName);
+    if (!tokens.length) return null;
+    let best = null, bestScore = 0, second = 0;
+    for (const m of ctMasterTokens) {
+      const s = ctMatchScore(tokens, m.tokens);
+      if (s > bestScore) { second = bestScore; bestScore = s; best = m; }
+      else if (s > second) { second = s; }
+    }
+    // exige score mínimo e vantagem clara sobre o segundo colocado (evita palpite errado)
+    if (best && bestScore >= 0.55 && (bestScore - second) >= 0.03) {
+      return { cnpj: best.cnpj, nome: best.nome, score: bestScore };
+    }
+    return null;
   }
 
   // ── UI: upload ──
@@ -3434,10 +3654,12 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           continue;
         }
         for (const f of doc.funds) {
+          const res = ctResolveCnpj(f);
           ctRows.push({
             arquivo: file.name, cliente: doc.cliente || '—', conta: doc.conta || '—',
             corretora: doc.kind === 'BTG' ? 'EQI/BTG' : 'XP',
-            cnpj: f.cnpj || '', fundo: f.nome, dataCota: f.dataCota, cota: f.cota, qtd: f.qtd
+            cnpj: res.cnpj, fonte: res.fonte, oficial: res.oficial,
+            fundo: f.nome, dataCota: f.dataCota, cota: f.cota, qtd: f.qtd
           });
         }
         ctSetFileStatus(file, `${doc.funds.length} fundo(s)`, 'file-status-ok');
@@ -3448,8 +3670,14 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       }
     }
 
+    const viaLista = ctRows.filter(r => r.fonte === 'Lista mestre').length;
+    if (viaLista) ctLog(`${viaLista} CNPJ(s) preenchido(s) pela lista mestre (nome aproximado — confira a coluna "Nome Oficial" no Excel).`, 'ok');
     const semCnpj = ctRows.filter(r => !r.cnpj).length;
-    if (semCnpj) ctLog(`${semCnpj} fundo(s) XP sem CNPJ — complete a Tabela CNPJ (XP) em "Extratos → Excel" e reprocesse.`, 'warn');
+    if (semCnpj) {
+      ctLog(`${semCnpj} fundo(s) sem CNPJ:`, 'warn');
+      [...new Set(ctRows.filter(r => !r.cnpj).map(r => r.fundo))].forEach(n => ctLog(`&nbsp;&nbsp;· ${n}`, 'warn'));
+      ctLog(`Adicione na Tabela CNPJ (XP) em "Extratos → Excel" ou na lista mestre e reprocesse.`, 'warn');
+    }
     ctLog(`Total: ${ctRows.length} posição(ões) em fundos.`, 'head');
     btn.disabled = false;
     if (ctRows.length) ctRenderPreview();
@@ -3457,14 +3685,15 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
   function ctFmtCota(n) { return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 8 }); }
 
-  // Fundos únicos: dedupe por CNPJ (ou nome normalizado quando sem CNPJ)
+  // Fundos únicos: dedupe por CNPJ + nome — séries/subclasses com o mesmo CNPJ
+  // mas nomes e cotas diferentes (ex: SRM EXODUS SEN 2 / SEN 3 / 4) aparecem em linhas separadas
   function ctUniqueFunds() {
     const seen = new Map();
     for (const r of ctRows) {
-      const key = r.cnpj || ctSquash(r.fundo);
+      const key = (r.cnpj || '') + '|' + ctSquash(r.fundo);
       if (!seen.has(key)) seen.set(key, r);
     }
-    return [...seen.values()].sort((a, b) => a.fundo.localeCompare(b.fundo, 'pt-BR'));
+    return [...seen.values()].sort((a, b) => (a.cnpj + a.fundo).localeCompare(b.cnpj + b.fundo, 'pt-BR'));
   }
 
   function ctRenderPreview() {
@@ -3478,16 +3707,17 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       <div class="ext-chip">Fundos únicos <span>${uniq.length}</span></div>
       <div class="ext-chip">Sem CNPJ <span style="color:${semCnpj ? '#E8A030' : '#4caf82'}">${semCnpj}</span></div>`;
     const table = document.getElementById('ctPreviewTable');
-    table.innerHTML = `<thead><tr><th>Cliente</th><th>Corretora</th><th>CNPJ</th><th>Fundo</th><th>Data Cota</th><th>Valor Cota</th></tr></thead>`;
+    table.innerHTML = `<thead><tr><th>Cliente</th><th>Corretora</th><th>CNPJ</th><th>Fonte</th><th>Fundo</th><th>Data Cota</th><th>Valor Cota</th></tr></thead>`;
     const tbody = document.createElement('tbody');
     ctRows.slice(0, 80).forEach(r => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td class="td-sheet">${r.cliente}</td><td>${r.corretora}</td><td class="${r.cnpj ? 'td-cnpj' : 'td-na'}">${r.cnpj || '—'}</td><td title="${r.fundo}">${r.fundo.length > 45 ? r.fundo.slice(0, 44) + '…' : r.fundo}</td><td>${r.dataCota}</td><td class="td-pos">${ctFmtCota(r.cota)}</td>`;
+      const fonteTitle = r.fonte === 'Lista mestre' && r.oficial ? `Nome oficial: ${r.oficial}` : '';
+      tr.innerHTML = `<td class="td-sheet">${r.cliente}</td><td>${r.corretora}</td><td class="${r.cnpj ? 'td-cnpj' : 'td-na'}">${r.cnpj || '—'}</td><td title="${fonteTitle}" style="${r.fonte === 'Lista mestre' ? 'color:var(--gold);' : ''}">${r.fonte || '—'}</td><td title="${r.fundo}">${r.fundo.length > 45 ? r.fundo.slice(0, 44) + '…' : r.fundo}</td><td>${r.dataCota}</td><td class="td-pos">${ctFmtCota(r.cota)}</td>`;
       tbody.appendChild(tr);
     });
     if (ctRows.length > 80) {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td colspan="6" style="text-align:center;color:var(--gray);padding:0.8rem;font-size:0.68rem;">… e mais ${ctRows.length - 80} posições no Excel</td>`;
+      tr.innerHTML = `<td colspan="7" style="text-align:center;color:var(--gray);padding:0.8rem;font-size:0.68rem;">… e mais ${ctRows.length - 80} posições no Excel</td>`;
       tbody.appendChild(tr);
     }
     table.appendChild(tbody);
@@ -3496,16 +3726,16 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   function ctDownloadExcel() {
     if (!ctRows.length) return;
     const wb = XLSX.utils.book_new();
-    const header = ['Arquivo', 'Cliente', 'Conta', 'Corretora', 'CNPJ', 'Fundo', 'Data Cota', 'Valor Cota', 'Qtd Cotas'];
-    const data = [header, ...ctRows.map(r => [r.arquivo, r.cliente, r.conta, r.corretora, r.cnpj, r.fundo, r.dataCota, r.cota, r.qtd])];
+    const header = ['Arquivo', 'Cliente', 'Conta', 'Corretora', 'CNPJ', 'Fonte CNPJ', 'Fundo', 'Nome Oficial (lista)', 'Data Cota', 'Valor Cota', 'Qtd Cotas'];
+    const data = [header, ...ctRows.map(r => [r.arquivo, r.cliente, r.conta, r.corretora, r.cnpj, r.fonte, r.fundo, r.oficial, r.dataCota, r.cota, r.qtd])];
     const ws = XLSX.utils.aoa_to_sheet(data);
-    ws['!cols'] = [30, 26, 12, 10, 20, 48, 12, 16, 16].map(w => ({ wch: w }));
+    ws['!cols'] = [30, 26, 12, 10, 20, 13, 48, 40, 12, 16, 16].map(w => ({ wch: w }));
     XLSX.utils.book_append_sheet(wb, ws, 'Cotas');
 
     const uniq = ctUniqueFunds();
-    const data2 = [['CNPJ', 'Fundo', 'Data Cota', 'Valor Cota'], ...uniq.map(r => [r.cnpj, r.fundo, r.dataCota, r.cota])];
+    const data2 = [['CNPJ', 'Fundo', 'Nome Oficial (lista)', 'Data Cota', 'Valor Cota'], ...uniq.map(r => [r.cnpj, r.fundo, r.oficial, r.dataCota, r.cota])];
     const ws2 = XLSX.utils.aoa_to_sheet(data2);
-    ws2['!cols'] = [20, 48, 12, 16].map(w => ({ wch: w }));
+    ws2['!cols'] = [20, 48, 40, 12, 16].map(w => ({ wch: w }));
     XLSX.utils.book_append_sheet(wb, ws2, 'Fundos Únicos');
 
     XLSX.writeFile(wb, `cotas_fundos_${new Date().toISOString().slice(0,10)}.xlsx`);
