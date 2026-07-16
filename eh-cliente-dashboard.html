@@ -3399,6 +3399,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     { cnpj:"09.636.393/0001-07", nome:"BNP PARIBAS MATCH DI FIRF REFERENCIADO CP" },
     { cnpj:"61.250.889/0001-50", nome:"BRASIL ENERGIA FII RESP LIMITADA" },
     { cnpj:"63.104.203/0001-48", nome:"BRASOL ENERGIA RENOVÁVEL" },
+    // mesmo fundo acima: nome com que aparece nos extratos XP
+    { cnpj:"63.104.203/0001-48", nome:"BRASOL RENDA IMOBILIÁRIA SOLAR II FII RL" },
     { cnpj:"35.726.300/0001-37", nome:"BRAVE 90 FIC FIM CP" },
     { cnpj:"60.027.987/0001-60", nome:"BTG CREDITO IMOBILIARIO CDI" },
     { cnpj:"48.330.198/0001-06", nome:"BTG MULTIGESTOR CREDIT PLUS FIM CRPR" },
@@ -3784,12 +3786,15 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   function ctFmtCota(n) { return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 8 }); }
 
   // Fundos únicos: dedupe por CNPJ + nome — séries/subclasses com o mesmo CNPJ
-  // mas nomes e cotas diferentes (ex: SRM EXODUS SEN 2 / SEN 3 / 4) aparecem em linhas separadas
+  // mas nomes e cotas diferentes (ex: SRM EXODUS SEN 2 / SEN 3 / 4) aparecem em linhas separadas.
+  // Se o mesmo fundo aparece com datas de cota diferentes entre clientes, mantém a mais recente.
+  function ctDateKey(d) { const p = (d || '').split('/'); return p.length === 3 ? p[2] + p[1] + p[0] : (d || ''); }
   function ctUniqueFunds() {
     const seen = new Map();
     for (const r of ctRows) {
       const key = (r.cnpj || '') + '|' + ctSquash(r.fundo);
-      if (!seen.has(key)) seen.set(key, r);
+      const prev = seen.get(key);
+      if (!prev || ctDateKey(r.dataCota) > ctDateKey(prev.dataCota)) seen.set(key, r);
     }
     return [...seen.values()].sort((a, b) => (a.cnpj + a.fundo).localeCompare(b.cnpj + b.fundo, 'pt-BR'));
   }
