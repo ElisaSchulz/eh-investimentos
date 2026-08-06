@@ -626,6 +626,10 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 017 7h2"/><path d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
     Extratos → Excel
   </button>
+  <button class="mobile-drawer-link" id="mobileExtratosNovosBtn" style="display:none;" onclick="showView('extratosnovos',this);closeDrawer()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+    XP Extratos Novos
+  </button>
   <button class="mobile-drawer-link" id="mobileCotasBtn" style="display:none;" onclick="showView('cotas',this);closeDrawer()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
     Cotas dos Fundos
@@ -682,6 +686,10 @@
     <button class="sidebar-link" onclick="showView('extratos',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 017 7h2"/><path d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
       Extratos → Excel
+    </button>
+    <button class="sidebar-link" onclick="showView('extratosnovos',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+      XP Extratos Novos
     </button>
     <button class="sidebar-link" onclick="showView('cotas',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
@@ -1191,6 +1199,91 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       </div>
     </div>
 
+    <!-- XP EXTRATOS NOVOS VIEW (admin only) -->
+    <!-- Mesma saída da ferramenta "Extratos → Excel" (modo XP), porém para o novo
+         layout do "Extrato da Conta Investimento" da XP, em que o PDF.js devolve o
+         texto espaçado ("31 / 07 / 2026", "R $   1 . 396 , 64"). -->
+    <div class="view" id="view-extratosnovos">
+      <div class="welcome-banner">
+        <h2>XP <em>Extratos Novos</em></h2>
+        <p>Para os extratos da XP no novo layout. Gera o mesmo Excel da ferramenta Extratos → Excel (modo XP), com CNPJ, tipo e valores.</p>
+      </div>
+
+      <div class="eqi-notice-dash visible">
+        <strong style="color:var(--white);">Quando usar:</strong> se o extrato XP (<strong style="color:var(--white);">Extrato da Conta Investimento</strong>) não for lido pela ferramenta <strong style="color:var(--white);">Extratos → Excel</strong>, use esta. Ela entende o novo desenho do PDF, em que datas e valores vêm com espaços (“31 / 07 / 2026”, “R $ 1 . 396 , 64”). A tabela de CNPJ é a mesma do modo XP.
+      </div>
+
+      <!-- Upload -->
+      <div class="upload-panel">
+        <h3>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          1. Extratos PDF (novo layout XP)
+        </h3>
+        <div class="extrato-upload-zone" id="xpnUploadZone">
+          <input type="file" id="xpnFileInput" accept=".pdf" multiple />
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--gold);margin:0 auto 0.6rem;display:block;"><path d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
+          <div style="font-size:0.85rem;color:var(--gray-light);margin-bottom:0.3rem;">Arraste os PDFs aqui</div>
+          <div style="font-size:0.68rem;color:var(--gray);">ou clique para selecionar · vários arquivos aceitos</div>
+        </div>
+        <div class="file-list-ext" id="xpnFileList"></div>
+        <div class="ext-progress-wrap" id="xpnProgressWrap">
+          <div class="ext-progress-bar"><div class="ext-progress-fill" id="xpnProgressFill"></div></div>
+          <div class="ext-progress-label" id="xpnProgressLabel"></div>
+        </div>
+      </div>
+
+      <!-- Mapping -->
+      <div class="upload-panel">
+        <h3>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+          2. Tabela CNPJ
+          <span style="font-size:0.62rem;font-weight:400;color:var(--gray);margin-left:0.5rem;">— XP (compartilhada)</span>
+        </h3>
+        <p style="font-size:0.78rem;color:var(--gray);margin-bottom:1rem;line-height:1.6;">Mapeie trechos do nome do fundo para o CNPJ. Esta é a <strong style="color:var(--gray-light);">mesma tabela XP</strong> usada em Extratos → Excel: o que você editar aqui vale nos dois lugares.</p>
+
+        <div class="mapping-toolbar-ext">
+          <div class="save-indicator-ext">
+            <div class="save-dot saved" id="xpnSaveDot"></div>
+            <span id="xpnSaveLabel">Salvo</span>
+          </div>
+          <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+            <button onclick="xpnExportMapping()" class="btn-upload" style="background:rgba(255,255,255,0.06);color:var(--gray-light);font-size:0.62rem;padding:0.4rem 0.8rem;">↓ Exportar Excel</button>
+            <label class="btn-upload" style="background:rgba(255,255,255,0.06);color:var(--gray-light);font-size:0.62rem;padding:0.4rem 0.8rem;cursor:pointer;">↑ Importar Excel<input type="file" accept=".xlsx,.xls" style="display:none" onchange="xpnImportMapping(this)"></label>
+            <button onclick="xpnResetMapping()" class="btn-upload" style="background:rgba(224,85,85,0.1);color:#f08080;border:1px solid rgba(224,85,85,0.3);font-size:0.62rem;padding:0.4rem 0.8rem;">Restaurar padrão</button>
+          </div>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="mapping-table-ext">
+            <thead><tr><th>Trecho do nome</th><th>CNPJ</th><th>Nome completo</th><th></th></tr></thead>
+            <tbody id="xpnMappingBody"></tbody>
+          </table>
+        </div>
+        <button onclick="xpnAddMappingRow()" class="btn-upload" style="margin-top:0.8rem;background:rgba(212,130,10,0.1);color:var(--gold);border:1px solid var(--border);">+ Adicionar fundo</button>
+      </div>
+
+      <!-- Process -->
+      <button class="btn-process-ext" id="xpnBtnProcess" onclick="xpnProcessAll()" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+        <span id="xpnBtnLabel">Processar e gerar Excel</span>
+      </button>
+
+      <div class="ext-status-box" id="xpnStatusBox"></div>
+
+      <!-- Preview -->
+      <div class="ext-preview-section" id="xpnPreviewSection">
+        <div class="section-header"><div class="section-title">3. Preview & Download</div></div>
+        <div class="ext-chips" id="xpnSummaryChips"></div>
+        <div class="ext-preview-wrap">
+          <table class="ext-preview-table" id="xpnPreviewTable"></table>
+        </div>
+        <button class="btn-download-ext" id="xpnBtnDownload">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Baixar Excel
+        </button>
+      </div>
+    </div>
+
     <!-- COTAS DOS FUNDOS VIEW (admin only) -->
     <div class="view" id="view-cotas">
       <div class="welcome-banner">
@@ -1310,6 +1403,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       document.getElementById('mobileAdminSection').style.display = 'block';
       document.getElementById('mobileUploadBtn').style.display = 'flex';
       document.getElementById('mobileExtratosBtn').style.display = 'flex';
+      document.getElementById('mobileExtratosNovosBtn').style.display = 'flex';
       document.getElementById('mobileCotasBtn').style.display = 'flex';
       document.getElementById('mobileClientesBtn').style.display = 'flex';
       document.getElementById('mobileEmailsBtn').style.display = 'flex';
@@ -1353,11 +1447,12 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.querySelectorAll('.mobile-drawer-link').forEach(l => l.classList.remove('active'));
     document.getElementById('view-' + viewId).classList.add('active');
     if (btn) btn.classList.add('active');
-    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', extratos:'Extratos → Excel', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' };
+    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', extratos:'Extratos → Excel', extratosnovos:'XP Extratos Novos', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' };
     const topbar = document.getElementById('topbarTitle');
     if (topbar) topbar.textContent = titles[viewId] || viewId;
     if (viewId === 'emails') { loadTemplates().then(() => buildTemplateAccordion()); if (clientRows.length === 0) addClientRow(); loadRascunho(); }
     if (viewId === 'extratos') extLoadMappingFromSupabase();
+    if (viewId === 'extratosnovos') xpnLoadMapping();
     if (viewId === 'cotas') ctLoadXpMapping();
     if (viewId === 'clientes') loadClientesView();
     if (viewId === 'perfil') populatePerfil();
@@ -3212,6 +3307,381 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     }
     const today=new Date().toISOString().slice(0,10);
     XLSX.writeFile(wb,`extratos_${extCurrentBroker.toLowerCase()}_${today}.xlsx`);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // ── XP EXTRATOS NOVOS ──────────────────────────────────
+  // ═══════════════════════════════════════════════════════
+  // Mesma saída do modo XP de "Extratos → Excel", para o novo layout do
+  // "Extrato da Conta Investimento" da XP. No layout novo o PDF.js devolve
+  // o texto espaçado — "31 / 07 / 2026", "R $   1 . 396 , 64", "- R $ 209 , 49" —
+  // e por isso os regex da ferramenta antiga não encontram nenhuma linha.
+  // Aqui o texto é normalizado antes do parse; textos já limpos (layout antigo)
+  // passam intactos pela normalização, então a ferramenta lê os dois desenhos.
+
+  let xpnSelectedFiles = [];
+  let xpnAllProcessedRows = [];
+  let xpnMappingSaveTimer = null;
+
+  // ── Mapeamento (compartilha a tabela XP com a ferramenta antiga) ──
+  async function xpnLoadMapping() {
+    xpnMarkSave('loading');
+    try {
+      const { data, error } = await sb.from('cnpj_mapping_xp').select('*').order('key');
+      if (error) throw error;
+      const rows = (data && data.length > 0) ? data.map(r => ({ key: r.key, cnpj: r.cnpj || '', full: r.full_name || '' })) : DEFAULT_MAPPING_XP;
+      xpnRenderMapping(rows);
+      xpnMarkSave('saved');
+    } catch(e) {
+      console.warn('Mapping load (XP novos):', e.message);
+      xpnRenderMapping(DEFAULT_MAPPING_XP);
+      xpnMarkSave('saved');
+    }
+  }
+
+  async function xpnSaveMapping() {
+    xpnMarkSave('unsaved');
+    clearTimeout(xpnMappingSaveTimer);
+    xpnMappingSaveTimer = setTimeout(async () => {
+      const rows = xpnGetMappingRows();
+      try {
+        await sb.from('cnpj_mapping_xp').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        if (rows.length > 0) {
+          const inserts = rows.map(r => ({ key: r.key, cnpj: r.cnpj, full_name: r.full, updated_at: new Date().toISOString() }));
+          const { error } = await sb.from('cnpj_mapping_xp').insert(inserts);
+          if (error) throw error;
+        }
+        xpnMarkSave('saved');
+      } catch(e) {
+        console.warn('Mapping save (XP novos):', e.message);
+        xpnMarkSave('error');
+      }
+    }, 1500);
+  }
+
+  function xpnMarkSave(state) {
+    const dot = document.getElementById('xpnSaveDot');
+    const label = document.getElementById('xpnSaveLabel');
+    if (!dot || !label) return;
+    if (state === 'saved') {
+      dot.className = 'save-dot saved';
+      label.textContent = 'Salvo — ' + new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+    } else if (state === 'unsaved') {
+      dot.className = 'save-dot unsaved';
+      label.textContent = 'Salvando...';
+    } else if (state === 'loading') {
+      dot.className = 'save-dot';
+      label.textContent = 'Carregando...';
+    } else {
+      dot.className = 'save-dot unsaved';
+      label.textContent = 'Erro ao salvar';
+    }
+  }
+
+  function xpnRenderMapping(rows) {
+    document.getElementById('xpnMappingBody').innerHTML = '';
+    rows.forEach(r => xpnAddMappingRow(r.key, r.cnpj, r.full));
+  }
+
+  function xpnAddMappingRow(key='', cnpj='', full='') {
+    const tbody = document.getElementById('xpnMappingBody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" placeholder="ex: BV Institucional" value="${extEscHtml(key)}" /></td>
+      <td><input type="text" placeholder="00.000.000/0000-00" value="${extEscHtml(cnpj)}" style="color:var(--gold);" /></td>
+      <td><input type="text" placeholder="Nome completo (opcional)" value="${extEscHtml(full)}" /></td>
+      <td><button onclick="this.closest('tr').remove();xpnSaveMapping();" style="background:none;border:none;color:#e05555;cursor:pointer;font-size:1rem;padding:0.3rem;">✕</button></td>`;
+    tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => xpnSaveMapping()));
+    tbody.appendChild(tr);
+  }
+
+  function xpnGetMappingRows() {
+    return Array.from(document.querySelectorAll('#xpnMappingBody tr')).map(tr => {
+      const ins = tr.querySelectorAll('input');
+      return { key: ins[0].value.trim(), cnpj: ins[1].value.trim(), full: ins[2].value.trim() };
+    }).filter(r => r.key);
+  }
+
+  function xpnResetMapping() {
+    if (!confirm('Restaurar tabela padrão? Isso vai sobrescrever o mapeamento XP atual (usado também em Extratos → Excel).')) return;
+    xpnRenderMapping(DEFAULT_MAPPING_XP);
+    xpnSaveMapping();
+  }
+
+  function xpnExportMapping() {
+    const rows = xpnGetMappingRows();
+    const data = [['Trecho do Nome','CNPJ','Nome Completo'], ...rows.map(r => [r.key, r.cnpj, r.full])];
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [28, 22, 42].map(w => ({ wch: w }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Mapeamento CNPJ');
+    XLSX.writeFile(wb, 'mapeamento_xp_eh.xlsx');
+  }
+
+  function xpnImportMapping(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        const rows = data.slice(1).filter(r => r[0]).map(r => ({ key: String(r[0]||'').trim(), cnpj: String(r[1]||'').trim(), full: String(r[2]||'').trim() }));
+        if (!rows.length) { alert('Nenhuma linha encontrada.'); return; }
+        xpnRenderMapping(rows);
+        xpnSaveMapping();
+        alert('✓ ' + rows.length + ' fundos importados.');
+      } catch(err) { alert('Erro: ' + err.message); }
+      input.value = '';
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // ── Upload ──
+  const xpnUploadZone = document.getElementById('xpnUploadZone');
+  const xpnFileInput  = document.getElementById('xpnFileInput');
+  xpnUploadZone.addEventListener('click', () => xpnFileInput.click());
+  xpnUploadZone.addEventListener('dragover', e => { e.preventDefault(); xpnUploadZone.classList.add('drag-over'); });
+  xpnUploadZone.addEventListener('dragleave', () => xpnUploadZone.classList.remove('drag-over'));
+  xpnUploadZone.addEventListener('drop', e => {
+    e.preventDefault(); xpnUploadZone.classList.remove('drag-over');
+    const pdfs = [...e.dataTransfer.files].filter(f => f.type === 'application/pdf');
+    if (pdfs.length) xpnSetFiles(pdfs);
+  });
+  xpnFileInput.addEventListener('change', () => { if (xpnFileInput.files.length) xpnSetFiles([...xpnFileInput.files]); });
+
+  function xpnSetFiles(files) {
+    xpnSelectedFiles = files;
+    const list = document.getElementById('xpnFileList');
+    list.innerHTML = '';
+    files.forEach(f => {
+      const div = document.createElement('div');
+      div.className = 'file-item-ext';
+      div.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--gold);flex-shrink:0;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span class="file-item-ext-name">${f.name}</span>
+        <span class="file-item-ext-status file-status-wait" id="xfs_${f.name.replace(/\W/g,'_')}">aguardando</span>`;
+      list.appendChild(div);
+    });
+    document.getElementById('xpnBtnProcess').disabled = false;
+    const n = files.length;
+    document.getElementById('xpnBtnLabel').textContent = n === 1 ? 'Processar e gerar Excel' : `Processar ${n} extratos e gerar Excel`;
+  }
+
+  function xpnSetFileStatus(file, status, cls) {
+    const el = document.getElementById('xfs_' + file.name.replace(/\W/g, '_'));
+    if (el) { el.textContent = status; el.className = 'file-item-ext-status ' + (cls || ''); }
+  }
+
+  // ── Normalização do novo layout ──
+  // "31 / 07 / 2026" -> "31/07/2026" · "R $   1 . 396 , 64" -> "R$ 1.396,64" · "- R $" -> "-R$"
+  function xpnNormalize(text) {
+    let t = text.replace(/[\u00A0\u2007\u202F]/g, ' ').replace(/\n/g, ' ');
+    t = t.replace(/R\s*\$/g, 'R$');                    // "R $" -> "R$"
+    t = t.replace(/(\d)\s*\.\s*(?=\d{3}\b)/g, '$1.');  // milhar: "1 . 396" -> "1.396"
+    t = t.replace(/(\d)\s*,\s*(?=\d)/g, '$1,');        // decimal: "396 , 64" -> "396,64"
+    t = t.replace(/\s*\/\s*/g, '/');                   // datas e "SET / 2030"
+    t = t.replace(/-\s*R\$/g, '-R$');                  // sinal negativo antes do símbolo
+    t = t.replace(/\s{2,}/g, ' ');
+    return t.trim();
+  }
+
+  function xpnParseAmount(str) {
+    if (!str) return null;
+    const neg = str.includes('-');
+    const n = parseFloat(str.replace(/-/g,'').replace(/R\$/g,'').replace(/\s+/g,'').replace(/\./g,'').replace(',','.'));
+    if (isNaN(n)) return null;
+    return neg ? -n : n;
+  }
+
+  // Sinal pode vir antes ("- R$ 209,49") ou depois do símbolo ("R$ -209,49")
+  const XPN_MONEY = String.raw`(-?\s*R\$\s*-?\s*\d[\d.,]*)`;
+
+  function xpnParse(text) {
+    const flat = xpnNormalize(text);
+    const re = new RegExp(String.raw`(\d{2}\/\d{2}\/\d{4})\s+(\d{2}\/\d{2}\/\d{4})\s+(.+?)\s+` + XPN_MONEY + String.raw`\s+` + XPN_MONEY, 'g');
+    const rows = []; let m;
+    while ((m = re.exec(flat)) !== null) {
+      let historico = m[3].replace(/\s+/g,' ').trim();
+      // Cabeçalho da tabela pode colar no início do histórico na quebra de página
+      historico = historico.replace(/^(?:Movimenta[çc][ãa]o|Liquida[çc][ãa]o|Hist[óo]rico|Valor|Saldo|\|)\s*/gi,'').trim();
+      if (!historico || /^(?:Hist[óo]rico|Valor|Saldo|Mov\b|Liq\b)/i.test(historico)) continue;
+      const valor = xpnParseAmount(m[4]);
+      const saldo = xpnParseAmount(m[5]);
+      if (valor === null || saldo === null) continue;
+      rows.push({ dataMov: m[1], dataLiq: m[2], historico, valor, saldo });
+    }
+    return rows;
+  }
+
+  // ── Classificação (mesmas regras do modo XP) ──
+  function xpnClassifyTipo(h) {
+    const u = h.toUpperCase();
+    if (u.includes('IRRF')) return 'IRRF';
+    if (u.includes('IOF')) return 'IOF';
+    if (u.includes('RESGATE')) return 'Resgate';
+    if (u.includes('INTEGRALIZ')) return 'Integralização';
+    if (u.includes('RENDIMENTO')) return 'Rendimento';
+    if (u.includes('AMORTIZ')) return 'Amortização';
+    if (u.includes('JUROS')||u.includes('PGTO')||u.includes('PGT ')) return 'Juros';
+    if (u.includes('TED')) return 'TED';
+    if (u.includes('PIX')) return 'PIX';
+    return 'Outro';
+  }
+
+  // ── CNPJ: busca por trecho, ignorando acentos e espaços ──
+  function xpnStrip(s) {
+    return (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+  }
+  function xpnLookupCNPJ(historico, mapping) {
+    const hay = xpnStrip(historico);
+    const hayTight = hay.replace(/\s+/g,'');
+    for (const m of mapping) {
+      if (!m.key) continue;
+      const needle = xpnStrip(m.key);
+      if (hay.includes(needle) || hayTight.includes(needle.replace(/\s+/g,''))) return m.cnpj || '—';
+    }
+    return '—';
+  }
+
+  // ── Nome do cliente (aba do Excel) ──
+  // Novo layout: "Cliente  Aline Costa Pereira Caldas 108249  Assessor  ..."
+  function xpnGetSheetName(text, filename) {
+    const flat = xpnNormalize(text);
+    const patterns = [
+      /Cliente\s*:?\s*([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'&.\-\s]{3,70}?)\s+\d{3,}\s+Assessor/i,
+      /Cliente\s*:?\s*([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'&.\-\s]{3,70}?)\s+\d{3,}\b/i,
+      /Cliente\s*:?\s*([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'&.\-\s]{3,70}?)\s+(?:CPF|CNPJ)/i
+    ];
+    for (const re of patterns) {
+      const m = flat.match(re);
+      if (!m) continue;
+      const name = m[1].trim().replace(/\s+/g,' ');
+      if (name.split(' ').length >= 2) return xpnSafeSheetName(name);
+    }
+    // Fallback: mesma heurística da ferramenta antiga (maiúsculas antes do CPF)
+    const anchor = flat.match(/(.{5,80}?)\s+CPF/);
+    if (anchor) { const n = extPickClientName(anchor[1]); if (n) return xpnSafeSheetName(n); }
+    return xpnSafeSheetName(filename.replace(/\.pdf$/i,'').replace(/[_-]/g,' '));
+  }
+  // Excel não aceita : \ / ? * [ ] no nome da aba
+  function xpnSafeSheetName(s) {
+    return (s || 'Extrato').replace(/[:\\\/\?\*\[\]]/g,' ').replace(/\s+/g,' ').trim().slice(0,31) || 'Extrato';
+  }
+
+  // ── Processamento ──
+  async function xpnProcessAll() {
+    if (!xpnSelectedFiles.length) return;
+    document.getElementById('xpnPreviewSection').classList.remove('visible');
+    document.getElementById('xpnStatusBox').innerHTML = '';
+    document.getElementById('xpnStatusBox').classList.add('visible');
+    document.getElementById('xpnBtnProcess').disabled = true;
+    xpnAllProcessedRows = [];
+    const mapping = xpnGetMappingRows();
+    const fill = document.getElementById('xpnProgressFill');
+    const plabel = document.getElementById('xpnProgressLabel');
+    document.getElementById('xpnProgressWrap').classList.add('visible');
+
+    for (let i = 0; i < xpnSelectedFiles.length; i++) {
+      const f = xpnSelectedFiles[i];
+      fill.style.width = Math.round((i / xpnSelectedFiles.length) * 100) + '%';
+      plabel.textContent = `Processando ${i+1} de ${xpnSelectedFiles.length}: ${f.name}`;
+      xpnLog(`── ${f.name}`, 'head');
+      xpnSetFileStatus(f, 'processando...', '');
+      try {
+        const text = await extExtractText(f);
+        const sheetName = xpnGetSheetName(text, f.name);
+        xpnLog(`Cliente: "${sheetName}"`, 'ok');
+        const rawRows = xpnParse(text);
+        if (!rawRows.length) {
+          xpnLog('Nenhuma transação encontrada — confira se o PDF é o Extrato da Conta Investimento (XP)', 'err');
+          xpnSetFileStatus(f, 'erro', 'file-status-err');
+          continue;
+        }
+        const rows = rawRows.map(r => {
+          const tipo = xpnClassifyTipo(r.historico);
+          const cnpj = ['IOF','IRRF'].includes(tipo) ? '—' : xpnLookupCNPJ(r.historico, mapping);
+          return { ...r, tipo, cnpj };
+        });
+        const semCnpj = rows.filter(r => r.cnpj === '—' && !['IOF','IRRF','TED','PIX'].includes(r.tipo)).length;
+        if (semCnpj > 0) xpnLog(`${semCnpj} linha(s) sem CNPJ na tabela de mapeamento`, 'warn');
+        xpnAllProcessedRows.push({ sheetName, rows, filename: f.name });
+        xpnLog(`${rows.length} transações · aba: "${sheetName}"`, 'ok');
+        xpnSetFileStatus(f, `✓ ${rows.length} transações`, 'file-status-ok');
+      } catch(e) {
+        xpnLog('Erro: ' + e.message, 'err'); console.error(e);
+        xpnSetFileStatus(f, 'erro', 'file-status-err');
+      }
+    }
+    fill.style.width = '100%';
+    plabel.textContent = `Concluído — ${xpnAllProcessedRows.length} de ${xpnSelectedFiles.length} arquivo(s)`;
+    if (xpnAllProcessedRows.length > 0) {
+      xpnRenderPreview(xpnAllProcessedRows);
+      xpnLog(`Pronto! ${xpnAllProcessedRows.length} aba(s) gerada(s).`, 'ok');
+    }
+    document.getElementById('xpnBtnProcess').disabled = false;
+  }
+
+  function xpnLog(msg, type='') {
+    const box = document.getElementById('xpnStatusBox');
+    const cls = type==='ok'?'ext-log-ok':type==='warn'?'ext-log-warn':type==='err'?'ext-log-err':type==='head'?'ext-log-head':'';
+    box.innerHTML += `<div class="${cls}">› ${msg}</div>`;
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function xpnRenderPreview(sheets) {
+    document.getElementById('xpnPreviewSection').classList.add('visible');
+    const totalTx = sheets.reduce((s,sh) => s + sh.rows.length, 0);
+    const totalIn = sheets.flatMap(s => s.rows).filter(r => r.valor > 0).reduce((s,r) => s + r.valor, 0);
+    const totalOut = sheets.flatMap(s => s.rows).filter(r => r.valor < 0).reduce((s,r) => s + r.valor, 0);
+    document.getElementById('xpnSummaryChips').innerHTML = `
+      <div class="ext-chip">Clientes <span>${sheets.length}</span></div>
+      <div class="ext-chip">Transações <span>${totalTx}</span></div>
+      <div class="ext-chip">Entradas <span style="color:#4caf82">${extFmtVal(totalIn)}</span></div>
+      <div class="ext-chip">Saídas <span style="color:#e05555">${extFmtVal(Math.abs(totalOut))}</span></div>`;
+    const table = document.getElementById('xpnPreviewTable');
+    table.innerHTML = `<thead><tr><th>Aba</th><th>CNPJ</th><th>Data</th><th>Descrição</th><th>Valor</th><th>Saldo</th><th>Tipo</th></tr></thead>`;
+    const tbody = document.createElement('tbody');
+    let count = 0;
+    for (const sh of sheets) {
+      for (const r of sh.rows) {
+        if (count++ > 60) break;
+        const tr = document.createElement('tr');
+        const valCls = r.valor < 0 ? 'td-neg' : 'td-pos';
+        const cnpjCls = r.cnpj === '—' ? 'td-na' : 'td-cnpj';
+        const hist = r.historico.length > 38 ? r.historico.slice(0,37) + '…' : r.historico;
+        tr.innerHTML = `<td class="td-sheet">${sh.sheetName}</td><td class="${cnpjCls}">${r.cnpj}</td><td>${r.dataMov}</td><td title="${extEscHtml(r.historico)}">${hist}</td><td class="${valCls}">${r.valor<0?'-':'+'}${extFmtVal(Math.abs(r.valor))}</td><td>${extFmtVal(r.saldo)}</td><td>${r.tipo}</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+    if (totalTx > 60) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td colspan="7" style="text-align:center;color:var(--gray);padding:0.8rem;font-size:0.68rem;">… e mais ${totalTx-60} transações no Excel</td>`;
+      tbody.appendChild(tr);
+    }
+    table.appendChild(tbody);
+    document.getElementById('xpnBtnDownload').onclick = xpnDownloadExcel;
+  }
+
+  function xpnDownloadExcel() {
+    const wb = XLSX.utils.book_new();
+    const header = ['CNPJ','Data Mov.','Data Liq.','Histórico','Valor (R$)','Saldo (R$)','Tipo'];
+    const sorted = [...xpnAllProcessedRows].sort((a,b) =>
+      a.sheetName.localeCompare(b.sheetName, 'pt-BR', { sensitivity: 'base' })
+    );
+    const usedNames = new Set();
+    for (const sh of sorted) {
+      let name = sh.sheetName.slice(0,31); let suffix = 2;
+      while (usedNames.has(name)) { name = sh.sheetName.slice(0,28) + '_' + suffix++; }
+      usedNames.add(name);
+      const data = [header, ...sh.rows.map(r => [r.cnpj, r.dataMov, r.dataLiq, r.historico, r.valor, r.saldo, r.tipo])];
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      ws['!cols'] = [22,13,13,50,14,14,16].map(w => ({ wch: w }));
+      XLSX.utils.book_append_sheet(wb, ws, name);
+    }
+    const today = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `extratos_xp_novos_${today}.xlsx`);
   }
 
   // ══════════ COTAS DOS FUNDOS (admin) ══════════
