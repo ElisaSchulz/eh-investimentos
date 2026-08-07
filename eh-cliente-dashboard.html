@@ -3512,7 +3512,21 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       if (valor === null || saldo === null) continue;
       rows.push({ dataMov: m[1], dataLiq: m[2], historico, valor, saldo });
     }
-    return rows;
+    return xpnSortRows(rows);
+  }
+
+  // ── Ordenação: da data mais antiga para a mais recente ──
+  // O extrato da XP vem em ordem decrescente, então inverter recupera a ordem
+  // cronológica também DENTRO de um mesmo dia — o que o sort por data sozinho
+  // não faria. Ex.: em 31/07 o PDF lista "RENDIMENTO" antes de "IRRF", mas a
+  // coluna de saldo mostra que o IRRF veio primeiro (596,87 − 209,49 = 387,38;
+  // 387,38 + 1.396,64 = 1.784,02). Invertendo, o saldo fica consistente linha
+  // a linha. O sort por data é estável, então só reposiciona lançamentos caso
+  // o arquivo venha fora de ordem, preservando a sequência dentro de cada dia.
+  function xpnSortRows(rows) {
+    const chave = d => { const p = d.split('/'); return p[2] + p[1] + p[0]; };
+    return rows.slice().reverse()
+      .sort((a, b) => chave(a.dataMov).localeCompare(chave(b.dataMov)));
   }
 
   // ── Classificação (mesmas regras do modo XP) ──
