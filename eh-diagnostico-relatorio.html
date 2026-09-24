@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seu Relatório | Diagnóstico Financeiro EH Investimentos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,300;1,8..60,400;1,8..60,500&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: #F3EDE1; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #0A1733; }
+  a { color: #A2600A; }
+  a:hover { color: #0D1E4E; }
+  ::selection { background: rgba(240,192,96,0.35); }
+
+  .btn-print { position: fixed; top: 20px; right: 20px; z-index: 999; background: #0D1E4E; color: #FBF8F1; border: none; border-radius: 6px; padding: 12px 20px; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-weight: 700; font-size: 13px; cursor: pointer; letter-spacing: 0.02em; }
+  .btn-print:hover { background: #2A2A6E; }
+
+  section { padding: 80px 32px 88px; }
+  section.tight { padding: 56px 32px 72px; }
+  .wrap { max-width: 780px; margin: 0 auto; }
+  .wrap-wide { max-width: 900px; margin: 0 auto; }
+  .hairline { border-top: 1px solid rgba(13,30,78,0.1); }
+
+  .eyebrow-wrap { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .eyebrow-line { width: 48px; height: 2px; background: #D4820A; flex-shrink: 0; }
+  .eyebrow-text { font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: #A2600A; flex: 1; }
+  .section-num { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: rgba(10,23,51,0.3); font-feature-settings: 'tnum'; flex-shrink: 0; }
+  h2 { font-family: 'Source Serif 4', Georgia, serif; font-size: 32px; font-weight: 500; color: #0D1E4E; margin: 0 0 32px; }
+
+  .navy-glow { position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(212,130,10,0.22) 0%, rgba(212,130,10,0) 70%); pointer-events: none; }
+  .card { background: #FBF8F1; border: 1px solid rgba(13,30,78,0.14); border-radius: 8px; }
+
+  .kpi-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(10,23,51,0.45); margin-bottom: 6px; }
+  .kpi-small { font-size: 16px; color: #0D1E4E; font-weight: 600; }
+  .kpi-med { font-family: 'Source Serif 4', Georgia, serif; font-size: 26px; font-weight: 500; color: #0D1E4E; font-feature-settings: 'tnum'; }
+
+  .cover { position: relative; overflow: hidden; background: #0D1E4E; color: #FBF8F1; min-height: 92vh; display: flex; flex-direction: column; justify-content: space-between; }
+  .cover-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 52px; font-weight: 500; line-height: 1.12; }
+
+  /* Gráfico da projeção: a caixa define a proporção (mais alta no celular) e
+     os rótulos são HTML, então o texto não encolhe junto com o desenho. */
+  .grafico { position: relative; width: 100%; padding-bottom: 41.7%; }
+  .g-rot { position: absolute; font-size: 10.5px; line-height: 1.2; white-space: nowrap; pointer-events: none; }
+  .g-rot-eixo { color: rgba(10,23,51,0.55); font-weight: 500; }
+  .g-rot-meta { color: #A9762F; font-weight: 700; }
+  .g-rot-marco { color: rgba(10,23,51,0.6); font-weight: 700; }
+  .g-rot-alerta { color: #B34747; font-weight: 700; }
+
+  @media (max-width: 639px) {
+    section { padding: 56px 20px 64px; }
+    section.tight { padding: 44px 20px 56px; }
+    .cover-title { font-size: 36px; }
+    h2 { font-size: 26px; }
+    .grafico { padding-bottom: 78%; }
+    .g-rot { font-size: 10px; }
+    /* Cartão-âncora em cima dos secundários, e rosca em cima da legenda:
+       lado a lado, os dois espremem a coluna da direita a ponto de os
+       rótulos quebrarem letra a letra. */
+    .kpi-grupo-corpo { grid-template-columns: 1fr !important; }
+    .dist-card { flex-direction: column; align-items: stretch !important; gap: 22px !important; }
+    .dist-card > div:first-child { align-self: center; }
+    .dist-lista { grid-template-columns: 1fr !important; }
+    .perfil-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .perfil-grid-2 { grid-template-columns: 1fr !important; }
+  }
+
+  @media print {
+    .no-print { display: none !important; }
+    body { background: #fff; }
+    .card, .kpi, .dim-row, .glossary-item, .faixa-row, .kpi-grupo { break-inside: avoid; }
+    /* O bloco do arquétipo pode passar de uma página inteira quando o cliente
+       escreve bastante nas perguntas abertas. Mantê-lo inteiro empurraria o
+       bloco todo pra folha seguinte e deixaria o título da seção sozinho, então
+       aqui ele continua na próxima página em vez de ser preservado. */
+    .archetype-block { break-inside: auto; }
+    @page { size: A4; margin: 16mm; }
+
+    /* Capa e encerramento ganham páginas sem margem, pra o fundo navy sangrar
+       até a borda do papel. O padding volta por dentro, em mm, já que aqui não
+       há viewport. */
+    @page sangria { margin: 0; }
+    /* A altura tem que ser dita em unidade de papel: 100vh aqui segue o
+       viewport de quem imprime, não a folha. Com um viewport mais alto que
+       A4, a capa passava do fim da página e gerava uma folha em branco
+       atrás dela — e o mesmo no encerramento. 296mm deixa 1mm de folga
+       contra arredondamento, imperceptível e suficiente. */
+    .cover, .closing { page: sangria; min-height: 0; height: 296mm; padding: 24mm 22mm; }
+    .closing { break-before: page; display: flex; flex-direction: column; justify-content: center; }
+
+    /* Uma seção por página: cada uma recomeça no topo da folha seguinte. O
+       respiro vertical entre seções vem da margem da folha, então o padding
+       sai — inclusive o de baixo, que o navegador tenta manter junto com o
+       último bloco e acabava empurrando blocos inteiros pra página seguinte. */
+    /* O recuo lateral também sai: a margem da folha já dá o respiro, e os
+       32px de cada lado espremiam o conteúdo para ~609mm úteis, deixando
+       tudo mais alto do que precisava. */
+    #report > section:not(.cover):not(.closing) { break-before: page; padding: 0; }
+    .wrap, .wrap-wide { max-width: none; }
+    /* Blocos que são grandes demais pra caber junto com o resto da seção e
+       têm título próprio: começam na folha seguinte de propósito. */
+    .quebra-pagina { break-before: page; }
+    /* Os fios separadores só fazem sentido quando as seções se seguem na
+       mesma folha; com a quebra, viram um risco solto no topo da página. */
+    .hairline { border-top: none; }
+  }
+</style>
+</head>
+<body>
+<button class="btn-print no-print" onclick="window.print()">Baixar PDF</button>
+<div id="report"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eh-diagnostico-supabase.js?v=1"></script>
+<script src="eh-diagnostico-core.js?v=1"></script>
+<script>
+"use strict";
+
+// Lógica de cálculo compartilhada (eh-diagnostico-core.js)
+var fmt = EHDiag.fmt, pct = EHDiag.pct, esc = EHDiag.esc, computeReport = EHDiag.computeReport;
+var NIVEL_TEXTS = EHDiag.NIVEL_TEXTS;
+
+/* Valores monetários longos não cabem em caixa de largura fixa, e como a
+   fonte é estática não dá pra medir em tempo de render. Aqui a largura é
+   estimada pelo número de caracteres — 0,55 em de largura média por
+   caractere na Source Serif 4 com tabular-nums, aferido contra o texto real
+   renderizado — e a fonte encolhe só o quanto precisar pra caber.
+
+   `largura` é a largura útil da caixa em impressão A4, que é a condição mais
+   apertada: 673px de folha, não os 900px do wrap na tela. */
+function tamanhoValor(txt, base, largura) {
+  var estimado = String(txt).length * base * 0.55;
+  var teto = largura * 0.94;                       // folga contra a estimativa
+  if (estimado <= teto) return base;
+  return Math.max(base * 0.45, base * teto / estimado).toFixed(1);
+}
+
+/* Cabeçalho de bloco dentro de uma seção: mesmo desenho do sectionHeader,
+   sem o número — a numeração é da página, não do bloco. */
+function blocoHeader(eyebrow, title, margemTopo) {
+  return '<div class="eyebrow-wrap" style="margin-top:' + (margemTopo || 34) + 'px;"><div class="eyebrow-line"></div><div class="eyebrow-text">' + eyebrow + '</div></div>' +
+    '<h2 style="font-size:23px; margin-bottom:16px;">' + title + '</h2>';
+}
+
+/* Escala dos cinco níveis de maturidade. Mostra onde a pessoa está dentro do
+   caminho inteiro, em vez de só nomear o degrau atual. */
+function escalaNiveis(atual) {
+  var itens = "";
+  for (var n = 1; n <= 5; n++) {
+    var passado = n <= atual;
+    var ehAtual = n === atual;
+    itens += '<div>' +
+      '<div style="height:7px; border-radius:4px; background:' + (passado ? (ehAtual ? "#A2600A" : "rgba(212,130,10,0.45)") : "rgba(13,30,78,0.12)") + '; margin-bottom:6px;"></div>' +
+      '<div style="font-size:10px; line-height:1.3; text-align:center; color:' + (ehAtual ? "#0D1E4E" : "rgba(10,23,51,0.5)") + '; font-weight:' + (ehAtual ? 700 : 500) + ';">' +
+      NIVEL_TEXTS[n].nome + '</div></div>';
+  }
+  return '<div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; margin-top:18px;">' + itens + '</div>';
+}
+
+/* ===================== Render ===================== */
+function sectionHeader(eyebrow, num, title) {
+  return '<div class="eyebrow-wrap"><div class="eyebrow-line"></div><div class="eyebrow-text">' + eyebrow + '</div><div class="section-num">' + num + ' · 13</div></div>' +
+    '<h2>' + title + '</h2>';
+}
+
+/* ── Seção 7: Distribuição de Despesas ────────────────────────────────────
+   Duas leituras na mesma página. A rosca reparte a despesa por categoria
+   (fecha em 100%); a régua compara com a referência 50/30/20, que é sobre a
+   renda.
+
+   Cor: onze categorias com onze matizes distintos reprovam nos testes de
+   daltonismo e de contraste — passam só três matizes quando todos os pares
+   precisam se distinguir. Então a identidade fica no grupo (essenciais em
+   azul, flexíveis em ocre) e, dentro de cada grupo, os passos variam em
+   claridade na ordem de tamanho. A lista ao lado nomeia cada fatia com seu
+   percentual, que é o alívio exigido para os tons de contraste mais baixo. */
+var RAMPA = {
+  essenciais: ["#25397A", "#2C4794", "#3454A8", "#4667BB", "#6180C9", "#8098D6", "#A3B4E3", "#BFCAEC"],
+  flexiveis:  ["#9E6B14", "#BE8320", "#D99A2B", "#E8B45E", "#F2CE90"],
+  investimentos: "#1F8F7A"
+};
+
+function corDaCategoria(cat, indiceNoGrupo) {
+  var rampa = RAMPA[cat.grupo] || RAMPA.essenciais;
+  return rampa[Math.min(indiceNoGrupo, rampa.length - 1)];
+}
+
+function renderDistribuicao(R) {
+  var d = R.distribuicao;
+
+  // A régua não é identidade, é estado: cada faixa é uma razão medida contra um
+  // limite. Por isso a barra usa a cor de estado — e vem sempre com a frase que
+  // diz o mesmo, pra não depender de cor em impressão preto e branco.
+  var COMENTARIO = {
+    essenciais: { ok: "Dentro da faixa geralmente considerada saudável.",
+                  fora: "Acima da faixa geralmente considerada saudável — vale ver se há espaço pra reduzir algum desses gastos fixos." },
+    flexiveis:  { ok: "Dentro da faixa geralmente considerada saudável.",
+                  fora: "Acima da faixa geralmente considerada saudável — é aqui que os cortes costumam ser mais fáceis." },
+    investimentos: { ok: "Dentro (ou acima) da faixa geralmente considerada saudável.",
+                     fora: "Abaixo da faixa geralmente considerada saudável — é o que mais pesa no longo prazo." }
+  };
+
+  var faixas = d.faixas.map(function (f) {
+    var cor = f.dentro ? "#2F7D5B" : "#C48A3E";
+    var largura = Math.max(0, Math.min(100, f.pct));
+    var rotulo = f.limite === "ate" ? "ideal até " + f.ideal + "%" : "ideal no mínimo " + f.ideal + "%";
+    var texto = COMENTARIO[f.key][f.dentro ? "ok" : "fora"];
+    return '<div class="faixa-row" style="margin-bottom:18px;">' +
+      '<div style="display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:5px;">' +
+      '<div style="font-size:14.5px; font-weight:700; color:#0D1E4E;">' + f.nome + '</div>' +
+      '<div style="font-size:13px; font-weight:700; color:' + cor + '; font-feature-settings:\'tnum\';">' + pct(f.pct, 1) +
+      ' <span style="color:rgba(10,23,51,0.4); font-weight:500;">(' + rotulo + ')</span></div></div>' +
+      '<div style="position:relative; height:9px; border-radius:4.5px; background:rgba(13,30,78,0.08); margin-bottom:6px;">' +
+      '<div style="width:' + largura + '%; height:100%; background:' + cor + '; border-radius:4.5px;"></div>' +
+      '<div style="position:absolute; top:-3px; left:' + f.ideal + '%; width:2px; height:15px; background:#0D1E4E;"></div>' +
+      '</div>' +
+      '<div style="font-size:12px; color:rgba(10,23,51,0.55); line-height:1.5;">' + f.itens + ' ' + texto + '</div>' +
+      '</div>';
+  }).join("");
+
+  var referencia =
+    '<div style="font-size:13.5px; line-height:1.7; color:rgba(10,23,51,0.7); max-width:620px; margin-bottom:16px;">' +
+    'Uma referência comum de planejamento sugere até 50% da renda em despesas essenciais, até 30% em despesas flexíveis, ' +
+    'e pelo menos 20% direcionado a investimentos e reserva — a lógica do "50/30/20". É um ponto de partida, não uma regra: ' +
+    'serve pra mostrar onde vale ajustar primeiro.</div>';
+
+  var cabecalho =
+    sectionHeader("Para onde vai o dinheiro", "06", "Distribuição de Despesas");
+
+  var bloco2 =
+    '<div style="font-size:10.5px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:#A2600A; margin:26px 0 10px;">Referência</div>' +
+    '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-size:19px; font-weight:500; color:#0D1E4E; margin-bottom:10px;">O que seria uma distribuição equilibrada</div>' +
+    referencia +
+    '<div class="card" style="padding:22px 28px;">' + faixas + '</div>';
+
+  if (!d.categorias.length) {
+    return '<section class="hairline"><div class="wrap">' + cabecalho +
+      '<div style="font-size:13.5px; line-height:1.6; color:rgba(10,23,51,0.7); margin-bottom:6px;">Você não detalhou as despesas por categoria, então não há distribuição a mostrar. A régua abaixo usa os totais informados.</div>' +
+      bloco2 + '</div></section>';
+  }
+
+  // ---- rosca ----
+  // Onze categorias com onze matizes distintos reprovam nos testes de daltonismo
+  // (só três matizes se distinguem quando qualquer par pode ser comparado). Então
+  // a identidade fica no grupo — essenciais em azul, flexíveis em ocre — e dentro
+  // de cada grupo os passos variam em claridade, na ordem de tamanho. A lista ao
+  // lado nomeia cada fatia com o percentual, que é o alívio exigido.
+  var RAIO = 60, LARGURA = 24, C = 2 * Math.PI * RAIO;
+  var acumulado = 0, vistos = {};
+  var arcos = d.categorias.map(function (c) {
+    var i = (vistos[c.grupo] = (vistos[c.grupo] || 0)); vistos[c.grupo]++;
+    var comprimento = (c.pct / 100) * C;
+    var traco = Math.max(comprimento - 2, 0.8);   // 2px de respiro entre fatias
+    var el = '<circle cx="80" cy="80" r="' + RAIO + '" fill="none" stroke="' + corDaCategoria(c, i) +
+      '" stroke-width="' + LARGURA + '" stroke-dasharray="' + traco.toFixed(2) + ' ' + (C - traco).toFixed(2) +
+      '" stroke-dashoffset="' + (-acumulado).toFixed(2) + '" />';
+    acumulado += comprimento;
+    return el;
+  }).join("");
+
+  // Cada linha traz o valor em reais que a pessoa informou, além do percentual:
+  // o percentual diz o peso relativo, mas é o valor que ela reconhece como o
+  // próprio gasto e consegue conferir contra o orçamento dela.
+  vistos = {};
+  var lista = d.categorias.map(function (c) {
+    var i = (vistos[c.grupo] = (vistos[c.grupo] || 0)); vistos[c.grupo]++;
+    return '<div style="display:flex; align-items:flex-start; gap:8px; padding:5px 0;">' +
+      '<div style="width:9px; height:9px; border-radius:50%; background:' + corDaCategoria(c, i) + '; flex-shrink:0; margin-top:4px;"></div>' +
+      '<div style="flex:1; min-width:0;">' +
+      '<div style="font-size:12.5px; color:rgba(10,23,51,0.8); line-height:1.35;">' + c.label + '</div>' +
+      '<div style="font-size:12px; color:rgba(10,23,51,0.5); font-feature-settings:\'tnum\'; line-height:1.35;">' + fmt(c.valor) + '</div>' +
+      '</div>' +
+      '<div style="font-size:12.5px; font-weight:700; color:#0D1E4E; font-feature-settings:\'tnum\';">' + pct(c.pct, 1) + '</div>' +
+      '</div>';
+  }).join("");
+
+  return '<section class="hairline"><div class="wrap">' + cabecalho +
+    '<div style="font-size:13.5px; line-height:1.6; color:rgba(10,23,51,0.6); max-width:580px; margin-bottom:18px;">' +
+    'Como os ' + fmt(d.total) + ' que saem por mês se repartem entre as categorias. ' +
+    'Aqui os percentuais são sobre a despesa; na régua abaixo, sobre a renda.</div>' +
+    '<div class="card dist-card" style="padding:26px 30px; display:flex; gap:32px; align-items:center;">' +
+    '<div style="position:relative; width:176px; height:176px; flex-shrink:0;">' +
+    '<svg width="176" height="176" viewBox="0 0 160 160" role="img" aria-label="Distribuição das despesas por categoria, total de ' + fmt(d.total) + '.">' +
+    '<circle cx="80" cy="80" r="' + RAIO + '" fill="none" stroke="rgba(13,30,78,0.08)" stroke-width="' + LARGURA + '" />' +
+    '<g transform="rotate(-90 80 80)">' + arcos + '</g></svg>' +
+    '<div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none;">' +
+    '<div style="width:96px; text-align:center;">' +
+    '<div style="font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:rgba(10,23,51,0.4);">Total</div>' +
+    '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-size:' + tamanhoValor(fmt(d.total), 18, 96) + 'px; font-weight:500; color:#0D1E4E; font-feature-settings:\'tnum\'; white-space:nowrap;">' + fmt(d.total) + '</div>' +
+    '</div></div></div>' +
+    '<div class="dist-lista" style="flex:1; display:grid; grid-template-columns:repeat(2, 1fr); gap:6px 20px;">' + lista + '</div>' +
+    '</div>' + bloco2 + '</div></section>';
+}
+
+function renderReport(R) {
+  var html = "";
+
+  // 1. Capa
+  html += '<section class="cover">' +
+    '<div class="navy-glow" style="top:-120px; right:-120px; width:420px; height:420px;"></div>' +
+    '<div style="position:relative; display:flex; align-items:center; justify-content:space-between;">' +
+    '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-size:20px; font-weight:600;">EH <span style="font-style:italic; color:#F0C060;">Investimentos</span></div>' +
+    '<div style="font-size:11px; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; color:#F0C060;">Diagnóstico Financeiro</div></div>' +
+    '<div style="position:relative; max-width:640px;">' +
+    '<div style="display:flex; align-items:center; gap:12px; margin-bottom:24px;"><div style="width:48px; height:2px; background:#F0C060;"></div>' +
+    '<div style="font-size:11px; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; color:#F0C060;">Relatório Personalizado</div></div>' +
+    '<div class="cover-title">' + esc(R.data.nome) + '</div>' +
+    '<div style="margin-top:20px; font-size:16px; color:rgba(251,248,241,0.7);">' + R.dataFormatada + '</div></div>' +
+    '<div style="position:relative; font-size:12.5px; color:rgba(251,248,241,0.5);">Documento educacional e orientativo · EH Investimentos · Gestão Financeira</div>' +
+    '</section>';
+
+  // 2. Abertura
+  html += '<section><div class="wrap">' +
+    sectionHeader("Antes de começar", "02", "Bem-vindo(a) ao seu diagnóstico, " + esc(R.data.primeiroNome) + ".") +
+    '<div style="font-size:16.5px; line-height:1.75; color:rgba(10,23,51,0.75); max-width:640px;">' +
+    '<p>Este relatório traduz tudo o que você compartilhou conosco em um retrato claro e honesto da sua vida financeira hoje, sem jargão e sem julgamento.</p>' +
+    '<p>Nas próximas páginas você vai encontrar: seu score geral e nível de maturidade financeira, seu perfil comportamental, os números centrais da sua situação, o desempenho em cada uma das 6 dimensões avaliadas, a projeção do seu patrimônio até a aposentadoria (quanto você precisa ter, quanto precisa guardar por mês e o que o ritmo atual entrega), e um plano de ação individualizado, com uma lista prática para os próximos 30 dias.</p>' +
+    '<p>Este é um retrato do momento, não uma sentença. Toda situação financeira pode evoluir com clareza e direção certas.</p>' +
+    '</div></div></section>';
+
+  // 3. Score, nível e perfil — uma página só
+  var rodapeScore;
+  if (R.insightPercepcao.show) {
+    rodapeScore = blocoHeader("Percepção x Realidade", "Onde a sensação diverge dos números") +
+      '<div style="background:rgba(196,138,62,0.1); border:1px solid rgba(196,138,62,0.3); border-radius:8px; padding:16px 20px;">' +
+      R.insightPercepcao.itens.map(function (d) {
+        return '<div style="font-size:13.5px; line-height:1.6; color:rgba(10,23,51,0.8); margin-bottom:8px;">' + d + '</div>';
+      }).join("") + '</div>';
+  } else {
+    rodapeScore = blocoHeader("Como chegamos ao score", "O que entra na conta") +
+      '<div style="font-size:14px; line-height:1.75; color:rgba(10,23,51,0.6); max-width:560px;">' +
+      'O score combina seis dimensões da sua vida financeira — fluxo de caixa, liquidez, endividamento, ' +
+      'gestão de risco, patrimônio e metas — cada uma com peso próprio na fórmula. Nas páginas seguintes ' +
+      'você verá o desempenho detalhado em cada uma delas.</div>';
+  }
+
+  html += '<section class="tight hairline"><div class="wrap">' +
+    sectionHeader("Onde você está", "03", "Score Geral e Nível de Maturidade") +
+    '<div class="card" style="padding:34px 38px; display:flex; align-items:center; gap:40px; flex-wrap:wrap;">' +
+    '<div style="position:relative; width:158px; height:158px; flex:0 0 auto;">' +
+    '<svg width="158" height="158" viewBox="0 0 160 160">' +
+    '<circle cx="80" cy="80" r="68" fill="none" stroke="rgba(13,30,78,0.12)" stroke-width="14" />' +
+    '<circle cx="80" cy="80" r="68" fill="none" stroke="#D4820A" stroke-width="14" stroke-linecap="round" stroke-dasharray="' + R.gaugeDash + '" stroke-dashoffset="' + R.gaugeOffset + '" transform="rotate(-90 80 80)" />' +
+    '</svg>' +
+    '<div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none;">' +
+    '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-size:46px; font-weight:500; color:#0D1E4E; font-feature-settings:\'tnum\'; line-height:1;">' + R.scoreGeral + '</div>' +
+    '<div style="font-size:9px; font-weight:700; letter-spacing:0.1em; color:rgba(10,23,51,0.4); margin-top:3px;">DE 100</div>' +
+    '</div></div>' +
+    '<div style="flex:1 1 280px; min-width:260px;">' +
+    '<div style="font-size:11px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:#A2600A; margin-bottom:8px;">Nível ' + R.nivel.n + ' · ' + R.nivel.nome + '</div>' +
+    '<div style="font-size:15px; line-height:1.65; color:rgba(10,23,51,0.75);">' + R.nivel.contexto + '</div>' +
+    escalaNiveis(R.nivel.n) +
+    '</div></div>' +
+
+    blocoHeader("Contexto", "Resumo do Perfil") +
+    '<div class="card" style="padding:30px 34px;">' +
+    '<div class="perfil-grid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:20px 24px; margin-bottom:20px;">' +
+    '<div><div class="kpi-label">Idade</div><div class="kpi-small">' + esc(R.data.idade) + ' anos</div></div>' +
+    '<div><div class="kpi-label">Estado civil</div><div class="kpi-small">' + esc(R.data.estadoCivil) + '</div></div>' +
+    '<div><div class="kpi-label">Filhos/dependentes</div><div class="kpi-small">' + esc(R.data.filhos) + '</div></div>' +
+    '<div><div class="kpi-label">Ocupação</div><div class="kpi-small">' + esc(R.data.ocupacao) + '</div></div>' +
+    '</div>' +
+    '<div style="height:1px; background:rgba(13,30,78,0.14); margin:4px 0 20px;"></div>' +
+    '<div class="perfil-grid-2" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:20px 24px;">' +
+    '<div><div class="kpi-label">Renda total mensal</div><div class="kpi-med">' + R.kpis.rendaTotalDisplay + '</div></div>' +
+    '<div><div class="kpi-label">Patrimônio total</div><div class="kpi-med">' + R.kpis.patrimonioTotalDisplay + '</div></div>' +
+    '</div></div>' +
+    rodapeScore +
+    '</div></section>';
+
+  // 5. Arquétipo
+  var voz = "";
+  if (R.vozCliente.show) {
+    voz = '<div style="position:relative; margin-top:24px; border-top:1px solid rgba(251,248,241,0.15); padding-top:24px;">' +
+      '<div style="font-size:10.5px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:#F0C060; margin-bottom:12px;">Na sua fala</div>' +
+      (R.vozCliente.situacao ? '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-style:italic; font-size:16px; line-height:1.6; color:rgba(251,248,241,0.85); margin-bottom:10px;">"' + esc(R.vozCliente.situacao) + '"</div>' : "") +
+      (R.vozCliente.maiorDor ? '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-style:italic; font-size:16px; line-height:1.6; color:rgba(251,248,241,0.85); margin-bottom:10px;">"' + esc(R.vozCliente.maiorDor) + '"</div>' : "") +
+      (R.vozCliente.sonhos ? '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-style:italic; font-size:16px; line-height:1.6; color:rgba(251,248,241,0.85);">"' + esc(R.vozCliente.sonhos) + '"</div>' : "") +
+      '</div>';
+  }
+  html += '<section><div class="wrap">' +
+    sectionHeader("Análise Comportamental", "04", "Seu Arquétipo Financeiro") +
+    '<div class="archetype-block" style="position:relative; overflow:hidden; background:#0D1E4E; color:#FBF8F1; border-radius:8px; padding:30px 34px;">' +
+    '<div class="navy-glow" style="top:-70px; right:-70px; width:280px; height:280px;"></div>' +
+    '<div style="position:relative; font-size:11px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:#F0C060; margin-bottom:14px;">Seu arquétipo</div>' +
+    '<div style="position:relative; font-family:\'Source Serif 4\', Georgia, serif; font-style:italic; font-size:31px; color:#FBF8F1; margin-bottom:16px;">' + R.arquetipo.nome + '</div>' +
+    '<div style="position:relative; font-family:\'Source Serif 4\', Georgia, serif; font-size:20px; line-height:1.55; color:#F0C060; margin-bottom:22px; max-width:620px;">“' + R.arquetipo.abertura + '”</div>' +
+    '<div style="position:relative; display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:14px; margin-bottom:14px;">' +
+    '<div style="background:rgba(251,248,241,0.06); border-radius:8px; padding:17px 20px;">' +
+    '<div style="font-size:10.5px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:#F0C060; margin-bottom:10px;">Padrão identificado</div>' +
+    '<div style="font-size:14.5px; line-height:1.7; color:rgba(251,248,241,0.85);">' + R.arquetipo.padrao + '</div></div>' +
+    '<div style="background:rgba(251,248,241,0.06); border-radius:8px; padding:17px 20px;">' +
+    '<div style="font-size:10.5px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:#F0C060; margin-bottom:10px;">Por que este é o seu padrão</div>' +
+    '<div style="font-size:14.5px; line-height:1.7; color:rgba(251,248,241,0.85);">' + R.arquetipo.naoOutro + '</div></div></div>' +
+    '<div style="position:relative; background:rgba(240,192,96,0.16); border-radius:8px; padding:17px 22px;">' +
+    '<div style="font-size:10.5px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:#F0C060; margin-bottom:8px;">Prioridade imediata</div>' +
+    '<div style="font-size:16px; line-height:1.6; color:#FBF8F1; font-weight:500;">' + R.arquetipo.prioridade + '</div></div>' +
+    voz + '</div></div></section>';
+
+  // 6. KPIs, agrupados por assunto
+  var grupos = R.kpiGrupos.map(function (g) {
+    var pequenos = g.itens.map(function (kpi) {
+      return '<div class="kpi" style="background:rgba(13,30,78,0.05); border:1px solid rgba(13,30,78,0.12); border-radius:8px; padding:16px 18px;">' +
+        '<div style="font-size:10px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:#A2600A; margin-bottom:6px;">' + kpi.label + '</div>' +
+        '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-size:' + tamanhoValor(kpi.value, 20, 177) + 'px; font-weight:500; color:#0D1E4E; font-feature-settings:\'tnum\';">' + kpi.value + '</div>' +
+        (kpi.sub ? '<div style="font-size:11.5px; color:rgba(10,23,51,0.5); margin-top:4px; line-height:1.45;">' + kpi.sub + '</div>' : "") +
+        '</div>';
+    }).join("");
+    return '<div class="kpi-grupo" style="margin-bottom:26px;">' +
+      '<div style="font-size:10.5px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:#A2600A; padding-bottom:8px; margin-bottom:14px; border-bottom:1px solid rgba(13,30,78,0.12);">' + g.titulo + '</div>' +
+      '<div class="kpi-grupo-corpo" style="display:grid; grid-template-columns:minmax(220px, 1fr) 2fr; gap:14px; align-items:stretch;">' +
+      '<div class="kpi" style="position:relative; overflow:hidden; background:#0D1E4E; border-radius:8px; padding:28px 26px; color:#FBF8F1; display:flex; flex-direction:column; justify-content:center;">' +
+      '<div class="navy-glow" style="top:-40px; right:-40px; width:150px; height:150px;"></div>' +
+      '<div style="position:relative; font-size:10.5px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:#F0C060; margin-bottom:10px;">' + g.destaque.label + '</div>' +
+      '<div style="position:relative; font-family:\'Source Serif 4\', Georgia, serif; font-size:' + tamanhoValor(g.destaque.value, 31, 168) + 'px; font-weight:500; font-feature-settings:\'tnum\'; line-height:1.15; white-space:nowrap;">' + g.destaque.value + '</div>' +
+      (g.destaque.sub ? '<div style="position:relative; font-size:12px; color:rgba(251,248,241,0.6); margin-top:8px;">' + g.destaque.sub + '</div>' : "") +
+      '</div>' +
+      '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(175px, 1fr)); gap:12px; align-content:start;">' + pequenos + '</div>' +
+      '</div></div>';
+  }).join("");
+  html += '<section><div class="wrap-wide">' +
+    sectionHeader("Os números por trás", "05", "KPIs Financeiros") +
+    grupos +
+    '</div></section>';
+
+  // 7. Distribuição das despesas
+  html += renderDistribuicao(R);
+
+  // 7. Score por dimensão
+  var legend = [["Crítico", "#B34747"], ["Insuficiente", "#C48A3E"], ["Adequado", "#2F7D5B"], ["Excelente", "#0D1E4E"]].map(function (b) {
+    return '<div style="display:flex; align-items:center; gap:8px; font-size:12px; color:rgba(10,23,51,0.55);"><div style="background:' + b[1] + '; width:10px; height:10px; border-radius:50%;"></div>' + b[0] + '</div>';
+  }).join("");
+  var dims = R.dimRows.map(function (d) {
+    return '<div class="dim-row" style="background:#FBF8F1; border:1px solid rgba(13,30,78,0.14); border-radius:8px; padding:20px 26px; margin-bottom:11px;">' +
+      '<div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px; gap:12px; flex-wrap:wrap;">' +
+      '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-size:19px; font-weight:500; color:#0D1E4E;">' + d.nome + '</div>' +
+      '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-size:19px; font-weight:500; color:#A2600A; font-feature-settings:\'tnum\';">' + d.score + '<span style="font-size:13px; color:rgba(10,23,51,0.4);"> / 100</span></div></div>' +
+      '<div style="height:8px; border-radius:4px; background:rgba(13,30,78,0.1); overflow:hidden; margin-bottom:12px;">' +
+      '<div style="' + d.barStyle + ' height:100%; border-radius:4px;"></div></div>' +
+      '<div style="font-size:14px; color:rgba(10,23,51,0.65); line-height:1.6;">' + d.contexto + '</div></div>';
+  }).join("");
+  html += '<section><div class="wrap">' +
+    sectionHeader("Dimensão por dimensão", "07", "Score por Dimensão") +
+    '<div style="display:flex; gap:22px; flex-wrap:wrap; margin-bottom:28px; margin-top:-12px;">' + legend + '</div>' +
+    dims + '</div></section>';
+
+  // 8. Projeção da aposentadoria
+  var A = R.aposentadoria;
+  var VEREDITO_CORES = {
+    ok: { fundo: "rgba(47,125,91,0.10)", borda: "rgba(47,125,91,0.4)", texto: "#2F7D5B", titulo: "O plano está de pé" },
+    atencao: { fundo: "rgba(196,138,62,0.1)", borda: "rgba(196,138,62,0.35)", texto: "#B07A2E", titulo: "Precisa de ajuste" },
+    critico: { fundo: "rgba(179,71,71,0.09)", borda: "rgba(179,71,71,0.32)", texto: "#B34747", titulo: "Gap relevante" }
+  };
+  var vd = VEREDITO_CORES[A.veredito.tipo] || VEREDITO_CORES.atencao;
+  var apoCards = A.cards.map(function (c) {
+    return '<div class="kpi" style="background:rgba(13,30,78,0.05); border:1px solid rgba(13,30,78,0.12); border-radius:8px; padding:18px 20px;">' +
+      '<div style="font-size:10px; font-weight:700; letter-spacing:0.13em; text-transform:uppercase; color:#A2600A; margin-bottom:8px;">' + esc(c.label) + '</div>' +
+      '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-size:' + tamanhoValor(c.value, 21, 174) + 'px; font-weight:500; color:#0D1E4E; font-feature-settings:\'tnum\';">' + esc(c.value) + '</div>' +
+      (c.sub ? '<div style="font-size:11.5px; color:rgba(10,23,51,0.55); margin-top:5px; line-height:1.5;">' + esc(c.sub) + '</div>' : "") +
+      '</div>';
+  }).join("");
+  var legendaChart = [
+    ["Plano necessário", "background:#2F7D5B;"],
+    ["Ritmo atual", "background:rgba(13,30,78,0.4);"],
+    ["Patrimônio necessário", "border-top:2px dashed #C48A3E; height:0;"]
+  ].map(function (l) {
+    return '<div style="display:flex; align-items:center; gap:8px; font-size:12.5px; color:rgba(10,23,51,0.65);">' +
+      '<div style="width:22px; height:3px; ' + l[1] + '"></div>' + l[0] + '</div>';
+  }).join("");
+  var metasBloco = R.metasDeclaradas.length
+    ? blocoHeader("Metas declaradas", "O que você disse que quer") +
+      '<div class="card" style="padding:24px 28px; margin-bottom:16px;">' +
+      R.metasDeclaradas.map(function (m) {
+        return '<div style="display:flex; gap:12px; margin-bottom:9px; align-items:baseline;">' +
+          '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-style:italic; color:#A2600A; flex-shrink:0;">—</div>' +
+          '<div style="font-size:14px; line-height:1.6; color:rgba(10,23,51,0.75);"><span style="font-weight:700; color:#0D1E4E;">' + esc(m.titulo) + '</span>' + (m.detalhe ? ' · ' + esc(m.detalhe) : '') + '</div></div>';
+      }).join("") + '</div>'
+    : "";
+
+  html += '<section class="hairline"><div class="wrap-wide">' +
+    sectionHeader("Pra onde isso leva", "08", A.titulo) +
+    '<div style="font-size:15px; color:rgba(10,23,51,0.6); margin:-16px 0 24px; max-width:660px; line-height:1.6;">' + esc(A.subtitulo) + '</div>' +
+    '<div class="card" style="padding:26px 28px; margin-bottom:16px;">' +
+    '<div style="font-size:10.5px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:#A2600A; margin-bottom:8px;">Estratégia escolhida · ' + esc(A.estrategiaLabel) + '</div>' +
+    '<div style="font-size:14.5px; line-height:1.7; color:rgba(10,23,51,0.75);">' + esc(A.estrategiaResumo) + '</div></div>' +
+    '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:16px;">' + apoCards + '</div>' +
+    metasBloco +
+    // O gráfico e a leitura dele ficam na folha seguinte, com título próprio:
+    // sem isso a curva aparecia sozinha no topo de uma página, sem dizer o que é.
+    '<div class="quebra-pagina">' +
+    blocoHeader("A curva", "Como o patrimônio evolui até lá", 0) +
+    '<div class="card" style="padding:28px 24px 20px;">' +
+    '<div class="grafico">' + R.chart.svg +
+    R.chart.rotulos.map(function (r) {
+      return '<div class="g-rot g-rot-' + r.tipo + '" style="' + r.style + '">' + esc(r.texto) + '</div>';
+    }).join("") + '</div>' +
+    '<div style="display:flex; gap:24px; margin-top:14px; flex-wrap:wrap; padding-left:8px;">' + legendaChart + '</div>' +
+    '<div style="font-size:12.5px; color:rgba(10,23,51,0.5); margin-top:18px; line-height:1.6; border-top:1px solid rgba(13,30,78,0.14); padding-top:14px;">' + esc(A.premissas) + '</div>' +
+    '</div>' +
+    '<div style="margin-top:16px; background:' + vd.fundo + '; border:1px solid ' + vd.borda + '; border-radius:8px; padding:22px 26px;">' +
+    '<div style="font-size:11px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:' + vd.texto + '; margin-bottom:10px;">' + vd.titulo + '</div>' +
+    '<div style="font-size:15px; line-height:1.7; color:rgba(10,23,51,0.82);">' + esc(A.veredito.texto) + '</div></div>' +
+    '</div>' +
+    '</div></section>';
+
+  // 9. Plano de ação
+  var plan = R.actionPlan.map(function (item) {
+    return '<div class="card" style="padding:24px 28px; margin-bottom:13px;">' +
+      '<div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">' +
+      '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-style:italic; color:#A2600A; font-size:22px;">' + item.n + '</div>' +
+      '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-size:19px; font-weight:500; color:#0D1E4E;">' + item.dimNome + '</div></div>' +
+      '<div style="font-size:15px; line-height:1.7; color:rgba(10,23,51,0.8); margin-bottom:16px;">' + item.texto + '</div>' +
+      '<div style="background:rgba(240,192,96,0.12); border-radius:6px; padding:16px 20px; font-size:14px; line-height:1.6; color:#0D1E4E;">' +
+      '<span style="font-weight:700; color:#A2600A;">Ação prática: </span>' + item.acao + '</div></div>';
+  }).join("");
+  var strengthsHtml = "";
+  if (R.hasStrengths) {
+    strengthsHtml = '<div style="margin-top:36px;">' +
+      '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-size:19px; font-weight:500; color:#0D1E4E; margin-bottom:16px;">Pontos fortes a manter</div>' +
+      R.strengths.map(function (s) {
+        return '<div style="display:flex; gap:12px; margin-bottom:12px; align-items:baseline;">' +
+          '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-style:italic; color:#A2600A; flex-shrink:0;">—</div>' +
+          '<div style="font-size:14.5px; line-height:1.6; color:rgba(10,23,51,0.7);"><span style="font-weight:700; color:#0D1E4E;">' + s.dimNome + ': </span>' + s.texto + '</div></div>';
+      }).join("") + '</div>';
+  }
+  var is = R.investSeguro;
+  var investSeguroHtml = '<div class="quebra-pagina">' +
+    blocoHeader("Onde começar a aplicar", "Alternativas seguras pro curto prazo", 0) +
+    '<div class="archetype-block" style="position:relative; overflow:hidden; background:#0D1E4E; color:#FBF8F1; border-radius:8px; padding:36px;">' +
+    '<div class="navy-glow" style="top:-50px; right:-50px; width:200px; height:200px;"></div>' +
+    '<div style="position:relative; font-size:11px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:#F0C060; margin-bottom:14px;">Onde aplicar com segurança</div>' +
+    '<div style="position:relative; font-size:15px; line-height:1.7; color:rgba(251,248,241,0.85); margin-bottom:22px; max-width:620px;">' + esc(is.intro) + '</div>' +
+    '<div style="position:relative; display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:16px; margin-bottom:18px;">' +
+    is.itens.map(function (item) {
+      return '<div style="background:rgba(251,248,241,0.06); border-radius:8px; padding:20px 22px;">' +
+        '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-size:17px; font-weight:500; color:#FBF8F1; margin-bottom:8px;">' + item.nome + '</div>' +
+        '<div style="font-size:13.5px; line-height:1.65; color:rgba(251,248,241,0.75);">' + item.desc + '</div></div>';
+    }).join("") +
+    '</div>' +
+    '<div style="position:relative; font-size:11.5px; color:rgba(251,248,241,0.45);">' + is.nota + '</div>' +
+    '</div></div>';
+
+  // Sem lacunas a corrigir, a seção deixa de ser de correção e passa a ser de
+  // refinamento — em vez de aparecer com o título cheio e nenhum item embaixo.
+  var planoIntro = R.planoOtimizacao
+    ? '<div style="font-size:15px; color:rgba(10,23,51,0.6); margin:-16px 0 28px; max-width:640px; line-height:1.6;">Nenhuma das seis dimensões está em faixa de correção. O que segue são ajustes de refinamento: o que fazer quando o básico já está resolvido.</div>'
+    : "";
+  html += '<section class="hairline"><div class="wrap">' +
+    sectionHeader("O que fazer", "09", R.planoOtimizacao ? "Plano de Otimização" : "Plano de Ação Individualizado") +
+    planoIntro + plan + strengthsHtml + investSeguroHtml + '</div></section>';
+
+  // 10. Checklist 30 dias
+  var checks = R.checklist.map(function (c) {
+    return '<div style="display:flex; align-items:flex-start; gap:16px; padding:20px 0; border-bottom:1px solid rgba(13,30,78,0.1);">' +
+      '<div style="width:22px; height:22px; border-radius:5px; border:2px solid #D4820A; flex-shrink:0; margin-top:2px;"></div>' +
+      '<div style="font-size:15px; line-height:1.6; color:rgba(10,23,51,0.8);">' + c + '</div></div>';
+  }).join("");
+  html += '<section class="tight hairline"><div class="wrap">' +
+    sectionHeader("Comece por aqui", "10", "Checklist dos Próximos 30 Dias") +
+    '<div class="card" style="padding:12px 32px;">' + checks + '</div></div></section>';
+
+  // 11. Glossário
+  var gloss = R.glossario.map(function (g) {
+    return '<div class="glossary-item">' +
+      '<div style="font-size:11px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:#A2600A; margin-bottom:8px;">' + g.termo + '</div>' +
+      '<div style="font-size:14px; line-height:1.65; color:rgba(10,23,51,0.7);">' + g.definicao + '</div></div>';
+  }).join("");
+  html += '<section class="hairline"><div class="wrap-wide">' +
+    sectionHeader("Pra consultar sempre que precisar", "11", "Glossário") +
+    '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:24px 32px;">' + gloss + '</div></div></section>';
+
+  // 12. Próximo passo
+  html += '<section class="tight hairline"><div class="wrap">' +
+    sectionHeader("Recomendação", "12", "Seu Próximo Passo") +
+    '<div class="card" style="padding:44px;">' +
+    '<div style="font-size:11px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:#A2600A; margin-bottom:12px;">Plano recomendado</div>' +
+    '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-size:34px; font-weight:500; color:#0D1E4E; margin-bottom:20px;">' + R.nextStep.duracao + '</div>' +
+    '<div style="font-size:15.5px; line-height:1.75; color:rgba(10,23,51,0.75); margin-bottom:28px; max-width:560px;">' + R.nextStep.justificativa + '</div>' +
+    '<a href="' + R.contatoMailto + '" style="display:inline-block; background:#0D1E4E; color:#FBF8F1; text-decoration:none; border-radius:6px; padding:16px 32px; font-weight:700; font-size:15px;">Agendar conversa com a EH Investimentos</a>' +
+    '</div></div></section>';
+
+  // 13. Encerramento
+  html += '<section class="closing" style="position:relative; overflow:hidden; background:#0D1E4E; color:#FBF8F1;">' +
+    '<div class="navy-glow" style="bottom:-100px; left:-100px; width:320px; height:320px; background:radial-gradient(circle, rgba(212,130,10,0.2) 0%, rgba(212,130,10,0) 70%);"></div>' +
+    '<div style="max-width:700px; margin:0 auto; position:relative; text-align:center;">' +
+    '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-style:italic; font-size:24px; color:#F0C060; margin-bottom:20px;">Obrigado pela confiança, ' + esc(R.data.primeiroNome) + '.</div>' +
+    '<div style="font-size:15.5px; line-height:1.8; color:rgba(251,248,241,0.8); margin-bottom:32px;">Esperamos que este diagnóstico tenha trazido clareza. Estamos à disposição para conversar sobre os próximos passos.</div>' +
+    '<div style="font-size:14px; color:rgba(251,248,241,0.6); margin-bottom:28px;">EH Investimentos · Gestão Financeira · <a href="mailto:contato@ehinvestimentos.com.br" style="color:#F0C060;">contato@ehinvestimentos.com.br</a> · <a href="index.html" style="color:#F0C060;">ehinvestimentos.com.br</a></div>' +
+    '<div style="height:1px; background:rgba(251,248,241,0.15); margin:0 auto 24px; max-width:400px;"></div>' +
+    '<div style="font-size:11.5px; line-height:1.7; color:rgba(251,248,241,0.45); max-width:560px; margin:0 auto;">Este diagnóstico é educacional e orientativo. Não substitui uma consultoria financeira individualizada completa. Projeções e cenários apresentados são baseados em premissas assumidas e não constituem garantia ou promessa de retorno.</div>' +
+    '</div></section>';
+
+  return html;
+}
+
+function renderEmpty() {
+  return '<section style="min-height:80vh; display:flex; align-items:center; justify-content:center;">' +
+    '<div class="card" style="padding:56px 48px; max-width:520px; text-align:center;">' +
+    '<div style="font-family:\'Source Serif 4\', Georgia, serif; font-size:26px; font-weight:500; color:#0D1E4E; margin-bottom:16px;">Nenhum diagnóstico encontrado</div>' +
+    '<div style="font-size:15px; line-height:1.7; color:rgba(10,23,51,0.65); margin-bottom:28px;">Você ainda não finalizou o formulário de diagnóstico neste navegador. Responda o questionário para gerar seu relatório personalizado.</div>' +
+    '<a href="eh-diagnostico.html" style="display:inline-block; background:#0D1E4E; color:#FBF8F1; text-decoration:none; border-radius:6px; padding:16px 32px; font-weight:700; font-size:15px;">Fazer o diagnóstico</a>' +
+    '</div></section>';
+}
+
+(function init() {
+  var container = document.getElementById("report");
+  var stored = null;
+  try { stored = JSON.parse(localStorage.getItem("eh_diagnostico_data") || "null"); } catch (e) {}
+  if (stored && stored.data && stored.data.nome) {
+    container.innerHTML = renderReport(computeReport(stored.data, stored.geradoEm));
+    if (window.ehSupabase && ehSupabase.configurado()) {
+      ehSupabase.enviarDiagnostico().then(function () { return ehSupabase.enviarRelatorio(); });
+    }
+  } else {
+    document.querySelector(".btn-print").style.display = "none";
+    container.innerHTML = renderEmpty();
+  }
+})();
+</script>
+</body>
+</html>

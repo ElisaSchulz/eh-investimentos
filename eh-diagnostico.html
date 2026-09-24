@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagnóstico Financeiro | EH Investimentos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,300;1,8..60,400;1,8..60,500&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: #F3EDE1; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #0A1733; min-height: 100vh; display: flex; flex-direction: column; }
+  ::selection { background: rgba(240,192,96,0.35); }
+  input::placeholder, textarea::placeholder { color: rgba(10,23,51,0.35); }
+  select { -webkit-appearance: none; appearance: none; }
+  textarea { resize: vertical; }
+  button { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 28px 64px; border-bottom: 1px solid rgba(13,30,78,0.14); }
+  .brand { display: inline-flex; align-items: center; gap: 10px; font-family: 'Source Serif 4', Georgia, serif; font-size: 20px; font-weight: 600; color: #0D1E4E; letter-spacing: 0.01em; text-decoration: none; }
+  .brand em { font-style: italic; color: #A2600A; font-weight: 500; }
+  .topbar-label { font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--faint); text-align: right; }
+
+  .stepper { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 16px 12px; border-bottom: 1px solid rgba(13,30,78,0.14); flex-wrap: wrap; }
+  .step-cell { display: flex; align-items: center; gap: 4px; }
+  .step-node { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; font-feature-settings: 'tnum'; flex-shrink: 0; }
+  .step-node.active { background: #0D1E4E; color: #FBF8F1; border: 1px solid #0D1E4E; }
+  .step-node.done { background: transparent; color: #A2600A; border: 1px solid #D4820A; }
+  .step-node.todo { background: transparent; color: rgba(10,23,51,0.35); border: 1px solid rgba(13,30,78,0.2); }
+  .step-line { width: 14px; height: 1px; background: rgba(13,30,78,0.2); }
+
+  .main { padding: 56px 24px 80px; flex: 1; display: flex; justify-content: center; }
+  .container { width: 100%; max-width: 760px; }
+
+  .hero { position: relative; overflow: hidden; background: #0D1E4E; border-radius: 8px; color: #FBF8F1; padding: 72px 64px; }
+  .hero-glow { position: absolute; top: -60px; right: -60px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(212,130,10,0.22) 0%, rgba(212,130,10,0) 70%); pointer-events: none; }
+  .hero-eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; position: relative; }
+  .hero-eyebrow-line { width: 48px; height: 2px; background: #F0C060; flex-shrink: 0; }
+  .hero-eyebrow-text { font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #F0C060; }
+  .hero-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 44px; line-height: 1.15; font-weight: 500; max-width: 560px; position: relative; }
+  .hero-title em { font-style: italic; color: #F0C060; }
+  .hero-sub { margin-top: 28px; font-size: 15.5px; line-height: 1.7; color: rgba(251,248,241,0.75); max-width: 520px; position: relative; }
+  .entregaveis { margin-top: 40px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 32px; max-width: 560px; position: relative; }
+  .entregavel { display: flex; gap: 10px; align-items: baseline; }
+  .entregavel-dash { font-family: 'Source Serif 4', Georgia, serif; font-style: italic; color: #F0C060; font-size: 15px; flex-shrink: 0; }
+  .entregavel-text { font-size: 14.5px; line-height: 1.5; color: rgba(251,248,241,0.9); }
+  .cta-wrap { margin-top: 40px; display: flex; flex-direction: row; align-items: center; gap: 28px; flex-wrap: wrap; position: relative; }
+  .btn-cta { background: #FBF8F1; color: #0D1E4E; border: none; border-radius: 6px; padding: 16px 32px; font-weight: 700; font-size: 15px; cursor: pointer; letter-spacing: 0.01em; }
+  .btn-cta:hover { background: #F0C060; color: #FBF8F1; }
+  .cta-note { font-size: 13px; color: rgba(251,248,241,0.55); line-height: 1.5; }
+
+  .step-eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .step-eyebrow-line { width: 48px; height: 2px; background: #D4820A; flex-shrink: 0; }
+  .step-eyebrow-text { font-size: 12px; font-weight: 700; letter-spacing: 0.24em; text-transform: uppercase; color: #A2600A; }
+  .step-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 34px; font-weight: 500; color: #0D1E4E; margin-bottom: 10px; }
+  .step-desc { font-size: 15px; color: rgba(10,23,51,0.6); margin-bottom: 28px; max-width: 560px; line-height: 1.6; }
+
+  .card { background: #FBF8F1; border: 1px solid rgba(13,30,78,0.14); border-radius: 8px; padding: 40px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid2.tight { gap: 20px; }
+  .span2 { grid-column: span 2; }
+  .grid1 { display: grid; grid-template-columns: 1fr; gap: 24px; }
+
+  .f-label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
+  .f-input { width: 100%; padding: 13px 14px; border: 1px solid rgba(13,30,78,0.2); border-radius: 6px; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 15px; color: #0A1733; background: #FBF8F1; }
+  .f-input:focus { outline: none; border-color: #A2600A; }
+  .f-input:disabled { opacity: 0.6; }
+  .f-input.num { font-feature-settings: 'tnum'; }
+  .f-hint { font-size: 12.5px; color: rgba(10,23,51,0.5); margin-top: 8px; }
+
+  .rule { grid-column: span 2; height: 1px; background: rgba(13,30,78,0.14); margin: 4px 0 8px; }
+  .rule-full { height: 1px; background: rgba(13,30,78,0.14); margin: 28px 0; }
+
+  .seg { display: inline-flex; border: 1px solid rgba(13,30,78,0.2); border-radius: 6px; overflow: hidden; }
+  .seg.full { width: 100%; }
+  .seg button { padding: 12px 22px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; background: transparent; color: rgba(10,23,51,0.55); }
+  .seg button + button { border-left: 1px solid rgba(13,30,78,0.2); }
+  .seg button.on { background: #0D1E4E; color: #FBF8F1; }
+  .seg.stretch button { flex: 1; padding: 13px 10px; font-size: 13px; }
+
+  .totalizer { position: relative; overflow: hidden; background: #0D1E4E; border-radius: 8px; padding: 24px 28px; color: #FBF8F1; margin-bottom: 28px; }
+  .totalizer.flat { margin-bottom: 0; }
+  .totalizer-glow { position: absolute; top: -30px; right: -30px; width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle, rgba(212,130,10,0.22) 0%, rgba(212,130,10,0) 70%); pointer-events: none; }
+  .totalizer-label { font-size: 11px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #F0C060; margin-bottom: 8px; position: relative; }
+  .totalizer-value { font-family: 'Source Serif 4', Georgia, serif; font-size: 30px; font-weight: 500; font-feature-settings: 'tnum'; position: relative; }
+
+  .list-item { border: 1px solid rgba(13,30,78,0.14); border-radius: 8px; padding: 20px; margin-bottom: 14px; }
+  .list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .list-title { font-size: 13px; font-weight: 700; color: #0D1E4E; }
+  .link-remove { background: transparent; border: none; color: var(--faint); font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: underline; }
+  .link-add { display: inline-block; margin-top: 4px; background: transparent; border: none; color: #A2600A; font-size: 14px; font-weight: 700; cursor: pointer; padding: 0; }
+  .link-edit { background: transparent; border: 1px solid rgba(13,30,78,0.25); color: #0D1E4E; font-size: 12.5px; font-weight: 700; cursor: pointer; padding: 6px 14px; border-radius: 5px; }
+
+  .review-card { margin-bottom: 20px; }
+  .review-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 19px; font-weight: 500; color: #0D1E4E; }
+  .review-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .review-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
+  .review-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(10,23,51,0.4); margin-bottom: 3px; }
+  .review-value { font-size: 14.5px; color: #0A1733; line-height: 1.5; }
+  .confirm-banner { background: #0D1E4E; border-radius: 8px; padding: 28px 32px; color: #FBF8F1; font-size: 14.5px; line-height: 1.6; }
+
+  .error-msg { text-align: right; font-size: 13px; color: #B34747; margin-bottom: 10px; line-height: 1.6; }
+  .footer-nav { display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 36px; }
+  .btn-back { background: transparent; border: none; color: rgba(10,23,51,0.55); font-weight: 600; font-size: 14px; cursor: pointer; padding: 12px 4px; }
+  .btn-continue { border: none; border-radius: 6px; padding: 16px 36px; font-weight: 700; font-size: 15px; cursor: pointer; background: #0D1E4E; color: #FBF8F1; }
+  .btn-continue.blocked { background: rgba(13,30,78,0.35); color: rgba(251,248,241,0.85); }
+
+  .done-hero { text-align: center; }
+  .done-title { font-family: 'Source Serif 4', Georgia, serif; font-style: italic; font-size: 28px; color: #F0C060; margin-bottom: 16px; position: relative; }
+  .done-text { font-size: 16px; line-height: 1.7; color: rgba(251,248,241,0.8); max-width: 460px; margin: 0 auto; position: relative; }
+  .done-actions { margin-top: 32px; position: relative; }
+  .btn-report { display: inline-block; background: #FBF8F1; color: #0D1E4E; text-decoration: none; border-radius: 6px; padding: 16px 32px; font-weight: 700; font-size: 15px; }
+  .btn-report:hover { background: #F0C060; color: #FBF8F1; }
+  .link-restart { display: block; margin-top: 18px; font-size: 13px; color: rgba(251,248,241,0.55); background: none; border: none; cursor: pointer; text-decoration: underline; margin-left: auto; margin-right: auto; position: relative; }
+
+  .nota { background: rgba(212,130,10,0.08); border-left: 2px solid #D4820A; border-radius: 6px; padding: 16px 18px; font-size: 13px; line-height: 1.65; color: rgba(10,23,51,0.72); }
+  .nota b { color: #0D1E4E; }
+  .nota p { margin: 0; }
+  .nota p + p { margin-top: 8px; }
+
+  .f-input.narrow, .estreito .f-input { max-width: 340px; }
+  .seg-conjuge button { line-height: 1.35; }
+  @media (max-width: 519px) { .seg-conjuge { flex-direction: column; } .seg-conjuge button + button { border-left: none; border-top: 1px solid rgba(13,30,78,0.2); } }
+
+  .gasto-slider-box { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .gasto-slider-box span { font-size: 14px; color: rgba(10,23,51,0.6); }
+  .check-label { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; color: rgba(10,23,51,0.55); cursor: pointer; }
+
+  @media (max-width: 639px) {
+    .topbar { padding: 16px 20px; }
+    .topbar-label { font-size: 9px; letter-spacing: 0.14em; }
+    .step-node { width: 22px; height: 22px; font-size: 10px; }
+    .step-line { width: 8px; }
+    .main { padding: 28px 18px 56px; }
+    .hero { padding: 36px 24px; }
+    .hero-title { font-size: 28px; }
+    .entregaveis { grid-template-columns: 1fr; }
+    .cta-wrap { flex-direction: column; align-items: stretch; gap: 16px; }
+    .btn-cta { width: 100%; text-align: center; }
+    .step-title { font-size: 26px; }
+    .card { padding: 24px 20px; }
+    .grid2, .review-grid { grid-template-columns: 1fr; }
+    .span2, .rule { grid-column: auto; }
+    .seg-wrap-mobile .seg { width: 100%; }
+    .seg-wrap-mobile .seg button { flex: 1; }
+    .footer-nav { flex-direction: column-reverse; gap: 12px; margin-top: 28px; }
+    .btn-continue { width: 100%; }
+    .error-msg { text-align: left; }
+  }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="brand" href="index.html"><img src="Logo_EH.png" alt="" width="30" height="30"><span>EH <em>Investimentos</em></span></a>
+  <div class="topbar-label">Diagnóstico Financeiro</div>
+</div>
+
+<div class="stepper" id="stepper" style="display:none;"></div>
+
+<div class="main">
+  <div class="container" id="app"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eh-diagnostico-supabase.js?v=1"></script>
+<script src="eh-diagnostico-core.js?v=1"></script>
+<script>
+"use strict";
+
+/* ===================== Constantes ===================== */
+var UF_LIST = [["AC","Acre"],["AL","Alagoas"],["AP","Amapá"],["AM","Amazonas"],["BA","Bahia"],["CE","Ceará"],["DF","Distrito Federal"],["ES","Espírito Santo"],["GO","Goiás"],["MA","Maranhão"],["MT","Mato Grosso"],["MS","Mato Grosso do Sul"],["MG","Minas Gerais"],["PA","Pará"],["PB","Paraíba"],["PR","Paraná"],["PE","Pernambuco"],["PI","Piauí"],["RJ","Rio de Janeiro"],["RN","Rio Grande do Norte"],["RS","Rio Grande do Sul"],["RO","Rondônia"],["RR","Roraima"],["SC","Santa Catarina"],["SP","São Paulo"],["SE","Sergipe"],["TO","Tocantins"]];
+var ESTADO_CIVIL = ["Solteiro(a)", "Casado(a)", "União estável", "Divorciado(a)", "Viúvo(a)"];
+var OCUPACOES = ["Tecnologia", "Saúde", "Educação", "Direito", "Finanças / Contabilidade", "Comércio / Varejo", "Indústria", "Serviços", "Setor Público", "Autônomo(a) / Empreendedor(a)", "Aposentado(a)", "Outro"];
+var ENTREGAVEIS = [
+  "Score geral e seu nível de maturidade financeira",
+  "Seu arquétipo financeiro (leitura comportamental)",
+  "Os KPIs dos seus números, com a distribuição das despesas",
+  "Score por dimensão: fluxo, liquidez, dívidas, risco, patrimônio e metas",
+  "Projeção da aposentadoria: quanto ter, quanto guardar por mês",
+  "Plano de ação e checklist dos próximos 30 dias"
+];
+var DESPESA_CATEGORIES = [["alimentacao","Alimentação"],["educacao","Educação"],["filhos","Filhos / Dependentes"],["investimentos","Investimentos / Poupança"],["lazer","Lazer"],["moradia","Moradia"],["presentes","Presentes / Doações"],["saude","Saúde"],["seguros","Seguros"],["servicos","Serviços Diversos"],["transporte","Transporte"],["vestuario","Vestuário / Cuidados Pessoais"]];
+// Classificação usada no relatório (régua 50/30/20). As despesas que a pessoa
+// adiciona à mão em "outras despesas" trazem a própria classificação.
+var DESPESAS_ESSENCIAIS = ["moradia", "alimentacao", "transporte", "saude", "educacao", "filhos", "seguros"];
+var INVEST_FIELDS = [["investPoupanca","Poupança"],["investRendaFixaPublica","Renda Fixa Pública (Tesouro Direto)"],["investRendaFixaPrivada","Renda Fixa Privada (CDB/LCI/LCA)"],["investRendaVariavel","Renda Variável (ações/FIIs/ETFs)"],["investCripto","Criptomoedas"],["investOutros","Outros"]];
+var PERFIL_RISCO = ["Conservador", "Moderado", "Arrojado"];
+var SABE_RENTABILIDADE = ["Não sei", "Ideia vaga", "Sei aproximado", "Sei exato"];
+var INVESTE_AUTOMATICO = ["Só o que sobra", "Às vezes automático", "Quase sempre", "Sempre automático"];
+var USOU_ROTATIVO = ["Frequentemente", "Já aconteceu 1-2 vezes", "Raramente", "Nunca"];
+// Dívida planejada e dívida de emergência pedem planos diferentes: uma é
+// questão de volume e prazo, a outra é falta de reserva. A ordem vai do pior
+// padrão para o melhor.
+var ORIGEM_DIVIDA = ["Sempre no aperto, quando não tem outra saída", "Quase sempre no aperto", "Depende: às vezes planejo, às vezes não", "Sempre planejada, comparando o custo antes"];
+var ONDE_APLICADA = ["Poupança", "Conta corrente", "CDB liquidez diária", "Tesouro Selic", "Outro"];
+var TEMPO_SEM_RENDA = ["Dias", "Semanas", "Poucos meses", "6+ meses"];
+var TEMPO_RENDA_GARANTIDA = ["Nenhum tempo", "Menos de 3 meses", "3-6 meses", "6+ meses ou tenho seguro invalidez"];
+var REVISOU_APOLICES = ["Nunca revisei", "Faz mais de 2 anos", "Há 1-2 anos", "Recentemente"];
+var METAS_DEFINIDAS = ["Não tenho metas", "Ideias vagas", "Algumas com prazo/valor", "Todas com prazo/valor"];
+var CALCULOU_GUARDAR = ["Não", "Pensei mas não calculei", "Calculei aproximado", "Calculei exato"];
+var SOBRA_EMPATA = ["Sobra", "Empata", "Fico no vermelho"];
+var SABE_PARA_ONDE = ["Sei bem, sem surpresas", "Mais ou menos, às vezes me surpreendo", "Não, tenho surpresas com frequência"];
+
+var STEP_META = {
+  1: { eyebrow: "Etapa 1 de 10", title: "Identificação", desc: "Alguns dados básicos pra personalizar seu relatório e mantermos contato sobre seu diagnóstico." },
+  2: { eyebrow: "Etapa 2 de 10", title: "Renda Mensal", desc: "Sua renda líquida e a do seu cônjuge, se aplicável, além de outras fontes de renda." },
+  3: { eyebrow: "Etapa 3 de 10", title: "Despesas", desc: "Seus gastos mensais por categoria. O valor em Investimentos / Poupança conta como aporte mensal (poupança), não como gasto. Se faltar alguma categoria, adicione no fim da página." },
+  // As etapas 3, 4 e 8 ganham no fim uma frase que depende de somar ou não a
+  // renda do cônjuge; veja notaConjuge().
+  4: { eyebrow: "Etapa 4 de 10", title: "Patrimônio e Investimentos", desc: "Imóveis, veículos, investimentos e seu perfil como investidor." },
+  5: { eyebrow: "Etapa 5 de 10", title: "Dívidas", desc: "Cartão de crédito, cheque especial, empréstimos e outras dívidas em aberto. Se não souber um valor exato, use o último extrato ou a última fatura como referência." },
+  6: { eyebrow: "Etapa 6 de 10", title: "Liquidez e Reserva de Emergência", desc: "Quanto você tem guardado para imprevistos e onde está aplicado. Informe o valor mesmo que já esteja incluído nos investimentos da etapa 4. Aqui ele serve para avaliar sua liquidez." },
+  7: { eyebrow: "Etapa 7 de 10", title: "Gestão de Risco (Seguros)", desc: "Seguro de vida, plano de saúde e proteção da sua renda." },
+  8: { eyebrow: "Etapa 8 de 10", title: "Aposentadoria e Metas de Longo Prazo", desc: "Quando você quer parar de depender do trabalho, quanto quer receber por mês e o que fazer com o patrimônio. É com essas respostas que montamos a projeção do relatório." },
+  9: { eyebrow: "Etapa 9 de 10", title: "Situação Atual", desc: "Como você enxerga sua própria situação financeira hoje." },
+  10: { eyebrow: "Etapa 10 de 10", title: "Revisão e Finalização", desc: "Confira tudo antes de enviar. Você pode voltar e editar qualquer etapa." }
+};
+
+var STORAGE_FORM = "eh_diagnostico_form";
+var STORAGE_DATA = "eh_diagnostico_data";
+
+/* ===================== Estado ===================== */
+function defaultData() {
+  return {
+    nome: "", email: "", estado: "", cidade: "", dataNascimento: "",
+    estadoCivil: "", temConjuge: "", dataNascimentoConjuge: "", filhos: "", ocupacao: "",
+    rendaPropria: 0, rendaConjuge: 0, considerarRendaConjuge: true, outrasRendas: [],
+    despesas: { alimentacao: 0, educacao: 0, filhos: 0, investimentos: 0, lazer: 0, moradia: 0, presentes: 0, saude: 0, seguros: 0, servicos: 0, transporte: 0, vestuario: 0 },
+    despesasExtras: [],
+    imoveis: [], veiculos: [],
+    investPoupanca: 0, investRendaFixaPublica: 0, investRendaFixaPrivada: 0, investRendaVariavel: 0, investCripto: 0, investOutros: 0,
+    perfilRisco: "", sabeRentabilidade: "", investeAutomatico: "",
+    temDividas: "", cartaoCredito: 0, chequeEspecial: 0, emprestimoPessoal: 0, outrasDividas: [],
+    parcelasMensais: 0, origemDivida: "", usouRotativo: "",
+    reservaEmergencia: 0, ondeAplicada: "", tempoSemRenda: "",
+    temSeguroVida: "", capitalSegurado: 0, temPlanoSaude: "", reservaMedica: "",
+    tempoRendaGarantida: "", revisouApolices: "",
+    idadeAposentadoria: "", gastoMensalAposentadoria: 0, gastoNaoSei: false, gastoPercent: 70,
+    estrategiaAposentadoria: "", idadeFimRenda: "", herancaDesejada: 0,
+    temMetasDefinidas: "", calculouQuantoGuardar: "", outrasMetas: [],
+    salarioCobre: "", sobraEmpataVermelho: "", sabeParaOndeVaiDinheiro: "", descricaoSituacao: "", maiorDor: "", sonhos: "",
+    consentimento: false, consentimentoEm: ""
+  };
+}
+
+var step = 0;
+var attempted = {};
+var data = defaultData();
+
+(function restore() {
+  try {
+    var saved = JSON.parse(localStorage.getItem(STORAGE_FORM) || "null");
+    if (saved && saved.data) {
+      data = Object.assign(defaultData(), saved.data);
+      // Só as categorias que existem hoje. Um rascunho antigo pode trazer
+      // "impostos", que saiu do formulário: sem essa limpeza o valor continuaria
+      // somando no total sem ter campo na tela pra ser editado.
+      var padraoDespesas = defaultData().despesas;
+      var salvas = saved.data.despesas || {};
+      Object.keys(padraoDespesas).forEach(function (k) {
+        padraoDespesas[k] = Number(salvas[k]) || 0;
+      });
+      data.despesas = padraoDespesas;
+      if (!Array.isArray(data.despesasExtras)) data.despesasExtras = [];
+      step = typeof saved.step === "number" ? saved.step : 0;
+    }
+  } catch (e) { /* dados corrompidos: começa do zero */ }
+})();
+
+function persist() {
+  try { localStorage.setItem(STORAGE_FORM, JSON.stringify({ step: step, data: data })); } catch (e) {}
+}
+
+/* ===================== Helpers ===================== */
+function fmt(value) {
+  var n = Number(value) || 0;
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n);
+}
+function esc(s) {
+  return String(s === undefined || s === null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function parseCents(raw) {
+  var digits = String(raw).replace(/\D/g, "");
+  return digits === "" ? 0 : parseInt(digits, 10) / 100;
+}
+
+/* ===================== Datas de nascimento ===================== */
+// A idade usada em todos os cálculos vem da data de nascimento de quem responde.
+// A data do cônjuge é apenas informativa: não entra em nenhuma conta.
+function idadeDeData(iso) {
+  if (window.EHDiag && EHDiag.idadeEm) return EHDiag.idadeEm(iso);
+  return null;
+}
+function idadeAtual() {
+  var calc = idadeDeData(data.dataNascimento);
+  if (calc !== null) return calc;
+  var legado = Number(data.idade);
+  return legado > 0 ? legado : null;
+}
+function dataBR(iso) {
+  if (window.EHDiag && EHDiag.formatarData) return EHDiag.formatarData(iso);
+  return iso || "";
+}
+function dataMaxNascimento() {
+  return new Date().toISOString().slice(0, 10);
+}
+// Quantos anos de acumulação sobram entre a idade de hoje e a idade-alvo.
+function hintPrazoAposentadoria() {
+  var idadeHoje = idadeAtual();
+  var idadeAlvo = Number(data.idadeAposentadoria) || 0;
+  if (idadeHoje === null || idadeAlvo <= 0) return "";
+  var anos = idadeAlvo - idadeHoje;
+  if (anos <= 0) return '<div class="f-hint">Você já está na idade que informou, então não há fase de acumulação: o relatório vai avaliar quanto o patrimônio atual sustenta.</div>';
+  return '<div class="f-hint">Você tem ' + anos + (anos === 1 ? " ano" : " anos") + " pra acumular, dos " + idadeHoje + " aos " + idadeAlvo + ".</div>";
+}
+function idadeHint(iso, rotulo) {
+  var a = idadeDeData(iso);
+  if (iso && a === null) return '<div class="f-hint" style="color:var(--red);">Data inválida.</div>';
+  if (a === null) return "";
+  return '<div class="f-hint">' + (rotulo || "Idade") + ": " + a + (a === 1 ? " ano" : " anos") + "</div>";
+}
+
+/* ===================== Renda do casal ===================== */
+// Ter cônjuge com renda e analisar as contas como um orçamento só são coisas
+// diferentes: muitos casais dividem a vida mas mantêm o dinheiro separado. A
+// escolha da etapa 2 decide se a renda dele entra na análise, e as etapas
+// seguintes precisam seguir a mesma base — não faz sentido excluir a renda
+// dele e depois pedir o patrimônio do casal.
+function somaRendaConjuge() {
+  return data.temConjuge === true && data.considerarRendaConjuge !== false;
+}
+function notaConjuge(n) {
+  if (data.temConjuge !== true) return "";
+  var junto = somaRendaConjuge();
+  if (n === 3) return junto
+    ? " Como a renda do casal entra na análise, informe as despesas do casal."
+    : " Como você optou por analisar só a sua renda, informe apenas as despesas que saem do seu bolso.";
+  if (n === 4) return junto
+    ? " Informe o patrimônio do casal."
+    : " Como você optou por analisar só a sua renda, informe apenas o patrimônio que é seu.";
+  if (n === 8) return junto
+    ? " Considere as metas do casal."
+    : " Como você optou por analisar só a sua renda, considere apenas as metas que você banca sozinho(a).";
+  return "";
+}
+
+/* ===================== Totais ===================== */
+function totals() {
+  var totalRenda = (data.rendaPropria || 0) + (somaRendaConjuge() ? (data.rendaConjuge || 0) : 0) + data.outrasRendas.reduce(function (a, r) { return a + (r.valor || 0); }, 0);
+  var totalDespesas = DESPESA_CATEGORIES.reduce(function (a, c) { return a + (data.despesas[c[0]] || 0); }, 0) +
+    data.despesasExtras.reduce(function (a, d) { return a + (d.valor || 0); }, 0);
+  var patrimonioImoveis = data.imoveis.reduce(function (a, i) { return a + (i.valorMercado || 0); }, 0);
+  var patrimonioVeiculos = data.veiculos.reduce(function (a, i) { return a + (i.valor || 0); }, 0);
+  var patrimonioInvest = INVEST_FIELDS.reduce(function (a, f) { return a + (data[f[0]] || 0); }, 0);
+  var patrimonioTotal = patrimonioImoveis + patrimonioVeiculos + patrimonioInvest;
+  var saldosFinanciamento = data.imoveis.concat(data.veiculos).reduce(function (a, i) { return a + (i.status === "financiado" ? (i.saldoDevedor || 0) : 0); }, 0);
+  var totalDividas = data.temDividas === true ? (data.cartaoCredito || 0) + (data.chequeEspecial || 0) + (data.emprestimoPessoal || 0) + data.outrasDividas.reduce(function (a, d) { return a + (d.valor || 0); }, 0) : 0;
+  var patrimonioLiquido = patrimonioTotal - saldosFinanciamento - totalDividas;
+  var gastoEstimado = totalRenda * ((data.gastoPercent || 0) / 100);
+  return { totalRenda: totalRenda, totalDespesas: totalDespesas, patrimonioTotal: patrimonioTotal, patrimonioLiquido: patrimonioLiquido, totalDividas: totalDividas, gastoEstimado: gastoEstimado };
+}
+
+function updateTotalizers() {
+  var t = totals();
+  var map = { "tot-renda": t.totalRenda, "tot-despesas": t.totalDespesas, "tot-patrimonio": t.patrimonioTotal, "tot-liquido": t.patrimonioLiquido, "tot-dividas": t.totalDividas };
+  Object.keys(map).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = fmt(map[id]);
+  });
+  var gastoLabel = document.getElementById("gasto-estimado-label");
+  if (gastoLabel) gastoLabel.textContent = "~ " + fmt(t.gastoEstimado) + " (" + data.gastoPercent + "% da renda)";
+}
+
+/* ===================== Validação ===================== */
+function requiredByStep(n) {
+  var t = totals();
+  var req = {
+    1: [
+      ["Nome completo", data.nome.trim() !== ""],
+      ["E-mail", /\S+@\S+\.\S+/.test(data.email)],
+      ["Estado", data.estado !== ""],
+      ["Cidade", data.cidade.trim() !== ""],
+      ["Data de nascimento", idadeAtual() !== null],
+      ["Estado civil", data.estadoCivil !== ""],
+      ["Tem cônjuge com renda própria?", data.temConjuge === true || data.temConjuge === false],
+      ["Filhos / dependentes", String(data.filhos) !== ""],
+      ["Ocupação", data.ocupacao !== ""],
+      ["Aceite da Política de Privacidade", data.consentimento === true]
+    ],
+    2: [[data.temConjuge === true && !somaRendaConjuge()
+      ? "Renda mensal (você optou por analisar só a sua renda, então informe a sua renda própria ou outra fonte sua)"
+      : "Renda mensal (informe ao menos uma fonte)", t.totalRenda > 0]],
+    3: [["Despesas mensais (informe ao menos uma categoria)", t.totalDespesas > 0]],
+    4: [
+      ["Perfil de risco autodeclarado", data.perfilRisco !== ""],
+      ["Sabe a rentabilidade média no último ano?", data.sabeRentabilidade !== ""],
+      ["Investe automático ou só o que sobra?", data.investeAutomatico !== ""]
+    ],
+    // Com dívida em aberto, as duas perguntas de comportamento são o que separa
+    // um plano de quitação de um plano de sair do ciclo — sem elas o relatório
+    // trata padrões muito diferentes do mesmo jeito.
+    5: [["Você tem dívidas em cartão de crédito, cheque especial ou empréstimo pessoal hoje?", data.temDividas === true || data.temDividas === false]]
+      .concat(data.temDividas === true ? [
+        ["Se a dívida costuma ser planejada ou aparece no aperto", data.origemDivida !== ""],
+        ["Se já usou empréstimo ou rotativo pra cobrir outra dívida", data.usouRotativo !== ""]
+      ] : []),
+    6: [
+      ["Onde está aplicada", data.ondeAplicada !== ""],
+      ["Tempo sem se desesperar", data.tempoSemRenda !== ""]
+    ],
+    7: [
+      ["Tem seguro de vida?", data.temSeguroVida === true || data.temSeguroVida === false],
+      ["Tem plano de saúde?", data.temPlanoSaude === true || data.temPlanoSaude === false],
+      ["Tempo com renda garantida", data.tempoRendaGarantida !== ""],
+      [rotuloRevisao(), !(data.temSeguroVida === true || data.temPlanoSaude === true) || data.revisouApolices !== ""]
+    ],
+    8: [
+      ["Idade em que quer se aposentar", String(data.idadeAposentadoria) !== ""],
+      ["Renda mensal desejada na aposentadoria", data.gastoNaoSei === true || (data.gastoMensalAposentadoria || 0) > 0],
+      ["O que fazer com o patrimônio na aposentadoria", data.estrategiaAposentadoria !== ""],
+      ["Idade até quando a renda precisa durar", data.estrategiaAposentadoria !== "consumo" || (Number(data.idadeFimRenda) || 0) > (Number(data.idadeAposentadoria) || 0)],
+      ["Metas financeiras definidas", data.temMetasDefinidas !== ""],
+      ["Já calculou quanto guardar", data.calculouQuantoGuardar !== ""]
+    ],
+    9: [
+      ["O salário/renda cobre todas as despesas?", data.salarioCobre === true || data.salarioCobre === false],
+      ["Sobra, empata ou fica no vermelho", data.sobraEmpataVermelho !== ""],
+      ["Sabe pra onde vai o dinheiro", data.sabeParaOndeVaiDinheiro !== ""]
+    ],
+    10: []
+  };
+  return (req[n] || []).filter(function (r) { return !r[1]; }).map(function (r) { return r[0]; });
+}
+
+/* ===================== Render: blocos ===================== */
+function selectHtml(field, options, selected, extraClass) {
+  var html = '<select class="f-input' + (extraClass || "") + '" data-field="' + field + '"><option value="">Selecione</option>';
+  options.forEach(function (opt) {
+    var value = Array.isArray(opt) ? opt[0] : opt;
+    var label = Array.isArray(opt) ? opt[1] : opt;
+    html += '<option value="' + esc(value) + '"' + (selected === value ? " selected" : "") + '>' + esc(label) + '</option>';
+  });
+  return html + '</select>';
+}
+
+function simNaoSeg(field, value) {
+  return '<div class="seg">' +
+    '<button type="button" class="' + (value === true ? "on" : "") + '" data-action="set" data-key="' + field + '" data-val="true">Sim</button>' +
+    '<button type="button" class="' + (value === false ? "on" : "") + '" data-action="set" data-key="' + field + '" data-val="false">Não</button>' +
+    '</div>';
+}
+
+function moneyInput(field, label, extra, hint) {
+  return '<div' + (extra ? ' class="' + extra + '"' : "") + '><label class="f-label">' + esc(label) + '</label>' +
+    '<input type="text" inputmode="numeric" class="f-input num" data-money="' + field + '" value="' + esc(fmt(data[field])) + '">' +
+    (hint ? '<div class="f-hint">' + hint + '</div>' : "") + '</div>';
+}
+
+function totalizerHtml(id, label, value, flat) {
+  return '<div class="totalizer' + (flat ? " flat" : "") + '"><div class="totalizer-glow"></div>' +
+    '<div class="totalizer-label">' + label + '</div>' +
+    '<div class="totalizer-value" id="' + id + '">' + fmt(value) + '</div></div>';
+}
+
+function assetListHtml(listKey, itemLabel, valorField, valorLabel) {
+  var html = "";
+  data[listKey].forEach(function (item, i) {
+    var fin = item.status === "financiado";
+    html += '<div class="list-item">' +
+      '<div class="list-header"><div class="list-title">' + itemLabel + ' ' + (i + 1) + '</div>' +
+      '<button type="button" class="link-remove" data-action="removeItem" data-list="' + listKey + '" data-index="' + i + '">Remover</button></div>' +
+      '<div class="grid2 tight">' +
+      '<div class="span2"><label class="f-label">Descrição</label><input type="text" class="f-input" data-ltext="descricao" data-list="' + listKey + '" data-index="' + i + '" placeholder="Ex: ' + (listKey === "imoveis" ? "Apartamento" : "Carro") + '" value="' + esc(item.descricao) + '"></div>' +
+      '<div><label class="f-label">' + valorLabel + '</label><input type="text" inputmode="numeric" class="f-input num" data-lmoney="' + valorField + '" data-list="' + listKey + '" data-index="' + i + '" value="' + esc(fmt(item[valorField])) + '"></div>' +
+      '<div><label class="f-label">Situação</label><div class="seg stretch" style="width:100%;">' +
+      '<button type="button" class="' + (!fin ? "on" : "") + '" data-action="setListField" data-list="' + listKey + '" data-index="' + i + '" data-lfield="status" data-val="quitado">Quitado</button>' +
+      '<button type="button" class="' + (fin ? "on" : "") + '" data-action="setListField" data-list="' + listKey + '" data-index="' + i + '" data-lfield="status" data-val="financiado">Financiado</button>' +
+      '</div></div>' +
+      (fin ? '<div class="span2"><label class="f-label">Saldo devedor</label><input type="text" inputmode="numeric" class="f-input num" data-lmoney="saldoDevedor" data-list="' + listKey + '" data-index="' + i + '" value="' + esc(fmt(item.saldoDevedor)) + '"></div>' : "") +
+      '</div></div>';
+  });
+  return html;
+}
+
+/* ===================== Render: etapas ===================== */
+function renderStep0() {
+  var items = ENTREGAVEIS.map(function (e) {
+    return '<div class="entregavel"><div class="entregavel-dash">—</div><div class="entregavel-text">' + e + '</div></div>';
+  }).join("");
+  return '<div class="hero"><div class="hero-glow"></div>' +
+    '<div class="hero-eyebrow"><div class="hero-eyebrow-line"></div><div class="hero-eyebrow-text">Diagnóstico Financeiro EH</div></div>' +
+    '<div class="hero-title">Um raio-x completo da sua vida financeira, <em>em cerca de 15 minutos</em>.</div>' +
+    '<div class="hero-sub">Você vai responder perguntas sobre renda, gastos, patrimônio, dívidas e objetivos. Ao final, o relatório personalizado fica pronto na hora, com o diagnóstico completo dos seus números:</div>' +
+    '<div class="entregaveis">' + items + '</div>' +
+    '<div class="cta-wrap">' +
+    '<button type="button" class="btn-cta" data-action="start">Começar diagnóstico</button>' +
+    '<div class="cta-note">Tempo estimado: cerca de 15 min · você pode salvar e continuar depois</div>' +
+    '</div></div>';
+}
+
+function renderStep1() {
+  return '<div class="card"><div class="grid2">' +
+    '<div class="span2"><label class="f-label">Nome completo</label><input type="text" class="f-input" data-field="nome" placeholder="Seu nome" value="' + esc(data.nome) + '"></div>' +
+    '<div class="span2"><label class="f-label">E-mail</label><input type="email" class="f-input" data-field="email" placeholder="voce@email.com" value="' + esc(data.email) + '"></div>' +
+    '<div><label class="f-label">Estado</label>' + selectHtml("estado", UF_LIST, data.estado) + '</div>' +
+    '<div><label class="f-label">Cidade</label><input type="text" class="f-input" id="cidade-input" data-field="cidade" ' + (data.estado ? "" : "disabled ") + 'placeholder="' + (data.estado ? "Digite sua cidade" : "Selecione um estado primeiro") + '" value="' + esc(data.cidade) + '"></div>' +
+    '<div><label class="f-label">Data de nascimento</label><input type="date" class="f-input" data-field="dataNascimento" max="' + dataMaxNascimento() + '" value="' + esc(data.dataNascimento) + '">' +
+      '<div id="hint-nascimento">' + idadeHint(data.dataNascimento) + '</div></div>' +
+    '<div><label class="f-label">Estado civil</label>' + selectHtml("estadoCivil", ESTADO_CIVIL, data.estadoCivil) + '</div>' +
+    '<div class="rule"></div>' +
+    '<div class="span2"><label class="f-label" style="margin-bottom:10px;">Tem cônjuge com renda própria?</label>' + simNaoSeg("temConjuge", data.temConjuge) + '</div>' +
+    (data.temConjuge === true ?
+      '<div><label class="f-label">Data de nascimento do cônjuge <span style="font-weight:500; opacity:0.75;">(opcional)</span></label>' +
+        '<input type="date" class="f-input" data-field="dataNascimentoConjuge" max="' + dataMaxNascimento() + '" value="' + esc(data.dataNascimentoConjuge) + '">' +
+        '<div id="hint-nascimento-conjuge">' + idadeHint(data.dataNascimentoConjuge) + '</div></div>' +
+      '<div class="f-hint" style="margin-top:0; align-self:end;">A data do cônjuge fica registrada apenas como informação. A projeção de aposentadoria usa a sua idade.</div>' +
+      '<div class="span2"><div class="f-hint" style="margin-top:0;">A renda do cônjuge será perguntada na próxima etapa, junto com a escolha de somá-la ou não à análise. As etapas seguintes seguem essa escolha.</div></div>' : "") +
+    '<div class="rule"></div>' +
+    '<div class="span2"><label class="f-label">Filhos / dependentes</label><input type="number" min="0" class="f-input num" data-field="filhos" placeholder="0" value="' + esc(data.filhos) + '"></div>' +
+    '<div class="span2"><label class="f-label">Ocupação</label>' + selectHtml("ocupacao", OCUPACOES, data.ocupacao) + '</div>' +
+    '<div class="rule"></div>' +
+    '<div class="span2"><label class="check-label" style="margin-top:0; align-items:flex-start; font-size:13.5px; line-height:1.6;">' +
+    '<input type="checkbox" data-action="toggleConsent"' + (data.consentimento ? " checked" : "") + ' style="margin-top:3px; flex-shrink:0;">' +
+    '<span>Autorizo o uso das minhas respostas para gerar meu diagnóstico personalizado e para contato da EH Investimentos. Meus dados são tratados de forma confidencial, conforme a LGPD, e não são compartilhados com terceiros.</span>' +
+    '</label></div>' +
+    '</div></div>';
+}
+
+function renderStep2() {
+  var t = totals();
+  var outras = "";
+  data.outrasRendas.forEach(function (item, i) {
+    outras += '<div class="list-item">' +
+      '<div class="list-header"><div class="list-title">Renda ' + (i + 1) + '</div><button type="button" class="link-remove" data-action="removeItem" data-list="outrasRendas" data-index="' + i + '">Remover</button></div>' +
+      '<div class="grid2 tight">' +
+      '<div><label class="f-label">Descrição</label><input type="text" class="f-input" data-ltext="descricao" data-list="outrasRendas" data-index="' + i + '" placeholder="Ex: Aluguel" value="' + esc(item.descricao) + '"></div>' +
+      '<div><label class="f-label">Valor</label><input type="text" inputmode="numeric" class="f-input num" data-lmoney="valor" data-list="outrasRendas" data-index="' + i + '" value="' + esc(fmt(item.valor)) + '"></div>' +
+      '</div></div>';
+  });
+  // Quem tem cônjuge escolhe a base da análise. O padrão é somar, que é o caso
+  // mais comum, mas casal com orçamento separado precisa poder ficar de fora.
+  var junto = somaRendaConjuge();
+  var escolhaConjuge = data.temConjuge === true
+    ? '<div class="rule-full"></div>' +
+      '<label class="f-label" style="margin-bottom:10px;">A renda do cônjuge entra na análise da sua saúde financeira?</label>' +
+      '<div class="seg stretch seg-conjuge" style="width:100%; max-width:520px;">' +
+      '<button type="button" class="' + (junto ? "on" : "") + '" data-action="set" data-key="considerarRendaConjuge" data-val="true">Sim, somar as duas rendas</button>' +
+      '<button type="button" class="' + (!junto ? "on" : "") + '" data-action="set" data-key="considerarRendaConjuge" data-val="false">Não, analisar só a minha</button>' +
+      '</div>' +
+      '<div class="nota" style="margin-top:16px;">' +
+      (junto
+        ? '<p>O diagnóstico vai tratar vocês como um orçamento só: taxa de poupança, régua 50/30/20, comprometimento da renda com dívidas e projeção da aposentadoria usam a soma das duas rendas. Nas etapas seguintes, informe as despesas, o patrimônio e as metas <b>do casal</b>.</p>'
+        : '<p>A renda do cônjuge fica registrada, mas <b>fora de todos os cálculos</b>: taxa de poupança, régua 50/30/20, comprometimento com dívidas e projeção da aposentadoria vão usar apenas a sua renda. É a escolha certa pra quem divide a vida mas mantém as contas separadas.</p>' +
+          '<p>Para o diagnóstico fechar, as etapas seguintes precisam seguir a mesma régua: informe só <b>as despesas que saem do seu bolso</b>, só o patrimônio que é seu e só as metas que você banca. Misturar as despesas do casal com uma renda individual cria um déficit que não existe.</p>') +
+      '</div>'
+    : "";
+
+  return totalizerHtml("tot-renda", "Renda total mensal", t.totalRenda) +
+    '<div class="card"><div class="grid2">' +
+    moneyInput("rendaPropria", "Renda mensal líquida própria") +
+    (data.temConjuge === true ? moneyInput("rendaConjuge", "Renda mensal líquida do cônjuge",
+      "", junto ? "" : "Registrada para contexto, fora dos cálculos.") : "") +
+    '</div>' + escolhaConjuge + '<div class="rule-full"></div>' +
+    '<label class="f-label" style="margin-bottom:14px;">Outras rendas (aluguel, freelance, etc.)</label>' + outras +
+    '<button type="button" class="link-add" data-action="addItem" data-list="outrasRendas">+ Adicionar outra renda</button></div>';
+}
+
+function renderStep3() {
+  var t = totals();
+  var fields = DESPESA_CATEGORIES.map(function (c) {
+    var grupo = c[0] === "investimentos" ? "" :
+      DESPESAS_ESSENCIAIS.indexOf(c[0]) !== -1 ? "Essencial" : "Flexível";
+    return '<div><label class="f-label">' + esc(c[1]) +
+      (grupo ? ' <span style="font-weight:600; letter-spacing:0.06em; color:rgba(10,23,51,0.35);">· ' + grupo + '</span>' : "") +
+      '</label><input type="text" inputmode="numeric" class="f-input num" data-despesa="' + c[0] + '" value="' + esc(fmt(data.despesas[c[0]])) + '"></div>';
+  }).join("");
+
+  // Gastos que não cabem em nenhuma categoria acima. A classificação vem de
+  // quem responde, porque só ela sabe se aquele gasto é obrigatório na vida
+  // dela ou se é o primeiro candidato a corte.
+  var extras = data.despesasExtras.map(function (item, i) {
+    var flexivel = item.tipo === "flexivel";
+    return '<div class="list-item">' +
+      '<div class="list-header"><div class="list-title">Despesa ' + (i + 1) + '</div>' +
+      '<button type="button" class="link-remove" data-action="removeItem" data-list="despesasExtras" data-index="' + i + '">Remover</button></div>' +
+      '<div class="grid2 tight">' +
+      '<div><label class="f-label">Descrição</label><input type="text" class="f-input" data-ltext="descricao" data-list="despesasExtras" data-index="' + i + '" placeholder="Ex: Pensão, academia, pet" value="' + esc(item.descricao) + '"></div>' +
+      '<div><label class="f-label">Valor mensal</label><input type="text" inputmode="numeric" class="f-input num" data-lmoney="valor" data-list="despesasExtras" data-index="' + i + '" value="' + esc(fmt(item.valor)) + '"></div>' +
+      '<div class="span2"><label class="f-label">Esse gasto é</label><div class="seg stretch" style="width:100%;">' +
+      '<button type="button" class="' + (!flexivel ? "on" : "") + '" data-action="setListField" data-list="despesasExtras" data-index="' + i + '" data-lfield="tipo" data-val="essencial">Essencial</button>' +
+      '<button type="button" class="' + (flexivel ? "on" : "") + '" data-action="setListField" data-list="despesasExtras" data-index="' + i + '" data-lfield="tipo" data-val="flexivel">Flexível</button>' +
+      '</div></div>' +
+      '</div></div>';
+  }).join("");
+
+  var nota = '<div class="nota" style="margin-bottom:18px;">' +
+    '<p><b>Essencial</b> é o gasto que mantém a sua vida funcionando: você não consegue cortar no mês que vem sem mudar de fato como vive — moradia, comida, transporte pro trabalho, saúde, escola dos filhos.</p>' +
+    '<p><b>Flexível</b> é o gasto que melhora a vida, mas que dá pra reduzir, adiar ou trocar por uma versão mais barata sem quebrar nada — lazer, assinaturas, presentes, roupas além do necessário.</p>' +
+    '<p>Essa classificação é o que permite ao relatório comparar suas contas com a referência 50/30/20 (até 50% da renda em essenciais, até 30% em flexíveis, ao menos 20% guardado). Na dúvida, pergunte-se: se a renda caísse pela metade, esse gasto continuaria do mesmo jeito?</p>' +
+    '</div>';
+
+  return totalizerHtml("tot-despesas", "Total de despesas mensais", t.totalDespesas) +
+    '<div class="card"><div class="grid2">' + fields + '</div>' +
+    '<div class="rule-full"></div>' +
+    '<label class="f-label" style="margin-bottom:14px;">Outras despesas</label>' +
+    nota + extras +
+    '<button type="button" class="link-add" data-action="addItem" data-list="despesasExtras">+ Adicionar outra despesa</button>' +
+    '</div>';
+}
+
+function renderStep4() {
+  var t = totals();
+  var invest = INVEST_FIELDS.map(function (f) {
+    return '<div><label class="f-label">' + esc(f[1]) + '</label><input type="text" inputmode="numeric" class="f-input num" data-money="' + f[0] + '" value="' + esc(fmt(data[f[0]])) + '"></div>';
+  }).join("");
+  var perfil = PERFIL_RISCO.map(function (opt) {
+    return '<button type="button" class="' + (data.perfilRisco === opt ? "on" : "") + '" data-action="set" data-key="perfilRisco" data-val="' + esc(opt) + '" style="padding:12px 20px;">' + esc(opt) + '</button>';
+  }).join("");
+  return '<div class="grid2" style="gap:20px;">' +
+    totalizerHtml("tot-patrimonio", "Patrimônio total", t.patrimonioTotal, true) +
+    totalizerHtml("tot-liquido", "Patrimônio líquido", t.patrimonioLiquido, true) +
+    '</div>' +
+    '<div class="card" style="margin-top:28px;">' +
+    '<label class="f-label" style="margin-bottom:14px;">Imóveis</label>' +
+    assetListHtml("imoveis", "Imóvel", "valorMercado", "Valor de mercado") +
+    '<button type="button" class="link-add" data-action="addItem" data-list="imoveis">+ Adicionar imóvel</button>' +
+    '<div class="rule-full"></div>' +
+    '<label class="f-label" style="margin-bottom:14px;">Veículos</label>' +
+    assetListHtml("veiculos", "Veículo", "valor", "Valor") +
+    '<button type="button" class="link-add" data-action="addItem" data-list="veiculos">+ Adicionar veículo</button>' +
+    '<div class="rule-full"></div>' +
+    '<label class="f-label" style="margin-bottom:14px;">Investimentos</label>' +
+    '<div class="grid2 tight">' + invest + '</div>' +
+    '<div class="rule-full"></div>' +
+    '<div class="grid2">' +
+    '<div class="span2 seg-wrap-mobile"><label class="f-label" style="margin-bottom:10px;">Perfil de risco autodeclarado</label><div class="seg">' + perfil + '</div></div>' +
+    '<div><label class="f-label">Sabe a rentabilidade média no último ano?</label>' + selectHtml("sabeRentabilidade", SABE_RENTABILIDADE, data.sabeRentabilidade) + '</div>' +
+    '<div><label class="f-label">Investe automático ou só o que sobra?</label>' + selectHtml("investeAutomatico", INVESTE_AUTOMATICO, data.investeAutomatico) + '</div>' +
+    '</div></div>';
+}
+
+function renderStep5() {
+  var t = totals();
+  var detail = "";
+  if (data.temDividas === true) {
+    var outras = "";
+    data.outrasDividas.forEach(function (item, i) {
+      outras += '<div class="list-item">' +
+        '<div class="list-header"><div class="list-title">Dívida ' + (i + 1) + '</div><button type="button" class="link-remove" data-action="removeItem" data-list="outrasDividas" data-index="' + i + '">Remover</button></div>' +
+        '<div class="grid2 tight">' +
+        '<div><label class="f-label">Descrição</label><input type="text" class="f-input" data-ltext="descricao" data-list="outrasDividas" data-index="' + i + '" value="' + esc(item.descricao) + '"></div>' +
+        '<div><label class="f-label">Valor</label><input type="text" inputmode="numeric" class="f-input num" data-lmoney="valor" data-list="outrasDividas" data-index="' + i + '" value="' + esc(fmt(item.valor)) + '"></div>' +
+        '</div></div>';
+    });
+    var notaDividas = '<div class="nota" style="margin-bottom:22px;">' +
+      '<p><b>Rotativo em aberto</b> é o que sobra quando você não paga a fatura inteira. O banco financia a diferença automaticamente e ela volta na próxima fatura com juros — os mais caros do mercado brasileiro, na casa de 400% ao ano. Some aqui o que ainda não foi pago: a fatura atual em aberto, o que ficou rolando de meses anteriores e o saldo do parcelamento da fatura.</p>' +
+      '<p>Não inclua as compras parceladas em lojas no cartão sem juros: elas não são rotativo. Elas entram em "Total das parcelas mensais" abaixo.</p>' +
+      '<p><b>Cheque especial</b> é o limite extra da conta corrente. Se o saldo está negativo, o valor que está no vermelho é o que você deve — também com juros altos, cobrados por dia de uso.</p>' +
+      '</div>';
+    detail = '<div style="margin-top:28px;">' +
+      totalizerHtml("tot-dividas", "Total de dívidas", t.totalDividas) +
+      notaDividas +
+      '<div class="grid1">' +
+      moneyInput("cartaoCredito", "Cartão de crédito (fatura/rotativo em aberto)", "",
+        "Quanto da fatura ainda não foi pago hoje, somando o que ficou rolando de meses anteriores.") +
+      moneyInput("chequeEspecial", "Cheque especial (valor utilizado)", "",
+        "O quanto a conta está negativa hoje. Se está zerada ou positiva, deixe em zero.") +
+      moneyInput("emprestimoPessoal", "Empréstimo pessoal (saldo devedor)", "",
+        "O que falta quitar, não o valor original contratado. Inclui consignado e crédito pessoal.") +
+      moneyInput("parcelasMensais", "Total das parcelas mensais dessas dívidas", "",
+        "Quanto sai da sua conta por mês para pagar tudo isso, incluindo compras parceladas no cartão. É esse valor que mostra o quanto da renda já está comprometido.") +
+      '</div><div class="rule-full"></div>' +
+      '<label class="f-label" style="margin-bottom:14px;">Outras dívidas</label>' + outras +
+      '<button type="button" class="link-add" data-action="addItem" data-list="outrasDividas">+ Adicionar outra dívida</button>' +
+      '<div class="rule-full"></div>' +
+      '<div class="grid1">' +
+      '<div><label class="f-label">Quando você contrai uma dívida, ela costuma ser planejada ou aparece no aperto?</label>' + selectHtml("origemDivida", ORIGEM_DIVIDA, data.origemDivida) +
+      '<div class="f-hint">Dívida planejada — com prazo definido, taxa comparada e parcela que cabe no orçamento — é uma ferramenta. Dívida que aparece no aperto costuma ser a mais cara disponível, contratada sem comparar nada. Os dois casos pedem planos diferentes: um é questão de volume e prazo, o outro se resolve construindo reserva.</div></div>' +
+      '<div><label class="f-label">Nos últimos 12 meses, já pegou empréstimo/usou rotativo pra cobrir outra dívida?</label>' + selectHtml("usouRotativo", USOU_ROTATIVO, data.usouRotativo) +
+      '<div class="f-hint">Pagar uma dívida com outra dívida mais cara é o padrão que mais rápido transforma um aperto passageiro numa bola de neve. Responder com honestidade aqui muda o plano de ação do relatório.</div></div>' +
+      '</div></div>';
+  }
+  return '<div class="card">' +
+    '<label class="f-label" style="margin-bottom:10px;">Você tem dívidas em cartão de crédito, cheque especial ou empréstimo pessoal hoje?</label>' +
+    simNaoSeg("temDividas", data.temDividas) +
+    '<div class="f-hint">Financiamento de imóvel ou de veículo não entra aqui: o saldo devedor desses bens já foi informado na etapa de patrimônio.</div>' +
+    detail + '</div>';
+}
+
+function renderStep6() {
+  return '<div class="card"><div class="grid2">' +
+    moneyInput("reservaEmergencia", "Valor total da reserva de emergência (mesmo se já informado nos investimentos)", "span2 estreito") +
+    '<div class="span2 estreito"><label class="f-label">Onde está aplicada</label>' + selectHtml("ondeAplicada", ONDE_APLICADA, data.ondeAplicada) + '</div>' +
+    '<div class="span2"><label class="f-label">Se perdesse sua renda hoje, por quanto tempo manteria seu padrão de vida sem se desesperar?</label>' + selectHtml("tempoSemRenda", TEMPO_SEM_RENDA, data.tempoSemRenda) + '</div>' +
+    '</div></div>';
+}
+
+/* A pergunta de revisão aparece para quem tem seguro de vida OU plano de
+   saúde, mas falar em "apólices" para quem só tem plano soa como se o
+   formulário tivesse ignorado a resposta anterior. O rótulo nomeia o que a
+   pessoa realmente marcou. */
+function rotuloRevisao() {
+  var vida = data.temSeguroVida === true;
+  var saude = data.temPlanoSaude === true;
+  if (vida && saude) return "Revisou o seguro de vida e o plano de saúde nos últimos 2 anos?";
+  if (vida) return "Revisou a apólice do seu seguro de vida nos últimos 2 anos?";
+  return "Revisou as coberturas do seu plano de saúde nos últimos 2 anos?";
+}
+
+function renderStep7() {
+  return '<div class="card"><div class="grid2">' +
+    '<div><label class="f-label" style="margin-bottom:10px;">Tem seguro de vida?</label>' + simNaoSeg("temSeguroVida", data.temSeguroVida) + '</div>' +
+    (data.temSeguroVida === true ? moneyInput("capitalSegurado", "Capital segurado (da sua apólice)") : "") +
+    '<div><label class="f-label" style="margin-bottom:10px;">Tem plano de saúde?</label>' + simNaoSeg("temPlanoSaude", data.temPlanoSaude) + '</div>' +
+    '<div><label class="f-label" style="margin-bottom:10px;">Tem reserva específica pra emergências médicas?</label>' + simNaoSeg("reservaMedica", data.reservaMedica) + '</div>' +
+    '<div class="span2"><label class="f-label">Se ficasse incapacitado de trabalhar, por quanto tempo sua renda estaria garantida?</label>' + selectHtml("tempoRendaGarantida", TEMPO_RENDA_GARANTIDA, data.tempoRendaGarantida) + '</div>' +
+    (data.temSeguroVida === true || data.temPlanoSaude === true ?
+      '<div class="span2"><label class="f-label">' + rotuloRevisao() + '</label>' + selectHtml("revisouApolices", REVISOU_APOLICES, data.revisouApolices) + '</div>' : "") +
+    '</div></div>';
+}
+
+function renderStep8() {
+  var t = totals();
+  var gastoField;
+  if (data.gastoNaoSei) {
+    gastoField = '<div class="f-input narrow gasto-slider-box">' +
+      '<span id="gasto-estimado-label">~ ' + fmt(t.gastoEstimado) + ' (' + data.gastoPercent + '% da renda)</span>' +
+      '<input type="range" min="30" max="120" value="' + data.gastoPercent + '" data-range="gastoPercent" style="width:100px;">' +
+      '</div>';
+  } else {
+    gastoField = '<input type="text" inputmode="numeric" class="f-input num narrow" data-money="gastoMensalAposentadoria" value="' + esc(fmt(data.gastoMensalAposentadoria)) + '">';
+  }
+  var metas = "";
+  data.outrasMetas.forEach(function (item, i) {
+    metas += '<div class="list-item">' +
+      '<div class="list-header"><div class="list-title">Meta ' + (i + 1) + '</div><button type="button" class="link-remove" data-action="removeItem" data-list="outrasMetas" data-index="' + i + '">Remover</button></div>' +
+      '<div class="grid2 tight">' +
+      '<div class="span2"><label class="f-label">Descrição</label><input type="text" class="f-input" data-ltext="descricao" data-list="outrasMetas" data-index="' + i + '" placeholder="Ex: Casa própria" value="' + esc(item.descricao) + '"></div>' +
+      '<div><label class="f-label">Valor estimado</label><input type="text" inputmode="numeric" class="f-input num" data-lmoney="valorEstimado" data-list="outrasMetas" data-index="' + i + '" value="' + esc(fmt(item.valorEstimado)) + '"></div>' +
+      '<div><label class="f-label">Prazo</label><input type="text" class="f-input" data-ltext="prazo" data-list="outrasMetas" data-index="' + i + '" placeholder="Ex: 5 anos" value="' + esc(item.prazo) + '"></div>' +
+      '</div></div>';
+  });
+  // Estratégia de aposentadoria: define como o patrimônio-alvo é calculado.
+  var estrategiaSeg = '<div class="seg" style="flex-wrap:wrap;">' +
+    '<button type="button" class="' + (data.estrategiaAposentadoria === "renda" ? "on" : "") + '" data-action="set" data-key="estrategiaAposentadoria" data-val="renda" style="padding:12px 18px;">Viver do rendimento</button>' +
+    '<button type="button" class="' + (data.estrategiaAposentadoria === "consumo" ? "on" : "") + '" data-action="set" data-key="estrategiaAposentadoria" data-val="consumo" style="padding:12px 18px;">Consumir o patrimônio</button>' +
+    '</div>' +
+    '<div class="f-hint" style="line-height:1.6;">' +
+    '<b>Viver do rendimento:</b> você saca só uma parte pequena por ano (4%), o patrimônio fica intacto pra sempre e vira herança. Exige 25× o gasto anual.<br>' +
+    '<b>Consumir o patrimônio:</b> o dinheiro é gasto ao longo da aposentadoria e acaba numa idade que você define. Exige bem menos capital, mas o prazo precisa ser generoso.' +
+    '</div>';
+
+  var camposConsumo = data.estrategiaAposentadoria === "consumo"
+    ? '<div><label class="f-label">Até que idade a renda precisa durar?</label>' +
+        '<input type="number" min="0" class="f-input num" data-field="idadeFimRenda" placeholder="Ex: 95" value="' + esc(data.idadeFimRenda) + '">' +
+        '<div class="f-hint">Vale calcular até uma idade generosa (95 ou 100). Subestimar o prazo é o erro mais caro dessa estratégia.</div></div>' +
+      '<div><label class="f-label">Quer deixar algum valor de herança? <span style="font-weight:500; opacity:0.75;">(opcional)</span></label>' +
+        '<input type="text" inputmode="numeric" class="f-input num" data-money="herancaDesejada" value="' + esc(fmt(data.herancaDesejada)) + '">' +
+        '<div class="f-hint">Deixe em zero pra consumir todo o patrimônio, em poder de compra de hoje.</div></div>'
+    : "";
+
+  // As duas primeiras perguntas ficam uma embaixo da outra: lado a lado, os
+  // blocos têm alturas diferentes (uma tem dica de prazo, a outra tem checkbox
+  // mais dica) e as bordas dos campos deixavam de se alinhar.
+  return '<div class="card"><div class="grid2">' +
+    '<div class="span2"><label class="f-label">Com que idade você quer se aposentar?</label><input type="number" min="0" class="f-input num narrow" data-field="idadeAposentadoria" placeholder="Ex: 60" value="' + esc(data.idadeAposentadoria) + '">' +
+    '<div id="hint-prazo-aposentadoria">' + hintPrazoAposentadoria() + '</div></div>' +
+    '<div class="span2"><label class="f-label">Quanto quer receber por mês na aposentadoria?</label>' + gastoField +
+    '<label class="check-label"><input type="checkbox" data-action="toggleGastoNaoSei"' + (data.gastoNaoSei ? " checked" : "") + '> Não sei, quero estimar como % da renda atual</label>' +
+    '<div class="f-hint">Em reais de hoje: pense no padrão de vida que quer manter, não no valor que estará no extrato lá na frente.</div></div>' +
+    '<div class="span2 seg-wrap-mobile"><label class="f-label" style="margin-bottom:10px;">O que você quer fazer com o patrimônio na aposentadoria?</label>' + estrategiaSeg + '</div>' +
+    camposConsumo +
+    '<div class="span2"><label class="f-label">Tem metas financeiras com prazo e valor definidos, ou são ideias vagas?</label>' + selectHtml("temMetasDefinidas", METAS_DEFINIDAS, data.temMetasDefinidas) + '</div>' +
+    '<div class="span2"><label class="f-label">Já calculou quanto precisaria guardar por mês pra chegar nas metas?</label>' + selectHtml("calculouQuantoGuardar", CALCULOU_GUARDAR, data.calculouQuantoGuardar) + '</div>' +
+    '</div><div class="rule-full"></div>' +
+    '<label class="f-label" style="margin-bottom:14px;">Outras metas de vida</label>' + metas +
+    '<button type="button" class="link-add" data-action="addItem" data-list="outrasMetas">+ Adicionar outra meta</button></div>';
+}
+
+function renderStep9() {
+  return '<div class="card"><div class="grid2">' +
+    '<div><label class="f-label" style="margin-bottom:10px;">O salário/renda cobre todas as despesas?</label>' + simNaoSeg("salarioCobre", data.salarioCobre) + '</div>' +
+    '<div><label class="f-label">Geralmente sobra, empata ou fica no vermelho?</label>' + selectHtml("sobraEmpataVermelho", SOBRA_EMPATA, data.sobraEmpataVermelho) + '</div>' +
+    '<div class="span2"><label class="f-label">Você sente que sabe pra onde vai o seu dinheiro todo mês, ou tem surpresas com frequência?</label>' + selectHtml("sabeParaOndeVaiDinheiro", SABE_PARA_ONDE, data.sabeParaOndeVaiDinheiro) + '</div>' +
+    '<div class="span2"><label class="f-label">Descreva sua situação financeira atual</label><textarea rows="3" class="f-input" data-field="descricaoSituacao">' + esc(data.descricaoSituacao) + '</textarea></div>' +
+    '<div class="span2"><label class="f-label">Qual sua maior dor financeira hoje?</label><textarea rows="3" class="f-input" data-field="maiorDor">' + esc(data.maiorDor) + '</textarea></div>' +
+    '<div class="span2"><label class="f-label">Quais seus sonhos financeiros? (com prazo)</label><textarea rows="3" class="f-input" data-field="sonhos">' + esc(data.sonhos) + '</textarea></div>' +
+    '</div></div>';
+}
+
+function renderStep10() {
+  var t = totals();
+  var simNao = function (v) { return v === true ? "Sim" : v === false ? "Não" : "—"; };
+  var orDash = function (v) { return v === "" || v === undefined || v === null ? "—" : esc(v); };
+  var sections = [
+    { n: 1, title: "Identificação", rows: [
+      ["Nome", orDash(data.nome)], ["E-mail", orDash(data.email)],
+      ["Cidade/Estado", orDash(data.cidade) + " / " + orDash(data.estado)],
+      ["Data de nascimento", orDash(dataBR(data.dataNascimento)) + (idadeAtual() !== null ? " (" + idadeAtual() + " anos)" : "")],
+      ["Estado civil", orDash(data.estadoCivil)], ["Cônjuge com renda", simNao(data.temConjuge)]
+    ].concat(data.temConjuge === true ? [
+      ["Nascimento do cônjuge", orDash(dataBR(data.dataNascimentoConjuge))]
+    ] : []).concat([
+      ["Filhos/dependentes", orDash(data.filhos)], ["Ocupação", orDash(data.ocupacao)]
+    ])},
+    { n: 2, title: "Renda Mensal", rows: [
+      ["Renda própria", fmt(data.rendaPropria)]
+    ].concat(data.temConjuge === true ? [
+      ["Renda cônjuge", fmt(data.rendaConjuge) + (somaRendaConjuge() ? "" : " (fora da análise)")],
+      ["Base da análise", somaRendaConjuge() ? "Renda do casal" : "Só a sua renda"]
+    ] : []).concat([
+      ["Outras rendas", String(data.outrasRendas.length)],
+      ["Total considerado", fmt(t.totalRenda)]
+    ])},
+    { n: 3, title: "Despesas", rows: [
+      ["Total de despesas", fmt(t.totalDespesas)],
+      ["Outras despesas informadas", String(data.despesasExtras.length)]
+    ]},
+    { n: 4, title: "Patrimônio e Investimentos", rows: [
+      ["Imóveis", String(data.imoveis.length)], ["Veículos", String(data.veiculos.length)],
+      ["Perfil de risco", orDash(data.perfilRisco)], ["Patrimônio total", fmt(t.patrimonioTotal)],
+      ["Patrimônio líquido", fmt(t.patrimonioLiquido)]
+    ]},
+    { n: 5, title: "Dívidas", rows: [
+      ["Tem dívidas", simNao(data.temDividas)], ["Total de dívidas", fmt(t.totalDividas)]
+    ].concat(data.temDividas === true ? [
+      ["Como a dívida aparece", orDash(data.origemDivida)],
+      ["Usou rotativo pra cobrir dívida", orDash(data.usouRotativo)]
+    ] : [])},
+    { n: 6, title: "Liquidez e Reserva", rows: [
+      ["Reserva de emergência", fmt(data.reservaEmergencia)], ["Onde está aplicada", orDash(data.ondeAplicada)],
+      ["Tempo sem se desesperar", orDash(data.tempoSemRenda)]
+    ]},
+    { n: 7, title: "Gestão de Risco (Seguros)", rows: [
+      ["Seguro de vida", simNao(data.temSeguroVida)], ["Plano de saúde", simNao(data.temPlanoSaude)],
+      ["Renda garantida se incapacitado", orDash(data.tempoRendaGarantida)]
+    ]},
+    { n: 8, title: "Aposentadoria e Metas", rows: [
+      ["Idade-alvo aposentadoria", orDash(data.idadeAposentadoria)],
+      ["Renda mensal desejada", data.gastoNaoSei ? "~" + fmt(t.gastoEstimado) : fmt(data.gastoMensalAposentadoria)],
+      ["Estratégia", data.estrategiaAposentadoria === "consumo" ? "Consumir o patrimônio" : data.estrategiaAposentadoria === "renda" ? "Viver do rendimento" : "—"]
+    ].concat(data.estrategiaAposentadoria === "consumo" ? [
+      ["Renda dura até os", orDash(data.idadeFimRenda) + " anos"],
+      ["Herança desejada", fmt(data.herancaDesejada)]
+    ] : []).concat([
+      ["Metas definidas", orDash(data.temMetasDefinidas)], ["Outras metas", String(data.outrasMetas.length)]
+    ])},
+    { n: 9, title: "Situação Atual", rows: [
+      ["Renda cobre despesas", simNao(data.salarioCobre)], ["Sobra/empata/vermelho", orDash(data.sobraEmpataVermelho)],
+      ["Sabe pra onde vai o dinheiro", orDash(data.sabeParaOndeVaiDinheiro)], ["Maior dor financeira", orDash(data.maiorDor)]
+    ]}
+  ];
+  var html = sections.map(function (s) {
+    var rows = s.rows.map(function (r) {
+      return '<div><div class="review-label">' + r[0] + '</div><div class="review-value">' + r[1] + '</div></div>';
+    }).join("");
+    return '<div class="card review-card"><div class="review-head">' +
+      '<div class="review-title">' + s.n + '. ' + s.title + '</div>' +
+      '<button type="button" class="link-edit" data-action="goto" data-step="' + s.n + '">Editar</button></div>' +
+      '<div class="review-grid">' + rows + '</div></div>';
+  }).join("");
+  return html + '<div class="confirm-banner">Após finalizar, seu diagnóstico personalizado será gerado na hora, com seu relatório completo.</div>';
+}
+
+function renderDone() {
+  return '<div class="hero done-hero"><div class="hero-glow"></div>' +
+    '<div class="done-title">Diagnóstico recebido</div>' +
+    '<div class="done-text">Obrigado, ' + esc(data.nome) + '. Seu relatório personalizado está pronto. Clique abaixo para visualizá-lo. Ele também fica salvo neste navegador para consultar depois.</div>' +
+    '<div class="done-text" id="sync-status" style="margin-top:14px; font-size:13.5px; color:rgba(251,248,241,0.55);"></div>' +
+    '<div class="done-actions"><a class="btn-report" href="eh-diagnostico-relatorio.html">Ver meu relatório →</a>' +
+    '<button type="button" class="link-restart" data-action="restart">Refazer o diagnóstico do zero</button></div>' +
+    '</div>';
+}
+
+function enviarRespostas() {
+  if (!window.ehSupabase || !ehSupabase.configurado()) return;
+  ehSupabase.enviarDiagnostico().then(function (status) {
+    var el = document.getElementById("sync-status");
+    if (!el) return;
+    if (status === "ok" || status === "ja-enviado") {
+      el.textContent = "Suas respostas foram registradas com sucesso.";
+    } else if (status === "erro") {
+      el.textContent = "Não foi possível enviar suas respostas agora. Elas ficam salvas neste navegador e serão reenviadas quando você abrir o relatório.";
+    }
+  });
+}
+
+/* ===================== Render principal ===================== */
+function renderStepper() {
+  var el = document.getElementById("stepper");
+  if (step < 1 || step > 10) { el.style.display = "none"; return; }
+  el.style.display = "flex";
+  var html = "";
+  for (var n = 1; n <= 10; n++) {
+    var cls = n === step ? "active" : n < step ? "done" : "todo";
+    html += '<div class="step-cell"><div class="step-node ' + cls + '">' + n + '</div>' + (n < 10 ? '<div class="step-line"></div>' : "") + '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function render() {
+  renderStepper();
+  var app = document.getElementById("app");
+  var html = "";
+  if (step === 0) {
+    html = renderStep0();
+  } else if (step === 11) {
+    html = renderDone();
+  } else {
+    var meta = STEP_META[step];
+    html += '<div class="step-eyebrow"><div class="step-eyebrow-line"></div><div class="step-eyebrow-text">' + meta.eyebrow + '</div></div>' +
+      '<div class="step-title">' + meta.title + '</div>' +
+      '<div class="step-desc">' + meta.desc + notaConjuge(step) + '</div>';
+    var renderers = { 1: renderStep1, 2: renderStep2, 3: renderStep3, 4: renderStep4, 5: renderStep5, 6: renderStep6, 7: renderStep7, 8: renderStep8, 9: renderStep9, 10: renderStep10 };
+    html += renderers[step]();
+    var missing = requiredByStep(step);
+    var blocked = missing.length > 0;
+    var showError = attempted[step] && blocked;
+    // A mensagem de erro fica sempre no DOM, só escondida quando não há o que
+    // mostrar: assim o atualizarRodape() consegue preenchê-la e limpá-la sem
+    // depender de um novo render().
+    html += '<div style="margin-top:36px;">' +
+      '<div class="error-msg" id="erroEtapa"' + (showError ? '' : ' style="display:none;"') + '>' +
+      (showError ? 'Preencha para continuar: ' + esc(missing.join(", ")) : '') + '</div>' +
+      '<div class="footer-nav" style="margin-top:0;">' +
+      '<button type="button" class="btn-back" data-action="back">← Voltar</button>' +
+      '<button type="button" class="btn-continue' + (blocked ? " blocked" : "") + '" data-action="continue">' + (step === 10 ? "Finalizar" : "Continuar →") + '</button>' +
+      '</div></div>';
+  }
+  app.innerHTML = html;
+  bindEvents();
+}
+
+/* ===================== Eventos ===================== */
+function scrollTop() { window.scrollTo({ top: 0 }); }
+
+function coerceVal(v) { return v === "true" ? true : v === "false" ? false : v; }
+
+var LIST_TEMPLATES = {
+  outrasRendas: { descricao: "", valor: 0 },
+  despesasExtras: { descricao: "", valor: 0, tipo: "essencial" },
+  outrasDividas: { descricao: "", valor: 0 },
+  outrasMetas: { descricao: "", valorEstimado: 0, prazo: "" },
+  imoveis: { descricao: "", valorMercado: 0, status: "quitado", saldoDevedor: 0 },
+  veiculos: { descricao: "", valor: 0, status: "quitado", saldoDevedor: 0 }
+};
+
+/**
+ * Deixa o rodapé de acordo com o que já foi preenchido.
+ *
+ * O render() só roda quando a etapa muda. Digitar um valor atualiza os
+ * totalizadores e nada mais, então o botão Continuar ficava com a
+ * aparência de bloqueado mesmo depois de a etapa já estar válida — e a
+ * mensagem de erro, uma vez exibida, continuava na tela depois de a
+ * pessoa corrigir o campo. Clicar sempre funcionou; o que estava errado
+ * era só o que a tela dizia.
+ */
+function atualizarRodape() {
+  var botao = document.querySelector(".btn-continue");
+  if (!botao) return;
+  var missing = requiredByStep(step);
+  botao.classList.toggle("blocked", missing.length > 0);
+
+  var erro = document.getElementById("erroEtapa");
+  if (!erro) return;
+  if (attempted[step] && missing.length) {
+    erro.textContent = "Preencha para continuar: " + missing.join(", ");
+    erro.style.display = "";
+  } else {
+    erro.textContent = "";
+    erro.style.display = "none";
+  }
+}
+
+function bindEvents() {
+  var app = document.getElementById("app");
+
+  app.querySelectorAll("[data-field]").forEach(function (el) {
+    var evt = el.tagName === "SELECT" ? "change" : "input";
+    el.addEventListener(evt, function () {
+      data[el.dataset.field] = el.value;
+      persist();
+      if (el.dataset.field === "dataNascimento") {
+        var h = document.getElementById("hint-nascimento");
+        if (h) h.innerHTML = idadeHint(data.dataNascimento);
+      }
+      if (el.dataset.field === "idadeAposentadoria") {
+        var hp = document.getElementById("hint-prazo-aposentadoria");
+        if (hp) hp.innerHTML = hintPrazoAposentadoria();
+      }
+      if (el.dataset.field === "dataNascimentoConjuge") {
+        var hc = document.getElementById("hint-nascimento-conjuge");
+        if (hc) hc.innerHTML = idadeHint(data.dataNascimentoConjuge);
+      }
+      if (el.dataset.field === "estado") {
+        var cidade = document.getElementById("cidade-input");
+        if (cidade) {
+          cidade.disabled = !data.estado;
+          cidade.placeholder = data.estado ? "Digite sua cidade" : "Selecione um estado primeiro";
+        }
+      }
+    });
+  });
+
+  app.querySelectorAll("[data-money]").forEach(function (el) {
+    el.addEventListener("input", function () {
+      var v = parseCents(el.value);
+      data[el.dataset.money] = v;
+      el.value = fmt(v);
+      persist();
+      updateTotalizers();
+    });
+  });
+
+  app.querySelectorAll("[data-despesa]").forEach(function (el) {
+    el.addEventListener("input", function () {
+      var v = parseCents(el.value);
+      data.despesas[el.dataset.despesa] = v;
+      el.value = fmt(v);
+      persist();
+      updateTotalizers();
+    });
+  });
+
+  app.querySelectorAll("[data-ltext]").forEach(function (el) {
+    el.addEventListener("input", function () {
+      data[el.dataset.list][parseInt(el.dataset.index, 10)][el.dataset.ltext] = el.value;
+      persist();
+    });
+  });
+
+  app.querySelectorAll("[data-lmoney]").forEach(function (el) {
+    el.addEventListener("input", function () {
+      var v = parseCents(el.value);
+      data[el.dataset.list][parseInt(el.dataset.index, 10)][el.dataset.lmoney] = v;
+      el.value = fmt(v);
+      persist();
+      updateTotalizers();
+    });
+  });
+
+  app.querySelectorAll("[data-range]").forEach(function (el) {
+    el.addEventListener("input", function () {
+      data[el.dataset.range] = parseInt(el.value, 10);
+      persist();
+      updateTotalizers();
+    });
+  });
+
+  app.querySelectorAll("[data-action]").forEach(function (el) {
+    var action = el.dataset.action;
+    if (action === "toggleGastoNaoSei") {
+      el.addEventListener("change", function () {
+        data.gastoNaoSei = el.checked;
+        persist();
+        render();
+      });
+      return;
+    }
+    if (action === "toggleConsent") {
+      el.addEventListener("change", function () {
+        data.consentimento = el.checked;
+        if (el.checked && !data.consentimentoEm) data.consentimentoEm = new Date().toISOString();
+        if (!el.checked) data.consentimentoEm = "";
+        persist();
+      });
+      return;
+    }
+    el.addEventListener("click", function () {
+      switch (action) {
+        case "start": step = 1; persist(); scrollTop(); render(); break;
+        case "back": step = Math.max(0, step - 1); persist(); scrollTop(); render(); break;
+        case "continue": {
+          var missing = requiredByStep(step);
+          if (missing.length === 0) {
+            if (step === 10) {
+              try { localStorage.setItem(STORAGE_DATA, JSON.stringify({ data: data, geradoEm: new Date().toISOString() })); } catch (e) {}
+              if (window.ehSupabase) ehSupabase.novoEnvio(data.nome);
+              step = 11;
+            } else {
+              step = Math.min(11, step + 1);
+            }
+            persist(); scrollTop(); render();
+            if (step === 11) enviarRespostas();
+          } else {
+            attempted[step] = true;
+            render();
+          }
+          break;
+        }
+        case "goto": step = parseInt(el.dataset.step, 10); persist(); scrollTop(); render(); break;
+        case "set": data[el.dataset.key] = coerceVal(el.dataset.val); persist(); render(); break;
+        case "setListField":
+          data[el.dataset.list][parseInt(el.dataset.index, 10)][el.dataset.lfield] = coerceVal(el.dataset.val);
+          persist(); render(); break;
+        case "addItem":
+          data[el.dataset.list].push(Object.assign({}, LIST_TEMPLATES[el.dataset.list]));
+          persist(); render(); break;
+        case "removeItem":
+          data[el.dataset.list].splice(parseInt(el.dataset.index, 10), 1);
+          persist(); render(); break;
+        case "restart":
+          if (confirm("Isso apaga todas as respostas salvas neste navegador. Deseja recomeçar?")) {
+            try { localStorage.removeItem(STORAGE_FORM); localStorage.removeItem(STORAGE_DATA); } catch (e) {}
+            step = 0; attempted = {}; data = defaultData();
+            scrollTop(); render();
+          }
+          break;
+      }
+    });
+  });
+}
+
+// Um ouvinte só, no container, ligado uma vez. Dentro do bindEvents() ele
+// se acumularia a cada render. Como os handlers de cada campo rodam no alvo
+// e este roda na propagação, os dados já estão atualizados quando ele entra.
+(function ligarSincroniaDoRodape() {
+  var app = document.getElementById("app");
+  app.addEventListener("input", atualizarRodape);
+  app.addEventListener("change", atualizarRodape);
+})();
+
+render();
+</script>
+</body>
+</html>
