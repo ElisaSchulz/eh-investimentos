@@ -1,0 +1,38 @@
+/* EH Investimentos — tema visual dos documentos (Fraunces + Manrope, navy #002060, âmbar #EE9A1E).
+   Carregar por último no <head>:  <link rel="stylesheet" href="eh-tema.css"> */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@300;400;500;600;700;800&display=swap');
+
+:root{
+  --navy:#002060; --navy-2:#001A50; --navy-3:#001848; --navy-dark:#001848;
+  --navy-mid:#0B2E7A; --navy-warm:#0A2A6E;
+  --gold:#EE9A1E; --gold-2:#F4AE45; --gold-light:#F4AE45; --gold-pale:#F7C46E;
+  --bronze:#92600D;
+  --cream:#F7F5EF; --cream-2:#EFE3C8;
+  --cream-soft:#DCE2F0; --cream-faint:#9AA6C6;
+  --rule:rgba(255,255,255,0.12); --rule-soft:rgba(255,255,255,0.06); --rule-strong:rgba(255,255,255,0.22);
+  --white:#F7F5EF; --gray:#9AA6C6; --gray-light:#DCE2F0; --border:rgba(255,255,255,0.22);
+}
+
+*{ font-variation-settings:"WONK" 0,"SOFT" 0; -webkit-font-smoothing:antialiased; }
+body::before{ display:none !important; } /* remove textura granulada */
+
+/* Tipografia: Manrope no texto corrido, Fraunces nos títulos */
+html,body,body *{ font-family:'Manrope',sans-serif !important; }
+h1,h2,h3,h4,
+h1 *,h2 *,h3 *,h4 *,
+blockquote,blockquote *,
+[class*="title"],[class*="name"],[class*="num"],[class*="value"],[class*="-v"],.v,.vl,.roman{
+  font-family:'Fraunces',serif !important;
+}
+h1,h2,h3{ font-weight:600 !important; letter-spacing:-0.01em; }
+em,i,blockquote,blockquote *,[class*="quote"],[class*="quote"] *{ font-style:normal !important; }
+h1 em,h2 em,h3 em{ color:var(--gold) !important; }
+
+/* Rótulos em caixa alta (antes em mono) */
+.mono,[class*="kicker"],[class*="tag"],[class*="label"],[class*="eyebrow"],[class*="fig"],cite,small,h5,h6{
+  font-weight:700; letter-spacing:.2em;
+}
+
+/* Cantos arredondados como nos documentos */
+button,a[class*="btn"],a[class*="pill"],[class*="btn"],[class*="pill"]{ border-radius:6px; }
+[class*="card"],[class*="box"],[class*="panel"],[class*="modal"],[class*="form"]:not(form),aside,article{ border-radius:8px; }
