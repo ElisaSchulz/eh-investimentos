@@ -6,34 +6,34 @@
   <title>EH Investimentos — Área do Cliente</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,300;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     :root {
       /* Navy & accent palette — aligned to index.html */
-      --navy:       #0D1E4E;
-      --navy-2:     #0a1840;
-      --navy-3:     #091438;
-      --navy-mid:   #152a64;
-      --navy-warm:  #1a2a5e;
-      --navy-dark:  #091438;
-      --gold:       #D4820A;
-      --gold-2:     #E8A030;
-      --gold-light: #E8A030;
-      --gold-pale:  #F0C060;
-      --cream:      #f3ede1;
-      --cream-2:    #e4d5b0;
-      --cream-soft: #f3ede1cc;
-      --cream-faint:#f3ede166;
-      --rule:       #f3ede122;
-      --rule-soft:  #f3ede112;
-      --rule-strong:#f3ede140;
+      --navy:       #002060;
+      --navy-2:     #001A50;
+      --navy-3:     #001848;
+      --navy-mid:   #0B2E7A;
+      --navy-warm:  #0A2A6E;
+      --navy-dark:  #001848;
+      --gold:       #EE9A1E;
+      --gold-2:     #F4AE45;
+      --gold-light: #F4AE45;
+      --gold-pale:  #F7C46E;
+      --cream:      #F7F5EF;
+      --cream-2:    #EFE3C8;
+      --cream-soft: #F7F5EFcc;
+      --cream-faint:#F7F5EF66;
+      --rule:       #F7F5EF22;
+      --rule-soft:  #F7F5EF12;
+      --rule-strong:#F7F5EF40;
       /* Aliases retained so any inline `var(--white)`, `var(--gray)`, etc.
          resolve to consistent values from the new palette */
-      --white:      #f3ede1;
-      --gray:       #f3ede199;
-      --gray-light: #f3ede1cc;
-      --border:     #f3ede140;
+      --white:      #F7F5EF;
+      --gray:       #F7F5EF99;
+      --gray-light: #F7F5EFcc;
+      --border:     #F7F5EF40;
       --error:      #e05555;
     }
 
@@ -41,7 +41,7 @@
     html, body { height: 100%; }
 
     body {
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Manrope', sans-serif;
       background: var(--navy);
       color: var(--cream);
       display: flex;
@@ -70,7 +70,7 @@
       justify-content: space-between;
       padding: 3rem 4rem;
       background:
-        radial-gradient(ellipse 60% 50% at 15% 90%, rgba(212,130,10,0.10) 0%, transparent 65%),
+        radial-gradient(ellipse 60% 50% at 15% 90%, rgba(238,154,30,0.10) 0%, transparent 65%),
         var(--navy);
       position: relative;
       overflow: hidden;
@@ -81,7 +81,7 @@
       position: absolute;
       width: 680px; height: 680px;
       border-radius: 50%;
-      border: 1px solid rgba(212,130,10,0.06);
+      border: 1px solid rgba(238,154,30,0.06);
       top: -260px; right: -180px;
       pointer-events: none;
     }
@@ -91,7 +91,7 @@
       position: absolute;
       width: 320px; height: 320px;
       border-radius: 50%;
-      border: 1px solid rgba(212,130,10,0.04);
+      border: 1px solid rgba(238,154,30,0.04);
       bottom: -120px; left: -120px;
       pointer-events: none;
     }
@@ -114,7 +114,7 @@
     }
 
     .panel-logo-text span:first-child {
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Manrope', sans-serif;
       font-weight: 700;
       font-size: 13px;
       letter-spacing: 0.08em;
@@ -122,7 +122,7 @@
     }
 
     .panel-logo-text span:last-child {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-weight: 400;
       font-size: 9px;
       letter-spacing: 0.22em;
@@ -138,7 +138,7 @@
     }
 
     .panel-quote blockquote {
-      font-family: 'Source Serif 4', Georgia, serif;
+      font-family: 'Fraunces', Georgia, serif;
       font-size: clamp(1.7rem, 2.4vw, 2.4rem);
       font-weight: 300;
       font-style: italic;
@@ -153,7 +153,7 @@
       content: '“';
       display: block;
       color: var(--gold);
-      font-family: 'Source Serif 4', serif;
+      font-family: 'Fraunces', serif;
       font-size: 3.4rem;
       line-height: 0;
       margin-bottom: -0.4rem;
@@ -166,7 +166,7 @@
     }
 
     .panel-quote cite {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 10px;
       font-weight: 500;
       letter-spacing: 0.22em;
@@ -181,7 +181,7 @@
     .panel-footer {
       position: relative;
       z-index: 2;
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 10px;
       letter-spacing: 0.06em;
       color: var(--cream-faint);
@@ -213,7 +213,7 @@
     .form-header { margin-bottom: 2.4rem; }
 
     .form-tag {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 10px;
       font-weight: 500;
       letter-spacing: 0.32em;
@@ -233,7 +233,7 @@
     }
 
     .form-header h1 {
-      font-family: 'Source Serif 4', Georgia, serif;
+      font-family: 'Fraunces', Georgia, serif;
       font-size: 2.6rem;
       font-weight: 300;
       line-height: 1.02;
@@ -243,7 +243,7 @@
     }
 
     .form-header p {
-      font-family: 'Source Serif 4', Georgia, serif;
+      font-family: 'Fraunces', Georgia, serif;
       font-size: 1rem;
       color: var(--cream-soft);
       font-weight: 400;
@@ -254,7 +254,7 @@
 
     label {
       display: block;
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 10px;
       font-weight: 500;
       letter-spacing: 0.24em;
@@ -271,7 +271,7 @@
       border: none;
       border-bottom: 1px solid var(--rule-strong);
       color: var(--cream);
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Manrope', sans-serif;
       font-size: 14px;
       font-weight: 400;
       padding: 0.85rem 0;
@@ -307,7 +307,7 @@
       width: 100%;
       background: var(--gold);
       color: var(--navy);
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Manrope', sans-serif;
       font-size: 13px;
       font-weight: 600;
       letter-spacing: 0.06em;
@@ -335,7 +335,7 @@
 
     .spinner {
       width: 14px; height: 14px;
-      border: 2px solid rgba(13,30,78,0.3);
+      border: 2px solid rgba(0,32,96,0.3);
       border-top-color: var(--navy);
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
@@ -346,7 +346,7 @@
       border: 1px solid rgba(224,85,85,0.30);
       border-left: 3px solid #e05555;
       color: #f08080;
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Manrope', sans-serif;
       font-size: 13px;
       font-weight: 400;
       padding: 0.8rem 1rem;
@@ -361,7 +361,7 @@
       border: 1px solid rgba(85,160,85,0.30);
       border-left: 3px solid #80c080;
       color: #80c080;
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Manrope', sans-serif;
       font-size: 13px;
       font-weight: 400;
       padding: 0.8rem 1rem;
@@ -375,7 +375,7 @@
       display: block;
       text-align: center;
       margin-top: 1.5rem;
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Manrope', sans-serif;
       font-size: 12px;
       font-weight: 400;
       color: var(--cream-soft);
@@ -397,7 +397,7 @@
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 9px;
       font-weight: 400;
       letter-spacing: 0.20em;
@@ -414,7 +414,7 @@
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 10px;
       letter-spacing: 0.20em;
       text-transform: uppercase;
@@ -466,6 +466,7 @@
       .form-header h1 { font-size: 1.7rem; }
     }
   </style>
+  <link rel="stylesheet" href="eh-tema.css" />
 </head>
 <body>
 
@@ -860,7 +861,7 @@
       btnText.textContent = 'Enviando...';
 
       const htmlBody = `
-        <h2 style="color:#0D1E4E;font-family:Arial,sans-serif;font-size:18px;">Nova solicitação de acesso — EH Investimentos</h2>
+        <h2 style="color:#002060;font-family:Arial,sans-serif;font-size:18px;">Nova solicitação de acesso — EH Investimentos</h2>
         <table style="font-family:Arial,sans-serif;font-size:14px;border-collapse:collapse;margin-top:16px;">
           <tr><td style="padding:6px 20px 6px 0;color:#888;font-weight:600;">Nome</td><td>${nome}</td></tr>
           <tr><td style="padding:6px 20px 6px 0;color:#888;font-weight:600;">E-mail</td><td>${email}</td></tr>

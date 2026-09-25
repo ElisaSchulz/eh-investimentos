@@ -6,35 +6,35 @@
   <title>EH Investimentos — Bem-vindo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,300;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     /* ── DESIGN SYSTEM — aligned with index.html ── */
     :root {
-      --navy:#0D1E4E;
-      --navy-2:#0a1840;
-      --navy-3:#091438;
-      --navy-mid:#152a64;
-      --navy-warm:#1a2a5e;
-      --gold:#D4820A;
-      --gold-2:#E8A030;
-      --gold-light:#E8A030;       /* legacy alias used in JS-injected classes */
-      --gold-pale:rgba(212,130,10,0.12);
-      --cream:#f3ede1;
-      --cream-2:#e4d5b0;
-      --cream-soft:#f3ede1cc;
-      --cream-faint:#f3ede166;
-      --rule:#f3ede122;
-      --rule-soft:#f3ede112;
-      --rule-strong:#f3ede140;
+      --navy:#002060;
+      --navy-2:#001A50;
+      --navy-3:#001848;
+      --navy-mid:#0B2E7A;
+      --navy-warm:#0A2A6E;
+      --gold:#EE9A1E;
+      --gold-2:#F4AE45;
+      --gold-light:#F4AE45;       /* legacy alias used in JS-injected classes */
+      --gold-pale:rgba(238,154,30,0.12);
+      --cream:#F7F5EF;
+      --cream-2:#EFE3C8;
+      --cream-soft:#F7F5EFcc;
+      --cream-faint:#F7F5EF66;
+      --rule:#F7F5EF22;
+      --rule-soft:#F7F5EF12;
+      --rule-strong:#F7F5EF40;
       /* legacy aliases — kept so JS-injected class names still resolve */
-      --navy-dark:#091438;
-      --white:#f3ede1;
-      --gray:#f3ede166;
-      --gray-light:#f3ede1cc;
-      --border:rgba(212,130,10,0.30);
-      --border-dim:#f3ede122;
+      --navy-dark:#001848;
+      --white:#F7F5EF;
+      --gray:#F7F5EF66;
+      --gray-light:#F7F5EFcc;
+      --border:rgba(238,154,30,0.30);
+      --border-dim:#F7F5EF22;
       --success:#4caf82;
       --error:#e05555;
     }
@@ -42,7 +42,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
-      font-family: 'Source Serif 4', Georgia, serif;
+      font-family: 'Fraunces', Georgia, serif;
       background: var(--navy);
       color: var(--cream);
       min-height: 100vh;
@@ -63,7 +63,7 @@
     }
     .spinner {
       width: 28px; height: 28px;
-      border: 2px solid rgba(212,130,10,0.18);
+      border: 2px solid rgba(238,154,30,0.18);
       border-top-color: var(--gold);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
@@ -98,7 +98,7 @@
 
     .ob-logo-text span:first-child {
       display: block;
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Manrope', sans-serif;
       font-weight: 700;
       font-size: 13px;
       letter-spacing: .08em;
@@ -106,7 +106,7 @@
     }
     .ob-logo-text span:last-child {
       display: block;
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 9px;
       letter-spacing: .22em;
       color: var(--cream-soft);
@@ -115,7 +115,7 @@
     }
 
     .ob-logout {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 10px;
       letter-spacing: .18em;
       text-transform: uppercase;
@@ -136,7 +136,7 @@
       margin-bottom: 56px;
     }
     .ob-welcome-tag {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 10px;
       font-weight: 500;
       letter-spacing: .32em;
@@ -154,7 +154,7 @@
       background: var(--gold);
     }
     .ob-welcome h1 {
-      font-family: 'Source Serif 4', serif;
+      font-family: 'Fraunces', serif;
       font-size: clamp(36px, 5vw, 62px);
       font-weight: 300;
       line-height: 1.02;
@@ -164,7 +164,7 @@
     }
     .ob-welcome h1 em { font-style: italic; font-weight: 400; color: var(--gold-2); }
     .ob-welcome p {
-      font-family: 'Source Serif 4', serif;
+      font-family: 'Fraunces', serif;
       font-size: 17px;
       color: var(--cream-soft);
       font-weight: 400;
@@ -202,7 +202,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'Source Serif 4', serif;
+      font-family: 'Fraunces', serif;
       font-size: 16px;
       font-style: italic;
       font-weight: 400;
@@ -231,7 +231,7 @@
     }
 
     .step-label {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 10px;
       font-weight: 500;
       letter-spacing: .22em;
@@ -244,7 +244,7 @@
     .step-item.done .step-label { color: var(--cream-soft); }
 
     .step-status {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 9px;
       letter-spacing: .14em;
       text-transform: uppercase;
@@ -259,7 +259,7 @@
     .ob-panel.active { display: block; }
 
     .panel-title {
-      font-family: 'Source Serif 4', serif;
+      font-family: 'Fraunces', serif;
       font-size: 42px;
       font-weight: 300;
       line-height: 1.05;
@@ -270,7 +270,7 @@
     .panel-title em { font-style: italic; font-weight: 400; color: var(--gold-2); }
 
     .panel-desc {
-      font-family: 'Source Serif 4', serif;
+      font-family: 'Fraunces', serif;
       font-size: 16px;
       color: var(--cream-soft);
       font-weight: 400;
@@ -296,7 +296,7 @@
     }
 
     .form-section-title {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 11px;
       font-weight: 500;
       letter-spacing: .28em;
@@ -327,7 +327,7 @@
     .form-field.span-3 { grid-column: span 3; }
 
     .form-field label {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 10px;
       font-weight: 500;
       letter-spacing: .22em;
@@ -335,7 +335,7 @@
       color: var(--cream-soft);
     }
     .form-field label .calc-hint {
-      font-family: 'Source Serif 4', serif;
+      font-family: 'Fraunces', serif;
       font-style: italic;
       font-weight: 400;
       font-size: 11px;
@@ -345,14 +345,14 @@
       margin-left: 4px;
     }
     .form-field input[readonly] {
-      background: rgba(212,130,10,0.06);
-      border-color: rgba(212,130,10,0.35);
+      background: rgba(238,154,30,0.06);
+      border-color: rgba(238,154,30,0.35);
       color: var(--gold-2);
       cursor: not-allowed;
     }
     .form-field input[readonly]:focus {
-      background: rgba(212,130,10,0.06);
-      border-color: rgba(212,130,10,0.35);
+      background: rgba(238,154,30,0.06);
+      border-color: rgba(238,154,30,0.35);
     }
 
     /* ── INFO TOOLTIP (label "i") ── */
@@ -366,7 +366,7 @@
       border: 1px solid var(--gold);
       color: var(--gold);
       background: transparent;
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Manrope', sans-serif;
       font-size: 10px;
       font-weight: 600;
       font-style: italic;
@@ -391,7 +391,7 @@
       border: 1px solid var(--rule-strong);
       border-left: 3px solid var(--gold);
       color: var(--cream);
-      font-family: 'Source Serif 4', serif;
+      font-family: 'Fraunces', serif;
       font-size: 13.5px;
       font-style: normal;
       font-weight: 400;
@@ -428,10 +428,10 @@
     .form-field input,
     .form-field select,
     .form-field textarea {
-      background: rgba(13,30,78,0.55);
+      background: rgba(0,32,96,0.55);
       border: 1px solid var(--rule-strong);
       color: var(--cream);
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Manrope', sans-serif;
       font-size: 14px;
       font-weight: 400;
       padding: 13px 14px;
@@ -443,7 +443,7 @@
     .form-field select:focus,
     .form-field textarea:focus {
       border-color: var(--gold);
-      background: rgba(212,130,10,0.06);
+      background: rgba(238,154,30,0.06);
     }
     .form-field input::placeholder,
     .form-field textarea::placeholder { color: var(--cream-faint); }
@@ -462,13 +462,13 @@
       align-items: flex-start;
       gap: 12px;
       padding: 12px 14px;
-      background: rgba(13,30,78,0.45);
+      background: rgba(0,32,96,0.45);
       border: 1px solid var(--rule);
       cursor: pointer;
       transition: all 0.15s;
     }
     .radio-option:hover {
-      background: rgba(212,130,10,0.06);
+      background: rgba(238,154,30,0.06);
       border-color: var(--rule-strong);
     }
     .radio-option.selected {
@@ -501,7 +501,7 @@
     }
 
     .radio-text {
-      font-family: 'Source Serif 4', serif;
+      font-family: 'Fraunces', serif;
       font-size: 15px;
       color: var(--cream-soft);
       font-weight: 400;
@@ -526,7 +526,7 @@
     }
 
     .suit-q-num {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 10px;
       font-weight: 500;
       letter-spacing: .28em;
@@ -536,7 +536,7 @@
     }
 
     .suit-q-text {
-      font-family: 'Source Serif 4', serif;
+      font-family: 'Fraunces', serif;
       font-size: 19px;
       font-weight: 400;
       color: var(--cream);
@@ -561,7 +561,7 @@
       cursor: pointer;
       border: none;
       border-right: 1px solid var(--rule);
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Manrope', sans-serif;
       text-align: left;
       transition: background 0.2s;
       position: relative;
@@ -576,7 +576,7 @@
       background: var(--gold);
     }
     .contract-type-btn-name {
-      font-family: 'Source Serif 4', serif;
+      font-family: 'Fraunces', serif;
       font-size: 18px;
       font-weight: 500;
       letter-spacing: -.005em;
@@ -586,7 +586,7 @@
     }
     .contract-type-btn.active .contract-type-btn-name { color: var(--gold-2); font-style: italic; font-weight: 400; }
     .contract-type-btn-desc {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 10px;
       letter-spacing: .18em;
       text-transform: uppercase;
@@ -598,7 +598,7 @@
       background: var(--navy-2);
       border: 1px solid var(--rule-strong);
       padding: 32px 30px;
-      font-family: 'Source Serif 4', serif;
+      font-family: 'Fraunces', serif;
       font-size: 15px;
       line-height: 1.75;
       color: var(--cream-soft);
@@ -609,7 +609,7 @@
     .contract-preview strong { color: var(--cream); font-weight: 500; }
     .contract-preview p { margin: 8px 0; }
     .contract-preview h4 {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 11px;
       font-weight: 500;
       letter-spacing: .26em;
@@ -648,7 +648,7 @@
     .result-card.arrojado::before { background: #6496FF; }
 
     .result-perfil {
-      font-family: 'Source Serif 4', serif;
+      font-family: 'Fraunces', serif;
       font-size: 38px;
       font-weight: 400;
       font-style: italic;
@@ -661,7 +661,7 @@
     .result-perfil.arrojado { color: #6496FF; }
 
     .result-pontos {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 10px;
       font-weight: 500;
       letter-spacing: .24em;
@@ -673,7 +673,7 @@
     }
 
     .result-desc {
-      font-family: 'Source Serif 4', serif;
+      font-family: 'Fraunces', serif;
       font-size: 15.5px;
       color: var(--cream-soft);
       line-height: 1.7;
@@ -689,7 +689,7 @@
       gap: 10px;
       background: var(--gold);
       color: var(--navy);
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Manrope', sans-serif;
       font-size: 13px;
       font-weight: 600;
       letter-spacing: .06em;
@@ -714,7 +714,7 @@
       gap: 8px;
       background: transparent;
       color: var(--cream);
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Manrope', sans-serif;
       font-size: 13px;
       font-weight: 500;
       letter-spacing: .06em;
@@ -729,7 +729,7 @@
 
     /* ── FEEDBACK ── */
     .feedback {
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Manrope', sans-serif;
       font-size: 13px;
       padding: 14px 18px;
       margin-top: 14px;
@@ -739,7 +739,7 @@
     }
     .feedback.success { background: rgba(76,175,130,0.08); border: 1px solid rgba(76,175,130,0.28); border-left: 3px solid var(--success); color: #9ad5b0; display: block; }
     .feedback.error { background: rgba(224,85,85,0.08); border: 1px solid rgba(224,85,85,0.28); border-left: 3px solid var(--error); color: #ec9a9a; display: block; }
-    .feedback.info { background: rgba(212,130,10,0.08); border: 1px solid var(--rule-strong); border-left: 3px solid var(--gold); color: var(--cream-soft); display: block; }
+    .feedback.info { background: rgba(238,154,30,0.08); border: 1px solid var(--rule-strong); border-left: 3px solid var(--gold); color: var(--cream-soft); display: block; }
 
     /* ── ZAPSIGN WAITING ── */
     .zapsign-wait {
@@ -762,7 +762,7 @@
     }
     .zapsign-wait svg { color: var(--gold); margin-bottom: 18px; }
     .zapsign-wait h3 {
-      font-family: 'Source Serif 4', serif;
+      font-family: 'Fraunces', serif;
       font-size: 28px;
       font-weight: 400;
       letter-spacing: -.01em;
@@ -770,7 +770,7 @@
       margin-bottom: 10px;
     }
     .zapsign-wait p {
-      font-family: 'Source Serif 4', serif;
+      font-family: 'Fraunces', serif;
       font-size: 15.5px;
       color: var(--cream-soft);
       font-weight: 400;
@@ -806,7 +806,7 @@
       color: var(--success);
     }
     .ob-completed h2 {
-      font-family: 'Source Serif 4', serif;
+      font-family: 'Fraunces', serif;
       font-size: 52px;
       font-weight: 300;
       line-height: 1.02;
@@ -816,7 +816,7 @@
     }
     .ob-completed h2 em { font-style: italic; font-weight: 400; color: var(--gold-2); }
     .ob-completed p {
-      font-family: 'Source Serif 4', serif;
+      font-family: 'Fraunces', serif;
       font-size: 17px;
       color: var(--cream-soft);
       font-weight: 400;
@@ -846,14 +846,14 @@
     .checkbox-option {
       display: flex; align-items: center; gap: 12px;
       padding: 11px 14px;
-      background: rgba(13,30,78,0.45);
+      background: rgba(0,32,96,0.45);
       border: 1px solid var(--rule);
       cursor: pointer; transition: all 0.15s;
     }
-    .checkbox-option:hover { background: rgba(212,130,10,0.06); border-color: var(--rule-strong); }
+    .checkbox-option:hover { background: rgba(238,154,30,0.06); border-color: var(--rule-strong); }
     .checkbox-option input { accent-color: var(--gold); width: 14px; height: 14px; flex-shrink: 0; }
     .checkbox-option span {
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Manrope', sans-serif;
       font-size: 13.5px;
       font-weight: 400;
       letter-spacing: .01em;
@@ -901,6 +901,7 @@
       .ob-completed h2 { font-size: 28px; }
     }
   </style>
+  <link rel="stylesheet" href="eh-tema.css" />
 </head>
 <body>
 
@@ -1964,7 +1965,7 @@
     const isFixo = contractType === 'fixo';
 
     const devBadge = preset.__dev
-      ? `<div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">⚠ Preview · valores de teste</div>`
+      ? `<div style="font-family:'Manrope',monospace;font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">⚠ Preview · valores de teste</div>`
       : '';
 
     const html = `
@@ -1992,7 +1993,7 @@
             <input type="number" id="mensalidade_valor" value="${mensPreset}" readonly />
           </div>
         </div>
-        <p style="margin-top:14px;font-family:'Source Serif 4',serif;font-size:13.5px;color:var(--cream-soft);line-height:1.6;font-style:italic;">
+        <p style="margin-top:14px;font-family:'Fraunces',serif;font-size:13.5px;color:var(--cream-soft);line-height:1.6;font-style:italic;">
           As condições comerciais deste contrato foram previamente acordadas com Eduardo Horta. Em caso de dúvida sobre os valores, entre em contato antes de assinar.
         </p>
       </div>
@@ -2290,26 +2291,26 @@
         position: fixed; bottom: 18px; right: 18px; z-index: 9998;
         display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
         max-width: calc(100vw - 36px);
-        background: #091438; border: 1px solid rgba(212,130,10,0.35);
+        background: #001848; border: 1px solid rgba(238,154,30,0.35);
         padding: 8px 10px;
         box-shadow: 0 12px 32px -10px rgba(0,0,0,.6);
       }
       #devBar .devbar-tag {
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: 'Manrope', monospace;
         font-size: 9px; letter-spacing: .28em; text-transform: uppercase;
-        color: #D4820A; padding: 0 8px 0 4px; border-right: 1px solid rgba(243,237,225,0.22);
+        color: #EE9A1E; padding: 0 8px 0 4px; border-right: 1px solid rgba(243,237,225,0.22);
       }
       #devBar .devbar-divider {
         width: 1px; height: 22px; background: rgba(243,237,225,0.22); margin: 0 4px;
       }
       #devBar button {
-        font-family: 'IBM Plex Sans', sans-serif;
+        font-family: 'Manrope', sans-serif;
         font-size: 11px; font-weight: 500; letter-spacing: .04em;
-        color: #f3ede1; background: transparent; border: 1px solid rgba(243,237,225,0.22);
+        color: #F7F5EF; background: transparent; border: 1px solid rgba(243,237,225,0.22);
         padding: 7px 11px; cursor: pointer; transition: all .15s;
       }
-      #devBar button:hover { border-color: #D4820A; color: #E8A030; }
-      #devBar button.is-active { background: #D4820A; color: #0D1E4E; border-color: #D4820A; font-weight: 600; }
+      #devBar button:hover { border-color: #EE9A1E; color: #F4AE45; }
+      #devBar button.is-active { background: #EE9A1E; color: #002060; border-color: #EE9A1E; font-weight: 600; }
     `;
     document.head.appendChild(style);
 
