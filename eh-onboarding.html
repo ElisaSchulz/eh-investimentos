@@ -9,6 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="eh-documentos.js"></script>
   <style>
     /* ── DESIGN SYSTEM — aligned with index.html ── */
     :root {
@@ -1235,6 +1237,7 @@
     </div>
 
     <div class="feedback" id="fb-suit"></div>
+    <button class="btn-ghost" id="btn-suit-ver" type="button" style="display:none;" onclick="visualizarDocumento('suitability', 'fb-suit')">Visualizar documento</button>
     <button class="btn-primary" id="btn-suit" onclick="calcularSuitability()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
       Calcular meu perfil
@@ -1249,6 +1252,7 @@
     <div id="contract-content"></div>
 
     <div class="feedback" id="fb-contrato"></div>
+    <button class="btn-ghost" id="btn-contrato-ver" type="button" onclick="visualizarDocumento('contrato', 'fb-contrato')">Visualizar contrato completo</button>
     <button class="btn-primary" id="btn-contrato" onclick="enviarContrato()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
       Enviar para assinatura
@@ -1330,161 +1334,66 @@
     ARROJADO: `Você busca possibilidade de maiores ganhos e aceita correr mais riscos. É um investidor que busca a boa rentabilidade ofertada pela renda variável, estando disposto a suportar mais risco na busca de melhores resultados.\n\nPrincipais produtos recomendados: Ações, Derivativos, Mercado Futuro, Fundos de Ações, Fundos Cambiais, Fundos Multimercado Arrojados.`
   };
 
-  // ── PDF GENERATION ──
-  function generatePdfBase64(title, bodyLines) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-    const pageW = doc.internal.pageSize.getWidth();
-    const pageH = doc.internal.pageSize.getHeight();
-    const margin = 20;
-    const maxW = pageW - margin * 2;
-    let y = margin;
-
-    // Header with gold line
-    doc.setDrawColor(212, 130, 10);
-    doc.setLineWidth(0.8);
-    doc.line(margin, y, pageW - margin, y);
-    y += 6;
-
-    // Logo text
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.setTextColor(13, 30, 78);
-    doc.text('EH INVESTIMENTOS', margin, y);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(138, 155, 184);
-    doc.text('GESTÃO FINANCEIRA', margin, y + 5);
-    y += 14;
-
-    doc.setDrawColor(212, 130, 10);
-    doc.line(margin, y, pageW - margin, y);
-    y += 10;
-
-    // Title
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(13);
-    doc.setTextColor(13, 30, 78);
-    const titleLines = doc.splitTextToSize(title, maxW);
-    doc.text(titleLines, pageW / 2, y, { align: 'center' });
-    y += titleLines.length * 7 + 8;
-
-    // Body
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.setTextColor(40, 40, 40);
-
-    for (const line of bodyLines) {
-      if (line.type === 'heading') {
-        if (y > pageH - 40) { doc.addPage(); y = margin; }
-        y += 4;
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10);
-        doc.setTextColor(13, 30, 78);
-        doc.text(line.text, margin, y);
-        y += 6;
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(10);
-        doc.setTextColor(40, 40, 40);
-      } else if (line.type === 'divider') {
-        y += 2;
-        doc.setDrawColor(200, 212, 232);
-        doc.setLineWidth(0.3);
-        doc.line(margin, y, pageW - margin, y);
-        y += 4;
-      } else if (line.type === 'spacer') {
-        y += line.size || 4;
-      } else {
-        const wrapped = doc.splitTextToSize(line.text || '', maxW);
-        for (const wline of wrapped) {
-          if (y > pageH - 25) { doc.addPage(); y = margin; }
-          doc.text(wline, margin, y);
-          y += 5.5;
-        }
-      }
-    }
-
-    // Footer
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setTextColor(138, 155, 184);
-      doc.setDrawColor(212, 130, 10);
-      doc.setLineWidth(0.4);
-      doc.line(margin, pageH - 12, pageW - margin, pageH - 12);
-      doc.text(`EH Investimentos — Gestão Financeira`, margin, pageH - 7);
-      doc.text(`Página ${i} de ${pageCount}`, pageW - margin, pageH - 7, { align: 'right' });
-    }
-
-    return doc.output('datauristring').split(',')[1];
+  // ── DADOS DOS DOCUMENTOS (Suitability e Contrato — ver eh-documentos.js) ──
+  function enderecoContrato(c) {
+    const rua = [c?.logradouro_tipo, c?.logradouro_nome].filter(Boolean).join(' ');
+    const partes = [rua, c?.numero, c?.complemento, c?.bairro,
+      [c?.cidade, c?.estado].filter(Boolean).join(' '), c?.cep ? 'CEP ' + c.cep : ''].filter(Boolean);
+    return partes.length ? 'em ' + partes.join(', ') : '';
   }
 
-  // ── DOCUMENT CONTENT BUILDERS ──
-  function buildSuitabilityLines(nome, cpf, hoje, perfil, pontos) {
-    const cpfFmt = cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-    return [
-      { type: 'heading', text: 'DADOS DO INVESTIDOR' },
-      { text: `Data: ${hoje}` },
-      { text: `Nome: ${nome}` },
-      { text: `CPF: ${cpfFmt}` },
-      { type: 'spacer', size: 4 },
-      { type: 'heading', text: 'RESULTADO' },
-      { text: `Pontuação total: ${pontos} pontos` },
-      { text: `Perfil de Investidor: ${perfil}` },
-      { type: 'spacer', size: 4 },
-      { type: 'heading', text: 'DESCRIÇÃO DO PERFIL' },
-      ...PROFILE_DESC[perfil].split('\n').filter(l => l.trim()).map(l => ({ text: l })),
-      { type: 'spacer', size: 6 },
-      { type: 'divider' },
-      { type: 'spacer', size: 4 },
-      { text: 'Esta condição de perfil é resultante de informações repassadas pelo próprio cliente e o condiciona a investimentos voltados ao seu perfil de risco.' },
-      { type: 'spacer', size: 10 },
-      { text: `Local e Data: Belo Horizonte, ${hoje}` },
-      { type: 'spacer', size: 16 },
-      { text: '___________________________________________________' },
-      { text: `Cliente: ${nome}` },
-      { type: 'spacer', size: 12 },
-      { text: '___________________________________________________' },
-      { text: 'Gestor: Eduardo Barbosa Horta Dos Santos' },
-    ];
+  function remuneracaoContrato(tipo, taxa, mens) {
+    if (tipo === 'fixo') {
+      return `R$ ${parseFloat(mens).toLocaleString('pt-BR', {minimumFractionDigits:2})} (${valorPorExtenso(mens)}) mensais, reajustados anualmente pelo IPCA.`;
+    }
+    const pct = parseFloat(taxa).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+    return `${pct}% de taxa de consultoria anualizada, calculada diariamente sobre o patrimônio objeto da consultoria, sendo paga mensalmente, calculada pro rata die.`;
   }
 
-  function buildContratoLines(nome, cpf, rg, ecivil, end, hoje, remuneracao, titulo) {
-    return [
-      { type: 'heading', text: 'PARTES' },
-      { text: `CONTRATANTE: ${nome}, ${ecivil ? ecivil.toLowerCase() : ''}, RG ${rg}, CPF ${cpf}, residente em ${end}.` },
-      { type: 'spacer', size: 3 },
-      { text: 'CONTRATADO: EDUARDO BARBOSA HORTA DOS SANTOS, CPF 026.489.996-20, Rua do Ouro, 1920, apt 502, Serra, Belo Horizonte MG, CEP 30.210-590.' },
-      { type: 'divider' },
-      { type: 'heading', text: 'CLÁUSULA 1 — OBJETO' },
-      { text: 'Prestação de serviço de consultoria de valores mobiliários, compreendendo orientação, recomendação e aconselhamento profissional, independente e individualizado sobre investimentos no mercado de valores mobiliários.' },
-      { type: 'divider' },
-      { type: 'heading', text: 'CLÁUSULA 2 — SERVIÇO DE CONSULTORIA' },
-      { text: 'O CONTRATADO disponibilizará relatórios com oportunidades de investimento, otimização de carteiras, acompanhamento de resultados e rebalanceamentos regulares. A adoção das recomendações é de total responsabilidade do CONTRATANTE.' },
-      { type: 'divider' },
-      { type: 'heading', text: 'CLÁUSULA 3 — REMUNERAÇÃO' },
-      { text: `O CONTRATANTE pagará ao CONTRATADO: ${remuneracao}` },
-      { type: 'spacer', size: 3 },
-      { text: 'Caso rescindido antes de 6 meses, será devido o valor equivalente a 6 meses. Atraso gera juros de 1%/mês + IPCA + multa de 2%.' },
-      { type: 'divider' },
-      { type: 'heading', text: 'CLÁUSULA 4 — DECLARAÇÕES E RESPONSABILIDADE' },
-      { text: 'O CONTRATANTE declara ciência de que as recomendações são opiniões independentes e a decisão final de investimento é de sua exclusiva responsabilidade. Resultados passados não garantem resultados futuros.' },
-      { type: 'divider' },
-      { type: 'heading', text: 'CLÁUSULA 5 — GARANTIAS' },
-      { text: 'O CONTRATADO garante melhores esforços na prestação dos serviços, em conformidade com os requisitos regulamentares e técnicos do mercado. Não garante resultados positivos. Dados da carteira serão mantidos por 5 anos.' },
-      { type: 'divider' },
-      { type: 'heading', text: 'CLÁUSULA 6 — VIGÊNCIA E DISPOSIÇÕES GERAIS' },
-      { text: 'Vigência por prazo indeterminado. Resilição com aviso prévio de 30 dias. Foro: Belo Horizonte/MG.' },
-      { type: 'spacer', size: 6 },
-      { text: `Belo Horizonte, ${hoje}` },
-      { type: 'spacer', size: 16 },
-      { text: '___________________________________________________' },
-      { text: `CONTRATANTE: ${nome}` },
-      { type: 'spacer', size: 12 },
-      { text: '___________________________________________________' },
-      { text: 'CONTRATADO: Eduardo Barbosa Horta Dos Santos' },
-    ];
+  async function dadosSuitabilityDoc() {
+    let cadastro = null;
+    if (!DEV_MODE_NO_AUTH) {
+      const { data } = await sb.from('cadastro_clientes').select('nome_completo, cpf, email').eq('user_id', currentUser.id).single();
+      cadastro = data;
+    }
+    return {
+      nome: cadastro?.nome_completo || currentUser.email,
+      cpf: cadastro?.cpf || '',
+      email: cadastro?.email || currentUser.email,
+      data: new Date(),
+      perfil: suitResult.perfil
+    };
+  }
+
+  async function dadosContratoDoc() {
+    let cadastro = null;
+    if (!DEV_MODE_NO_AUTH) {
+      const { data } = await sb.from('cadastro_clientes').select('*').eq('user_id', currentUser.id).single();
+      cadastro = data;
+    }
+    const taxa = document.getElementById('taxa_valor')?.value || '1';
+    const mens = document.getElementById('mensalidade_valor')?.value || '500';
+    return {
+      nome: cadastro?.nome_completo || '',
+      email: cadastro?.email || currentUser.email,
+      nacionalidade: cadastro?.nacionalidade || '',
+      estadoCivil: cadastro?.estado_civil || '',
+      rg: cadastro?.rg || '',
+      cpf: cadastro?.cpf || '',
+      endereco: enderecoContrato(cadastro),
+      data: new Date(),
+      remuneracao: remuneracaoContrato(contractType, taxa, mens),
+      taxa, mens
+    };
+  }
+
+  async function visualizarDocumento(tipo, fbId) {
+    try {
+      const dados = tipo === 'suitability' ? await dadosSuitabilityDoc() : await dadosContratoDoc();
+      await EHDocs.abrirPdf(tipo, dados);
+    } catch (e) {
+      showFb(fbId, 'Não foi possível gerar o documento: ' + e.message, 'error');
+    }
   }
 
   // ── BOOT ──
@@ -1766,6 +1675,16 @@
     const perfil = totalPontos <= 48 ? 'CONSERVADOR' : totalPontos <= 74 ? 'MODERADO' : 'ARROJADO';
     suitResult = { respostas, pontuacao: totalPontos, perfil };
 
+    // Salva as respostas já no cálculo, mesmo que o envio ao ZapSign falhe depois
+    if (!DEV_MODE_NO_AUTH) {
+      const { error } = await sb.from('suitability').upsert({
+        user_id: currentUser.id,
+        respostas, pontuacao: totalPontos, perfil,
+        created_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+      if (error) console.warn('Erro ao salvar respostas da suitability:', error);
+    }
+
     // Show result
     const card = document.getElementById('result-card');
     card.className = 'result-card ' + perfil.toLowerCase();
@@ -1774,6 +1693,7 @@
     document.getElementById('result-pontos-label').textContent = `${totalPontos} pontos`;
     document.getElementById('result-desc-text').textContent = PROFILE_DESC[perfil];
     document.getElementById('suit-result').style.display = 'block';
+    document.getElementById('btn-suit-ver').style.display = '';
 
     // Update button
     document.getElementById('btn-suit').innerHTML = `
@@ -1788,15 +1708,12 @@
     btn.disabled = true; btn.textContent = 'Enviando para ZapSign...';
 
     try {
-      const { data: cadastro } = await sb.from('cadastro_clientes').select('nome_completo, cpf, email').eq('user_id', currentUser.id).single();
-      const nome = cadastro?.nome_completo || currentUser.email;
-      const cpf  = cadastro?.cpf || '';
-      const email = cadastro?.email || currentUser.email;
-      const hoje  = new Date().toLocaleDateString('pt-BR');
+      const dados = await dadosSuitabilityDoc();
+      const { nome, email } = dados;
 
-      // Build suitability PDF
-      const suitLines = buildSuitabilityLines(nome, cpf, hoje, suitResult.perfil, suitResult.pontuacao);
-      const suitBase64 = generatePdfBase64(`RESULTADO DO TESTE DE SUITABILITY`, suitLines);
+      btn.textContent = 'Gerando documento...';
+      const suitBase64 = await EHDocs.pdfBase64('suitability', dados);
+      btn.textContent = 'Enviando para ZapSign...';
 
       // Send to ZapSign via proxy (CORS workaround)
       const zapResp = await fetch(ZAPSIGN_PROXY, {
@@ -1859,29 +1776,6 @@
       btn.disabled = false;
       btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Enviar para assinatura via ZapSign';
     }
-  }
-
-  // ── BUILD SUITABILITY DOC HTML (converted to base64 for ZapSign) ──
-  function buildSuitabilityDocHTML(nome, cpf, data, perfil) {
-    const cpfFmt = cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-    const perfilTexto = PROFILE_DESC[perfil];
-    return `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
-    <style>body{font-family:Arial,sans-serif;font-size:12px;line-height:1.6;color:#111;margin:40px;} h2{text-align:center;font-size:14px;} table{width:100%;border-collapse:collapse;margin:16px 0;} td,th{border:1px solid #ccc;padding:8px;} strong{font-weight:bold;} .sig{margin-top:60px;border-top:1px solid #000;width:60%;display:inline-block;}</style>
-    </head><body>
-    <h2>RESULTADO DO TESTE DE ANÁLISE DO PERFIL DO INVESTIDOR - SUITABILITY</h2>
-    <p><strong>DATA:</strong> ${data}</p>
-    <p><strong>NOME DO INVESTIDOR:</strong> ${nome}</p>
-    <p><strong>CPF:</strong> ${cpfFmt}</p>
-    <p><strong>OBSERVAÇÃO:</strong> O cliente foi avaliado de acordo com os critérios estabelecidos pelo suitability e, em virtude desta análise, informamos que o seu perfil foi enquadrado como:</p>
-    <table><tr><td style="text-align:center;font-size:16px;font-weight:bold;">${perfil}</td></tr></table>
-    <p>${perfilTexto.replace(/\n/g,'<br/>')}</p>
-    <p>Esta condição de perfil é resultante de uma série de informações repassadas pelo próprio cliente, e o condiciona a investimentos voltados ao seu perfil.</p>
-    <p><strong>LOCAL E DATA:</strong> Belo Horizonte, ${data}</p>
-    <br/><br/>
-    <p class="sig"></p><p><strong>CLIENTE:</strong> ${nome}</p>
-    <br/><br/>
-    <p class="sig"></p><p><strong>GESTOR:</strong> Eduardo Barbosa Horta Dos Santos</p>
-    </body></html>`;
   }
 
   // ── CONTRACT PANEL ──
@@ -1953,6 +1847,8 @@
         </div>`;
       const btn = document.getElementById('btn-contrato');
       if (btn) { btn.disabled = true; btn.style.opacity = '.4'; btn.style.cursor = 'not-allowed'; }
+      const ver = document.getElementById('btn-contrato-ver');
+      if (ver) ver.style.display = 'none';
       return;
     }
 
@@ -1973,7 +1869,7 @@
       <div class="contract-type-selector" aria-disabled="true" style="grid-template-columns:1fr;">
         ${!isFixo ? `
         <button class="contract-type-btn active" type="button" disabled style="cursor:default;">
-          <span class="contract-type-btn-name">Taxa de Administração</span>
+          <span class="contract-type-btn-name">Taxa de Consultoria</span>
           <span class="contract-type-btn-desc">Percentual anual sobre o patrimônio</span>
         </button>` : `
         <button class="contract-type-btn active" type="button" disabled style="cursor:default;">
@@ -1985,7 +1881,7 @@
         <div class="form-section-title">Condições comerciais</div>
         <div class="form-grid">
           <div class="form-field" id="taxa-field" style="display:${isFixo ? 'none' : 'flex'};">
-            <label>Taxa de administração (% ao ano)</label>
+            <label>Taxa de consultoria (% ao ano)</label>
             <input type="number" id="taxa_valor" value="${taxaPreset}" readonly />
           </div>
           <div class="form-field" id="mensalidade-field" style="display:${isFixo ? 'flex' : 'none'};">
@@ -2000,6 +1896,8 @@
       <div class="contract-preview" id="contract-preview"></div>`;
 
     document.getElementById('contract-content').innerHTML = html;
+    const ver = document.getElementById('btn-contrato-ver');
+    if (ver) ver.style.display = '';
     updateContractPreview(nome, cpf, rg, ecivil, end, hoje);
   }
 
@@ -2019,11 +1917,8 @@
   function updateContractPreview(nome, cpf, rg, ecivil, end, hoje) {
     const taxa = document.getElementById('taxa_valor')?.value || '1';
     const mens = document.getElementById('mensalidade_valor')?.value || '500';
-    const remuneracao = contractType === 'percentual'
-      ? `${taxa}% de taxa de administração anualizada, calculada diariamente sobre o total sob administração, sendo paga mensalmente calculada pro rata die.`
-      : `R$ ${parseFloat(mens).toLocaleString('pt-BR', {minimumFractionDigits:2})} (${valorPorExtenso(mens)}) mensais, reajustados anualmente pelo IPCA.`;
-
-    const titulo = contractType === 'percentual' ? 'CONTRATO DE ADMINISTRAÇÃO DE CARTEIRA' : 'CONTRATO DE CONSULTORIA DE INVESTIMENTOS';
+    const remuneracao = remuneracaoContrato(contractType, taxa, mens);
+    const titulo = 'CONTRATO DE CONSULTORIA DE INVESTIMENTOS';
 
     document.getElementById('contract-preview').innerHTML = `
       <h4>${titulo}</h4>
@@ -2056,51 +1951,12 @@
     btn.disabled = true; btn.textContent = 'Enviando para ZapSign...';
 
     try {
-      const { data: cadastro } = await sb.from('cadastro_clientes').select('*').eq('user_id', currentUser.id).single();
-      const nome  = cadastro?.nome_completo || '';
-      const email = cadastro?.email || currentUser.email;
-      const cpf   = cadastro?.cpf ? cadastro.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '';
-      const rg    = cadastro?.rg || '';
-      const ecivil = cadastro?.estado_civil || '';
-      const end   = [cadastro?.logradouro_tipo, cadastro?.logradouro_nome, cadastro?.numero, cadastro?.complemento, cadastro?.bairro, cadastro?.cidade, cadastro?.estado].filter(Boolean).join(', ');
-      const hoje  = new Date().toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' });
-      const taxa  = document.getElementById('taxa_valor')?.value || '1';
-      const mens  = document.getElementById('mensalidade_valor')?.value || '500';
+      const dados = await dadosContratoDoc();
+      const { nome, email, taxa, mens } = dados;
 
-      const remuneracao = contractType === 'percentual'
-        ? `${taxa}% de taxa de administração anualizada, calculada diariamente sobre o total sob administração, sendo paga mensalmente calculada pro rata die.`
-        : `R$ ${parseFloat(mens).toLocaleString('pt-BR', {minimumFractionDigits:2})} (${valorPorExtenso(mens)}) mensais, reajustados anualmente pelo IPCA.`;
-
-      const titulo = contractType === 'percentual' ? 'CONTRATO DE ADMINISTRAÇÃO DE CARTEIRA' : 'CONTRATO DE CONSULTORIA DE INVESTIMENTOS';
-
-      // Build contract PDF
-      const contratoLines = buildContratoLines(nome, cpf, rg, ecivil, end, hoje, remuneracao, titulo);
-      const contratoBase64 = generatePdfBase64(titulo, contratoLines);
-
-      // KEEP this for reference but use base64 below
-      const contratoHTML_unused = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
-        <style>body{font-family:Arial,sans-serif;font-size:11px;line-height:1.7;color:#111;margin:40px;} h2{text-align:center;font-size:13px;margin-bottom:20px;} h3{font-size:12px;margin:16px 0 6px;} p{margin:6px 0;} .sig{margin-top:50px;}</style>
-        </head><body>
-        <h2>${titulo}</h2>
-        <p>Pelo presente instrumento, as partes:</p>
-        <p><strong>${nome}</strong>, ${ecivil ? ecivil.toLowerCase() : ''}, RG ${rg}, CPF ${cpf}, residente em ${end} ("CONTRATANTE"); e</p>
-        <p><strong>EDUARDO BARBOSA HORTA DOS SANTOS</strong>, CPF 026.489.996-20, Rua do Ouro, 1920, apt 502, Serra, Belo Horizonte MG ("CONTRATADO").</p>
-        <h3>CLÁUSULA 1 — OBJETO</h3>
-        <p>Prestação de serviço de consultoria de valores mobiliários, compreendendo orientação, recomendação e aconselhamento profissional, independente e individualizado sobre investimentos no mercado de valores mobiliários.</p>
-        <h3>CLÁUSULA 2 — SERVIÇO DE CONSULTORIA</h3>
-        <p>O CONTRATADO disponibilizará relatórios com oportunidades de investimento, otimização de carteiras, acompanhamento de resultados e rebalanceamentos regulares. A adoção das recomendações é de total responsabilidade do CONTRATANTE.</p>
-        <h3>CLÁUSULA 3 — REMUNERAÇÃO</h3>
-        <p>O CONTRATANTE pagará ao CONTRATADO: <strong>${remuneracao}</strong> Caso rescindido antes de 6 meses, será devido o valor equivalente a 6 meses. Atraso gera juros de 1%/mês + IPCA + multa de 2%.</p>
-        <h3>CLÁUSULA 4 — DECLARAÇÕES E RESPONSABILIDADE</h3>
-        <p>O CONTRATANTE declara ciência de que as recomendações são opiniões independentes e a decisão final de investimento é de sua exclusiva responsabilidade. Resultados passados não garantem resultados futuros. Ambas as partes se comprometem ao sigilo das informações confidenciais.</p>
-        <h3>CLÁUSULA 5 — GARANTIAS</h3>
-        <p>O CONTRATADO garante melhores esforços na prestação dos serviços, em conformidade com os requisitos regulamentares e técnicos do mercado. Não garante resultados positivos. Dados da carteira serão mantidos por 5 anos.</p>
-        <h3>CLÁUSULA 6 — VIGÊNCIA E DISPOSIÇÕES GERAIS</h3>
-        <p>Vigência por prazo indeterminado. Resilição com aviso prévio de 30 dias. Foro: Belo Horizonte/MG.</p>
-        <p style="margin-top:30px;"><strong>Belo Horizonte, ${hoje}</strong></p>
-        <div class="sig"><p>___________________________________________________</p><p><strong>CONTRATANTE:</strong> ${nome}</p></div>
-        <div class="sig" style="margin-top:30px;"><p>___________________________________________________</p><p><strong>CONTRATADO:</strong> Eduardo Barbosa Horta Dos Santos</p></div>
-        </body></html>`;
+      btn.textContent = 'Gerando documento...';
+      const contratoBase64 = await EHDocs.pdfBase64('contrato', dados);
+      btn.textContent = 'Enviando para ZapSign...';
 
       const zapResp = await fetch(ZAPSIGN_PROXY, {
         method: 'POST',
