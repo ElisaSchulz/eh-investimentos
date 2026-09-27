@@ -14,6 +14,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="eh-documentos.js"></script>
+  <script src="eh-senha.js"></script>
   <style>
     :root {
       /* Navy & accent palette — aligned to index.html */
@@ -1587,6 +1588,12 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.getElementById('setPasswordModal').style.display = 'flex';
   }
 
+  // Regras de senha visíveis enquanto o cliente digita (eh-senha.js):
+  // janela escura de primeira senha e "Meu Perfil → Alterar senha"
+  EHSenha.anexar(document.getElementById('newPassword'), document.getElementById('confirmPassword'), { escuro: true });
+  EHSenha.anexar(document.getElementById('perfil-senha-nova'), document.getElementById('perfil-senha-confirm'),
+    { depoisDe: document.getElementById('perfil-senha-nova').closest('.perfil-row') });
+
   async function doSetPassword() {
     const name = document.getElementById('newUserName').value.trim();
     const pw   = document.getElementById('newPassword').value;
@@ -1595,12 +1602,12 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     err.classList.remove('show');
     const showName = document.getElementById('nameField').style.display !== 'none';
     if (showName && !name) { err.textContent = 'Informe seu nome.'; err.classList.add('show'); return; }
-    if (pw.length < 6)     { err.textContent = 'Senha com mínimo 6 caracteres.'; err.classList.add('show'); return; }
-    if (pw !== pw2)        { err.textContent = 'As senhas não coincidem.'; err.classList.add('show'); return; }
+    const problemaSenha = EHSenha.validar(pw, pw2);
+    if (problemaSenha)     { err.textContent = problemaSenha; err.classList.add('show'); return; }
     const updateData = { password: pw };
     if (showName && name) updateData.data = { full_name: name };
     const { error } = await sb.auth.updateUser(updateData);
-    if (error) { err.textContent = 'Erro: ' + error.message; err.classList.add('show'); return; }
+    if (error) { err.textContent = 'Erro: ' + EHSenha.mensagemErro(error); err.classList.add('show'); return; }
     document.getElementById('setPasswordModal').style.display = 'none';
     const { data } = await sb.auth.getUser();
     currentUser = data.user;
@@ -1820,8 +1827,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const nova    = document.getElementById('perfil-senha-nova')?.value;
     const confirm = document.getElementById('perfil-senha-confirm')?.value;
     if (!atual)           { setPerfilFb('fb-senha', 'Informe a senha atual.', 'error'); return; }
-    if (nova.length < 6)  { setPerfilFb('fb-senha', 'A nova senha precisa ter no m\u00ednimo 6 caracteres.', 'error'); return; }
-    if (nova !== confirm) { setPerfilFb('fb-senha', 'As senhas n\u00e3o coincidem.', 'error'); return; }
+    const problemaSenha = EHSenha.validar(nova, confirm);
+    if (problemaSenha)    { setPerfilFb('fb-senha', problemaSenha, 'error'); return; }
     btn.disabled = true; btn.textContent = 'Verificando\u2026';
     const { error: authErr } = await sb.auth.signInWithPassword({ email: currentUser.email, password: atual });
     if (authErr) {
@@ -1831,10 +1838,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     btn.textContent = 'Salvando\u2026';
     const { error } = await sb.auth.updateUser({ password: nova });
     if (error) {
-      setPerfilFb('fb-senha', 'Erro: ' + error.message, 'error');
+      setPerfilFb('fb-senha', 'Erro: ' + EHSenha.mensagemErro(error), 'error');
     } else {
       ['perfil-senha-atual','perfil-senha-nova','perfil-senha-confirm'].forEach(id => {
-        const el = document.getElementById(id); if (el) el.value = '';
+        const el = document.getElementById(id); if (el) { el.value = ''; el.dispatchEvent(new Event('input')); }
       });
       setPerfilFb('fb-senha', '\u2713 Senha atualizada com sucesso.', 'success');
     }
