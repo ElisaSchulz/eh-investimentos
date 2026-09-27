@@ -14,8 +14,10 @@
 (function () {
   const LOGO = 'Logo_EH.png';
 
-  // Página A4 a 96 dpi, margem de 16 mm
-  const PAGE_W = 794, PAGE_H = 1123, MARGIN = 60;
+  // Página A4 no mesmo enquadramento do PDF de referência (layout do Claude Design
+  // impresso a 80%: 1 px de layout = 0,6 pt). Margem lateral de 16 mm; cabeçalho e
+  // rodapé ficam a ~27 px da borda e o corpo começa/termina a ~61 px.
+  const PAGE_W = 992, PAGE_H = 1403, MARGIN = 60, EDGE = 27, BODY_Y = 61;
 
   const NAVY = '#002060', GOLD = '#EE9A1E', BRONZE = '#92600D', GRAY = '#6C6D70';
   const RULE = 'rgba(0,32,96,0.12)', CREAM = '#F7F5EF', TEXT = '#2A3550';
@@ -31,6 +33,56 @@
     return n.length === 11 ? n.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : String(c || '');
   };
 
+  // ── Valor por extenso (reais inteiros) ──
+  const UNI = ['zero','um','dois','três','quatro','cinco','seis','sete','oito','nove','dez','onze','doze','treze','quatorze','quinze','dezesseis','dezessete','dezoito','dezenove'];
+  const DEZ = ['','','vinte','trinta','quarenta','cinquenta','sessenta','setenta','oitenta','noventa'];
+  const CEN = ['','cento','duzentos','trezentos','quatrocentos','quinhentos','seiscentos','setecentos','oitocentos','novecentos'];
+  function ate999(n) {
+    if (n === 100) return 'cem';
+    const c = Math.floor(n / 100), r = n % 100, p = [];
+    if (c) p.push(CEN[c]);
+    if (r) p.push(r < 20 ? UNI[r] : DEZ[Math.floor(r / 10)] + (r % 10 ? ' e ' + UNI[r % 10] : ''));
+    return p.join(' e ');
+  }
+  function extenso(n) {
+    n = Math.round(Number(n) || 0);
+    if (n === 0) return 'zero reais';
+    const mi = Math.floor(n / 1e6), mil = Math.floor(n / 1000) % 1000, r = n % 1000, g = [];
+    if (mi) g.push([mi, mi === 1 ? 'um milhão' : ate999(mi) + ' milhões']);
+    if (mil) g.push([mil, mil === 1 ? 'mil' : ate999(mil) + ' mil']);
+    if (r) g.push([r, ate999(r)]);
+    // "mil duzentos e cinquenta", "dois mil e quinhentos", "um milhão e quinhentos mil"
+    const ult = g[g.length - 1][0];
+    const txt = g.length > 1
+      ? g.slice(0, -1).map(x => x[1]).join(' ') + (ult < 100 || ult % 100 === 0 ? ' e ' : ' ') + g[g.length - 1][1]
+      : g[0][1];
+    return txt + (!r && !mil && mi ? ' de reais' : ' reais');
+  }
+
+  // Cláusula 3: só a condição principal vai em negrito, como no modelo
+  function remuneracao(d) {
+    if (d.tipo === 'fixo') {
+      const v = Number(d.mensalidade) || 0;
+      return { destaque: `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (${extenso(v)}) mensais`,
+               resto: ', reajustados anualmente pelo IPCA.' };
+    }
+    const pct = (Number(d.taxa) || 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+    return { destaque: `${pct}% de taxa de consultoria anualizada`,
+             resto: ', calculada diariamente sobre o patrimônio objeto da consultoria, sendo paga mensalmente, calculada pro rata die.' };
+  }
+
+  // "na Avenida Lúcio Costa, nº 4700, apt 613, Barra da Tijuca, Rio de Janeiro RJ, CEP 22630-011"
+  const TIPOS_MASC = /^(largo|beco|parque|setor|condom[ií]nio|loteamento|anel|trevo|conjunto|n[uú]cleo|jardim|residencial|s[ií]tio|caminho|viaduto|acesso|elevado|morro|p[aá]tio)$/i;
+  function endereco(c) {
+    if (!c) return '';
+    const tipo = (c.logradouro_tipo || '').trim();
+    const rua = [tipo, (c.logradouro_nome || '').trim()].filter(Boolean).join(' ');
+    const partes = [rua, c.numero ? 'nº ' + String(c.numero).replace(/^n[º°o]\.?\s*/i, '') : '', c.complemento, c.bairro,
+      [c.cidade, c.estado].filter(Boolean).join(' '), c.cep ? 'CEP ' + c.cep : ''].filter(Boolean);
+    if (!partes.length) return '';
+    return (rua ? (TIPOS_MASC.test(tipo) ? 'no ' : 'na ') : 'em ') + partes.join(', ');
+  }
+
   // ── Peças comuns ──
   const header = titulo => `
     <div style="padding-bottom:8px;border-bottom:1px solid ${RULE};display:flex;align-items:center;justify-content:space-between;gap:12px;">
@@ -41,14 +93,14 @@
       <span style="font-size:8.5px;letter-spacing:0.18em;color:${GRAY};font-weight:600;">${titulo}</span>
     </div>`;
 
-  const footer = (pagina, total) => `
+  const footer = () => `
     <div style="padding-top:8px;border-top:1px solid ${RULE};display:flex;justify-content:space-between;gap:12px;font-size:8.5px;letter-spacing:0.16em;color:${GRAY};font-weight:600;">
       <span>EH INVESTIMENTOS · GESTÃO FINANCEIRA</span>
-      <span>BELO HORIZONTE · MG · ${pagina}/${total}</span>
+      <span>BELO HORIZONTE · MG</span>
     </div>`;
 
-  const capa = (kicker, tituloHtml, comMarca) => `
-    <div style="background:${NAVY};color:#fff;border-radius:8px;padding:30px 32px 28px;margin:10px 0 26px;position:relative;overflow:hidden;text-align:left;">
+  const capa = (kicker, tituloHtml, comMarca, topo, pad = '30px 32px 28px') => `
+    <div style="background:${NAVY};color:#fff;border-radius:8px;padding:${pad};margin:${topo}px 0 26px;position:relative;overflow:hidden;text-align:left;">
       <div style="position:absolute;top:-120px;right:-90px;width:320px;height:320px;border:1px solid rgba(238,154,30,0.22);border-radius:50%;"></div>
       <div style="position:absolute;top:-60px;right:-30px;width:200px;height:200px;border:1px solid rgba(255,255,255,0.07);border-radius:50%;"></div>
       ${comMarca ? `
@@ -78,8 +130,8 @@
     </div>`;
 
   const assinaturas = (localData, esq, dir) => `
-    <div style="margin:40px 0 10px;text-align:left;">
-      <p style="margin:0 0 56px;">${localData}</p>
+    <div style="margin:60px 0 10px;text-align:left;">
+      <p style="margin:0 0 110px;">${localData}</p>
       <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;">
         ${[esq, dir].map(([papel, nome]) => `
         <div>
@@ -118,7 +170,7 @@
     const perfilLabel = perfil.charAt(0) + perfil.slice(1).toLowerCase();
 
     const blocos = [
-      capa('RESULTADO DO TESTE', 'Análise do Perfil<br>do Investidor · Suitability', true),
+      capa('RESULTADO DO TESTE', 'Análise do Perfil<br>do Investidor · Suitability', false, 40),
       `<div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);gap:14px;margin-bottom:22px;text-align:left;">
         ${campo('NOME DO INVESTIDOR', nome)}${campo('CPF', esc(fmtCPF(d.cpf)))}${campo('DATA', data)}
       </div>`,
@@ -130,7 +182,7 @@
       </div>`,
       secao('PERFIS', 'Descrição dos Perfis'),
       ...PERFIS.map(p => `
-        <div style="background:${CREAM};border-radius:8px;padding:18px 20px;margin-bottom:14px;${p.nome === perfil ? `border-left:3px solid ${GOLD};` : ''}">
+        <div style="background:${CREAM};border-radius:8px;padding:18px 20px;margin-bottom:14px;">
           <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px;text-align:left;">
             <span style="font-family:'Fraunces',serif !important;font-weight:600;color:${GOLD};">${p.n}</span>
             <span style="font-size:10px;letter-spacing:0.22em;color:${NAVY};font-weight:800;">CLIENTE COM PERFIL ${p.nome}</span>
@@ -146,18 +198,20 @@
         <p style="margin:0;">Se o seu perfil foi enquadrado a uma condição mais conservadora do que ao investimento ao qual deseja aplicar seus recursos, recomendamos que leia atentamente o “Termo de Ciência de Desenquadramento de Suitability” e o assine, podendo assim, dar continuidade aos seus investimentos.</p>
       </div>`,
       assinaturas(`<strong style="color:${NAVY};">Local e data:</strong> Belo Horizonte, ${data}`,
-        ['CLIENTE', nome], ['GESTOR', 'Eduardo Barbosa Horta Dos Santos'])
+        ['GESTOR', 'EDUARDO BARBOSA HORTA DOS SANTOS'], ['CLIENTE', nome])
     ];
     return { titulo: 'ANÁLISE DO PERFIL DO INVESTIDOR · SUITABILITY', blocos };
   }
 
   // ── CONTRATO DE CONSULTORIA ──
   function contrato(d) {
-    const nome = esc(d.nome || '');
-    const partes = [esc(d.nacionalidade), esc((d.estadoCivil || '').toLowerCase()), d.rg ? 'RG ' + esc(d.rg) : '', 'CPF ' + esc(fmtCPF(d.cpf))].filter(Boolean).join(', ');
+    const nome = esc((d.nome || '').trim().toUpperCase());
+    const partes = [esc((d.nacionalidade || '').toLowerCase()), esc((d.estadoCivil || '').toLowerCase()),
+      d.rg ? 'RG ' + esc(d.rg) : '', 'CPF ' + esc(fmtCPF(d.cpf))].filter(Boolean).join(', ');
+    const rem = remuneracao(d);
 
     const blocos = [
-      capa('INSTRUMENTO PARTICULAR', 'Contrato de Consultoria<br>de Investimentos', false),
+      capa('INSTRUMENTO PARTICULAR', 'Contrato de Consultoria<br>de Investimentos', false, 28, '22px 32px 25px'),
       `<p style="margin:0 0 16px;">Pelo presente instrumento e na melhor forma de direito, as partes:</p>`,
       `<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-bottom:22px;">
         <div style="background:${CREAM};border-radius:8px;padding:16px 18px;">
@@ -195,7 +249,7 @@
       item('2.5.', 'Toda e qualquer execução de ordens de compra e venda possivelmente, mas não exclusivamente, resultantes das recomendações do CONTRATADO será enviada pelo próprio CONTRATANTE.', 1),
 
       secao('CLÁUSULA 3', 'Remuneração'),
-      item('3.', `Em contrapartida à prestação dos serviços descritos neste CONTRATO, o CONTRATANTE pagará ao CONTRATADO: <strong style="color:${NAVY};">${esc(d.remuneracao)}</strong>`),
+      item('3.', `Em contrapartida à prestação dos serviços descritos neste CONTRATO, o CONTRATANTE pagará ao CONTRATADO: <strong style="color:${NAVY};">${esc(rem.destaque)}</strong>${esc(rem.resto)}`),
       item('3.1.', 'Caso o contrato seja rescindido antes do prazo de 6 meses, será devido o pagamento referente ao valor contratado, calculado para 6 meses.', 1),
       item('3.2.', 'Ocorrendo a suspensão da prestação de serviço por qualquer razão, a remuneração relativa àquele serviço será proporcional ao período em que o mesmo foi prestado.', 1),
       item('3.3.', 'Na hipótese de atraso no pagamento, total ou parcial, dos valores devidos pelo CONTRATANTE ao CONTRATADO, serão acrescidos ao valor em atraso juros moratórios de 1% (um por cento) ao mês e correção monetária pelo Índice de Preços ao Consumidor Amplo – IPCA, assim como multa moratória de 2% (dois por cento) sobre a quantia total em atraso.', 1),
@@ -258,10 +312,10 @@
   // ── Paginação: distribui os blocos em páginas A4 de altura fixa ──
   function novaPagina(host, titulo) {
     const page = document.createElement('div');
-    page.style.cssText = `width:${PAGE_W}px;height:${PAGE_H}px;padding:${MARGIN * 0.6}px ${MARGIN}px;box-sizing:border-box;background:#fff;display:flex;flex-direction:column;overflow:hidden;font-family:'Manrope',sans-serif;color:${TEXT};`;
-    page.innerHTML = `<div>${header(titulo)}</div>
-      <div data-body style="flex:1;min-height:0;overflow:hidden;padding:18px 0 12px;font-size:13px;line-height:1.66;text-align:justify;"></div>
-      <div data-footer></div>`;
+    page.style.cssText = `position:relative;width:${PAGE_W}px;height:${PAGE_H}px;box-sizing:border-box;background:#fff;overflow:hidden;font-family:'Manrope',sans-serif;color:${TEXT};`;
+    page.innerHTML = `<div style="position:absolute;top:${EDGE}px;left:${MARGIN}px;right:${MARGIN}px;">${header(titulo)}</div>
+      <div data-body style="position:absolute;top:${BODY_Y}px;bottom:${BODY_Y}px;left:${MARGIN}px;right:${MARGIN}px;overflow:hidden;font-size:13px;line-height:1.66;text-align:justify;"></div>
+      <div data-footer style="position:absolute;bottom:${EDGE}px;left:${MARGIN}px;right:${MARGIN}px;"></div>`;
     host.appendChild(page);
     return page;
   }
@@ -287,7 +341,7 @@
       paginas.push(page);
       mover.forEach(m => body.appendChild(m));
     }
-    paginas.forEach((p, i) => { p.querySelector('[data-footer]').innerHTML = footer(i + 1, paginas.length); });
+    paginas.forEach(p => { p.querySelector('[data-footer]').innerHTML = footer(); });
     return paginas;
   }
 
@@ -342,6 +396,6 @@
         throw e;
       }
     },
-    fmtCPF
+    fmtCPF, endereco, remuneracao, extenso
   };
 })();

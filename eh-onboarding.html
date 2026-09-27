@@ -1335,19 +1335,9 @@
   };
 
   // ── DADOS DOS DOCUMENTOS (Suitability e Contrato — ver eh-documentos.js) ──
-  function enderecoContrato(c) {
-    const rua = [c?.logradouro_tipo, c?.logradouro_nome].filter(Boolean).join(' ');
-    const partes = [rua, c?.numero, c?.complemento, c?.bairro,
-      [c?.cidade, c?.estado].filter(Boolean).join(' '), c?.cep ? 'CEP ' + c.cep : ''].filter(Boolean);
-    return partes.length ? 'em ' + partes.join(', ') : '';
-  }
-
   function remuneracaoContrato(tipo, taxa, mens) {
-    if (tipo === 'fixo') {
-      return `R$ ${parseFloat(mens).toLocaleString('pt-BR', {minimumFractionDigits:2})} (${valorPorExtenso(mens)}) mensais, reajustados anualmente pelo IPCA.`;
-    }
-    const pct = parseFloat(taxa).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
-    return `${pct}% de taxa de consultoria anualizada, calculada diariamente sobre o patrimônio objeto da consultoria, sendo paga mensalmente, calculada pro rata die.`;
+    const r = EHDocs.remuneracao({ tipo, taxa, mensalidade: mens });
+    return r.destaque + r.resto;
   }
 
   async function dadosSuitabilityDoc() {
@@ -1380,10 +1370,10 @@
       estadoCivil: cadastro?.estado_civil || '',
       rg: cadastro?.rg || '',
       cpf: cadastro?.cpf || '',
-      endereco: enderecoContrato(cadastro),
+      endereco: EHDocs.endereco(cadastro),
       data: new Date(),
-      remuneracao: remuneracaoContrato(contractType, taxa, mens),
-      taxa, mens
+      tipo: contractType, taxa, mensalidade: mens,
+      mens
     };
   }
 
@@ -1811,7 +1801,7 @@
     const cpf  = cadastro?.cpf ? cadastro.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '';
     const rg   = cadastro?.rg || '';
     const ecivil = cadastro?.estado_civil || '';
-    const end  = [cadastro?.logradouro_tipo, cadastro?.logradouro_nome, cadastro?.numero, cadastro?.complemento, cadastro?.bairro, cadastro?.cidade, cadastro?.estado, 'CEP ' + (cadastro?.cep || '')].filter(Boolean).join(', ');
+    const end  = EHDocs.endereco(cadastro);
     const hoje = new Date().toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' });
 
     // 🔒 Busca a taxa pré-configurada pelo gestor (tabela cliente_taxa_preset, keyed por email).
@@ -1923,7 +1913,7 @@
     document.getElementById('contract-preview').innerHTML = `
       <h4>${titulo}</h4>
       <p>Pelo presente instrumento e na melhor forma de direito, as partes:</p>
-      <p><strong>${nome || '[NOME DO CLIENTE]'}</strong>, ${ecivil ? ecivil.toLowerCase() : 'brasileiro(a)'}, RG ${rg || '[RG]'}, CPF ${cpf || '[CPF]'}, residente em ${end || '[ENDEREÇO]'} ("CONTRATANTE"); e</p>
+      <p><strong>${nome || '[NOME DO CLIENTE]'}</strong>, ${ecivil ? ecivil.toLowerCase() : 'brasileiro(a)'}, RG ${rg || '[RG]'}, CPF ${cpf || '[CPF]'}, residente ${end || '[ENDEREÇO]'} ("CONTRATANTE"); e</p>
       <p><strong>EDUARDO BARBOSA HORTA DOS SANTOS</strong>, pessoa física, CPF 026.489.996-20, residente na Rua do Ouro, 1920, apt 502, Bairro Serra, Belo Horizonte MG, CEP 30.210-590 ("CONTRATADO").</p>
       <h4>CLÁUSULA 1 — OBJETO</h4>
       <p>Constitui objeto deste contrato a prestação de serviço de consultoria de valores mobiliários, compreendido como o estudo de oportunidades de alocação de capital em títulos e valores mobiliários, orientação, recomendação e aconselhamento de forma profissional, independente e individualizada.</p>
@@ -1937,12 +1927,6 @@
       <p style="margin-top:1.5rem;"><strong>Belo Horizonte, ${hoje}</strong></p>
       <p>___________________________________________________<br/><strong>CONTRATANTE:</strong> ${nome || '[NOME DO CLIENTE]'}</p>
       <p>___________________________________________________<br/><strong>CONTRATADO:</strong> Eduardo Barbosa Horta Dos Santos</p>`;
-  }
-
-  function valorPorExtenso(v) {
-    const n = parseInt(v);
-    const map = {500:'Quinhentos',600:'Seiscentos',700:'Setecentos',800:'Oitocentos',900:'Novecentos',1000:'Mil'};
-    return map[n] ? map[n] + ' reais' : `${n} reais`;
   }
 
   // ── SEND CONTRACT ──
