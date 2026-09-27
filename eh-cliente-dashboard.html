@@ -487,7 +487,13 @@
     .ob-banner.visible { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
     .ob-banner-text { font-family: 'Fraunces', Georgia, serif; font-size: 0.95rem; color: var(--cream-soft); font-weight: 400; line-height: 1.55; }
     .ob-banner-text strong { font-family: 'Fraunces', Georgia, serif; color: var(--cream); display: block; margin-bottom: 0.35rem; font-size: 1.05rem; font-weight: 500; }
-    .ob-banner-steps { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.65rem; }
+    .ob-banner-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0.75rem; margin-top: 1rem; }
+    .ob-step { border: 1px solid var(--rule-strong); padding: 0.8rem 0.95rem; }
+    .ob-step.done { border-color: rgba(76,175,130,0.4); }
+    .ob-step-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.3rem; }
+    .ob-step-name { font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 600; color: var(--cream); }
+    .ob-step-desc { font-family: 'Manrope', sans-serif; font-size: 12px; color: var(--cream-faint); line-height: 1.45; }
+    .ob-banner-main { flex: 1 1 520px; }
     .ob-step-chip { font-family: 'Manrope', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; padding: 0.3rem 0.65rem; border-radius: 0; }
     .ob-step-chip.done { background: transparent; color: #6cc596; border: 1px solid rgba(76,175,130,0.4); }
     .ob-step-chip.pending { background: transparent; color: var(--cream-faint); border: 1px solid var(--rule-strong); }
@@ -730,7 +736,7 @@
 
 <main class="main">
   <div class="topbar">
-    <div class="topbar-title" id="topbarTitle">Relatórios</div>
+    <div class="topbar-title" id="topbarTitle">Início</div>
     <div class="topbar-date" id="topbarDate"></div>
   </div>
   <div class="content">
@@ -739,12 +745,14 @@
     <div class="view active" id="view-inicio">
       <!-- Onboarding banner (moved from Relatórios) -->
       <div class="ob-banner" id="obBanner">
-        <div class="ob-banner-text">
-          <strong>⚠️ Complete seu cadastro</strong>
-          Você ainda tem etapas pendentes para ativar seu acesso completo ao portal.
+        <div class="ob-banner-main">
+          <div class="ob-banner-text">
+            <strong id="obBannerTitle">Bem-vindo! Complete seu cadastro</strong>
+            <span id="obBannerDesc">Para ativar seu acompanhamento, faltam algumas etapas rápidas. Você pode fazer agora ou quando preferir — seu progresso fica salvo.</span>
+          </div>
           <div class="ob-banner-steps" id="obBannerSteps"></div>
         </div>
-        <button class="ob-banner-btn" onclick="window.location.href='eh-onboarding.html'">Continuar cadastro →</button>
+        <button class="ob-banner-btn" id="obBannerBtn" onclick="window.location.href='eh-onboarding.html'">Começar cadastro →</button>
       </div>
 
       <!-- Editorial hero -->
@@ -1512,14 +1520,27 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     if (data && (data.completed || data.skip_onboarding)) return;
 
     const stepDefs = [
-      { key: 'step_cadastro',    label: 'Cadastro' },
-      { key: 'step_suitability', label: 'Perfil API' },
-      { key: 'step_contrato',    label: 'Contrato' }
+      { key: 'step_cadastro',    label: 'Cadastro',             desc: 'Dados pessoais, endereço e situação financeira.' },
+      { key: 'step_suitability', label: 'Perfil de investidor', desc: '13 perguntas rápidas sobre seus objetivos e experiência.' },
+      { key: 'step_contrato',    label: 'Contrato',             desc: 'Leitura e assinatura digital do contrato de consultoria.' }
     ];
+    const feitas = stepDefs.filter(s => data && data[s.key]).length;
+    const faltam = stepDefs.length - feitas;
 
-    steps.innerHTML = stepDefs.map(s => {
+    document.getElementById('obBannerTitle').textContent = feitas === 0
+      ? 'Bem-vindo! Complete seu cadastro'
+      : `Falta${faltam > 1 ? 'm' : ''} ${faltam} etapa${faltam > 1 ? 's' : ''} para concluir seu cadastro`;
+    document.getElementById('obBannerBtn').textContent = feitas === 0 ? 'Começar cadastro →' : 'Continuar cadastro →';
+
+    steps.innerHTML = stepDefs.map((s, i) => {
       const done = data && data[s.key];
-      return `<span class="ob-step-chip ${done ? 'done' : 'pending'}">${done ? '✓' : '○'} ${s.label}</span>`;
+      return `<div class="ob-step ${done ? 'done' : ''}">
+        <div class="ob-step-head">
+          <span class="ob-step-name">${i + 1}. ${s.label}</span>
+          <span class="ob-step-chip ${done ? 'done' : 'pending'}">${done ? '✓ Feito' : 'Pendente'}</span>
+        </div>
+        <div class="ob-step-desc">${s.desc}</div>
+      </div>`;
     }).join('');
 
     banner.classList.add('visible');
