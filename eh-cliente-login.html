@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="eh-senha.js"></script>
   <style>
     :root {
       /* Navy & accent palette — aligned to index.html */
@@ -674,7 +675,7 @@
       </button>
 
       <div class="form-header">
-        <div class="form-tag">Primeiro Acesso</div>
+        <div class="form-tag" id="setPasswordTag">Primeiro Acesso</div>
         <h1 id="setPasswordTitle">Crie sua senha</h1>
         <p id="setPasswordDesc">Bem-vindo! Defina seu nome e uma senha para acessar o Portal do Cliente.</p>
       </div>
@@ -688,7 +689,7 @@
 
       <div class="form-group">
         <label for="newPassword">Nova senha</label>
-        <input type="password" id="newPassword" placeholder="Mínimo 6 caracteres" />
+        <input type="password" id="newPassword" placeholder="Mínimo 8 caracteres" />
       </div>
 
       <div class="form-group">
@@ -819,6 +820,7 @@
       // Adjust title depending on flow
       const title = document.getElementById('setPasswordTitle');
       const desc = document.getElementById('setPasswordDesc');
+      document.getElementById('setPasswordTag').textContent = type === 'invite' ? 'Primeiro Acesso' : 'Recuperação';
       if (type === 'invite') {
         title.textContent = 'Crie sua senha';
         desc.textContent = 'Bem-vindo! Defina seu nome e uma senha para acessar o Portal do Cliente.';
@@ -971,6 +973,9 @@
     }
 
     // ── SET NEW PASSWORD ──
+    // Regras de senha visíveis enquanto o cliente digita (eh-senha.js)
+    EHSenha.anexar(document.getElementById('newPassword'), document.getElementById('confirmPassword'));
+
     async function doSetPassword() {
       const name = document.getElementById('newUserName').value.trim();
       const pw = document.getElementById('newPassword').value;
@@ -986,13 +991,9 @@
         errEl.classList.add('show');
         return;
       }
-      if (pw.length < 6) {
-        errEl.textContent = 'A senha precisa ter pelo menos 6 caracteres.';
-        errEl.classList.add('show');
-        return;
-      }
-      if (pw !== pw2) {
-        errEl.textContent = 'As senhas não coincidem.';
+      const problemaSenha = EHSenha.validar(pw, pw2);
+      if (problemaSenha) {
+        errEl.textContent = problemaSenha;
         errEl.classList.add('show');
         return;
       }
@@ -1006,7 +1007,7 @@
       const { error } = await sb.auth.updateUser(updateData);
 
       if (error) {
-        errEl.textContent = 'Erro ao salvar: ' + error.message;
+        errEl.textContent = 'Erro ao salvar: ' + EHSenha.mensagemErro(error);
         errEl.classList.add('show');
         btn.disabled = false;
         btn.textContent = 'Salvar e Entrar';
