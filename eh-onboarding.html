@@ -39,6 +39,8 @@
       --border-dim:#F7F5EF22;
       --success:#4caf82;
       --error:#e05555;
+      --gold-text:#EE9A1E;
+      --gold-text-2:#F4AE45;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -131,7 +133,7 @@
       padding: 10px 16px;
       transition: all .2s;
     }
-    .ob-logout:hover { color: var(--gold); border-color: var(--gold); }
+    .ob-logout:hover { color: var(--gold-text); border-color: var(--gold); }
 
     /* ── WELCOME (editorial hero) ── */
     .ob-welcome {
@@ -143,7 +145,7 @@
       font-weight: 500;
       letter-spacing: .32em;
       text-transform: uppercase;
-      color: var(--gold);
+      color: var(--gold-text);
       display: flex;
       align-items: center;
       gap: 10px;
@@ -164,7 +166,7 @@
       color: var(--cream);
       margin-bottom: 18px;
     }
-    .ob-welcome h1 em { font-style: italic; font-weight: 400; color: var(--gold-2); }
+    .ob-welcome h1 em { font-style: italic; font-weight: 400; color: var(--gold-text-2); }
     .ob-welcome p {
       font-family: 'Fraunces', serif;
       font-size: 17px;
@@ -222,7 +224,7 @@
     .step-item.active .step-num {
       background: var(--gold-pale);
       border-color: var(--gold);
-      color: var(--gold);
+      color: var(--gold-text);
     }
     .step-item.active::before {
       content: '';
@@ -254,7 +256,7 @@
       font-weight: 400;
     }
     .step-item.done .step-status { color: var(--success); }
-    .step-item.active .step-status { color: var(--gold); }
+    .step-item.active .step-status { color: var(--gold-text); }
 
     /* ── PANELS ── */
     .ob-panel { display: none; }
@@ -269,7 +271,7 @@
       color: var(--cream);
       margin-bottom: 12px;
     }
-    .panel-title em { font-style: italic; font-weight: 400; color: var(--gold-2); }
+    .panel-title em { font-style: italic; font-weight: 400; color: var(--gold-text-2); }
 
     .panel-desc {
       font-family: 'Fraunces', serif;
@@ -303,7 +305,7 @@
       font-weight: 500;
       letter-spacing: .28em;
       text-transform: uppercase;
-      color: var(--gold);
+      color: var(--gold-text);
       margin-bottom: 24px;
       display: flex;
       align-items: center;
@@ -343,13 +345,13 @@
       font-size: 11px;
       letter-spacing: 0;
       text-transform: none;
-      color: var(--gold);
+      color: var(--gold-text);
       margin-left: 4px;
     }
     .form-field input[readonly] {
       background: rgba(238,154,30,0.06);
       border-color: rgba(238,154,30,0.35);
-      color: var(--gold-2);
+      color: var(--gold-text-2);
       cursor: not-allowed;
     }
     .form-field input[readonly]:focus {
@@ -366,7 +368,7 @@
       width: 15px; height: 15px;
       border-radius: 50%;
       border: 1px solid var(--gold);
-      color: var(--gold);
+      color: var(--gold-text);
       background: transparent;
       font-family: 'Manrope', sans-serif;
       font-size: 10px;
@@ -533,7 +535,7 @@
       font-weight: 500;
       letter-spacing: .28em;
       text-transform: uppercase;
-      color: var(--gold);
+      color: var(--gold-text);
       margin-bottom: 10px;
     }
 
@@ -586,7 +588,7 @@
       display: block;
       margin-bottom: 4px;
     }
-    .contract-type-btn.active .contract-type-btn-name { color: var(--gold-2); font-style: italic; font-weight: 400; }
+    .contract-type-btn.active .contract-type-btn-name { color: var(--gold-text-2); font-style: italic; font-weight: 400; }
     .contract-type-btn-desc {
       font-family: 'Manrope', monospace;
       font-size: 10px;
@@ -616,7 +618,7 @@
       font-weight: 500;
       letter-spacing: .26em;
       text-transform: uppercase;
-      color: var(--gold);
+      color: var(--gold-text);
       margin: 22px 0 8px;
       display: flex;
       align-items: center;
@@ -659,7 +661,7 @@
       margin-bottom: 8px;
     }
     .result-perfil.conservador { color: var(--success); }
-    .result-perfil.moderado { color: var(--gold-2); }
+    .result-perfil.moderado { color: var(--gold-text-2); }
     .result-perfil.arrojado { color: #6496FF; }
 
     .result-pontos {
@@ -762,7 +764,7 @@
       width: 60px; height: 4px;
       background: var(--gold);
     }
-    .zapsign-wait svg { color: var(--gold); margin-bottom: 18px; }
+    .zapsign-wait svg { color: var(--gold-text); margin-bottom: 18px; }
     .zapsign-wait h3 {
       font-family: 'Fraunces', serif;
       font-size: 28px;
@@ -816,7 +818,7 @@
       color: var(--cream);
       margin-bottom: 18px;
     }
-    .ob-completed h2 em { font-style: italic; font-weight: 400; color: var(--gold-2); }
+    .ob-completed h2 em { font-style: italic; font-weight: 400; color: var(--gold-text-2); }
     .ob-completed p {
       font-family: 'Fraunces', serif;
       font-size: 17px;
@@ -901,6 +903,98 @@
       .ob-welcome h1 { font-size: 28px; }
       .panel-title { font-size: 24px; }
       .ob-completed h2 { font-size: 28px; }
+    }
+
+    /* ── PADRÃO DO SITE (mesmos componentes do index.html) ──
+       Página em creme com cards brancos e texto azul; o resultado da suitability e a
+       tela de conclusão ficam em blocos azuis. Declarado no body para valer por cima
+       das variáveis do eh-tema.css. */
+    body {
+      background: #F7F5EF; color: #002060; border-top: 4px solid #EE9A1E;
+      --cream: #002060; --white: #002060;
+      --cream-soft: #42506e; --gray-light: #42506e;
+      --cream-faint: #6C6D70; --gray: #6C6D70;
+      --rule: rgba(0,32,96,0.12); --rule-soft: rgba(0,32,96,0.06); --rule-strong: rgba(0,32,96,0.18);
+      --border: rgba(0,32,96,0.18); --border-dim: rgba(0,32,96,0.10);
+      --navy-2: #FFFFFF; --navy-3: #EFEBE1; --navy-dark: #FFFFFF; --navy-warm: #F2EEE4;
+      --gold-text: #92600D; --gold-text-2: #92600D;
+      --gold-pale: #FFF8EC;
+      --success: #1F7A4D;
+    }
+    #authGuard { background: #F7F5EF; }
+    .ob-header { border-bottom: 1px solid rgba(0,32,96,0.12); }
+
+    /* Botões: principal azul; secundários com contorno */
+    .btn-primary { background: #002060; border: 1px solid #002060; color: #FFFFFF; border-radius: 6px; font-weight: 700; letter-spacing: 0.02em; }
+    .btn-primary:hover:not(:disabled) { background: #0B2E7A; border-color: #0B2E7A; }
+    .btn-ghost, .ob-logout { background: #FFFFFF; color: #002060; border: 1px solid rgba(0,32,96,0.25); border-radius: 6px; }
+    .btn-ghost:hover, .ob-logout:hover { border-color: #002060; color: #002060; }
+
+    /* Campos: caixa branca com borda e cantos arredondados */
+    .form-field input, .form-field select, .form-field textarea {
+      background: #FFFFFF; border: 1px solid rgba(0,32,96,0.15); border-radius: 6px; color: #002060; padding: 12px 14px;
+    }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: #EE9A1E; background: #FFFFFF; }
+    .form-field select option { background: #FFFFFF; color: #002060; }
+    .form-field input[readonly], .form-field input[readonly]:focus { background: #EFEBE1; border-color: rgba(0,32,96,0.10); color: #42506e; }
+
+    /* Cards brancos com borda fina, cantos arredondados e sombra suave */
+    .form-section, .suit-question, .steps-tracker, .contract-preview, .contract-type-selector, .zapsign-wait {
+      background: #FFFFFF; border: 1px solid rgba(0,32,96,0.10); border-radius: 8px;
+      box-shadow: 0 18px 40px -32px rgba(0,32,96,0.35);
+    }
+    .steps-tracker { overflow: hidden; }
+    .form-section::before, .suit-question::before, .zapsign-wait::before { display: none; }
+    .step-item.active::before { height: 4px; }
+    .step-num { font-style: normal; }
+    .radio-option, .checkbox-option { background: #FFFFFF; border: 1px solid rgba(0,32,96,0.15); border-radius: 6px; }
+    .radio-option:hover, .checkbox-option:hover { background: #FBF7EE; border-color: rgba(0,32,96,0.3); }
+    .radio-option.selected, .checkbox-option:has(input:checked) { background: #FFF8EC; border: 1.5px solid #EE9A1E; }
+    .radio-option.selected .radio-dot::after { background: #FFFFFF; }
+    .radio-text { font-family: 'Manrope', sans-serif !important; }
+    .contract-type-btn.active { background: #FFF8EC; }
+    .contract-type-btn.active .contract-type-btn-name { font-style: normal; }
+    .ob-progress { border-radius: 2px; }
+
+    /* Blocos azuis: resultado do perfil e conclusão, com faixa âmbar de 6 px */
+    .result-card, .ob-completed {
+      background: #002060; border: 1px solid #002060; border-radius: 8px; position: relative; overflow: hidden;
+      --cream: #F7F5EF; --white: #F7F5EF;
+      --cream-soft: #DCE2F0; --gray-light: #DCE2F0; --cream-faint: #9AA6C6; --gray: #9AA6C6;
+      --rule: rgba(255,255,255,0.12); --rule-strong: rgba(255,255,255,0.22);
+      --gold-text: #EE9A1E; --gold-text-2: #F4AE45; --success: #6cc596;
+      color: #F7F5EF;
+    }
+    .page .result-card::before, .page .ob-completed::before { top: 0; left: 0; right: 0; width: auto; height: 6px; transform: none; }
+    .result-card.moderado::before, .ob-completed::before { background: #EE9A1E; }
+    .result-perfil { font-style: normal; font-family: 'Fraunces', serif !important; font-weight: 600; }
+    .result-perfil.moderado { color: #EE9A1E; }
+    .ob-completed .btn-primary { background: #EE9A1E; border-color: #EE9A1E; color: #002060; }
+    .ob-completed .btn-primary:hover:not(:disabled) { background: #F4AE45; border-color: #F4AE45; }
+
+    /* Feedback legível no fundo claro */
+    .feedback { border-radius: 6px; }
+    .feedback.success { background: #E8F5EE; border-color: rgba(31,122,77,0.3); color: #1F7A4D; }
+    .feedback.error { background: #FDECEC; border-color: rgba(179,38,30,0.3); color: #B3261E; }
+    .feedback.info { background: #FFF6E6; border-color: rgba(238,154,30,0.4); color: #6B4A0A; }
+
+    /* Títulos e etiquetas sem enfeites; sem itálico */
+    .ob-welcome-tag::before, .form-section-title::before, .contract-preview h4::before { display: none; }
+    .page .form-section-title, .page .suit-q-num, .page .contract-type-btn-name { font-family: 'Manrope', sans-serif !important; font-weight: 700; }
+    .page .form-section-title, .page .suit-q-num { letter-spacing: 0.24em; }
+    .ob-welcome h1, .panel-title, .ob-completed h2 { font-weight: 600 !important; }
+    .ob-welcome h1 em, .panel-title em { color: #92600D !important; }
+    .page .panel-title em, .page .ob-completed h2 em { font-family: 'Fraunces', serif !important; font-weight: 600; }
+    .ob-completed h2 em { color: #EE9A1E !important; }
+    .form-field label .calc-hint { font-style: normal; font-family: 'Manrope', sans-serif !important; }
+    .ob-logout { white-space: nowrap; }
+    @media (max-width: 600px) {
+      .ob-header { gap: 10px; }
+      .ob-logout { padding: 8px 10px; letter-spacing: 0.08em; }
+      .ob-header > div { gap: 6px !important; }
+      .ob-logout svg { display: none; }
+      .ob-logo-text span:last-child { display: none; }
+      .ob-logo-text span:first-child { font-size: 11px; }
     }
   </style>
   <link rel="stylesheet" href="eh-tema.css" />
@@ -1852,7 +1946,7 @@
     const isFixo = contractType === 'fixo';
 
     const devBadge = preset.__dev
-      ? `<div style="font-family:'Manrope',monospace;font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">⚠ Preview · valores de teste</div>`
+      ? `<div style="font-family:'Manrope',monospace;font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold-text);margin-bottom:10px;">⚠ Preview · valores de teste</div>`
       : '';
 
     const html = `
