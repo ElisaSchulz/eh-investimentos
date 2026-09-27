@@ -11,6 +11,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="eh-documentos.js"></script>
   <style>
     :root {
       /* Navy & accent palette — aligned to index.html */
@@ -643,6 +646,10 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
     Envio de Emails
   </button>
+  <button class="mobile-drawer-link" id="mobileGeradorBtn" style="display:none;" onclick="showView('gerador',this);closeDrawer()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+    Gerador de Documentos
+  </button>
   <div class="mobile-drawer-divider"></div>
   <div style="padding:0.8rem;">
     <div style="font-size:0.78rem;font-weight:500;color:var(--white);" id="mobileUserName">...</div>
@@ -703,6 +710,10 @@
     <button class="sidebar-link" onclick="showView('clientes',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
       Clientes
+    </button>
+    <button class="sidebar-link" onclick="showView('gerador',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+      Gerador de Documentos
     </button>
   </div>
   <div class="sidebar-bottom">
@@ -907,6 +918,78 @@
         <div class="loading-state"><div class="spinner"></div> Carregando clientes...</div>
       </div>
       <div class="upload-feedback" id="clientesFb"></div>
+    </div>
+
+    <!-- GERADOR DE DOCUMENTOS (admin) -->
+    <div class="view" id="view-gerador">
+      <div class="welcome-banner">
+        <h2>Gerador de <em>Documentos</em></h2>
+        <p>Escolha um cliente para preencher o Contrato e a Suitability com os dados do cadastro. Os campos podem ser ajustados antes de gerar o PDF.</p>
+      </div>
+
+      <div class="upload-panel">
+        <h3>Cliente</h3>
+        <div class="upload-form">
+          <div class="upload-field" style="grid-column:1/-1;"><label>Selecionar cliente</label>
+            <select id="g_cliente" onchange="geradorSelecionar(this.value)"><option value="">Carregando…</option></select>
+          </div>
+        </div>
+        <div class="upload-feedback" id="geradorFb"></div>
+      </div>
+
+      <div class="upload-panel">
+        <h3>Identificação</h3>
+        <div class="upload-form">
+          <div class="upload-field" style="grid-column:1/-1;"><label>Nome completo</label><input type="text" id="g_nome" /></div>
+          <div class="upload-field"><label>Nacionalidade</label><input type="text" id="g_nacionalidade" placeholder="brasileiro(a)" /></div>
+          <div class="upload-field"><label>Estado civil</label>
+            <select id="g_estado_civil">
+              <option value="">Selecione</option>
+              <option>Solteiro(a)</option><option>Casado(a)</option><option>União estável</option>
+              <option>Divorciado(a)</option><option>Viúvo(a)</option><option>Separado(a) judicialmente</option>
+            </select>
+          </div>
+          <div class="upload-field"><label>CPF</label><input type="text" id="g_cpf" placeholder="000.000.000-00" /></div>
+          <div class="upload-field"><label>RG</label><input type="text" id="g_rg" /></div>
+          <div class="upload-field"><label>Órgão emissor</label><input type="text" id="g_rg_orgao" placeholder="SSP/MG" /></div>
+        </div>
+      </div>
+
+      <div class="upload-panel">
+        <h3>Endereço</h3>
+        <div class="upload-form">
+          <div class="upload-field"><label>Tipo</label><input type="text" id="g_log_tipo" placeholder="Rua" /></div>
+          <div class="upload-field" style="grid-column:span 2;"><label>Logradouro</label><input type="text" id="g_log_nome" /></div>
+          <div class="upload-field"><label>Número</label><input type="text" id="g_numero" /></div>
+          <div class="upload-field"><label>Complemento</label><input type="text" id="g_complemento" /></div>
+          <div class="upload-field"><label>Bairro</label><input type="text" id="g_bairro" /></div>
+          <div class="upload-field"><label>Cidade</label><input type="text" id="g_cidade" /></div>
+          <div class="upload-field"><label>UF</label><input type="text" id="g_uf" maxlength="2" /></div>
+          <div class="upload-field"><label>CEP</label><input type="text" id="g_cep" /></div>
+        </div>
+      </div>
+
+      <div class="upload-panel">
+        <h3>Suitability e contrato</h3>
+        <div class="upload-form">
+          <div class="upload-field"><label>Perfil do investidor</label>
+            <select id="g_perfil"><option value="">Selecione</option><option>CONSERVADOR</option><option>MODERADO</option><option>ARROJADO</option></select>
+          </div>
+          <div class="upload-field"><label>Data da suitability</label><input type="date" id="g_data_suit" /></div>
+          <div class="upload-field"><label>Data do contrato</label><input type="date" id="g_data_contrato" /></div>
+          <div class="upload-field"><label>Remuneração</label>
+            <select id="g_tipo" onchange="geradorTipo()"><option value="percentual">Taxa de consultoria (% a.a.)</option><option value="fixo">Mensalidade fixa (R$)</option></select>
+          </div>
+          <div class="upload-field" id="g_taxa_field"><label>Taxa (% ao ano)</label><input type="number" id="g_taxa" step="0.01" min="0" /></div>
+          <div class="upload-field" id="g_mens_field" style="display:none;"><label>Mensalidade (R$)</label><input type="number" id="g_mensalidade" step="0.01" min="0" /></div>
+        </div>
+      </div>
+
+      <div class="upload-panel">
+        <h3>Documentos</h3>
+        <div id="geradorDocs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;"></div>
+        <div class="upload-feedback" id="geradorDocsFb"></div>
+      </div>
     </div>
 
     <!-- EMAILS -->
@@ -1408,6 +1491,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       document.getElementById('mobileCotasBtn').style.display = 'flex';
       document.getElementById('mobileClientesBtn').style.display = 'flex';
       document.getElementById('mobileEmailsBtn').style.display = 'flex';
+      document.getElementById('mobileGeradorBtn').style.display = 'flex';
     }
     loadReports();
     checkOnboarding();
@@ -1448,7 +1532,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.querySelectorAll('.mobile-drawer-link').forEach(l => l.classList.remove('active'));
     document.getElementById('view-' + viewId).classList.add('active');
     if (btn) btn.classList.add('active');
-    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', extratos:'Extratos → Excel', extratosnovos:'XP Extratos Novos', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' };
+    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', extratos:'Extratos → Excel', extratosnovos:'XP Extratos Novos', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos' };
     const topbar = document.getElementById('topbarTitle');
     if (topbar) topbar.textContent = titles[viewId] || viewId;
     if (viewId === 'emails') { loadTemplates().then(() => buildTemplateAccordion()); if (clientRows.length === 0) addClientRow(); loadRascunho(); }
@@ -1456,6 +1540,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     if (viewId === 'extratosnovos') xpnLoadMapping();
     if (viewId === 'cotas') ctLoadXpMapping();
     if (viewId === 'clientes') loadClientesView();
+    if (viewId === 'gerador') geradorCarregarClientes();
     if (viewId === 'perfil') populatePerfil();
   }
 
@@ -1742,6 +1827,162 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     }
     showFb2('clientesFb', `✓ ${profiles.length} cliente(s) marcados como concluído.`, 'success');
     loadClientesView();
+  }
+
+  // ── GERADOR DE DOCUMENTOS (admin) ──
+  // Lê cadastro_clientes / suitability / contratos / cliente_taxa_preset e gera
+  // Contrato e Suitability no design novo (eh-documentos.js).
+  let geradorClientes = [];
+  const G_CAMPOS = ['g_nome','g_nacionalidade','g_estado_civil','g_cpf','g_rg','g_rg_orgao','g_log_tipo','g_log_nome',
+    'g_numero','g_complemento','g_bairro','g_cidade','g_uf','g_cep','g_perfil','g_data_suit','g_data_contrato',
+    'g_tipo','g_taxa','g_mensalidade'];
+  const gv = id => (document.getElementById(id)?.value || '').trim();
+  const gset = (id, val) => { const el = document.getElementById(id); if (el) el.value = val == null ? '' : val; };
+  const hojeISO = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+  const isoParaData = iso => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); return m ? new Date(+m[1], m[2] - 1, +m[3]) : null; };
+
+  async function geradorCarregarClientes() {
+    const sel = document.getElementById('g_cliente');
+    if (!sel.dataset.bound) {
+      sel.dataset.bound = '1';
+      G_CAMPOS.forEach(id => document.getElementById(id)?.addEventListener('input', geradorStatus));
+      G_CAMPOS.forEach(id => document.getElementById(id)?.addEventListener('change', geradorStatus));
+      gset('g_data_suit', hojeISO()); gset('g_data_contrato', hojeISO()); gset('g_taxa', '1');
+      geradorStatus();
+    }
+    try {
+      const [{ data: cad, error: e1 }, { data: profs }] = await Promise.all([
+        sb.from('cadastro_clientes').select('*'),
+        sb.from('profiles').select('id, full_name, email')
+      ]);
+      if (e1) throw e1;
+      const porId = {};
+      (profs || []).forEach(p => { porId[p.id] = { user_id: p.id, nome_completo: p.full_name, email: p.email, __semCadastro: true }; });
+      (cad || []).forEach(c => { porId[c.user_id] = c; });
+      geradorClientes = Object.values(porId)
+        .filter(c => !ADMIN_EMAILS.includes((c.email || '').toLowerCase()))
+        .sort((a, b) => (a.nome_completo || a.email || '').localeCompare(b.nome_completo || b.email || '', 'pt-BR'));
+      sel.innerHTML = '<option value="">— Preencher manualmente —</option>' + geradorClientes.map(c =>
+        `<option value="${c.user_id}">${escHtml(c.nome_completo || c.email)}${c.__semCadastro ? ' (sem cadastro)' : ''}</option>`).join('');
+    } catch (e) {
+      sel.innerHTML = '<option value="">— Preencher manualmente —</option>';
+      showFb2('geradorFb', 'Não foi possível carregar os clientes: ' + e.message, 'error');
+    }
+  }
+
+  async function geradorSelecionar(userId) {
+    G_CAMPOS.forEach(id => gset(id, ''));
+    gset('g_data_suit', hojeISO()); gset('g_data_contrato', hojeISO()); gset('g_tipo', 'percentual'); gset('g_taxa', '1');
+    const c = geradorClientes.find(x => x.user_id === userId);
+    if (c) {
+      gset('g_nome', c.nome_completo); gset('g_nacionalidade', c.nacionalidade); gset('g_estado_civil', c.estado_civil);
+      gset('g_cpf', c.cpf ? EHDocs.fmtCPF(c.cpf) : ''); gset('g_rg', c.rg); gset('g_rg_orgao', c.rg_orgao);
+      gset('g_log_tipo', c.logradouro_tipo); gset('g_log_nome', c.logradouro_nome); gset('g_numero', c.numero);
+      gset('g_complemento', c.complemento); gset('g_bairro', c.bairro); gset('g_cidade', c.cidade);
+      gset('g_uf', c.estado); gset('g_cep', c.cep);
+      try {
+        const [{ data: suit }, { data: contr }, { data: preset }] = await Promise.all([
+          sb.from('suitability').select('perfil, created_at').eq('user_id', userId).maybeSingle(),
+          sb.from('contratos').select('tipo, taxa, mensalidade, created_at').eq('user_id', userId).maybeSingle(),
+          c.email ? sb.from('cliente_taxa_preset').select('*').eq('email', c.email.toLowerCase()).maybeSingle() : Promise.resolve({ data: null })
+        ]);
+        if (suit) { gset('g_perfil', (suit.perfil || '').toUpperCase()); if (suit.created_at) gset('g_data_suit', suit.created_at.slice(0, 10)); }
+        if (contr?.created_at) gset('g_data_contrato', contr.created_at.slice(0, 10));
+        const cond = contr || preset;
+        if (cond) {
+          const tipo = (cond.tipo || cond.contrato_tipo || '').toString().toLowerCase();
+          const fixo = ['fixo','fixa','mensalidade','mensalidade_fixa','mensalidade fixa'].includes(tipo);
+          gset('g_tipo', fixo ? 'fixo' : 'percentual');
+          if (cond.taxa != null) gset('g_taxa', cond.taxa);
+          if (cond.mensalidade != null) gset('g_mensalidade', cond.mensalidade);
+        }
+      } catch (e) {
+        showFb2('geradorFb', 'Cadastro carregado, mas não foi possível ler suitability/contrato: ' + e.message, 'error');
+      }
+      if (c.__semCadastro) showFb2('geradorFb', 'Este cliente ainda não preencheu o cadastro. Complete os campos manualmente.', 'error');
+    }
+    geradorTipo();
+  }
+
+  function geradorTipo() {
+    const fixo = gv('g_tipo') === 'fixo';
+    document.getElementById('g_taxa_field').style.display = fixo ? 'none' : '';
+    document.getElementById('g_mens_field').style.display = fixo ? '' : 'none';
+    geradorStatus();
+  }
+
+  function geradorDados(tipo) {
+    if (tipo === 'suitability') {
+      return { nome: gv('g_nome'), cpf: gv('g_cpf'), perfil: gv('g_perfil'), data: isoParaData(gv('g_data_suit')) };
+    }
+    return {
+      nome: gv('g_nome'), nacionalidade: gv('g_nacionalidade'), estadoCivil: gv('g_estado_civil'),
+      rg: gv('g_rg'), orgao: gv('g_rg_orgao').toUpperCase(), cpf: gv('g_cpf'),
+      endereco: EHDocs.endereco({ logradouro_tipo: gv('g_log_tipo'), logradouro_nome: gv('g_log_nome'), numero: gv('g_numero'),
+        complemento: gv('g_complemento'), bairro: gv('g_bairro'), cidade: gv('g_cidade'), estado: gv('g_uf').toUpperCase(), cep: gv('g_cep') }),
+      data: isoParaData(gv('g_data_contrato')),
+      tipo: gv('g_tipo'), taxa: gv('g_taxa'), mensalidade: gv('g_mensalidade')
+    };
+  }
+
+  const G_DOCS = {
+    contrato: { titulo: 'Contrato de Consultoria', prefixo: 'Contrato',
+      req: [['g_nome','nome'],['g_nacionalidade','nacionalidade'],['g_estado_civil','estado civil'],['g_cpf','CPF'],['g_rg','RG'],
+            ['g_rg_orgao','órgão emissor'],['g_log_nome','logradouro'],['g_numero','número'],['g_bairro','bairro'],['g_cidade','cidade'],
+            ['g_uf','UF'],['g_cep','CEP'],['g_data_contrato','data do contrato']] },
+    suitability: { titulo: 'Suitability', prefixo: 'API',
+      req: [['g_nome','nome'],['g_cpf','CPF'],['g_perfil','perfil'],['g_data_suit','data da suitability']] }
+  };
+
+  function geradorFaltando(tipo) {
+    const req = G_DOCS[tipo].req.slice();
+    if (tipo === 'contrato') req.push(gv('g_tipo') === 'fixo' ? ['g_mensalidade','mensalidade'] : ['g_taxa','taxa']);
+    return req.filter(([id]) => !gv(id)).map(([, nome]) => nome);
+  }
+
+  function geradorStatus() {
+    const box = document.getElementById('geradorDocs');
+    if (!box) return;
+    box.innerHTML = Object.entries(G_DOCS).map(([tipo, d]) => {
+      const falta = geradorFaltando(tipo);
+      const ok = !falta.length;
+      return `
+        <div style="border:1px solid var(--rule-strong);padding:1.2rem 1.3rem;display:flex;flex-direction:column;gap:0.8rem;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:0.6rem;">
+            <div style="font-family:'Fraunces',serif;font-size:1.15rem;color:var(--cream);">${d.titulo}</div>
+            <span style="font-size:10px;letter-spacing:0.16em;font-weight:700;color:${ok ? '#6cc596' : 'var(--gold)'};">${ok ? 'COMPLETO' : falta.length + (falta.length > 1 ? ' PENDENTES' : ' PENDENTE')}</span>
+          </div>
+          ${ok ? '' : `<div style="font-size:12px;color:var(--cream-faint);line-height:1.5;">Falta: ${falta.join(', ')}</div>`}
+          <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+            <button class="btn-upload" style="background:transparent;color:var(--gold);" onclick="geradorGerar('${tipo}', false, this)">Visualizar</button>
+            <button class="btn-upload" onclick="geradorGerar('${tipo}', true, this)">Baixar PDF</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // "Viviane Costa Pereira Caldas" → "VivianeCPC" (mesmo padrão dos arquivos já usados)
+  function geradorNomeArquivo(prefixo) {
+    const partes = gv('g_nome').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z\s]/g, ' ')
+      .split(/\s+/).filter(Boolean).filter(p => !/^(de|da|do|das|dos|e)$/i.test(p));
+    if (!partes.length) return prefixo + '.pdf';
+    const primeiro = partes[0].charAt(0).toUpperCase() + partes[0].slice(1).toLowerCase();
+    return `${prefixo}_${primeiro}${partes.slice(1).map(p => p.charAt(0).toUpperCase()).join('')}.pdf`;
+  }
+
+  async function geradorGerar(tipo, baixar, btn) {
+    const falta = geradorFaltando(tipo);
+    if (falta.length && !confirm(`Ainda falta: ${falta.join(', ')}.\n\nGerar mesmo assim?`)) return;
+    const txt = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Gerando…';
+    try {
+      const dados = geradorDados(tipo);
+      if (baixar) await EHDocs.baixarPdf(tipo, dados, geradorNomeArquivo(G_DOCS[tipo].prefixo));
+      else await EHDocs.abrirPdf(tipo, dados);
+    } catch (e) {
+      showFb2('geradorDocsFb', 'Erro ao gerar o documento: ' + e.message, 'error');
+    }
+    btn.disabled = false; btn.textContent = txt;
   }
 
   function showFb2(id, msg, type) {

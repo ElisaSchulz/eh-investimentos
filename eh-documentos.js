@@ -8,8 +8,9 @@
  * Uso:
  *   const base64 = await EHDocs.pdfBase64('suitability', { nome, cpf, data, perfil });
  *   const base64 = await EHDocs.pdfBase64('contrato',    { nome, nacionalidade, estadoCivil, rg, cpf,
- *                                                          endereco, data, remuneracao });
+ *                                                          orgao, endereco, data, tipo, taxa, mensalidade });
  *   await EHDocs.abrirPdf('suitability', dados);   // abre o PDF numa nova aba
+ *   await EHDocs.baixarPdf('contrato', dados, 'Contrato - Nome.pdf');
  */
 (function () {
   const LOGO = 'Logo_EH.png';
@@ -75,7 +76,7 @@
   const TIPOS_MASC = /^(largo|beco|parque|setor|condom[ií]nio|loteamento|anel|trevo|conjunto|n[uú]cleo|jardim|residencial|s[ií]tio|caminho|viaduto|acesso|elevado|morro|p[aá]tio)$/i;
   function endereco(c) {
     if (!c) return '';
-    const tipo = (c.logradouro_tipo || '').trim();
+    const tipo = /^outr[oa]$/i.test((c.logradouro_tipo || '').trim()) ? '' : (c.logradouro_tipo || '').trim();
     const rua = [tipo, (c.logradouro_nome || '').trim()].filter(Boolean).join(' ');
     const partes = [rua, c.numero ? 'nº ' + String(c.numero).replace(/^n[º°o]\.?\s*/i, '') : '', c.complemento, c.bairro,
       [c.cidade, c.estado].filter(Boolean).join(' '), c.cep ? 'CEP ' + c.cep : ''].filter(Boolean);
@@ -93,10 +94,10 @@
       <span style="font-size:8.5px;letter-spacing:0.18em;color:${GRAY};font-weight:600;">${titulo}</span>
     </div>`;
 
-  const footer = () => `
+  const footer = (pagina, total) => `
     <div style="padding-top:8px;border-top:1px solid ${RULE};display:flex;justify-content:space-between;gap:12px;font-size:8.5px;letter-spacing:0.16em;color:${GRAY};font-weight:600;">
       <span>EH INVESTIMENTOS · GESTÃO FINANCEIRA</span>
-      <span>BELO HORIZONTE · MG</span>
+      <span>BELO HORIZONTE · MG · PÁGINA ${pagina} DE ${total}</span>
     </div>`;
 
   const capa = (kicker, tituloHtml, comMarca, topo, pad = '30px 32px 28px') => `
@@ -206,8 +207,10 @@
   // ── CONTRATO DE CONSULTORIA ──
   function contrato(d) {
     const nome = esc((d.nome || '').trim().toUpperCase());
-    const partes = [esc((d.nacionalidade || '').toLowerCase()), esc((d.estadoCivil || '').toLowerCase()),
-      d.rg ? 'RG ' + esc(d.rg) : '', 'CPF ' + esc(fmtCPF(d.cpf))].filter(Boolean).join(', ');
+    const nacionalidade = /^outr[oa]s?$/i.test((d.nacionalidade || '').trim()) ? '' : (d.nacionalidade || '').toLowerCase();
+    const rg = [d.rg, d.orgao].map(x => (x || '').trim()).filter(Boolean).join(' - ');
+    const partes = [esc(nacionalidade), esc((d.estadoCivil || '').toLowerCase()),
+      rg ? 'RG ' + esc(rg) : '', 'CPF ' + esc(fmtCPF(d.cpf))].filter(Boolean).join(', ');
     const rem = remuneracao(d);
 
     const blocos = [
@@ -341,7 +344,7 @@
       paginas.push(page);
       mover.forEach(m => body.appendChild(m));
     }
-    paginas.forEach(p => { p.querySelector('[data-footer]').innerHTML = footer(); });
+    paginas.forEach((p, i) => { p.querySelector('[data-footer]').innerHTML = footer(i + 1, paginas.length); });
     return paginas;
   }
 
@@ -384,17 +387,22 @@
       const pdf = await gerarPdf(tipo, dados);
       return pdf.output('datauristring').split(',')[1];
     },
+    // `dados` pode ser uma Promise: a aba abre antes de qualquer await,
+    // senão o navegador a bloqueia como pop-up.
     async abrirPdf(tipo, dados) {
-      // Abre a aba antes do await para não ser bloqueada como pop-up
       const aba = window.open('', '_blank');
       try {
-        const pdf = await gerarPdf(tipo, dados);
+        const pdf = await gerarPdf(tipo, await dados);
         const url = URL.createObjectURL(pdf.output('blob'));
         if (aba) aba.location.href = url; else window.location.href = url;
       } catch (e) {
         if (aba) aba.close();
         throw e;
       }
+    },
+    async baixarPdf(tipo, dados, nomeArquivo) {
+      const pdf = await gerarPdf(tipo, dados);
+      pdf.save(nomeArquivo || tipo + '.pdf');
     },
     fmtCPF, endereco, remuneracao, extenso
   };

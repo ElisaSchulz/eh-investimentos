@@ -996,7 +996,8 @@
           </select>
         </div>
         <div class="form-field"><label>Data de nascimento *</label><input type="text" id="c_nascimento" inputmode="numeric" maxlength="10" placeholder="dd/mm/aaaa" oninput="maskDateBR(this)" /></div>
-        <div class="form-field"><label>RG (número e órgão) *</label><input type="text" id="c_rg" placeholder="000000000 SSP/MG" /></div>
+        <div class="form-field"><label>RG *</label><input type="text" id="c_rg" placeholder="000000000" /></div>
+        <div class="form-field"><label>Órgão emissor do RG *</label><input type="text" id="c_rg_orgao" placeholder="SSP/MG" /></div>
         <div class="form-field"><label>CPF *</label><input type="text" id="c_cpf" placeholder="000.000.000-00" /></div>
         <div class="form-field"><label>Telefone celular *</label><input type="tel" id="c_telefone" placeholder="(00) 00000-0000" /></div>
         <div class="form-field"><label>Possui dependentes? *</label>
@@ -1369,6 +1370,7 @@
       nacionalidade: cadastro?.nacionalidade || '',
       estadoCivil: cadastro?.estado_civil || '',
       rg: cadastro?.rg || '',
+      orgao: cadastro?.rg_orgao || '',
       cpf: cadastro?.cpf || '',
       endereco: EHDocs.endereco(cadastro),
       data: new Date(),
@@ -1379,8 +1381,7 @@
 
   async function visualizarDocumento(tipo, fbId) {
     try {
-      const dados = tipo === 'suitability' ? await dadosSuitabilityDoc() : await dadosContratoDoc();
-      await EHDocs.abrirPdf(tipo, dados);
+      await EHDocs.abrirPdf(tipo, tipo === 'suitability' ? dadosSuitabilityDoc() : dadosContratoDoc());
     } catch (e) {
       showFb(fbId, 'Não foi possível gerar o documento: ' + e.message, 'error');
     }
@@ -1534,7 +1535,7 @@
 
   // ── SAVE CADASTRO ──
   async function saveCadastro() {
-    const required = ['c_nome','c_nacionalidade','c_estado_civil','c_nascimento','c_rg','c_cpf',
+    const required = ['c_nome','c_nacionalidade','c_estado_civil','c_nascimento','c_rg','c_rg_orgao','c_cpf',
       'c_telefone','c_logradouro_tipo','c_logradouro_nome','c_numero','c_bairro','c_cidade',
       'c_estado','c_cep','c_profissao','c_tempo_profissao','c_renda_mensal','c_renda_familiar_total',
       'c_despesas_essenciais','c_despesas_nao_essenciais','c_controla_despesas','c_possui_dividas',
@@ -1564,7 +1565,7 @@
         user_id: currentUser.id,
         nome_completo: v('c_nome'), nacionalidade: v('c_nacionalidade'),
         estado_civil: v('c_estado_civil'), data_nascimento: v('c_nascimento'),
-        rg: v('c_rg'), cpf: parseCPF('c_cpf'), email: currentUser.email,
+        rg: v('c_rg'), rg_orgao: v('c_rg_orgao').toUpperCase(), cpf: parseCPF('c_cpf'), email: currentUser.email,
         telefone: v('c_telefone'), logradouro_tipo: v('c_logradouro_tipo'),
         logradouro_nome: v('c_logradouro_nome'), numero: v('c_numero'),
         complemento: v('c_complemento'), bairro: v('c_bairro'),
@@ -1799,7 +1800,7 @@
 
     const nome = cadastro?.nome_completo || '';
     const cpf  = cadastro?.cpf ? cadastro.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '';
-    const rg   = cadastro?.rg || '';
+    const rg   = [cadastro?.rg, cadastro?.rg_orgao].filter(Boolean).join(' - ');
     const ecivil = cadastro?.estado_civil || '';
     const end  = EHDocs.endereco(cadastro);
     const hoje = new Date().toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' });
@@ -2093,6 +2094,8 @@
     if (telEl) maskPhone(telEl);
     if (cepEl) maskCEP(cepEl);
     if (rgEl)  maskRG(rgEl);
+    const orgaoEl = document.getElementById('c_rg_orgao');
+    if (orgaoEl) maskRG(orgaoEl);
 
     const moneyIds = ['c_renda_mensal','c_renda_conjuge','c_renda_extra_anual',
       'c_despesas_essenciais','c_despesas_nao_essenciais',
