@@ -35,6 +35,8 @@
       --gray-light: #F7F5EFcc;
       --border:     #F7F5EF40;
       --error:      #e05555;
+      --gold-text:  #EE9A1E;
+      --gold-text-2:#F4AE45;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -152,7 +154,7 @@
     .panel-quote blockquote::before {
       content: '“';
       display: block;
-      color: var(--gold);
+      color: var(--gold-text);
       font-family: 'Fraunces', serif;
       font-size: 3.4rem;
       line-height: 0;
@@ -161,7 +163,7 @@
     }
 
     .panel-quote blockquote em {
-      color: var(--gold-2);
+      color: var(--gold-text-2);
       font-style: italic;
     }
 
@@ -171,7 +173,7 @@
       font-weight: 500;
       letter-spacing: 0.22em;
       text-transform: uppercase;
-      color: var(--gold);
+      color: var(--gold-text);
       font-style: normal;
       display: block;
       padding-top: 14px;
@@ -218,7 +220,7 @@
       font-weight: 500;
       letter-spacing: 0.32em;
       text-transform: uppercase;
-      color: var(--gold);
+      color: var(--gold-text);
       display: flex;
       align-items: center;
       gap: 0.65rem;
@@ -265,6 +267,7 @@
 
     input[type="email"],
     input[type="password"],
+    input[type="tel"],
     input[type="text"] {
       width: 100%;
       background: transparent;
@@ -301,7 +304,7 @@
       transition: color 0.2s;
     }
 
-    .toggle-pw:hover { color: var(--gold); }
+    .toggle-pw:hover { color: var(--gold-text); }
 
     .btn-login {
       width: 100%;
@@ -384,7 +387,7 @@
       letter-spacing: 0.02em;
     }
 
-    .forgot-link:hover { color: var(--gold); }
+    .forgot-link:hover { color: var(--gold-text); }
 
     .divider {
       width: 40px; height: 1px;
@@ -427,7 +430,7 @@
       padding: 0;
     }
 
-    .back-link:hover { color: var(--gold); }
+    .back-link:hover { color: var(--gold-text); }
 
     @media (max-width: 800px) {
       body { flex-direction: column; overflow: auto; min-height: 100vh; }
@@ -464,6 +467,54 @@
     @media (max-width: 400px) {
       .right-panel { padding: 1.6rem 1.3rem 2.5rem; }
       .form-header h1 { font-size: 1.7rem; }
+    }
+
+    /* ── PADRÃO DO SITE (mesmos componentes do index.html) ──
+       Painel da citação em azul; painel do formulário em creme, com os mesmos
+       botões, campos e etiquetas da página principal e da área logada. */
+    body { border-top: 4px solid #EE9A1E; box-sizing: border-box; }
+    .right-panel {
+      background: #F7F5EF; border-left: none;
+      --cream: #002060; --white: #002060;
+      --cream-soft: #42506e; --gray-light: #42506e;
+      --cream-faint: #6C6D70; --gray: #6C6D70;
+      --rule: rgba(0,32,96,0.12); --rule-strong: rgba(0,32,96,0.18);
+      --border: rgba(0,32,96,0.18);
+      --gold-text: #92600D; --gold-text-2: #92600D;
+      color: #002060;
+    }
+    .right-panel::before, .form-tag::before { display: none; }
+    .left-panel, .right-panel { border-radius: 0; }
+    .form-header h1 { font-weight: 600 !important; letter-spacing: -0.015em; }
+    .form-header p { color: #42506e; }
+    .right-panel label { color: #42506e; font-weight: 700; }
+
+    .right-panel input[type="email"], .right-panel input[type="password"],
+    .right-panel input[type="tel"], .right-panel input[type="text"], .right-panel textarea {
+      background: #FFFFFF !important; border: 1px solid rgba(0,32,96,0.15) !important; border-radius: 6px !important;
+      padding: 12px 14px !important; color: #002060 !important; font-size: 14px !important;
+    }
+    .right-panel input:focus, .right-panel textarea:focus { border-color: #EE9A1E !important; }
+    .right-panel input::placeholder, .right-panel textarea::placeholder { color: #8A8C90; }
+    .toggle-pw { right: 12px; color: #6C6D70; }
+
+    .btn-login { background: #002060; border-color: #002060; color: #FFFFFF; border-radius: 6px; font-weight: 700; letter-spacing: 0.02em; }
+    .btn-login:hover { background: #0B2E7A; border-color: #0B2E7A; }
+    .spinner { border-color: rgba(255,255,255,0.3); border-top-color: #FFFFFF; }
+
+    .error-msg { background: #FDECEC; border: 1px solid rgba(179,38,30,0.3); border-left: 3px solid #B3261E; color: #B3261E; border-radius: 6px; }
+    .success-msg { background: #E8F5EE; border: 1px solid rgba(31,122,77,0.3); border-left: 3px solid #1F7A4D; color: #1F7A4D; border-radius: 6px; }
+    .forgot-link { color: #002060; font-weight: 600; }
+    .forgot-link:hover, .back-link:hover { color: #92600D; }
+    .right-panel a[onclick="showSolicitar()"] { color: #92600D !important; }
+
+    /* Painel azul: citação sem itálico, como os destaques do site */
+    .panel-quote blockquote { font-style: normal !important; font-weight: 500; }
+    .panel-quote blockquote em { color: #EE9A1E !important; }
+    .left-panel::before { border-color: rgba(238,154,30,0.22); }
+
+    @media (max-width: 800px) {
+      .right-panel { border-top: none; }
     }
   </style>
   <link rel="stylesheet" href="eh-tema.css" />
@@ -531,7 +582,7 @@
 
       <div style="text-align:center;margin-top:1rem;">
         <span style="font-size:0.78rem;color:var(--text-muted);">Ainda não tem acesso? </span>
-        <a onclick="showSolicitar()" style="cursor:pointer;font-size:0.78rem;color:var(--gold);font-weight:600;text-decoration:none;">Solicitar acesso</a>
+        <a onclick="showSolicitar()" style="cursor:pointer;font-size:0.78rem;color:var(--gold-text);font-weight:600;text-decoration:none;">Solicitar acesso</a>
       </div>
 
       <div class="divider"></div>
