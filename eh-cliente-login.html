@@ -802,7 +802,7 @@
       btn.disabled = true;
       btnText.innerHTML = '<span class="spinner"></span>';
 
-      const { data: signData, error } = await sb.auth.signInWithPassword({ email, password });
+      const { error } = await sb.auth.signInWithPassword({ email, password });
 
       if (error) {
         btn.disabled = false;
@@ -816,22 +816,9 @@
         console.error('Login error:', error);
       } else {
         btnText.textContent = 'Redirecionando...';
-        const userId = signData?.user?.id;
-        const ADMIN_EMAILS_LOGIN = ['elisacmazzo@gmail.com', 'contato@eduardohorta.com.br'];
-        if (ADMIN_EMAILS_LOGIN.includes(email)) {
-          window.location.href = 'eh-cliente-dashboard.html';
-        } else {
-          try {
-            const { data: ob } = await sb.from('onboarding').select('completed, skip_onboarding').eq('user_id', userId).single();
-            if (!ob || (!ob.completed && !ob.skip_onboarding)) {
-              window.location.href = 'eh-onboarding.html';
-            } else {
-              window.location.href = 'eh-cliente-dashboard.html';
-            }
-          } catch(e2) {
-            window.location.href = 'eh-onboarding.html';
-          }
-        }
+        // Clientes vão sempre para a área logada; se o onboarding estiver
+        // pendente, o banner na tela Início mostra o que falta fazer.
+        window.location.href = 'eh-cliente-dashboard.html';
       }
     }
 

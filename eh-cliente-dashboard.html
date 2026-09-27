@@ -7,42 +7,45 @@
   <title>EH Investimentos — Portal do Cliente</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,300;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="eh-documentos.js"></script>
   <style>
     :root {
       /* Navy & accent palette — aligned to index.html */
-      --navy:       #0D1E4E;
-      --navy-2:     #0a1840;
-      --navy-3:     #091438;
-      --navy-mid:   #152a64;
-      --navy-warm:  #1a2a5e;
-      --navy-dark:  #091438;
-      --gold:       #D4820A;
-      --gold-2:     #E8A030;
-      --gold-light: #E8A030;
-      --gold-pale-color: #F0C060;
-      --gold-pale:  rgba(212,130,10,0.12);
-      --cream:      #f3ede1;
-      --cream-2:    #e4d5b0;
-      --cream-soft: #f3ede1cc;
-      --cream-faint:#f3ede166;
-      --rule:       #f3ede122;
-      --rule-soft:  #f3ede112;
-      --rule-strong:#f3ede140;
+      --navy:       #002060;
+      --navy-2:     #001A50;
+      --navy-3:     #001848;
+      --navy-mid:   #0B2E7A;
+      --navy-warm:  #0A2A6E;
+      --navy-dark:  #001848;
+      --gold:       #EE9A1E;
+      --gold-2:     #F4AE45;
+      --gold-light: #F4AE45;
+      --gold-pale-color: #F7C46E;
+      --gold-pale:  rgba(238,154,30,0.12);
+      --cream:      #F7F5EF;
+      --cream-2:    #EFE3C8;
+      --cream-soft: #F7F5EFcc;
+      --cream-faint:#F7F5EF66;
+      --rule:       #F7F5EF22;
+      --rule-soft:  #F7F5EF12;
+      --rule-strong:#F7F5EF40;
       /* Aliases retained so legacy inline styles resolve to the new palette */
-      --white:      #f3ede1;
-      --gray:       #f3ede199;
-      --gray-light: #f3ede1cc;
-      --border:     #f3ede140;
-      --border-dim: #f3ede122;
+      --white:      #F7F5EF;
+      --gray:       #F7F5EF99;
+      --gray-light: #F7F5EFcc;
+      --border:     #F7F5EF40;
+      --border-dim: #F7F5EF22;
       --error:      #e05555;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Manrope', sans-serif;
       background: var(--navy);
       color: var(--cream);
       min-height: 100vh;
@@ -57,49 +60,49 @@
 
     /* ── AUTH GUARD ── */
     #authGuard { position: fixed; inset: 0; background: var(--navy); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-    .spinner { width: 28px; height: 28px; border: 2px solid rgba(212,130,10,0.18); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    .spinner { width: 28px; height: 28px; border: 2px solid rgba(238,154,30,0.18); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── MODAL ── */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(9,20,56,0.92); backdrop-filter: blur(12px); z-index: 999; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,24,72,0.92); backdrop-filter: blur(12px); z-index: 999; display: flex; align-items: center; justify-content: center; padding: 2rem; }
     .modal-box { background: var(--navy-2); border: 1px solid var(--rule-strong); padding: 3rem 2.6rem; width: 100%; max-width: 460px; position: relative; }
     .modal-box::before { content:''; position:absolute; top:0; left:0; width:60px; height:4px; background:var(--gold); }
-    .modal-tag { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.32em; text-transform: uppercase; color: var(--gold); display: flex; align-items: center; gap: 0.65rem; margin-bottom: 1rem; }
+    .modal-tag { font-family: 'Manrope', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.32em; text-transform: uppercase; color: var(--gold); display: flex; align-items: center; gap: 0.65rem; margin-bottom: 1rem; }
     .modal-tag::before { content: ''; display: block; width: 28px; height: 1px; background: var(--gold); }
-    .modal-box h2 { font-family: 'Source Serif 4', Georgia, serif; font-size: 2rem; font-weight: 300; line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 0.6rem; color: var(--cream); }
-    .modal-box p { font-family: 'Source Serif 4', Georgia, serif; font-size: 0.95rem; color: var(--cream-soft); font-weight: 400; line-height: 1.55; margin-bottom: 1.8rem; }
+    .modal-box h2 { font-family: 'Fraunces', Georgia, serif; font-size: 2rem; font-weight: 300; line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 0.6rem; color: var(--cream); }
+    .modal-box p { font-family: 'Fraunces', Georgia, serif; font-size: 0.95rem; color: var(--cream-soft); font-weight: 400; line-height: 1.55; margin-bottom: 1.8rem; }
     .modal-field { margin-bottom: 1.1rem; }
-    .modal-field label { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.24em; text-transform: uppercase; color: var(--cream-faint); margin-bottom: 0.55rem; }
-    .modal-field input { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--rule-strong); color: var(--cream); font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; font-weight: 400; padding: 0.75rem 0; outline: none; transition: border-color 0.2s; }
+    .modal-field label { display: block; font-family: 'Manrope', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.24em; text-transform: uppercase; color: var(--cream-faint); margin-bottom: 0.55rem; }
+    .modal-field input { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--rule-strong); color: var(--cream); font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 400; padding: 0.75rem 0; outline: none; transition: border-color 0.2s; }
     .modal-field input:focus { border-bottom-color: var(--gold); }
     .modal-field input::placeholder { color: var(--cream-faint); }
-    .modal-error { font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; color: #f08080; background: rgba(224,85,85,0.08); border: 1px solid rgba(224,85,85,0.3); border-left: 3px solid #e05555; padding: 0.65rem 0.85rem; margin-bottom: 1rem; display: none; }
+    .modal-error { font-family: 'Manrope', sans-serif; font-size: 13px; color: #f08080; background: rgba(224,85,85,0.08); border: 1px solid rgba(224,85,85,0.3); border-left: 3px solid #e05555; padding: 0.65rem 0.85rem; margin-bottom: 1rem; display: none; }
     .modal-error.show { display: block; }
 
     /* ── SIDEBAR ── */
-    .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 244px; background: var(--navy-3); border-right: 1px solid var(--rule-strong); display: flex; flex-direction: column; padding: 1.8rem 0 1.5rem; z-index: 100; }
+    .sidebar { border-radius: 0; position: fixed; left: 0; top: 0; bottom: 0; width: 244px; background: var(--navy-3); border-right: 1px solid var(--rule-strong); display: flex; flex-direction: column; padding: 1.8rem 0 1.5rem; z-index: 100; }
     .sidebar-logo { display: flex; align-items: center; gap: 0.75rem; padding: 0 1.6rem 1.5rem; border-bottom: 1px solid var(--rule); margin-bottom: 1.4rem; text-decoration: none; }
-    .sidebar-logo-text span:first-child { display: block; font-family: 'IBM Plex Sans', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.08em; color: var(--cream); }
-    .sidebar-logo-text span:last-child { display: block; font-family: 'IBM Plex Mono', monospace; font-weight: 400; font-size: 9px; letter-spacing: 0.22em; color: var(--cream-soft); text-transform: uppercase; margin-top: 3px; }
+    .sidebar-logo-text span:first-child { display: block; font-family: 'Manrope', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.08em; color: var(--cream); }
+    .sidebar-logo-text span:last-child { display: block; font-family: 'Manrope', monospace; font-weight: 400; font-size: 9px; letter-spacing: 0.22em; color: var(--cream-soft); text-transform: uppercase; margin-top: 3px; }
     .sidebar-section { padding: 0 0.9rem; margin-bottom: 0.5rem; }
-    .sidebar-section-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold); padding: 0 0.8rem; margin-bottom: 0.7rem; display: flex; align-items: center; gap: 0.5rem; }
+    .sidebar-section-label { font-family: 'Manrope', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold); padding: 0 0.8rem; margin-bottom: 0.7rem; display: flex; align-items: center; gap: 0.5rem; }
     .sidebar-section-label::before { content: ''; display: block; width: 18px; height: 1px; background: var(--gold); }
-    .sidebar-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.85rem; font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; font-weight: 400; letter-spacing: 0.01em; color: var(--cream-soft); text-decoration: none; transition: background 0.15s, color 0.15s, border-color 0.15s; cursor: pointer; background: none; border: 1px solid transparent; width: 100%; text-align: left; }
-    .sidebar-link:hover { background: rgba(212,130,10,0.06); color: var(--cream); }
-    .sidebar-link.active { background: rgba(212,130,10,0.08); color: var(--cream); border-color: var(--rule-strong); }
+    .sidebar-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.85rem; font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 400; letter-spacing: 0.01em; color: var(--cream-soft); text-decoration: none; transition: background 0.15s, color 0.15s, border-color 0.15s; cursor: pointer; background: none; border: 1px solid transparent; width: 100%; text-align: left; }
+    .sidebar-link:hover { background: rgba(238,154,30,0.06); color: var(--cream); }
+    .sidebar-link.active { background: rgba(238,154,30,0.08); color: var(--cream); border-color: var(--rule-strong); }
     .sidebar-link svg { flex-shrink: 0; color: var(--cream-faint); }
     .sidebar-link.active svg, .sidebar-link:hover svg { color: var(--gold); }
     .sidebar-bottom { margin-top: auto; padding: 1.2rem 0.9rem 0; border-top: 1px solid var(--rule); }
     .sidebar-user { display: flex; align-items: center; gap: 0.7rem; padding: 0 0.85rem; margin-bottom: 0.6rem; }
-    .user-avatar { width: 34px; height: 34px; background: var(--gold); border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; font-family: 'Source Serif 4', serif; font-size: 13px; font-weight: 600; color: var(--navy); flex-shrink: 0; }
-    .user-name { font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--cream); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .user-email { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--cream-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+    .user-avatar { width: 34px; height: 34px; background: var(--gold); border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-size: 13px; font-weight: 600; color: var(--navy); flex-shrink: 0; }
+    .user-name { font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 500; color: var(--cream); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-email { font-family: 'Manrope', monospace; font-size: 10px; color: var(--cream-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 
     /* ── MAIN ── */
     .main { margin-left: 244px; min-height: 100vh; display: flex; flex-direction: column; background: var(--navy); }
-    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 1.4rem 2.5rem; border-bottom: 1px solid var(--rule); background: rgba(13,30,78,0.96); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 50; }
-    .topbar-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 1.6rem; font-weight: 400; letter-spacing: -0.01em; color: var(--cream); }
-    .topbar-date { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cream-faint); }
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 1.4rem 2.5rem; border-bottom: 1px solid var(--rule); background: rgba(0,32,96,0.96); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 50; }
+    .topbar-title { font-family: 'Fraunces', Georgia, serif; font-size: 1.6rem; font-weight: 400; letter-spacing: -0.01em; color: var(--cream); }
+    .topbar-date { font-family: 'Manrope', monospace; font-size: 10px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cream-faint); }
     .content { padding: 2.5rem; flex: 1; }
 
     /* ── VIEWS ── */
@@ -113,7 +116,7 @@
       margin-bottom: 3rem;
     }
     .inicio-kicker {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 11px;
       font-weight: 500;
       letter-spacing: 0.32em;
@@ -132,7 +135,7 @@
       background: var(--gold);
     }
     .inicio-greeting {
-      font-family: 'Source Serif 4', Georgia, serif;
+      font-family: 'Fraunces', Georgia, serif;
       font-size: clamp(2.8rem, 6.2vw, 5.2rem);
       font-weight: 300;
       line-height: 0.98;
@@ -147,7 +150,7 @@
       color: var(--gold-2);
     }
     .inicio-deck {
-      font-family: 'Source Serif 4', Georgia, serif;
+      font-family: 'Fraunces', Georgia, serif;
       font-size: 1.2rem;
       font-weight: 400;
       line-height: 1.55;
@@ -157,7 +160,7 @@
 
     .inicio-section { margin-bottom: 2.6rem; }
     .inicio-section-tag {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 10px;
       font-weight: 500;
       letter-spacing: 0.32em;
@@ -204,7 +207,7 @@
     .inicio-feature-card.is-empty::after { background: var(--rule-strong); }
     .inicio-feature-card.is-empty:hover { background: var(--navy-3); }
     .inicio-feature-chapter {
-      font-family: 'Source Serif 4', Georgia, serif;
+      font-family: 'Fraunces', Georgia, serif;
       font-style: italic;
       font-weight: 400;
       font-size: 1rem;
@@ -212,7 +215,7 @@
       margin-bottom: 0.9rem;
     }
     .inicio-feature-name {
-      font-family: 'Source Serif 4', Georgia, serif;
+      font-family: 'Fraunces', Georgia, serif;
       font-size: 2rem;
       font-weight: 400;
       line-height: 1.08;
@@ -222,7 +225,7 @@
       text-wrap: pretty;
     }
     .inicio-feature-meta {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Manrope', monospace;
       font-size: 10px;
       font-weight: 500;
       letter-spacing: 0.20em;
@@ -231,7 +234,7 @@
       margin-bottom: auto;
     }
     .inicio-feature-empty {
-      font-family: 'Source Serif 4', Georgia, serif;
+      font-family: 'Fraunces', Georgia, serif;
       font-size: 1.05rem;
       font-style: italic;
       color: var(--cream-faint);
@@ -243,7 +246,7 @@
       margin-top: 2rem;
       padding-top: 1.1rem;
       border-top: 1px solid var(--rule);
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Manrope', sans-serif;
       font-size: 12px;
       font-weight: 600;
       letter-spacing: 0.06em;
@@ -267,7 +270,7 @@
     .inicio-nav-link {
       background: transparent;
       padding: 1.6rem 1.8rem;
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Manrope', sans-serif;
       font-size: 14px;
       font-weight: 500;
       letter-spacing: 0.01em;
@@ -280,15 +283,15 @@
       transition: background 0.2s, color 0.2s, padding-left 0.2s;
       border: none;
       text-align: left;
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Manrope', sans-serif;
     }
     .inicio-nav-link:hover {
-      background: rgba(212,130,10,0.06);
+      background: rgba(238,154,30,0.06);
       color: var(--gold);
       padding-left: 2.1rem;
     }
     .inicio-nav-arrow {
-      font-family: 'Source Serif 4', serif;
+      font-family: 'Fraunces', serif;
       color: var(--gold);
       font-size: 1.2rem;
       font-weight: 400;
@@ -297,21 +300,21 @@
     /* ── WELCOME BANNER ── */
     .welcome-banner { background: var(--navy-2); border: 1px solid var(--rule-strong); padding: 2.2rem 2.5rem; margin-bottom: 2rem; position: relative; overflow: hidden; }
     .welcome-banner::before { content: ''; position: absolute; top: 0; left: 0; width: 60px; height: 4px; background: var(--gold); }
-    .welcome-banner::after { content: ''; position: absolute; right: -120px; top: -140px; width: 320px; height: 320px; border-radius: 50%; border: 1px solid rgba(212,130,10,0.07); pointer-events: none; }
-    .welcome-banner h2 { font-family: 'Source Serif 4', Georgia, serif; font-size: 2rem; font-weight: 300; line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 0.5rem; color: var(--cream); }
+    .welcome-banner::after { content: ''; position: absolute; right: -120px; top: -140px; width: 320px; height: 320px; border-radius: 50%; border: 1px solid rgba(238,154,30,0.07); pointer-events: none; }
+    .welcome-banner h2 { font-family: 'Fraunces', Georgia, serif; font-size: 2rem; font-weight: 300; line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 0.5rem; color: var(--cream); }
     .welcome-banner h2 em { font-style: italic; font-weight: 400; color: var(--gold-2); }
-    .welcome-banner p { font-family: 'Source Serif 4', Georgia, serif; font-size: 1rem; color: var(--cream-soft); font-weight: 400; line-height: 1.55; }
+    .welcome-banner p { font-family: 'Fraunces', Georgia, serif; font-size: 1rem; color: var(--cream-soft); font-weight: 400; line-height: 1.55; }
 
     /* ── STATS ── */
     .stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--rule); border: 1px solid var(--rule-strong); margin-bottom: 2rem; }
     .stat-card { background: var(--navy-2); padding: 1.6rem 1.8rem; position: relative; }
-    .stat-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.24em; text-transform: uppercase; color: var(--cream-faint); margin-bottom: 0.7rem; }
-    .stat-value { font-family: 'Source Serif 4', Georgia, serif; font-size: 2rem; font-weight: 400; line-height: 1; letter-spacing: -0.01em; color: var(--cream); }
+    .stat-label { font-family: 'Manrope', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.24em; text-transform: uppercase; color: var(--cream-faint); margin-bottom: 0.7rem; }
+    .stat-value { font-family: 'Fraunces', Georgia, serif; font-size: 2rem; font-weight: 400; line-height: 1; letter-spacing: -0.01em; color: var(--cream); }
     .stat-value.gold { color: var(--gold-2); font-style: italic; font-weight: 400; }
 
     /* ── SECTION HEADER ── */
     .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; gap: 1rem; flex-wrap: wrap; }
-    .section-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 1.5rem; font-weight: 400; letter-spacing: -0.01em; color: var(--cream); display: flex; align-items: center; gap: 0.7rem; }
+    .section-title { font-family: 'Fraunces', Georgia, serif; font-size: 1.5rem; font-weight: 400; letter-spacing: -0.01em; color: var(--cream); display: flex; align-items: center; gap: 0.7rem; }
     .section-title::before { content: ''; display: block; width: 4px; height: 22px; background: var(--gold); }
 
     /* ── REPORTS GRID ── */
@@ -321,47 +324,47 @@
     .report-card:hover { background: var(--navy-warm); }
     .report-card:hover::after { transform: scaleX(1); }
     .report-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.8rem; }
-    .report-icon { width: 44px; height: 44px; background: rgba(212,130,10,0.10); border: 1px solid var(--rule-strong); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--gold); }
-    .report-badge { font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.20em; text-transform: uppercase; padding: 0.3rem 0.65rem; background: transparent; border: 1px solid var(--gold); color: var(--gold); }
-    .report-name { font-family: 'Source Serif 4', Georgia, serif; font-size: 1.2rem; font-weight: 400; line-height: 1.25; letter-spacing: -0.005em; color: var(--cream); }
-    .report-meta { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 400; letter-spacing: 0.10em; color: var(--cream-faint); display: flex; align-items: center; gap: 0.4rem; }
-    .report-download { display: flex; align-items: center; gap: 0.55rem; font-family: 'IBM Plex Sans', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; color: var(--gold); text-decoration: none; transition: color 0.2s; padding-top: 0.9rem; border-top: 1px solid var(--rule); margin-top: auto; }
+    .report-icon { width: 44px; height: 44px; background: rgba(238,154,30,0.10); border: 1px solid var(--rule-strong); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--gold); }
+    .report-badge { font-family: 'Manrope', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.20em; text-transform: uppercase; padding: 0.3rem 0.65rem; background: transparent; border: 1px solid var(--gold); color: var(--gold); }
+    .report-name { font-family: 'Fraunces', Georgia, serif; font-size: 1.2rem; font-weight: 400; line-height: 1.25; letter-spacing: -0.005em; color: var(--cream); }
+    .report-meta { font-family: 'Manrope', monospace; font-size: 10px; font-weight: 400; letter-spacing: 0.10em; color: var(--cream-faint); display: flex; align-items: center; gap: 0.4rem; }
+    .report-download { display: flex; align-items: center; gap: 0.55rem; font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; color: var(--gold); text-decoration: none; transition: color 0.2s; padding-top: 0.9rem; border-top: 1px solid var(--rule); margin-top: auto; }
     .report-download:hover { color: var(--gold-2); }
     .empty-state { grid-column: 1/-1; background: var(--navy-2); padding: 4rem 2rem; text-align: center; color: var(--cream-faint); }
     .empty-state svg { color: var(--cream-faint); margin-bottom: 0.6rem; }
-    .empty-state p { font-family: 'Source Serif 4', Georgia, serif; font-size: 1rem; color: var(--cream-soft); font-weight: 400; line-height: 1.6; margin-top: 1rem; max-width: 460px; margin-left: auto; margin-right: auto; }
-    .loading-state { display: flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 3rem; color: var(--cream-faint); font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; grid-column: 1/-1; }
+    .empty-state p { font-family: 'Fraunces', Georgia, serif; font-size: 1rem; color: var(--cream-soft); font-weight: 400; line-height: 1.6; margin-top: 1rem; max-width: 460px; margin-left: auto; margin-right: auto; }
+    .loading-state { display: flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 3rem; color: var(--cream-faint); font-family: 'Manrope', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; grid-column: 1/-1; }
 
     /* ── FILTER ── */
     .filter-bar { display: flex; gap: 0.5rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
-    .filter-btn { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; padding: 0.5rem 0.95rem; background: transparent; border: 1px solid var(--rule-strong); color: var(--cream-soft); cursor: pointer; transition: all 0.2s; }
+    .filter-btn { font-family: 'Manrope', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; padding: 0.5rem 0.95rem; background: transparent; border: 1px solid var(--rule-strong); color: var(--cream-soft); cursor: pointer; transition: all 0.2s; }
     .filter-btn:hover { border-color: var(--cream-soft); color: var(--cream); }
     .filter-btn.active { background: var(--gold); border-color: var(--gold); color: var(--navy); font-weight: 600; }
 
     /* ── UPLOAD PANEL ── */
     .upload-panel { background: var(--navy-2); border: 1px solid var(--rule-strong); padding: 2rem 2rem 2rem; margin-bottom: 2rem; position: relative; }
     .upload-panel::before { content: ''; position: absolute; top: 0; left: 0; width: 60px; height: 4px; background: var(--gold); }
-    .upload-panel h3 { font-family: 'Source Serif 4', Georgia, serif; font-size: 1.35rem; font-weight: 400; letter-spacing: -0.005em; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.6rem; color: var(--cream); }
+    .upload-panel h3 { font-family: 'Fraunces', Georgia, serif; font-size: 1.35rem; font-weight: 400; letter-spacing: -0.005em; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.6rem; color: var(--cream); }
     .upload-panel h3 svg { color: var(--gold); }
-    .upload-panel > p { font-family: 'Source Serif 4', Georgia, serif; font-size: 0.95rem; color: var(--cream-soft); line-height: 1.65; }
+    .upload-panel > p { font-family: 'Fraunces', Georgia, serif; font-size: 0.95rem; color: var(--cream-soft); line-height: 1.65; }
     .upload-form { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.1rem; }
-    .upload-field label { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--cream-faint); margin-bottom: 0.5rem; }
-    .upload-field input, .upload-field select, .upload-field textarea { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--rule-strong); color: var(--cream); font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; font-weight: 400; padding: 0.7rem 0; outline: none; transition: border-color 0.2s; }
+    .upload-field label { display: block; font-family: 'Manrope', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--cream-faint); margin-bottom: 0.5rem; }
+    .upload-field input, .upload-field select, .upload-field textarea { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--rule-strong); color: var(--cream); font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 400; padding: 0.7rem 0; outline: none; transition: border-color 0.2s; }
     .upload-field textarea { resize: vertical; line-height: 1.6; padding: 0.7rem 0; }
     .upload-field input:focus, .upload-field select:focus, .upload-field textarea:focus { border-bottom-color: var(--gold); }
     .upload-field select { background: var(--navy-2); }
     .upload-field select option { background: var(--navy); color: var(--cream); }
     .upload-field input::placeholder, .upload-field textarea::placeholder { color: var(--cream-faint); }
     .drop-zone { border: 1px dashed var(--rule-strong); padding: 1.8rem; text-align: center; cursor: pointer; transition: background 0.2s, border-color 0.2s; margin-top: 1.2rem; position: relative; }
-    .drop-zone:hover { background: rgba(212,130,10,0.06); border-color: var(--gold); }
+    .drop-zone:hover { background: rgba(238,154,30,0.06); border-color: var(--gold); }
     .drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-    .drop-zone-label { font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; color: var(--cream-soft); pointer-events: none; font-weight: 400; }
+    .drop-zone-label { font-family: 'Manrope', sans-serif; font-size: 13px; color: var(--cream-soft); pointer-events: none; font-weight: 400; }
     .drop-zone-label span { color: var(--gold); font-weight: 600; }
-    .selected-file { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--gold-2); margin-top: 0.6rem; font-weight: 400; letter-spacing: 0.04em; }
-    .btn-upload { background: var(--gold); color: var(--navy); font-family: 'IBM Plex Sans', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; padding: 0.85rem 1.6rem; border: 1px solid var(--gold); cursor: pointer; transition: background 0.2s, border-color 0.2s; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.55rem; }
+    .selected-file { font-family: 'Manrope', monospace; font-size: 11px; color: var(--gold-2); margin-top: 0.6rem; font-weight: 400; letter-spacing: 0.04em; }
+    .btn-upload { background: var(--gold); color: var(--navy); font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; padding: 0.85rem 1.6rem; border: 1px solid var(--gold); cursor: pointer; transition: background 0.2s, border-color 0.2s; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.55rem; }
     .btn-upload:hover { background: var(--gold-2); border-color: var(--gold-2); }
     .btn-upload:disabled { opacity: 0.45; cursor: not-allowed; }
-    .upload-feedback { font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; padding: 0.7rem 0.9rem; margin-top: 0.9rem; display: none; line-height: 1.5; }
+    .upload-feedback { font-family: 'Manrope', sans-serif; font-size: 13px; padding: 0.7rem 0.9rem; margin-top: 0.9rem; display: none; line-height: 1.5; }
     .upload-feedback.success { background: rgba(85,160,85,0.08); border: 1px solid rgba(85,160,85,0.3); border-left: 3px solid #80c080; color: #80c080; display: block; }
     .upload-feedback.error { background: rgba(224,85,85,0.08); border: 1px solid rgba(224,85,85,0.3); border-left: 3px solid #e05555; color: #f08080; display: block; }
     .upload-progress { height: 2px; background: var(--rule); margin-top: 0.9rem; display: none; }
@@ -369,7 +372,7 @@
 
     /* ── EMAIL TABS ── */
     .email-tabs { display: flex; border-bottom: 1px solid var(--rule); margin-bottom: 2rem; }
-    .email-tab { display: flex; align-items: center; gap: 0.55rem; padding: 0.9rem 1.6rem; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--cream-soft); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: color 0.2s, border-color 0.2s; margin-bottom: -1px; }
+    .email-tab { display: flex; align-items: center; gap: 0.55rem; padding: 0.9rem 1.6rem; font-family: 'Manrope', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--cream-soft); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: color 0.2s, border-color 0.2s; margin-bottom: -1px; }
     .email-tab:hover { color: var(--cream); }
     .email-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
     .email-tab-content { display: none; }
@@ -377,80 +380,80 @@
 
     /* ── CLIENTS TABLE ── */
     #clientsTable { width: 100%; border-collapse: collapse; }
-    #clientsTable th { text-align: left; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); padding: 0.7rem 0.8rem; border-bottom: 1px solid var(--rule-strong); }
+    #clientsTable th { text-align: left; font-family: 'Manrope', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); padding: 0.7rem 0.8rem; border-bottom: 1px solid var(--rule-strong); }
     #clientsTable td { padding: 0.45rem 0.5rem; vertical-align: middle; border-bottom: 1px solid var(--rule); }
-    #clientsTable input { width: 100%; background: transparent; border: 1px solid var(--rule); color: var(--cream); font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; padding: 0.55rem 0.7rem; outline: none; transition: border-color 0.2s; }
+    #clientsTable input { width: 100%; background: transparent; border: 1px solid var(--rule); color: var(--cream); font-family: 'Manrope', sans-serif; font-size: 13px; padding: 0.55rem 0.7rem; outline: none; transition: border-color 0.2s; }
     #clientsTable input:focus { border-color: var(--gold); }
-    .badge-acima { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; padding: 0.25rem 0.55rem; background: rgba(76,175,130,0.10); color: #6cc596; border: 1px solid rgba(76,175,130,0.35); }
-    .badge-abaixo { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; padding: 0.25rem 0.55rem; background: rgba(224,85,85,0.10); color: #f08080; border: 1px solid rgba(224,85,85,0.35); }
-    .paste-zone { border: 1px dashed var(--rule-strong); padding: 1.3rem 1.5rem; margin-bottom: 1rem; cursor: pointer; transition: background 0.2s, border-color 0.2s; text-align: center; outline: none; font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; color: var(--cream-soft); }
-    .paste-zone:focus, .paste-zone:hover { background: rgba(212,130,10,0.06); border-color: var(--gold); }
+    .badge-acima { font-family: 'Manrope', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; padding: 0.25rem 0.55rem; background: rgba(76,175,130,0.10); color: #6cc596; border: 1px solid rgba(76,175,130,0.35); }
+    .badge-abaixo { font-family: 'Manrope', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; padding: 0.25rem 0.55rem; background: rgba(224,85,85,0.10); color: #f08080; border: 1px solid rgba(224,85,85,0.35); }
+    .paste-zone { border: 1px dashed var(--rule-strong); padding: 1.3rem 1.5rem; margin-bottom: 1rem; cursor: pointer; transition: background 0.2s, border-color 0.2s; text-align: center; outline: none; font-family: 'Manrope', sans-serif; font-size: 13px; color: var(--cream-soft); }
+    .paste-zone:focus, .paste-zone:hover { background: rgba(238,154,30,0.06); border-color: var(--gold); }
     .preview-card { background: var(--navy-2); border: 1px solid var(--rule-strong); padding: 1.6rem; margin-bottom: 1rem; position: relative; }
     .preview-card::before { content: ''; position: absolute; top: 0; left: 0; width: 40px; height: 3px; background: var(--gold); }
     .preview-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 0.85rem; border-bottom: 1px solid var(--rule); }
-    .preview-meta { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--cream-soft); line-height: 1.7; letter-spacing: 0.04em; }
+    .preview-meta { font-family: 'Manrope', monospace; font-size: 11px; color: var(--cream-soft); line-height: 1.7; letter-spacing: 0.04em; }
     .preview-meta strong { color: var(--cream); font-weight: 500; }
-    .preview-body { font-family: 'Source Serif 4', Georgia, serif; font-size: 0.95rem; color: var(--cream); line-height: 1.75; white-space: pre-wrap; font-weight: 400; }
+    .preview-body { font-family: 'Fraunces', Georgia, serif; font-size: 0.95rem; color: var(--cream); line-height: 1.75; white-space: pre-wrap; font-weight: 400; }
 
     /* ── MOBILE NAV ── */
-    .mobile-nav { display: none; position: fixed; top: 0; left: 0; right: 0; background: rgba(13,30,78,0.96); backdrop-filter: blur(14px); border-bottom: 1px solid var(--rule); z-index: 200; padding: 0.85rem 1.2rem; align-items: center; justify-content: space-between; }
+    .mobile-nav { display: none; position: fixed; top: 0; left: 0; right: 0; background: rgba(0,32,96,0.96); backdrop-filter: blur(14px); border-bottom: 1px solid var(--rule); z-index: 200; padding: 0.85rem 1.2rem; align-items: center; justify-content: space-between; }
     .mobile-nav-logo { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
-    .mobile-nav-logo span { font-family: 'IBM Plex Sans', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.08em; color: var(--cream); }
+    .mobile-nav-logo span { font-family: 'Manrope', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.08em; color: var(--cream); }
     .hamburger { background: none; border: none; cursor: pointer; padding: 0.3rem; display: flex; flex-direction: column; gap: 5px; }
     .hamburger span { display: block; width: 22px; height: 2px; background: var(--cream); transition: all 0.25s; }
     .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
     .hamburger.open span:nth-child(2) { opacity: 0; }
     .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-    .mobile-drawer { display: none; position: fixed; inset: 0; top: 54px; background: rgba(9,20,56,0.98); backdrop-filter: blur(20px); z-index: 190; padding: 1.5rem 1.2rem; flex-direction: column; gap: 0.2rem; overflow-y: auto; }
+    .mobile-drawer { display: none; position: fixed; inset: 0; top: 54px; background: rgba(0,24,72,0.98); backdrop-filter: blur(20px); z-index: 190; padding: 1.5rem 1.2rem; flex-direction: column; gap: 0.2rem; overflow-y: auto; }
     .mobile-drawer.open { display: flex; }
-    .mobile-drawer-section { font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold); padding: 0.9rem 0.8rem 0.5rem; }
-    .mobile-drawer-link { display: flex; align-items: center; gap: 0.85rem; padding: 0.95rem 0.85rem; font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; font-weight: 400; color: var(--cream); background: none; border: none; width: 100%; text-align: left; cursor: pointer; transition: background 0.15s, color 0.15s; }
-    .mobile-drawer-link:hover, .mobile-drawer-link.active { background: rgba(212,130,10,0.08); color: var(--cream); }
+    .mobile-drawer-section { font-family: 'Manrope', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold); padding: 0.9rem 0.8rem 0.5rem; }
+    .mobile-drawer-link { display: flex; align-items: center; gap: 0.85rem; padding: 0.95rem 0.85rem; font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 400; color: var(--cream); background: none; border: none; width: 100%; text-align: left; cursor: pointer; transition: background 0.15s, color 0.15s; }
+    .mobile-drawer-link:hover, .mobile-drawer-link.active { background: rgba(238,154,30,0.08); color: var(--cream); }
     .mobile-drawer-link svg { color: var(--gold); flex-shrink: 0; }
     .mobile-drawer-divider { height: 1px; background: var(--rule); margin: 0.8rem 0; }
 
     /* ── EXTRATOS ── */
     .broker-selector { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--rule); border:1px solid var(--rule-strong); margin-bottom:2rem; }
-    .broker-btn { padding:1.4rem 1.6rem; background:var(--navy-2); cursor:pointer; transition:background 0.2s, border-color 0.2s; font-family:'IBM Plex Sans',sans-serif; border:none; text-align:left; position: relative; }
+    .broker-btn { padding:1.4rem 1.6rem; background:var(--navy-2); cursor:pointer; transition:background 0.2s, border-color 0.2s; font-family:'Manrope',sans-serif; border:none; text-align:left; position: relative; }
     .broker-btn:hover { background:var(--navy-warm); }
     .broker-btn.active { background:var(--navy-warm); }
     .broker-btn.active::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--gold); }
-    .broker-btn-name { font-family: 'Source Serif 4', Georgia, serif; font-size:1.1rem; font-weight:400; color:var(--cream); display:block; margin-bottom:0.25rem; letter-spacing: -0.005em; }
+    .broker-btn-name { font-family: 'Fraunces', Georgia, serif; font-size:1.1rem; font-weight:400; color:var(--cream); display:block; margin-bottom:0.25rem; letter-spacing: -0.005em; }
     .broker-btn.active .broker-btn-name { color:var(--gold-2); }
-    .broker-btn-sub { font-family: 'IBM Plex Mono', monospace; font-size:10px; font-weight:500; letter-spacing:0.18em; text-transform:uppercase; color:var(--cream-faint); }
+    .broker-btn-sub { font-family: 'Manrope', monospace; font-size:10px; font-weight:500; letter-spacing:0.18em; text-transform:uppercase; color:var(--cream-faint); }
 
-    .extrato-upload-zone { border:1px dashed var(--rule-strong); padding:2rem; text-align:center; cursor:pointer; transition:background 0.2s, border-color 0.2s; position:relative; font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; color: var(--cream-soft); }
-    .extrato-upload-zone:hover, .extrato-upload-zone.drag-over { background:rgba(212,130,10,0.06); border-color:var(--gold); }
+    .extrato-upload-zone { border:1px dashed var(--rule-strong); padding:2rem; text-align:center; cursor:pointer; transition:background 0.2s, border-color 0.2s; position:relative; font-family: 'Manrope', sans-serif; font-size: 13px; color: var(--cream-soft); }
+    .extrato-upload-zone:hover, .extrato-upload-zone.drag-over { background:rgba(238,154,30,0.06); border-color:var(--gold); }
     .extrato-upload-zone input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
 
     .file-list-ext { display:flex; flex-direction:column; gap:0.5rem; margin-top:0.9rem; }
     .file-item-ext { display:flex; align-items:center; gap:0.85rem; background:rgba(76,175,130,0.05); border:1px solid rgba(76,175,130,0.28); padding:0.65rem 1rem; }
-    .file-item-ext-name { font-family: 'IBM Plex Sans', sans-serif; font-size:13px; color:var(--cream); flex:1; }
-    .file-item-ext-status { font-family: 'IBM Plex Mono', monospace; font-size:10px; font-weight:500; letter-spacing: 0.10em; text-transform: uppercase; }
+    .file-item-ext-name { font-family: 'Manrope', sans-serif; font-size:13px; color:var(--cream); flex:1; }
+    .file-item-ext-status { font-family: 'Manrope', monospace; font-size:10px; font-weight:500; letter-spacing: 0.10em; text-transform: uppercase; }
     .file-status-ok { color:#6cc596; }
     .file-status-err { color:#f08080; }
     .file-status-wait { color:var(--cream-faint); }
 
     .mapping-toolbar-ext { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.9rem; flex-wrap:wrap; gap:0.5rem; }
-    .save-indicator-ext { font-family: 'IBM Plex Mono', monospace; font-size:10px; letter-spacing: 0.14em; text-transform: uppercase; color:var(--cream-faint); display:flex; align-items:center; gap:0.5rem; }
+    .save-indicator-ext { font-family: 'Manrope', monospace; font-size:10px; letter-spacing: 0.14em; text-transform: uppercase; color:var(--cream-faint); display:flex; align-items:center; gap:0.5rem; }
     .save-dot { width:8px; height:8px; border-radius:50%; background:var(--rule-strong); flex-shrink:0; transition:background 0.3s; }
     .save-dot.saved { background:#6cc596; }
     .save-dot.unsaved { background:var(--gold); }
 
     .mapping-table-ext { width:100%; border-collapse:collapse; font-size:13px; }
-    .mapping-table-ext th { text-align:left; font-family: 'IBM Plex Mono', monospace; font-size:10px; font-weight:500; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold); padding:0.6rem 0.8rem; border-bottom:1px solid var(--rule-strong); background:var(--navy-3); }
+    .mapping-table-ext th { text-align:left; font-family: 'Manrope', monospace; font-size:10px; font-weight:500; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold); padding:0.6rem 0.8rem; border-bottom:1px solid var(--rule-strong); background:var(--navy-3); }
     .mapping-table-ext td { padding:0.4rem 0.5rem; border-bottom:1px solid var(--rule); vertical-align:middle; }
-    .mapping-table-ext input { width:100%; background:transparent; border:1px solid transparent; color:var(--cream); font-family:'IBM Plex Sans',sans-serif; font-size:13px; padding:0.4rem 0.55rem; outline:none; transition:border-color 0.2s, background 0.2s; }
-    .mapping-table-ext input:focus { border-color:var(--gold); background:rgba(212,130,10,0.04); }
+    .mapping-table-ext input { width:100%; background:transparent; border:1px solid transparent; color:var(--cream); font-family:'Manrope',sans-serif; font-size:13px; padding:0.4rem 0.55rem; outline:none; transition:border-color 0.2s, background 0.2s; }
+    .mapping-table-ext input:focus { border-color:var(--gold); background:rgba(238,154,30,0.04); }
     .mapping-table-ext input::placeholder { color:var(--cream-faint); }
 
     .ext-progress-wrap { display:none; margin-top:0.9rem; }
     .ext-progress-wrap.visible { display:block; }
     .ext-progress-bar { height:3px; background:var(--rule); }
     .ext-progress-fill { height:100%; background:var(--gold); width:0%; transition:width 0.3s; }
-    .ext-progress-label { font-family: 'IBM Plex Mono', monospace; font-size:10px; letter-spacing: 0.14em; color:var(--cream-faint); margin-top:0.45rem; }
+    .ext-progress-label { font-family: 'Manrope', monospace; font-size:10px; letter-spacing: 0.14em; color:var(--cream-faint); margin-top:0.45rem; }
 
-    .ext-status-box { display:none; background:var(--navy-3); border:1px solid var(--rule); padding:1rem 1.2rem; margin-top:1rem; font-family: 'IBM Plex Mono', monospace; font-size:11px; line-height:1.9; color:var(--cream-soft); max-height:200px; overflow-y:auto; }
+    .ext-status-box { display:none; background:var(--navy-3); border:1px solid var(--rule); padding:1rem 1.2rem; margin-top:1rem; font-family: 'Manrope', monospace; font-size:11px; line-height:1.9; color:var(--cream-soft); max-height:200px; overflow-y:auto; }
     .ext-status-box.visible { display:block; }
     .ext-log-ok { color:#6cc596; }
     .ext-log-warn { color:var(--gold-2); }
@@ -460,48 +463,54 @@
     .ext-preview-section { display:none; margin-top:2rem; }
     .ext-preview-section.visible { display:block; }
     .ext-chips { display:flex; gap:0.8rem; flex-wrap:wrap; margin:1rem 0; }
-    .ext-chip { background:transparent; border:1px solid var(--rule-strong); border-radius:0; padding:0.4rem 0.95rem; font-family: 'IBM Plex Mono', monospace; font-size:10px; letter-spacing: 0.10em; text-transform: uppercase; color:var(--cream-soft); }
+    .ext-chip { background:transparent; border:1px solid var(--rule-strong); border-radius:0; padding:0.4rem 0.95rem; font-family: 'Manrope', monospace; font-size:10px; letter-spacing: 0.10em; text-transform: uppercase; color:var(--cream-soft); }
     .ext-chip span { color:var(--gold); font-weight:600; margin-left:0.4rem; }
     .ext-preview-wrap { overflow-x:auto; border:1px solid var(--rule-strong); max-height:380px; overflow-y:auto; }
     .ext-preview-table { width:100%; border-collapse:collapse; font-size:12px; }
-    .ext-preview-table th { background:var(--navy-3); color:var(--gold); font-family: 'IBM Plex Mono', monospace; font-size:10px; font-weight: 500; letter-spacing:0.14em; text-transform:uppercase; padding:0.7rem 0.95rem; text-align:left; white-space:nowrap; position:sticky; top:0; }
-    .ext-preview-table td { padding:0.55rem 0.95rem; border-bottom:1px solid var(--rule); white-space:nowrap; font-family: 'IBM Plex Sans', sans-serif; color: var(--cream); }
-    .ext-preview-table tr:nth-child(even) td { background:rgba(243,237,225,0.02); }
+    .ext-preview-table th { background:var(--navy-3); color:var(--gold); font-family: 'Manrope', monospace; font-size:10px; font-weight: 500; letter-spacing:0.14em; text-transform:uppercase; padding:0.7rem 0.95rem; text-align:left; white-space:nowrap; position:sticky; top:0; }
+    .ext-preview-table td { padding:0.55rem 0.95rem; border-bottom:1px solid var(--rule); white-space:nowrap; font-family: 'Manrope', sans-serif; color: var(--cream); }
+    .ext-preview-table tr:nth-child(even) td { background:rgba(247,245,239,0.02); }
     .td-neg { color:#f08080; } .td-pos { color:#6cc596; }
     .td-cnpj { color:var(--gold); font-weight:500; }
     .td-na { color:var(--cream-faint); }
     .td-sheet { color:#6a9fd8; font-weight:500; }
-    .eqi-notice-dash { background:var(--navy-2); border:1px solid var(--rule-strong); border-left: 3px solid #6a9fd8; padding:0.95rem 1.3rem; font-family: 'IBM Plex Sans', sans-serif; font-size:13px; color:var(--cream-soft); line-height:1.6; display:none; margin-bottom:1rem; }
+    .eqi-notice-dash { background:var(--navy-2); border:1px solid var(--rule-strong); border-left: 3px solid #6a9fd8; padding:0.95rem 1.3rem; font-family: 'Manrope', sans-serif; font-size:13px; color:var(--cream-soft); line-height:1.6; display:none; margin-bottom:1rem; }
     .eqi-notice-dash.visible { display:block; }
-    .btn-process-ext { width:100%; padding:1.05rem 2rem; background:var(--gold); color:var(--navy); border:1px solid var(--gold); font-family:'IBM Plex Sans',sans-serif; font-size:13px; font-weight:600; letter-spacing:0.06em; cursor:pointer; margin-top:1.5rem; transition:background 0.2s, border-color 0.2s; display:flex; align-items:center; justify-content:center; gap:0.6rem; }
+    .btn-process-ext { width:100%; padding:1.05rem 2rem; background:var(--gold); color:var(--navy); border:1px solid var(--gold); font-family:'Manrope',sans-serif; font-size:13px; font-weight:600; letter-spacing:0.06em; cursor:pointer; margin-top:1.5rem; transition:background 0.2s, border-color 0.2s; display:flex; align-items:center; justify-content:center; gap:0.6rem; }
     .btn-process-ext:hover:not(:disabled) { background:var(--gold-2); border-color: var(--gold-2); }
     .btn-process-ext:disabled { opacity:0.45; cursor:not-allowed; }
-    .btn-download-ext { margin-top:1rem; padding:0.85rem 1.8rem; background:transparent; color:var(--gold); border:1px solid var(--gold); font-family:'IBM Plex Sans',sans-serif; font-size:12px; font-weight:600; letter-spacing:0.06em; cursor:pointer; display:inline-flex; align-items:center; gap:0.6rem; transition:background 0.2s, color 0.2s; }
+    .btn-download-ext { margin-top:1rem; padding:0.85rem 1.8rem; background:transparent; color:var(--gold); border:1px solid var(--gold); font-family:'Manrope',sans-serif; font-size:12px; font-weight:600; letter-spacing:0.06em; cursor:pointer; display:inline-flex; align-items:center; gap:0.6rem; transition:background 0.2s, color 0.2s; }
     .btn-download-ext:hover { background:var(--gold); color: var(--navy); }
 
     /* ── ONBOARDING BANNER ── */
     .ob-banner { background: var(--navy-2); border: 1px solid var(--rule-strong); border-left: 3px solid var(--gold); padding: 1.3rem 1.6rem; margin-bottom: 1.5rem; display: none; position: relative; }
     .ob-banner.visible { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-    .ob-banner-text { font-family: 'Source Serif 4', Georgia, serif; font-size: 0.95rem; color: var(--cream-soft); font-weight: 400; line-height: 1.55; }
-    .ob-banner-text strong { font-family: 'Source Serif 4', Georgia, serif; color: var(--cream); display: block; margin-bottom: 0.35rem; font-size: 1.05rem; font-weight: 500; }
-    .ob-banner-steps { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.65rem; }
-    .ob-step-chip { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; padding: 0.3rem 0.65rem; border-radius: 0; }
+    .ob-banner-text { font-family: 'Fraunces', Georgia, serif; font-size: 0.95rem; color: var(--cream-soft); font-weight: 400; line-height: 1.55; }
+    .ob-banner-text strong { font-family: 'Fraunces', Georgia, serif; color: var(--cream); display: block; margin-bottom: 0.35rem; font-size: 1.05rem; font-weight: 500; }
+    .ob-banner-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0.75rem; margin-top: 1rem; }
+    .ob-step { border: 1px solid var(--rule-strong); padding: 0.8rem 0.95rem; }
+    .ob-step.done { border-color: rgba(76,175,130,0.4); }
+    .ob-step-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.3rem; }
+    .ob-step-name { font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 600; color: var(--cream); }
+    .ob-step-desc { font-family: 'Manrope', sans-serif; font-size: 12px; color: var(--cream-faint); line-height: 1.45; }
+    .ob-banner-main { flex: 1 1 520px; }
+    .ob-step-chip { font-family: 'Manrope', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; padding: 0.3rem 0.65rem; border-radius: 0; }
     .ob-step-chip.done { background: transparent; color: #6cc596; border: 1px solid rgba(76,175,130,0.4); }
     .ob-step-chip.pending { background: transparent; color: var(--cream-faint); border: 1px solid var(--rule-strong); }
-    .ob-banner-btn { font-family: 'IBM Plex Sans', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; padding: 0.75rem 1.3rem; background: var(--gold); color: var(--navy); border: 1px solid var(--gold); cursor: pointer; white-space: nowrap; transition: background 0.2s, border-color 0.2s; }
+    .ob-banner-btn { font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; padding: 0.75rem 1.3rem; background: var(--gold); color: var(--navy); border: 1px solid var(--gold); cursor: pointer; white-space: nowrap; transition: background 0.2s, border-color 0.2s; }
     .ob-banner-btn:hover { background: var(--gold-2); border-color: var(--gold-2); }
 
     /* ── CUSTOM TEMPLATE DROPDOWN ── */
     .tpl-dd { position:relative; width:100%; }
-    .tpl-dd-btn { width:100%; background:transparent; border:1px solid var(--rule); color:var(--cream); font-family:'IBM Plex Sans',sans-serif; font-size:12px; padding:0.5rem 2rem 0.5rem 0.6rem; cursor:pointer; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; position:relative; outline:none; transition:border-color 0.2s; }
+    .tpl-dd-btn { width:100%; background:transparent; border:1px solid var(--rule); color:var(--cream); font-family:'Manrope',sans-serif; font-size:12px; padding:0.5rem 2rem 0.5rem 0.6rem; cursor:pointer; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; position:relative; outline:none; transition:border-color 0.2s; }
     .tpl-dd-btn:hover, .tpl-dd-btn.open { border-color:var(--gold); }
     .tpl-dd-btn::after { content:'▾'; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); color:var(--cream-faint); font-size:0.7rem; transition:transform 0.2s; }
     .tpl-dd-btn.open::after { transform:translateY(-50%) rotate(180deg); }
     .tpl-dd-list { position:fixed; z-index:9999; background:var(--navy-2); border:1px solid var(--rule-strong); box-shadow:0 8px 32px rgba(0,0,0,0.6); display:none; flex-direction:column; max-height:280px; overflow-y:auto; min-width:240px; }
     .tpl-dd-list.open { display:flex; }
-    .tpl-dd-item { padding:0.6rem 0.85rem; font-family:'IBM Plex Sans',sans-serif; font-size:12px; color:var(--cream-soft); cursor:pointer; display:flex; align-items:center; gap:0.6rem; transition:background 0.15s; white-space:nowrap; }
-    .tpl-dd-item:hover { background:rgba(212,130,10,0.10); color:var(--cream); }
-    .tpl-dd-item.selected { color:var(--gold); background:rgba(212,130,10,0.06); }
+    .tpl-dd-item { padding:0.6rem 0.85rem; font-family:'Manrope',sans-serif; font-size:12px; color:var(--cream-soft); cursor:pointer; display:flex; align-items:center; gap:0.6rem; transition:background 0.15s; white-space:nowrap; }
+    .tpl-dd-item:hover { background:rgba(238,154,30,0.10); color:var(--cream); }
+    .tpl-dd-item.selected { color:var(--gold); background:rgba(238,154,30,0.06); }
     .tpl-dd-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
     .tpl-dd-sep { height:1px; background:var(--rule); margin:2px 0; }
 
@@ -548,24 +557,25 @@
     /* ── PERFIL ── */
     .perfil-card { background: var(--navy-2); border: 1px solid var(--rule-strong); padding: 2rem 2.2rem 2.2rem; margin-bottom: 1.4rem; position: relative; }
     .perfil-card::before { content: ''; position: absolute; top: 0; left: 0; width: 48px; height: 3px; background: var(--gold); }
-    .perfil-card-title { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.4rem; display: flex; align-items: center; gap: 0.6rem; }
+    .perfil-card-title { font-family: 'Manrope', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.4rem; display: flex; align-items: center; gap: 0.6rem; }
     .perfil-card-title::before { content: ''; display: block; width: 18px; height: 1px; background: var(--gold); }
     .perfil-field { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.2rem; }
-    .perfil-field label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--cream-soft); }
-    .perfil-field input { background: rgba(13,30,78,0.55); border: 1px solid var(--rule-strong); color: var(--cream); font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; padding: 0.75rem 0.9rem; outline: none; transition: border-color 0.2s, background 0.2s; width: 100%; max-width: 420px; }
-    .perfil-field input:focus { border-color: var(--gold); background: rgba(212,130,10,0.06); }
+    .perfil-field label { font-family: 'Manrope', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--cream-soft); }
+    .perfil-field input { background: rgba(0,32,96,0.55); border: 1px solid var(--rule-strong); color: var(--cream); font-family: 'Manrope', sans-serif; font-size: 14px; padding: 0.75rem 0.9rem; outline: none; transition: border-color 0.2s, background 0.2s; width: 100%; max-width: 420px; }
+    .perfil-field input:focus { border-color: var(--gold); background: rgba(238,154,30,0.06); }
     .perfil-field input::placeholder { color: var(--cream-faint); }
-    .perfil-field input[readonly] { background: rgba(13,30,78,0.3); border-color: var(--rule); color: var(--cream-soft); cursor: not-allowed; }
+    .perfil-field input[readonly] { background: rgba(0,32,96,0.3); border-color: var(--rule); color: var(--cream-soft); cursor: not-allowed; }
     .perfil-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-width: 420px; }
     .perfil-row .perfil-field { margin-bottom: 0; }
     .perfil-row .perfil-field input { max-width: 100%; }
-    .perfil-save-btn { display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 1.5rem; background: var(--gold); color: var(--navy); font-family: 'IBM Plex Sans', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; padding: 0.8rem 1.6rem; border: 1px solid var(--gold); cursor: pointer; transition: background 0.2s, opacity 0.2s; }
+    .perfil-save-btn { display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 1.5rem; background: var(--gold); color: var(--navy); font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; padding: 0.8rem 1.6rem; border: 1px solid var(--gold); cursor: pointer; transition: background 0.2s, opacity 0.2s; }
     .perfil-save-btn:hover { background: var(--gold-2); border-color: var(--gold-2); }
     .perfil-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .perfil-fb { font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; padding: 0.65rem 0.9rem; margin-top: 0.9rem; display: none; max-width: 420px; }
+    .perfil-fb { font-family: 'Manrope', sans-serif; font-size: 13px; padding: 0.65rem 0.9rem; margin-top: 0.9rem; display: none; max-width: 420px; }
     .perfil-fb.success { background: rgba(85,160,85,0.08); border: 1px solid rgba(85,160,85,0.3); border-left: 3px solid #80c080; color: #80c080; display: block; }
     .perfil-fb.error   { background: rgba(224,85,85,0.08);  border: 1px solid rgba(224,85,85,0.3);  border-left: 3px solid #e05555; color: #f08080; display: block; }
   </style>
+  <link rel="stylesheet" href="eh-tema.css" />
 </head>
 <body>
 
@@ -642,6 +652,10 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
     Envio de Emails
   </button>
+  <button class="mobile-drawer-link" id="mobileGeradorBtn" style="display:none;" onclick="showView('gerador',this);closeDrawer()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+    Gerador de Documentos
+  </button>
   <div class="mobile-drawer-divider"></div>
   <div style="padding:0.8rem;">
     <div style="font-size:0.78rem;font-weight:500;color:var(--white);" id="mobileUserName">...</div>
@@ -703,6 +717,10 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
       Clientes
     </button>
+    <button class="sidebar-link" onclick="showView('gerador',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+      Gerador de Documentos
+    </button>
   </div>
   <div class="sidebar-bottom">
     <div class="sidebar-user">
@@ -718,7 +736,7 @@
 
 <main class="main">
   <div class="topbar">
-    <div class="topbar-title" id="topbarTitle">Relatórios</div>
+    <div class="topbar-title" id="topbarTitle">Início</div>
     <div class="topbar-date" id="topbarDate"></div>
   </div>
   <div class="content">
@@ -727,12 +745,14 @@
     <div class="view active" id="view-inicio">
       <!-- Onboarding banner (moved from Relatórios) -->
       <div class="ob-banner" id="obBanner">
-        <div class="ob-banner-text">
-          <strong>⚠️ Complete seu cadastro</strong>
-          Você ainda tem etapas pendentes para ativar seu acesso completo ao portal.
+        <div class="ob-banner-main">
+          <div class="ob-banner-text">
+            <strong id="obBannerTitle">Bem-vindo! Complete seu cadastro</strong>
+            <span id="obBannerDesc">Para ativar seu acompanhamento, faltam algumas etapas rápidas. Você pode fazer agora ou quando preferir — seu progresso fica salvo.</span>
+          </div>
           <div class="ob-banner-steps" id="obBannerSteps"></div>
         </div>
-        <button class="ob-banner-btn" onclick="window.location.href='eh-onboarding.html'">Continuar cadastro →</button>
+        <button class="ob-banner-btn" id="obBannerBtn" onclick="window.location.href='eh-onboarding.html'">Começar cadastro →</button>
       </div>
 
       <!-- Editorial hero -->
@@ -884,7 +904,7 @@
           Convidar clientes em massa
         </h3>
         <p style="font-size:0.78rem;color:var(--gray);margin-bottom:1rem;line-height:1.6;">Cole uma lista de emails (um por linha). Os clientes receberão um convite por email para criar a senha. O onboarding será marcado como <strong style="color:var(--white);">concluído automaticamente</strong> — use para clientes antigos que não precisam passar pelo cadastro.</p>
-        <textarea id="bulkEmailsInput" rows="5" placeholder="email1@exemplo.com&#10;email2@exemplo.com&#10;email3@exemplo.com" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.22);color:var(--white);font-family:'Montserrat',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;transition:border-color 0.2s;margin-bottom:0.8rem;"></textarea>
+        <textarea id="bulkEmailsInput" rows="5" placeholder="email1@exemplo.com&#10;email2@exemplo.com&#10;email3@exemplo.com" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.22);color:var(--white);font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;transition:border-color 0.2s;margin-bottom:0.8rem;"></textarea>
         <div style="display:flex;gap:0.8rem;align-items:center;flex-wrap:wrap;">
           <button class="btn-upload" onclick="bulkInvite()" id="bulkInviteBtn" style="background:var(--gold);color:var(--navy-dark);">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -908,6 +928,78 @@
       <div class="upload-feedback" id="clientesFb"></div>
     </div>
 
+    <!-- GERADOR DE DOCUMENTOS (admin) -->
+    <div class="view" id="view-gerador">
+      <div class="welcome-banner">
+        <h2>Gerador de <em>Documentos</em></h2>
+        <p>Escolha um cliente para preencher o Contrato e a Suitability com os dados do cadastro. Os campos podem ser ajustados antes de gerar o PDF.</p>
+      </div>
+
+      <div class="upload-panel">
+        <h3>Cliente</h3>
+        <div class="upload-form">
+          <div class="upload-field" style="grid-column:1/-1;"><label>Selecionar cliente</label>
+            <select id="g_cliente" onchange="geradorSelecionar(this.value)"><option value="">Carregando…</option></select>
+          </div>
+        </div>
+        <div class="upload-feedback" id="geradorFb"></div>
+      </div>
+
+      <div class="upload-panel">
+        <h3>Identificação</h3>
+        <div class="upload-form">
+          <div class="upload-field" style="grid-column:1/-1;"><label>Nome completo</label><input type="text" id="g_nome" /></div>
+          <div class="upload-field"><label>Nacionalidade</label><input type="text" id="g_nacionalidade" placeholder="brasileiro(a)" /></div>
+          <div class="upload-field"><label>Estado civil</label>
+            <select id="g_estado_civil">
+              <option value="">Selecione</option>
+              <option>Solteiro(a)</option><option>Casado(a)</option><option>União estável</option>
+              <option>Divorciado(a)</option><option>Viúvo(a)</option><option>Separado(a) judicialmente</option>
+            </select>
+          </div>
+          <div class="upload-field"><label>CPF</label><input type="text" id="g_cpf" placeholder="000.000.000-00" /></div>
+          <div class="upload-field"><label>RG</label><input type="text" id="g_rg" /></div>
+          <div class="upload-field"><label>Órgão emissor</label><input type="text" id="g_rg_orgao" placeholder="SSP/MG" /></div>
+        </div>
+      </div>
+
+      <div class="upload-panel">
+        <h3>Endereço</h3>
+        <div class="upload-form">
+          <div class="upload-field"><label>Tipo</label><input type="text" id="g_log_tipo" placeholder="Rua" /></div>
+          <div class="upload-field" style="grid-column:span 2;"><label>Logradouro</label><input type="text" id="g_log_nome" /></div>
+          <div class="upload-field"><label>Número</label><input type="text" id="g_numero" /></div>
+          <div class="upload-field"><label>Complemento</label><input type="text" id="g_complemento" /></div>
+          <div class="upload-field"><label>Bairro</label><input type="text" id="g_bairro" /></div>
+          <div class="upload-field"><label>Cidade</label><input type="text" id="g_cidade" /></div>
+          <div class="upload-field"><label>UF</label><input type="text" id="g_uf" maxlength="2" /></div>
+          <div class="upload-field"><label>CEP</label><input type="text" id="g_cep" /></div>
+        </div>
+      </div>
+
+      <div class="upload-panel">
+        <h3>Suitability e contrato</h3>
+        <div class="upload-form">
+          <div class="upload-field"><label>Perfil do investidor</label>
+            <select id="g_perfil"><option value="">Selecione</option><option>CONSERVADOR</option><option>MODERADO</option><option>ARROJADO</option></select>
+          </div>
+          <div class="upload-field"><label>Data da suitability</label><input type="date" id="g_data_suit" /></div>
+          <div class="upload-field"><label>Data do contrato</label><input type="date" id="g_data_contrato" /></div>
+          <div class="upload-field"><label>Remuneração</label>
+            <select id="g_tipo" onchange="geradorTipo()"><option value="percentual">Taxa de consultoria (% a.a.)</option><option value="fixo">Mensalidade fixa (R$)</option></select>
+          </div>
+          <div class="upload-field" id="g_taxa_field"><label>Taxa (% ao ano)</label><input type="number" id="g_taxa" step="0.01" min="0" /></div>
+          <div class="upload-field" id="g_mens_field" style="display:none;"><label>Mensalidade (R$)</label><input type="number" id="g_mensalidade" step="0.01" min="0" /></div>
+        </div>
+      </div>
+
+      <div class="upload-panel">
+        <h3>Documentos</h3>
+        <div id="geradorDocs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;"></div>
+        <div class="upload-feedback" id="geradorDocsFb"></div>
+      </div>
+    </div>
+
     <!-- EMAILS -->
     <div class="view" id="view-emails">
       <div class="email-tabs">
@@ -925,16 +1017,16 @@
           <h3>Templates de Email</h3>
           <p style="font-size:0.8rem;color:var(--gray);margin-bottom:1.5rem;line-height:1.7;">
             Clique em um template para expandir e editar. Use
-            <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{nome}}</code>,
-            <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{desempenho}}</code>,
-            <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{valor}}</code> e
-            <code style="background:rgba(212,130,10,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{btn_relatorio}}</code>.
+            <code style="background:rgba(238,154,30,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{nome}}</code>,
+            <code style="background:rgba(238,154,30,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{desempenho}}</code>,
+            <code style="background:rgba(238,154,30,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{valor}}</code> e
+            <code style="background:rgba(238,154,30,0.15);color:var(--gold);padding:0.1rem 0.4rem;">{{btn_relatorio}}</code>.
             Templates são salvos no Supabase e compartilhados entre admins.
           </p>
 
           <!-- Formatting guide accordion -->
           <div style="margin-bottom:1rem;">
-            <button onclick="toggleAccordion(this)" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:rgba(212,130,10,0.08);border:1px solid var(--border);color:var(--gray-light);font-family:'IBM Plex Sans',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;padding:0.75rem 1rem;cursor:pointer;transition:background 0.2s;">
+            <button onclick="toggleAccordion(this)" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:rgba(238,154,30,0.08);border:1px solid var(--border);color:var(--gray-light);font-family:'Manrope',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;padding:0.75rem 1rem;cursor:pointer;transition:background 0.2s;">
               <span>📋 Guia de Formatação</span>
               <span class="accordion-arrow" style="transition:transform 0.2s;">▼</span>
             </button>
@@ -949,19 +1041,19 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Negrito</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;strong&gt;texto&lt;/strong&gt;</code></td><td style="padding:0.5rem 0.8rem;color:var(--white);"><strong>texto</strong></td></tr>
-                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Itálico</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;em&gt;texto&lt;/em&gt;</code></td><td style="padding:0.5rem 0.8rem;color:var(--white);"><em>texto</em></td></tr>
-                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Cor dourada</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;span style="color:#D4820A"&gt;texto&lt;/span&gt;</code></td><td style="padding:0.5rem 0.8rem;"><span style="color:#D4820A;">texto</span></td></tr>
-                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Linha separadora</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;hr/&gt;</code></td><td style="padding:0.5rem 0.8rem;color:var(--gray);">— linha —</td></tr>
-                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Quebra de linha</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;br/&gt;</code></td><td style="padding:0.5rem 0.8rem;color:var(--gray);">pula linha</td></tr>
-                  <tr><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Variáveis</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(212,130,10,0.12);color:var(--gold);padding:0.15rem 0.5rem;">{{nome}} {{desempenho}} {{valor}}</code></td><td style="padding:0.5rem 0.8rem;color:var(--gray);">dados do cliente</td></tr>
+                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Negrito</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(238,154,30,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;strong&gt;texto&lt;/strong&gt;</code></td><td style="padding:0.5rem 0.8rem;color:var(--white);"><strong>texto</strong></td></tr>
+                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Itálico</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(238,154,30,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;em&gt;texto&lt;/em&gt;</code></td><td style="padding:0.5rem 0.8rem;color:var(--white);"><em>texto</em></td></tr>
+                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Cor dourada</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(238,154,30,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;span style="color:#EE9A1E"&gt;texto&lt;/span&gt;</code></td><td style="padding:0.5rem 0.8rem;"><span style="color:#EE9A1E;">texto</span></td></tr>
+                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Linha separadora</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(238,154,30,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;hr/&gt;</code></td><td style="padding:0.5rem 0.8rem;color:var(--gray);">— linha —</td></tr>
+                  <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Quebra de linha</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(238,154,30,0.12);color:var(--gold);padding:0.15rem 0.5rem;">&lt;br/&gt;</code></td><td style="padding:0.5rem 0.8rem;color:var(--gray);">pula linha</td></tr>
+                  <tr><td style="padding:0.5rem 0.8rem;color:var(--gray-light);">Variáveis</td><td style="padding:0.5rem 0.8rem;"><code style="background:rgba(238,154,30,0.12);color:var(--gold);padding:0.15rem 0.5rem;">{{nome}} {{desempenho}} {{valor}}</code></td><td style="padding:0.5rem 0.8rem;color:var(--gray);">dados do cliente</td></tr>
                 </tbody>
               </table>
               <div style="margin-top:1rem;background:rgba(255,255,255,0.03);border:1px solid var(--border-dim);padding:1rem;">
                 <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);margin-bottom:0.6rem;">Exemplo</p>
                 <pre style="font-size:0.75rem;color:var(--gray-light);line-height:1.7;white-space:pre-wrap;">Olá &lt;strong&gt;{{nome}}&lt;/strong&gt;,
 
-Sua carteira rendeu &lt;strong&gt;&lt;span style="color:#D4820A"&gt;{{desempenho}} do CDI&lt;/span&gt;&lt;/strong&gt;.
+Sua carteira rendeu &lt;strong&gt;&lt;span style="color:#EE9A1E"&gt;{{desempenho}} do CDI&lt;/span&gt;&lt;/strong&gt;.
 
 &lt;hr/&gt;
 
@@ -973,7 +1065,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           </div>
 
           <!-- GERADOR DE TEMPLATES DO MÊS -->
-          <div style="margin-bottom:1.4rem;border:1px solid var(--border);background:rgba(212,130,10,0.05);padding:1.3rem 1.3rem 1.1rem;position:relative;">
+          <div style="margin-bottom:1.4rem;border:1px solid var(--border);background:rgba(238,154,30,0.05);padding:1.3rem 1.3rem 1.1rem;position:relative;">
             <p style="font-size:0.72rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);margin-bottom:0.6rem;">⚡ Gerador — Texto do Mês</p>
             <p style="font-size:0.75rem;color:var(--gray);line-height:1.6;margin-bottom:1.1rem;">
               Escreva o comentário do mês <strong style="color:var(--white);">uma única vez</strong> e clique em gerar: os 10 templates
@@ -989,20 +1081,20 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
             </div>
             <div class="upload-field" style="margin-bottom:0.9rem;">
               <label>Comentário do mês (análise do mercado — muda todo mês)</label>
-              <textarea id="gen-comentario" rows="6" placeholder="ex: Junho foi um mês onde a volatilidade..." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'IBM Plex Sans',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
+              <textarea id="gen-comentario" rows="6" placeholder="ex: Junho foi um mês onde a volatilidade..." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
             </div>
             <div class="upload-field" style="margin-bottom:0.9rem;">
               <label>Parágrafo — carteira ACIMA do CDI</label>
-              <textarea id="gen-acima" rows="3" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'IBM Plex Sans',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
+              <textarea id="gen-acima" rows="3" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
             </div>
             <div class="upload-field" style="margin-bottom:1.1rem;">
               <label>Parágrafo — carteira ABAIXO do CDI</label>
-              <textarea id="gen-abaixo" rows="3" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'IBM Plex Sans',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
+              <textarea id="gen-abaixo" rows="3" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
             </div>
 
             <!-- Blocos fixos (saudação, pagamentos, encerramento) -->
             <div style="margin-bottom:1.1rem;">
-              <button onclick="toggleAccordion(this)" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:rgba(212,130,10,0.08);border:1px solid var(--border);color:var(--gray-light);font-family:'IBM Plex Sans',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;padding:0.75rem 1rem;cursor:pointer;transition:background 0.2s;">
+              <button onclick="toggleAccordion(this)" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:rgba(238,154,30,0.08);border:1px solid var(--border);color:var(--gray-light);font-family:'Manrope',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;padding:0.75rem 1rem;cursor:pointer;transition:background 0.2s;">
                 <span>🧱 Blocos fixos — saudação, pagamentos e encerramento</span>
                 <span class="accordion-arrow" style="transition:transform 0.2s;">▼</span>
               </button>
@@ -1013,27 +1105,27 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
                 </p>
                 <div class="upload-field" style="margin-bottom:0.9rem;">
                   <label>Saudação (início de todos os emails)</label>
-                  <textarea id="gen-saudacao" rows="2" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'IBM Plex Sans',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
+                  <textarea id="gen-saudacao" rows="2" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
                 </div>
                 <div class="upload-field" style="margin-bottom:0.9rem;">
                   <label>Pagamento — Mensal</label>
-                  <textarea id="gen-pag-mensal" rows="2" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'IBM Plex Sans',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
+                  <textarea id="gen-pag-mensal" rows="2" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
                 </div>
                 <div class="upload-field" style="margin-bottom:0.9rem;">
                   <label>Pagamento — Trimestral</label>
-                  <textarea id="gen-pag-trimestral" rows="2" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'IBM Plex Sans',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
+                  <textarea id="gen-pag-trimestral" rows="2" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
                 </div>
                 <div class="upload-field" style="margin-bottom:0.9rem;">
                   <label>Pagamento — Pagamento Pendente (cliente não pagou o mês anterior)</label>
-                  <textarea id="gen-pag-cobranca" rows="3" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'IBM Plex Sans',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
+                  <textarea id="gen-pag-cobranca" rows="3" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
                 </div>
                 <div class="upload-field" style="margin-bottom:0.9rem;">
                   <label>Pagamento — Elisa (seu PIX)</label>
-                  <textarea id="gen-pag-elisa" rows="3" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'IBM Plex Sans',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
+                  <textarea id="gen-pag-elisa" rows="3" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
                 </div>
                 <div class="upload-field" style="margin-bottom:0;">
                   <label>Encerramento (fim de todos os emails)</label>
-                  <textarea id="gen-encerramento" rows="4" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'IBM Plex Sans',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
+                  <textarea id="gen-encerramento" rows="4" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
                 </div>
               </div>
             </div>
@@ -1069,12 +1161,12 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
             </table>
           </div>
           <div style="display:flex;gap:0.8rem;margin-top:1rem;flex-wrap:wrap;">
-            <button class="btn-upload" onclick="addClientRow()" style="background:rgba(212,130,10,0.15);color:var(--gold);border:1px solid var(--border);">+ Adicionar linha</button>
+            <button class="btn-upload" onclick="addClientRow()" style="background:rgba(238,154,30,0.15);color:var(--gold);border:1px solid var(--border);">+ Adicionar linha</button>
             <button class="btn-upload" onclick="clearAllRows()" style="background:rgba(224,85,85,0.1);color:#f08080;border:1px solid rgba(224,85,85,0.3);">Limpar tudo</button>
           </div>
           <div style="margin-top:1.5rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:center;">
             <button class="btn-upload" onclick="previewEmails()" style="background:rgba(255,255,255,0.08);color:var(--white);">Pré-visualizar</button>
-            <button class="btn-upload" onclick="salvarRascunho()" style="background:rgba(212,130,10,0.15);color:var(--gold);border:1px solid var(--border);">
+            <button class="btn-upload" onclick="salvarRascunho()" style="background:rgba(238,154,30,0.15);color:var(--gold);border:1px solid var(--border);">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
               Salvar Rascunho
             </button>
@@ -1090,7 +1182,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
             <div class="section-header" style="margin-bottom:0.8rem;">
               <div class="section-title">Rascunho Salvo</div>
               <div style="display:flex;gap:0.5rem;">
-                <button onclick="carregarRascunho()" class="btn-upload" style="font-size:0.62rem;padding:0.4rem 0.8rem;background:rgba(212,130,10,0.15);color:var(--gold);border:1px solid var(--border);">↓ Carregar na tabela</button>
+                <button onclick="carregarRascunho()" class="btn-upload" style="font-size:0.62rem;padding:0.4rem 0.8rem;background:rgba(238,154,30,0.15);color:var(--gold);border:1px solid var(--border);">↓ Carregar na tabela</button>
                 <button onclick="apagarTodosRascunhos()" class="btn-upload" style="font-size:0.62rem;padding:0.4rem 0.8rem;background:rgba(224,85,85,0.1);color:#f08080;border:1px solid rgba(224,85,85,0.3);">✕ Apagar todos</button>
               </div>
             </div>
@@ -1174,7 +1266,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
             <tbody id="extMappingBody"></tbody>
           </table>
         </div>
-        <button onclick="extAddMappingRow()" class="btn-upload" style="margin-top:0.8rem;background:rgba(212,130,10,0.1);color:var(--gold);border:1px solid var(--border);">+ Adicionar fundo</button>
+        <button onclick="extAddMappingRow()" class="btn-upload" style="margin-top:0.8rem;background:rgba(238,154,30,0.1);color:var(--gold);border:1px solid var(--border);">+ Adicionar fundo</button>
       </div>
 
       <!-- Process -->
@@ -1259,7 +1351,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
             <tbody id="xpnMappingBody"></tbody>
           </table>
         </div>
-        <button onclick="xpnAddMappingRow()" class="btn-upload" style="margin-top:0.8rem;background:rgba(212,130,10,0.1);color:var(--gold);border:1px solid var(--border);">+ Adicionar fundo</button>
+        <button onclick="xpnAddMappingRow()" class="btn-upload" style="margin-top:0.8rem;background:rgba(238,154,30,0.1);color:var(--gold);border:1px solid var(--border);">+ Adicionar fundo</button>
       </div>
 
       <!-- Process -->
@@ -1407,6 +1499,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       document.getElementById('mobileCotasBtn').style.display = 'flex';
       document.getElementById('mobileClientesBtn').style.display = 'flex';
       document.getElementById('mobileEmailsBtn').style.display = 'flex';
+      document.getElementById('mobileGeradorBtn').style.display = 'flex';
     }
     loadReports();
     checkOnboarding();
@@ -1427,14 +1520,27 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     if (data && (data.completed || data.skip_onboarding)) return;
 
     const stepDefs = [
-      { key: 'step_cadastro',    label: 'Cadastro' },
-      { key: 'step_suitability', label: 'Perfil API' },
-      { key: 'step_contrato',    label: 'Contrato' }
+      { key: 'step_cadastro',    label: 'Cadastro',             desc: 'Dados pessoais, endereço e situação financeira.' },
+      { key: 'step_suitability', label: 'Perfil de investidor', desc: '13 perguntas rápidas sobre seus objetivos e experiência.' },
+      { key: 'step_contrato',    label: 'Contrato',             desc: 'Leitura e assinatura digital do contrato de consultoria.' }
     ];
+    const feitas = stepDefs.filter(s => data && data[s.key]).length;
+    const faltam = stepDefs.length - feitas;
 
-    steps.innerHTML = stepDefs.map(s => {
+    document.getElementById('obBannerTitle').textContent = feitas === 0
+      ? 'Bem-vindo! Complete seu cadastro'
+      : `Falta${faltam > 1 ? 'm' : ''} ${faltam} etapa${faltam > 1 ? 's' : ''} para concluir seu cadastro`;
+    document.getElementById('obBannerBtn').textContent = feitas === 0 ? 'Começar cadastro →' : 'Continuar cadastro →';
+
+    steps.innerHTML = stepDefs.map((s, i) => {
       const done = data && data[s.key];
-      return `<span class="ob-step-chip ${done ? 'done' : 'pending'}">${done ? '✓' : '○'} ${s.label}</span>`;
+      return `<div class="ob-step ${done ? 'done' : ''}">
+        <div class="ob-step-head">
+          <span class="ob-step-name">${i + 1}. ${s.label}</span>
+          <span class="ob-step-chip ${done ? 'done' : 'pending'}">${done ? '✓ Feito' : 'Pendente'}</span>
+        </div>
+        <div class="ob-step-desc">${s.desc}</div>
+      </div>`;
     }).join('');
 
     banner.classList.add('visible');
@@ -1447,7 +1553,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.querySelectorAll('.mobile-drawer-link').forEach(l => l.classList.remove('active'));
     document.getElementById('view-' + viewId).classList.add('active');
     if (btn) btn.classList.add('active');
-    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', extratos:'Extratos → Excel', extratosnovos:'XP Extratos Novos', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' };
+    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', extratos:'Extratos → Excel', extratosnovos:'XP Extratos Novos', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos' };
     const topbar = document.getElementById('topbarTitle');
     if (topbar) topbar.textContent = titles[viewId] || viewId;
     if (viewId === 'emails') { loadTemplates().then(() => buildTemplateAccordion()); if (clientRows.length === 0) addClientRow(); loadRascunho(); }
@@ -1455,6 +1561,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     if (viewId === 'extratosnovos') xpnLoadMapping();
     if (viewId === 'cotas') ctLoadXpMapping();
     if (viewId === 'clientes') loadClientesView();
+    if (viewId === 'gerador') geradorCarregarClientes();
     if (viewId === 'perfil') populatePerfil();
   }
 
@@ -1627,12 +1734,12 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           `<span style="font-size:0.6rem;padding:0.15rem 0.5rem;border-radius:10px;font-weight:600;background:${s.done?'rgba(76,175,130,0.10)':'transparent'};color:${s.done?'#6cc596':'var(--gray)'};border:1px solid ${s.done?'rgba(76,175,130,0.3)':'var(--border-dim)'};">${s.done?'✓':'○'} ${s.label}</span>`
         ).join('');
         const primaryBtn = completed
-          ? `<span style="font-size:0.62rem;padding:0.35rem 0.7rem;background:rgba(76,175,130,0.12);color:#4caf82;border:1px solid rgba(76,175,130,0.3);font-family:'IBM Plex Mono',monospace;font-weight:600;letter-spacing:0.06em;">✓ COMPLETO</span>`
-          : `<button onclick="markOneComplete('${p.id}')" class="btn-upload" style="font-size:0.62rem;padding:0.4rem 0.8rem;background:rgba(212,130,10,0.15);color:var(--gold);border:1px solid var(--border);">Marcar completo</button>`;
+          ? `<span style="font-size:0.62rem;padding:0.35rem 0.7rem;background:rgba(76,175,130,0.12);color:#4caf82;border:1px solid rgba(76,175,130,0.3);font-family:'Manrope',monospace;font-weight:600;letter-spacing:0.06em;">✓ COMPLETO</span>`
+          : `<button onclick="markOneComplete('${p.id}')" class="btn-upload" style="font-size:0.62rem;padding:0.4rem 0.8rem;background:rgba(238,154,30,0.15);color:var(--gold);border:1px solid var(--border);">Marcar completo</button>`;
         const rBtn = (key, label, active, title) =>
           `<button ${active ? `onclick="resetStep('${p.id}','${key}')"` : 'disabled'}
             title="${title}"
-            style="font-size:0.6rem;padding:0.28rem 0.65rem;font-family:'IBM Plex Mono',monospace;font-weight:500;cursor:${active?'pointer':'default'};background:${active?'rgba(224,85,85,0.08)':'rgba(243,237,225,0.03)'};color:${active?'#f08080':'var(--border-dim)'};border:1px solid ${active?'rgba(224,85,85,0.3)':'var(--border-dim)'};">
+            style="font-size:0.6rem;padding:0.28rem 0.65rem;font-family:'Manrope',monospace;font-weight:500;cursor:${active?'pointer':'default'};background:${active?'rgba(224,85,85,0.08)':'rgba(247,245,239,0.03)'};color:${active?'#f08080':'var(--border-dim)'};border:1px solid ${active?'rgba(224,85,85,0.3)':'var(--border-dim)'};">
             ↩ ${label}
           </button>`;
         const canC = !!ob.step_cadastro || completed;
@@ -1648,8 +1755,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
               </div>
               <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">${primaryBtn}</div>
             </div>
-            <div style="padding:0.55rem 1.5rem;background:rgba(9,20,56,0.5);border-top:1px solid var(--border-dim);display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;">
-              <span style="font-family:'IBM Plex Mono',monospace;font-size:0.58rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gray);margin-right:0.2rem;">Reabrir:</span>
+            <div style="padding:0.55rem 1.5rem;background:rgba(0,24,72,0.5);border-top:1px solid var(--border-dim);display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;">
+              <span style="font-family:'Manrope',monospace;font-size:0.58rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gray);margin-right:0.2rem;">Reabrir:</span>
               ${rBtn('cadastro',    'Cadastro',   canC, 'Zera as 3 etapas — cliente volta ao início')}
               ${rBtn('suitability', 'Perfil API', canS, 'Zera API e Contrato — mantém Cadastro')}
               ${rBtn('contrato',    'Contrato',   canK, 'Zera apenas o Contrato — mantém Cadastro e API')}
@@ -1741,6 +1848,162 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     }
     showFb2('clientesFb', `✓ ${profiles.length} cliente(s) marcados como concluído.`, 'success');
     loadClientesView();
+  }
+
+  // ── GERADOR DE DOCUMENTOS (admin) ──
+  // Lê cadastro_clientes / suitability / contratos / cliente_taxa_preset e gera
+  // Contrato e Suitability no design novo (eh-documentos.js).
+  let geradorClientes = [];
+  const G_CAMPOS = ['g_nome','g_nacionalidade','g_estado_civil','g_cpf','g_rg','g_rg_orgao','g_log_tipo','g_log_nome',
+    'g_numero','g_complemento','g_bairro','g_cidade','g_uf','g_cep','g_perfil','g_data_suit','g_data_contrato',
+    'g_tipo','g_taxa','g_mensalidade'];
+  const gv = id => (document.getElementById(id)?.value || '').trim();
+  const gset = (id, val) => { const el = document.getElementById(id); if (el) el.value = val == null ? '' : val; };
+  const hojeISO = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+  const isoParaData = iso => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); return m ? new Date(+m[1], m[2] - 1, +m[3]) : null; };
+
+  async function geradorCarregarClientes() {
+    const sel = document.getElementById('g_cliente');
+    if (!sel.dataset.bound) {
+      sel.dataset.bound = '1';
+      G_CAMPOS.forEach(id => document.getElementById(id)?.addEventListener('input', geradorStatus));
+      G_CAMPOS.forEach(id => document.getElementById(id)?.addEventListener('change', geradorStatus));
+      gset('g_data_suit', hojeISO()); gset('g_data_contrato', hojeISO()); gset('g_taxa', '1');
+      geradorStatus();
+    }
+    try {
+      const [{ data: cad, error: e1 }, { data: profs }] = await Promise.all([
+        sb.from('cadastro_clientes').select('*'),
+        sb.from('profiles').select('id, full_name, email')
+      ]);
+      if (e1) throw e1;
+      const porId = {};
+      (profs || []).forEach(p => { porId[p.id] = { user_id: p.id, nome_completo: p.full_name, email: p.email, __semCadastro: true }; });
+      (cad || []).forEach(c => { porId[c.user_id] = c; });
+      geradorClientes = Object.values(porId)
+        .filter(c => !ADMIN_EMAILS.includes((c.email || '').toLowerCase()))
+        .sort((a, b) => (a.nome_completo || a.email || '').localeCompare(b.nome_completo || b.email || '', 'pt-BR'));
+      sel.innerHTML = '<option value="">— Preencher manualmente —</option>' + geradorClientes.map(c =>
+        `<option value="${c.user_id}">${escHtml(c.nome_completo || c.email)}${c.__semCadastro ? ' (sem cadastro)' : ''}</option>`).join('');
+    } catch (e) {
+      sel.innerHTML = '<option value="">— Preencher manualmente —</option>';
+      showFb2('geradorFb', 'Não foi possível carregar os clientes: ' + e.message, 'error');
+    }
+  }
+
+  async function geradorSelecionar(userId) {
+    G_CAMPOS.forEach(id => gset(id, ''));
+    gset('g_data_suit', hojeISO()); gset('g_data_contrato', hojeISO()); gset('g_tipo', 'percentual'); gset('g_taxa', '1');
+    const c = geradorClientes.find(x => x.user_id === userId);
+    if (c) {
+      gset('g_nome', c.nome_completo); gset('g_nacionalidade', c.nacionalidade); gset('g_estado_civil', c.estado_civil);
+      gset('g_cpf', c.cpf ? EHDocs.fmtCPF(c.cpf) : ''); gset('g_rg', c.rg); gset('g_rg_orgao', c.rg_orgao);
+      gset('g_log_tipo', c.logradouro_tipo); gset('g_log_nome', c.logradouro_nome); gset('g_numero', c.numero);
+      gset('g_complemento', c.complemento); gset('g_bairro', c.bairro); gset('g_cidade', c.cidade);
+      gset('g_uf', c.estado); gset('g_cep', c.cep);
+      try {
+        const [{ data: suit }, { data: contr }, { data: preset }] = await Promise.all([
+          sb.from('suitability').select('perfil, created_at').eq('user_id', userId).maybeSingle(),
+          sb.from('contratos').select('tipo, taxa, mensalidade, created_at').eq('user_id', userId).maybeSingle(),
+          c.email ? sb.from('cliente_taxa_preset').select('*').eq('email', c.email.toLowerCase()).maybeSingle() : Promise.resolve({ data: null })
+        ]);
+        if (suit) { gset('g_perfil', (suit.perfil || '').toUpperCase()); if (suit.created_at) gset('g_data_suit', suit.created_at.slice(0, 10)); }
+        if (contr?.created_at) gset('g_data_contrato', contr.created_at.slice(0, 10));
+        const cond = contr || preset;
+        if (cond) {
+          const tipo = (cond.tipo || cond.contrato_tipo || '').toString().toLowerCase();
+          const fixo = ['fixo','fixa','mensalidade','mensalidade_fixa','mensalidade fixa'].includes(tipo);
+          gset('g_tipo', fixo ? 'fixo' : 'percentual');
+          if (cond.taxa != null) gset('g_taxa', cond.taxa);
+          if (cond.mensalidade != null) gset('g_mensalidade', cond.mensalidade);
+        }
+      } catch (e) {
+        showFb2('geradorFb', 'Cadastro carregado, mas não foi possível ler suitability/contrato: ' + e.message, 'error');
+      }
+      if (c.__semCadastro) showFb2('geradorFb', 'Este cliente ainda não preencheu o cadastro. Complete os campos manualmente.', 'error');
+    }
+    geradorTipo();
+  }
+
+  function geradorTipo() {
+    const fixo = gv('g_tipo') === 'fixo';
+    document.getElementById('g_taxa_field').style.display = fixo ? 'none' : '';
+    document.getElementById('g_mens_field').style.display = fixo ? '' : 'none';
+    geradorStatus();
+  }
+
+  function geradorDados(tipo) {
+    if (tipo === 'suitability') {
+      return { nome: gv('g_nome'), cpf: gv('g_cpf'), perfil: gv('g_perfil'), data: isoParaData(gv('g_data_suit')) };
+    }
+    return {
+      nome: gv('g_nome'), nacionalidade: gv('g_nacionalidade'), estadoCivil: gv('g_estado_civil'),
+      rg: gv('g_rg'), orgao: gv('g_rg_orgao').toUpperCase(), cpf: gv('g_cpf'),
+      endereco: EHDocs.endereco({ logradouro_tipo: gv('g_log_tipo'), logradouro_nome: gv('g_log_nome'), numero: gv('g_numero'),
+        complemento: gv('g_complemento'), bairro: gv('g_bairro'), cidade: gv('g_cidade'), estado: gv('g_uf').toUpperCase(), cep: gv('g_cep') }),
+      data: isoParaData(gv('g_data_contrato')),
+      tipo: gv('g_tipo'), taxa: gv('g_taxa'), mensalidade: gv('g_mensalidade')
+    };
+  }
+
+  const G_DOCS = {
+    contrato: { titulo: 'Contrato de Consultoria', prefixo: 'Contrato',
+      req: [['g_nome','nome'],['g_nacionalidade','nacionalidade'],['g_estado_civil','estado civil'],['g_cpf','CPF'],['g_rg','RG'],
+            ['g_rg_orgao','órgão emissor'],['g_log_nome','logradouro'],['g_numero','número'],['g_bairro','bairro'],['g_cidade','cidade'],
+            ['g_uf','UF'],['g_cep','CEP'],['g_data_contrato','data do contrato']] },
+    suitability: { titulo: 'Suitability', prefixo: 'API',
+      req: [['g_nome','nome'],['g_cpf','CPF'],['g_perfil','perfil'],['g_data_suit','data da suitability']] }
+  };
+
+  function geradorFaltando(tipo) {
+    const req = G_DOCS[tipo].req.slice();
+    if (tipo === 'contrato') req.push(gv('g_tipo') === 'fixo' ? ['g_mensalidade','mensalidade'] : ['g_taxa','taxa']);
+    return req.filter(([id]) => !gv(id)).map(([, nome]) => nome);
+  }
+
+  function geradorStatus() {
+    const box = document.getElementById('geradorDocs');
+    if (!box) return;
+    box.innerHTML = Object.entries(G_DOCS).map(([tipo, d]) => {
+      const falta = geradorFaltando(tipo);
+      const ok = !falta.length;
+      return `
+        <div style="border:1px solid var(--rule-strong);padding:1.2rem 1.3rem;display:flex;flex-direction:column;gap:0.8rem;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:0.6rem;">
+            <div style="font-family:'Fraunces',serif;font-size:1.15rem;color:var(--cream);">${d.titulo}</div>
+            <span style="font-size:10px;letter-spacing:0.16em;font-weight:700;color:${ok ? '#6cc596' : 'var(--gold)'};">${ok ? 'COMPLETO' : falta.length + (falta.length > 1 ? ' PENDENTES' : ' PENDENTE')}</span>
+          </div>
+          ${ok ? '' : `<div style="font-size:12px;color:var(--cream-faint);line-height:1.5;">Falta: ${falta.join(', ')}</div>`}
+          <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+            <button class="btn-upload" style="background:transparent;color:var(--gold);" onclick="geradorGerar('${tipo}', false, this)">Visualizar</button>
+            <button class="btn-upload" onclick="geradorGerar('${tipo}', true, this)">Baixar PDF</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // "Viviane Costa Pereira Caldas" → "VivianeCPC" (mesmo padrão dos arquivos já usados)
+  function geradorNomeArquivo(prefixo) {
+    const partes = gv('g_nome').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z\s]/g, ' ')
+      .split(/\s+/).filter(Boolean).filter(p => !/^(de|da|do|das|dos|e)$/i.test(p));
+    if (!partes.length) return prefixo + '.pdf';
+    const primeiro = partes[0].charAt(0).toUpperCase() + partes[0].slice(1).toLowerCase();
+    return `${prefixo}_${primeiro}${partes.slice(1).map(p => p.charAt(0).toUpperCase()).join('')}.pdf`;
+  }
+
+  async function geradorGerar(tipo, baixar, btn) {
+    const falta = geradorFaltando(tipo);
+    if (falta.length && !confirm(`Ainda falta: ${falta.join(', ')}.\n\nGerar mesmo assim?`)) return;
+    const txt = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Gerando…';
+    try {
+      const dados = geradorDados(tipo);
+      if (baixar) await EHDocs.baixarPdf(tipo, dados, geradorNomeArquivo(G_DOCS[tipo].prefixo));
+      else await EHDocs.abrirPdf(tipo, dados);
+    } catch (e) {
+      showFb2('geradorDocsFb', 'Erro ao gerar o documento: ' + e.message, 'error');
+    }
+    btn.disabled = false; btn.textContent = txt;
   }
 
   function showFb2(id, msg, type) {
@@ -1853,7 +2116,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         </div>
         <div style="display:flex;gap:0.8rem;padding-top:0.8rem;border-top:1px solid var(--border-dim);">
           <a style="font-size:0.65rem;color:var(--gold);text-decoration:none;" href="${r.file_url}" target="_blank">↓ Baixar</a>
-          <button onclick="deleteReport('${r.id}','${r.file_path || ''}')" style="font-size:0.65rem;color:#f08080;background:none;border:none;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;padding:0;">✕ Remover</button>
+          <button onclick="deleteReport('${r.id}','${r.file_path || ''}')" style="font-size:0.65rem;color:#f08080;background:none;border:none;cursor:pointer;font-family:'Manrope',sans-serif;padding:0;">✕ Remover</button>
         </div>
       </div>`).join('');
   }
@@ -1956,8 +2219,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     { id:'mensal_abaixo',       label:'Mensal — Abaixo do CDI',               dot:'#e05555', freq:'Mensal',     perf:'abaixo' },
     { id:'trimestral_acima',    label:'Trimestral — Acima do CDI',            dot:'#4caf82', freq:'Trimestral', perf:'acima' },
     { id:'trimestral_abaixo',   label:'Trimestral — Abaixo do CDI',           dot:'#e05555', freq:'Trimestral', perf:'abaixo' },
-    { id:'cobranca_acima',      label:'Pagamento Pendente — Acima do CDI',    dot:'#E8A030', freq:null,         perf:'acima' },
-    { id:'cobranca_abaixo',     label:'Pagamento Pendente — Abaixo do CDI',   dot:'#E8A030', freq:null,         perf:'abaixo' },
+    { id:'cobranca_acima',      label:'Pagamento Pendente — Acima do CDI',    dot:'#F4AE45', freq:null,         perf:'acima' },
+    { id:'cobranca_abaixo',     label:'Pagamento Pendente — Abaixo do CDI',   dot:'#F4AE45', freq:null,         perf:'abaixo' },
     { id:'sem_cobranca_acima',  label:'Sem Pagamento — Acima do CDI',         dot:'#5BC8AF', freq:null,         perf:'acima' },
     { id:'sem_cobranca_abaixo', label:'Sem Pagamento — Abaixo do CDI',        dot:'#5BC8AF', freq:null,         perf:'abaixo' },
     { id:'elisa_acima',         label:'Elisa (PIX Elisa) — Acima do CDI',     dot:'#E87FB0', freq:null,         perf:'acima' },
@@ -1980,7 +2243,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         <button onclick="toggleTplAccordion('tpl-body-${tpl.id}', this)"
           style="width:100%;display:flex;align-items:center;gap:0.8rem;background:none;border:none;
           border-bottom:1px solid var(--border-dim);padding:1rem 1.2rem;cursor:pointer;text-align:left;transition:background 0.2s;"
-          onmouseover="this.style.background='rgba(212,130,10,0.05)'" onmouseout="this.style.background='none'">
+          onmouseover="this.style.background='rgba(238,154,30,0.05)'" onmouseout="this.style.background='none'">
           <div style="width:8px;height:8px;border-radius:50%;background:${tpl.dot};flex-shrink:0;"></div>
           <span style="font-size:0.75rem;font-weight:600;color:var(--white);flex:1;">${tpl.label}</span>
           <span style="font-size:0.7rem;color:var(--gray);margin-right:0.5rem;" id="tpl-status-${tpl.id}">${d.assunto ? '✓ preenchido' : 'vazio'}</span>
@@ -1997,7 +2260,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
             <textarea id="body-${tpl.id}" rows="8"
               placeholder="${tpl.id === 'personalizado' ? 'Escreva seu email aqui...' : 'Olá {{nome}},\n\nSua carteira rendeu {{desempenho}} do CDI.\n\nValor do serviço: {{valor}}.\n\n{{btn_relatorio}}'}"
               style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);
-              font-family:'IBM Plex Sans',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;
+              font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;
               transition:border-color 0.2s;"
               oninput="markTplUnsaved()">${escHtml(d.corpo)}</textarea>
           </div>
@@ -2187,8 +2450,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
               <span class="tpl-dd-dot" style="background:#4caf82"></span>Trimestral
               <span style="font-size:0.62rem;color:var(--gray);margin-left:auto;">auto ↑↓ CDI</span>
             </div>
-            <div class="tpl-dd-item" data-val="cobranca" onclick="tplDdSelect('${id}','cobranca','Pagamento Pendente','#E8A030')">
-              <span class="tpl-dd-dot" style="background:#E8A030"></span>Pagamento Pendente
+            <div class="tpl-dd-item" data-val="cobranca" onclick="tplDdSelect('${id}','cobranca','Pagamento Pendente','#F4AE45')">
+              <span class="tpl-dd-dot" style="background:#F4AE45"></span>Pagamento Pendente
               <span style="font-size:0.62rem;color:var(--gray);margin-left:auto;">auto ↑↓ CDI</span>
             </div>
             <div class="tpl-dd-item" data-val="sem_cobranca" onclick="tplDdSelect('${id}','sem_cobranca','Sem Pagamento','#5BC8AF')">
@@ -2215,12 +2478,12 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         <div style="display:flex;align-items:center;gap:0.5rem;">
           <label id="pdf-label-${id}" style="font-size:0.65rem;color:var(--gray);cursor:pointer;display:flex;align-items:center;gap:0.4rem;white-space:nowrap;">
             <input type="file" accept=".pdf" style="display:none;" onchange="onPdfSelect(event,'${id}')" />
-            <span id="pdf-btn-${id}" style="background:rgba(212,130,10,0.12);border:1px solid var(--border);color:var(--gold);padding:0.25rem 0.6rem;font-size:0.62rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;transition:background 0.2s;">
+            <span id="pdf-btn-${id}" style="background:rgba(238,154,30,0.12);border:1px solid var(--border);color:var(--gold);padding:0.25rem 0.6rem;font-size:0.62rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;transition:background 0.2s;">
               + PDF
             </span>
           </label>
           <span id="pdf-name-${id}" style="font-size:0.65rem;color:var(--gray);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
-          <div id="pdf-spinner-${id}" style="display:none;width:12px;height:12px;border:2px solid rgba(212,130,10,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;"></div>
+          <div id="pdf-spinner-${id}" style="display:none;width:12px;height:12px;border:2px solid rgba(238,154,30,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;"></div>
         </div>
         <input type="hidden" id="pdf-url-${id}" value="" />
       </td>
@@ -2233,7 +2496,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       const tplDef = {
         mensal:       { label:'Mensal',             color:'#4caf82' },
         trimestral:   { label:'Trimestral',          color:'#4caf82' },
-        cobranca:     { label:'Pagamento Pendente',  color:'#E8A030' },
+        cobranca:     { label:'Pagamento Pendente',  color:'#F4AE45' },
         sem_cobranca: { label:'Sem Pagamento',       color:'#5BC8AF' },
         elisa:        { label:'Elisa (PIX Elisa)',   color:'#E87FB0' },
         offshore:     { label:'Carteira Offshore',   color:'#6496FF' },
@@ -2332,7 +2595,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     }
     const tpl = templateData[tplId] || { assunto: '', corpo: '' };
     const linkHtml = client.link_relatorio
-      ? `<p style="margin-top:16px;"><a href="${client.link_relatorio}" style="display:inline-block;background:#D4820A;color:#081537;padding:10px 22px;text-decoration:none;font-weight:700;font-size:13px;">↓ Baixar Relatório</a></p>`
+      ? `<p style="margin-top:16px;"><a href="${client.link_relatorio}" style="display:inline-block;background:#EE9A1E;color:#001848;padding:10px 22px;text-decoration:none;font-weight:700;font-size:13px;">↓ Baixar Relatório</a></p>`
       : '';
     const r = s => (s||'')
       .replace(/{{nome}}/g, client.nome||'')
@@ -2399,7 +2662,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const isOpen  = content.style.display === 'block';
     content.style.display = isOpen ? 'none' : 'block';
     arrow.style.transform  = isOpen ? '' : 'rotate(180deg)';
-    btn.style.background   = isOpen ? 'rgba(212,130,10,0.08)' : 'rgba(212,130,10,0.15)';
+    btn.style.background   = isOpen ? 'rgba(238,154,30,0.08)' : 'rgba(238,154,30,0.15)';
   }
 
   // ── RASCUNHO ──
@@ -2449,7 +2712,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           </div>
         </div>
         <div style="display:flex;gap:0.5rem;">
-          <span style="font-size:0.62rem;padding:0.2rem 0.6rem;background:rgba(212,130,10,0.12);border:1px solid var(--border);color:var(--gold);font-weight:600;">PENDENTE</span>
+          <span style="font-size:0.62rem;padding:0.2rem 0.6rem;background:rgba(238,154,30,0.12);border:1px solid var(--border);color:var(--gold);font-weight:600;">PENDENTE</span>
           <button onclick="deletarRascunhoItem('${r.id}')" style="background:none;border:none;color:#e05555;cursor:pointer;font-size:0.8rem;padding:0.2rem 0.5rem;">✕</button>
         </div>
       </div>`).join('');
@@ -4292,7 +4555,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       <div class="ext-chip">Extratos <span>${nClientes}</span></div>
       <div class="ext-chip">Posições <span>${ctRows.length}</span></div>
       <div class="ext-chip">Fundos únicos <span>${uniq.length}</span></div>
-      <div class="ext-chip">Sem CNPJ <span style="color:${semCnpj ? '#E8A030' : '#4caf82'}">${semCnpj}</span></div>`;
+      <div class="ext-chip">Sem CNPJ <span style="color:${semCnpj ? '#F4AE45' : '#4caf82'}">${semCnpj}</span></div>`;
     const table = document.getElementById('ctPreviewTable');
     table.innerHTML = `<thead><tr><th>Cliente</th><th>Corretora</th><th>CNPJ</th><th>Fonte</th><th>Fundo</th><th>Data Cota</th><th>Valor Cota</th></tr></thead>`;
     const tbody = document.createElement('tbody');
