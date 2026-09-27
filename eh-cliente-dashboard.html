@@ -599,7 +599,6 @@
     .main .upload-field select option { background: #FFFFFF; color: #002060; }
     .main .inicio-feature-card, .main .report-card, .main .stat-card, .main .upload-panel,
     .main .perfil-card, .main .preview-card { box-shadow: 0 18px 40px -32px rgba(0,32,96,0.35); }
-    .main .btn-upload, .main .btn-process-ext, .main .ob-banner-btn, .main .perfil-save-btn { color: #002060; }
 
     /* Blocos em azul dentro do conteúdo claro */
     .main .welcome-banner, .main .ob-banner {
@@ -632,6 +631,83 @@
     .main .inicio-nav-link:hover { background: #FBF7EE; }
     .main .perfil-field input { background: #FFFFFF; }
     .main .perfil-field input[readonly] { background: #EFEBE1; }
+
+    /* ── PADRÃO DO SITE (mesmos componentes do index.html) ── */
+    /* Faixa âmbar no topo, como a navegação do site */
+    .sidebar, .topbar, .mobile-nav { box-shadow: inset 0 4px 0 #EE9A1E; }
+
+    /* Botões: principal azul; secundários com contorno; âmbar só dentro dos blocos azuis */
+    .main .btn-upload, .main .btn-process-ext, .main .perfil-save-btn {
+      background: #002060; border: 1px solid #002060; color: #FFFFFF;
+      border-radius: 6px; font-weight: 700; letter-spacing: 0.02em; text-transform: none;
+    }
+    .main .btn-upload:hover:not(:disabled), .main .btn-process-ext:hover:not(:disabled), .main .perfil-save-btn:hover:not(:disabled) {
+      background: #0B2E7A; border-color: #0B2E7A; color: #FFFFFF;
+    }
+    .main .btn-upload[style*="background:rgba"], .main .btn-upload[style*="background:transparent"],
+    .main .btn-upload[style*="background: rgba"], .main .btn-download-ext {
+      background: #FFFFFF !important; color: #002060 !important; border: 1px solid rgba(0,32,96,0.25) !important; border-radius: 6px;
+    }
+    .main .btn-upload[style*="background:rgba"]:hover, .main .btn-upload[style*="background:transparent"]:hover,
+    .main .btn-upload[style*="background: rgba"]:hover, .main .btn-download-ext:hover { border-color: #002060 !important; }
+    .main .btn-upload[style*="background:var(--gold)"] { background: #002060 !important; color: #FFFFFF !important; border-color: #002060 !important; }
+    .main .ob-banner-btn { background: #EE9A1E; border-color: #EE9A1E; color: #002060; border-radius: 6px; font-weight: 800; }
+    .main .ob-banner-btn:hover { background: #F4AE45; border-color: #F4AE45; }
+    .main .filter-btn { border-radius: 6px; }
+
+    /* Campos: caixa branca com borda e cantos arredondados */
+    .main .upload-field input, .main .upload-field select, .main .upload-field textarea,
+    .main .perfil-field input, .main #clientsTable input {
+      background: #FFFFFF; border: 1px solid rgba(0,32,96,0.15); border-radius: 6px;
+      padding: 12px 14px; color: #002060; font-size: 14px;
+    }
+    .main textarea {
+      background: #FFFFFF !important; border: 1px solid rgba(0,32,96,0.15) !important;
+      border-radius: 6px !important; color: #002060 !important;
+    }
+    .main .upload-field input:focus, .main .upload-field select:focus, .main .upload-field textarea:focus,
+    .main .perfil-field input:focus, .main #clientsTable input:focus, .main textarea:focus {
+      border-color: #EE9A1E !important; background: #FFFFFF;
+    }
+    .main .perfil-field input[readonly] { background: #EFEBE1; }
+
+    /* Cards brancos com borda fina, cantos arredondados e sombra suave */
+    .main .upload-panel, .main .perfil-card, .main .preview-card, .main .report-card,
+    .main .stat-card, .main .empty-state, .main .inicio-feature-card, .main .inicio-nav-link {
+      border: 1px solid rgba(0,32,96,0.10); border-radius: 8px;
+    }
+    .main .inicio-grid, .main .reports-grid, .main .stats-row, .main .inicio-nav {
+      gap: 18px; background: none; border: none;
+    }
+    .main .upload-panel::before, .main .perfil-card::before, .main .preview-card::before { display: none; }
+    .main .inicio-feature-card { overflow: hidden; }
+    .main .inicio-feature-card::after { width: auto; right: 0; height: 6px; }
+    .main .report-card::after { height: 6px; }
+
+    /* Blocos azuis: cantos arredondados, faixa âmbar de 6 px no topo e círculos finos */
+    .main .welcome-banner, .main .ob-banner { border-radius: 8px; position: relative; overflow: hidden; }
+    .main .welcome-banner::before, .main .ob-banner::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; width: auto; height: 6px; background: #EE9A1E;
+    }
+    .main .welcome-banner::after {
+      content: ''; position: absolute; right: -140px; top: -180px; width: 420px; height: 420px;
+      border-radius: 50%; border: 1px solid rgba(238,154,30,0.22); pointer-events: none;
+    }
+    .main .ob-banner { border-left: none; padding-top: calc(1.3rem + 6px); }
+    .main .ob-banner > * { position: relative; z-index: 1; }
+
+    /* Títulos de seção e etiquetas sem enfeites; sem itálico */
+    .main .section-title::before, .main .inicio-kicker::before, .main .inicio-section-tag::before,
+    .main .perfil-card-title::before { display: none; }
+    .main .section-title { font-weight: 600; }
+    .main .perfil-card-title, .main .ob-step-name { font-family: 'Manrope', sans-serif !important; font-weight: 700; }
+    .main .inicio-feature-chapter {
+      font-family: 'Manrope', sans-serif; font-style: normal; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.24em; text-transform: uppercase;
+    }
+    .main .inicio-feature-empty, .main .stat-value.gold { font-style: normal; }
+    .main .ob-banner-text strong { font-family: 'Fraunces', serif !important; font-weight: 600; font-size: 1.3rem; }
+    .main .inicio-greeting, .main .inicio-greeting em { font-weight: 600 !important; letter-spacing: -0.015em; }
   </style>
   <link rel="stylesheet" href="eh-tema.css" />
 </head>
