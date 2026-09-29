@@ -1299,7 +1299,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
               Enviar a carta mensal junto
             </label>
             <p style="font-size:0.72rem;color:var(--gray);line-height:1.6;margin:0.4rem 0 0;">
-              Todos os emails deste disparo levam o botão <strong style="color:var(--white);">Baixar carta mensal</strong> ao lado do <strong style="color:var(--white);">Baixar relatório</strong>.
+              Todos os emails deste disparo levam o botão <strong style="color:var(--white);">Ler a Carta Mensal →</strong> ao lado do <strong style="color:var(--white);">Baixar Relatório</strong>.
               Para colocar o botão da carta em outro ponto do texto, use <code style="background:rgba(238,154,30,0.15);color:var(--gold-text);padding:0.1rem 0.4rem;">{{btn_carta}}</code> no template.
             </p>
             <div id="cartaPanel" style="display:none;margin-top:1rem;">
@@ -2690,7 +2690,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     // template tiver {{btn_carta}}; sem nenhum dos dois, entra no final do email.
     const carta = cartaAtiva();
     const btnRel   = { url: client.link_relatorio, label: 'Baixar Relatório' };
-    const btnCarta = carta ? { url: carta.url, label: 'Carta Mensal', secundario: true } : null;
+    const btnCarta = carta ? { url: carta.url, label: 'Ler a Carta Mensal', secundario: true } : null;
     const cartaPropria = !!btnCarta && (tpl.corpo||'').includes('{{btn_carta}}');
     const linkHtml  = emailButtons([btnRel, cartaPropria ? null : btnCarta]);
     const cartaHtml = emailButtons([btnCarta]);
@@ -2855,7 +2855,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   // ── CARTA MENSAL ──
-  // Com a caixa marcada, os emails do disparo levam também o botão "Baixar carta mensal".
+  // Com a caixa marcada, os emails do disparo levam também o botão "Ler a Carta Mensal".
   // O link do PDF fica salvo em email_templates (id "carta_mensal_pdf": corpo = URL
   // pública, assunto = nome do arquivo), para não precisar reenviar o PDF.
   function fillCartaFields() {
