@@ -1384,6 +1384,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         </h3>
         <p style="font-size:0.78rem;color:var(--gray);margin-bottom:1rem;line-height:1.6;">Mapeie trechos do nome do fundo para o CNPJ. Cada corretora tem sua própria tabela, salva automaticamente no Supabase.</p>
 
+        <button type="button" class="btn-upload mapping-toggle-btn" onclick="toggleMappingPanel(this,'extMappingPanel')" style="background:rgba(255,255,255,0.06);color:var(--gray-light);font-size:0.62rem;padding:0.4rem 0.8rem;margin-bottom:0.9rem;">Exibir tabela</button>
+        <div id="extMappingPanel" style="display:none;">
         <div class="mapping-toolbar-ext">
           <div class="save-indicator-ext">
             <div class="save-dot saved" id="extSaveDot"></div>
@@ -1392,7 +1394,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
             <button onclick="extExportMapping()" class="btn-upload" style="background:rgba(255,255,255,0.06);color:var(--gray-light);font-size:0.62rem;padding:0.4rem 0.8rem;">↓ Exportar Excel</button>
             <label class="btn-upload" style="background:rgba(255,255,255,0.06);color:var(--gray-light);font-size:0.62rem;padding:0.4rem 0.8rem;cursor:pointer;">↑ Importar Excel<input type="file" accept=".xlsx,.xls" style="display:none" onchange="extImportMapping(this)"></label>
-            <button onclick="extResetMapping()" class="btn-upload" style="background:rgba(224,85,85,0.1);color:var(--err-text);border:1px solid rgba(224,85,85,0.3);font-size:0.62rem;padding:0.4rem 0.8rem;">Restaurar padrão</button>
+            <button onclick="extMergeDefaultMapping()" class="btn-upload" style="background:rgba(238,154,30,0.1);color:var(--gold-text);border:1px solid var(--border);font-size:0.62rem;padding:0.4rem 0.8rem;" title="Acrescenta os fundos da tabela padrão que ainda não estão aqui, sem apagar nada">+ Completar com padrão</button>
           </div>
         </div>
 
@@ -1403,6 +1405,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           </table>
         </div>
         <button onclick="extAddMappingRow()" class="btn-upload" style="margin-top:0.8rem;background:rgba(238,154,30,0.1);color:var(--gold-text);border:1px solid var(--border);">+ Adicionar fundo</button>
+        </div>
       </div>
 
       <!-- Process -->
@@ -1469,6 +1472,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         </h3>
         <p style="font-size:0.78rem;color:var(--gray);margin-bottom:1rem;line-height:1.6;">Mapeie trechos do nome do fundo para o CNPJ. Esta é a <strong style="color:var(--gray-light);">mesma tabela XP</strong> usada em Extratos → Excel: o que você editar aqui vale nos dois lugares.</p>
 
+        <button type="button" class="btn-upload mapping-toggle-btn" onclick="toggleMappingPanel(this,'xpnMappingPanel')" style="background:rgba(255,255,255,0.06);color:var(--gray-light);font-size:0.62rem;padding:0.4rem 0.8rem;margin-bottom:0.9rem;">Exibir tabela</button>
+        <div id="xpnMappingPanel" style="display:none;">
         <div class="mapping-toolbar-ext">
           <div class="save-indicator-ext">
             <div class="save-dot saved" id="xpnSaveDot"></div>
@@ -1477,7 +1482,6 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
             <button onclick="xpnExportMapping()" class="btn-upload" style="background:rgba(255,255,255,0.06);color:var(--gray-light);font-size:0.62rem;padding:0.4rem 0.8rem;">↓ Exportar Excel</button>
             <label class="btn-upload" style="background:rgba(255,255,255,0.06);color:var(--gray-light);font-size:0.62rem;padding:0.4rem 0.8rem;cursor:pointer;">↑ Importar Excel<input type="file" accept=".xlsx,.xls" style="display:none" onchange="xpnImportMapping(this)"></label>
-            <button onclick="xpnResetMapping()" class="btn-upload" style="background:rgba(224,85,85,0.1);color:var(--err-text);border:1px solid rgba(224,85,85,0.3);font-size:0.62rem;padding:0.4rem 0.8rem;">Restaurar padrão</button>
           </div>
         </div>
 
@@ -1488,6 +1492,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           </table>
         </div>
         <button onclick="xpnAddMappingRow()" class="btn-upload" style="margin-top:0.8rem;background:rgba(238,154,30,0.1);color:var(--gold-text);border:1px solid var(--border);">+ Adicionar fundo</button>
+        </div>
       </div>
 
       <!-- Process -->
@@ -3093,17 +3098,49 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     { key:"Porto Seguro FIRF",           cnpj:"18.719.154/0001-01", full:"PORTO SEGURO DI CP" },
     { key:"Blueoak SSI",                 cnpj:"55.219.936/0001-08", full:"BLUEOAK SPECIAL SIT. I FIC FIP" },
     { key:"Absolute Creta Advisory",     cnpj:"48.122.126/0001-65", full:"ABSOLUTE CRETA ADVISORY FIC FIRF" },
+    { key:"Capitânia Yield",            cnpj:"66.578.726/0001-14", full:"CAPITÂNIA YIELD SÊNIOR FIC FIDC RL" },
+    { key:"Capitânia Radar",            cnpj:"23.272.391/0001-07", full:"CAPITÂNIA RADAR 90 FIC DE FIF MULTIMERCADO CP LP RL" },
+    { key:"Jive Bossanova 90",          cnpj:"58.893.662/0001-18", full:"JIVE BOSSANOVA 90 FIDC" },
+    { key:"Ouro Preto",                 cnpj:"14.171.578/0001-15", full:"OURO PRETO FIC DE FIDC" },
+    { key:"BNP Paribas Match",          cnpj:"09.636.393/0001-07", full:"BNP PARIBAS MATCH FIF RF CP RL" },
+    { key:"ARX Denali",                 cnpj:"41.888.219/0001-56", full:"ARX DENALI ADVISORY FIC DE FIF RF CP RL" },
+    { key:"ARX Vinson",                 cnpj:"41.888.492/0001-80", full:"ARX VINSON ADVISORY FIC DE FIF RF CP RL" },
+    { key:"Augme 30 II",                cnpj:"52.285.852/0001-76", full:"AUGME 30 II CIC DE CIRF CP LP RL" },
+    { key:"Daycoval Classic",           cnpj:"29.250.121/0001-73", full:"DAYCOVAL CLASSIC 30 FIRF CP" },
+    { key:"Iridium Titan",              cnpj:"32.756.812/0001-58", full:"IRIDIUM TITAN ADVISORY FIC EM FIF RF CP RL" },
+    { key:"Polo Crédito Corporativo",   cnpj:"31.455.879/0001-90", full:"POLO CRÉDITO CORPORATIVO ADVISORY FIC FIF RF CP LP RL" },
+    { key:"SPX Seahawk",                cnpj:"35.505.971/0001-78", full:"SPX SEAHAWK ADVISORY FIC FIRF CP LP" },
+    { key:"Tivio Institucional",        cnpj:"06.866.051/0001-87", full:"TIVIO INSTITUCIONAL RF CP FIF RL" },
+    { key:"Headline XP",                cnpj:"45.089.346/0001-46", full:"HEADLINE XP VC 3 FIP MULTI CLASSE A (TREND PE X)" },
+    { key:"Newave Energia",             cnpj:"46.153.220/0001-56", full:"NEWAVE ENERGIA I ADVISORY CLASSE D (TREND PE XXVII)" },
+    { key:"XP Selection Alter",         cnpj:"39.669.815/0001-01", full:"XP SELECTION ALTERNATIVO CLASSE A (TREND PE V)" },
+    { key:"HSI Renda CDI",              cnpj:"67.704.827/0001-57", full:"HSI RENDA CDI CRÉDITO" },
+    { key:"Riza Renda Imobili",         cnpj:"66.834.182/0001-04", full:"RIZA RENDA IMOBILIÁRIA" },
+    { key:"Brasol Renda",               cnpj:"63.104.203/0001-48", full:"BRASOL RENDA IMOBILIÁRIA" },
+    { key:"BTLP11",                     cnpj:"60.922.008/0001-37", full:"BTLP11 - BTG PACTUAL" },
+    { key:"Maua Lajes",                 cnpj:"62.526.654/0001-00", full:"MAUÁ LAJES CORPORATIVAS" },
+    { key:"MCCE11",                     cnpj:"43.741.195/0001-33", full:"MCCE11 - MAUÁ CAPITAL" },
+    { key:"Pátria Infraestrutur",       cnpj:"64.768.982/0001-49", full:"PÁTRIA INFRAESTRUTURA" },
+    { key:"AZ-AXS Energia",             cnpj:"61.258.419/0001-32", full:"AZ-AXS ENERGIA FIP-I" },
+    { key:"A1 CP High Grade",           cnpj:"57.832.914/0001-36", full:"A1 CP HIGH GRADE FIF" },
+    { key:"BDIF11",                     cnpj:"BDIF11", full:"BDIF11 - FII" },
+    { key:"VGHF11",                     cnpj:"VGHF11", full:"VGHF11 - FII" },
+    { key:"VGIR11",                     cnpj:"VGIR11", full:"VGIR11 - FII" },
+    { key:"VIGT11",                     cnpj:"VIGT11", full:"VIGT11 - FII" },
+    { key:"KNCR11",                     cnpj:"KNCR11", full:"KNCR11 - FII" },
+    { key:"KNIP11",                     cnpj:"KNIP11", full:"KNIP11 - FII" },
+    { key:"VGIP11",                     cnpj:"VGIP11", full:"VGIP11 - FII" },
     { key:"Jivemauá Bossanova",          cnpj:"", full:"Jivemauá Bossanova Crédito Securitizad" },
     { key:"CRI MAGAZINE LUIZA",          cnpj:"", full:"CRI Magazine Luiza - OUT/2030" },
-    { key:"CDII11",                      cnpj:"", full:"CDII11 - FII" },
-    { key:"XP Renda Imobiliária",        cnpj:"", full:"XP Renda Imobiliária" },
+    { key:"CDII11",                      cnpj:"CDII11", full:"CDII11 - FII" },
+    { key:"XP Renda Imobiliária",        cnpj:"61.424.730/0001-04", full:"XP Renda Imobiliária" },
     { key:"CRA MARFRIG",                 cnpj:"", full:"CRA Marfrig - MAR/2034" },
     { key:"CDCA VAMOS",                  cnpj:"", full:"CDCA Vamos - SET/2031" },
     { key:"CDCA BTG",                    cnpj:"", full:"CDCA BTG - JUL/2034" },
     { key:"CRA JBS",                     cnpj:"", full:"CRA JBS - SET/2037" },
     { key:"CRA SEARA",                   cnpj:"", full:"CRA Seara - SET/2034" },
     { key:"CRI MRV FLEX",                cnpj:"", full:"CRI MRV Flex - MAR/2033" },
-    { key:"RBRY11",                      cnpj:"", full:"RBRY11 - FII" },
+    { key:"RBRY11",                      cnpj:"RBRY11", full:"RBRY11 - FII" },
   ];
 
   const DEFAULT_MAPPING_EQI = [
@@ -3118,6 +3155,26 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     { key:"ROOT CAP",                    cnpj:"64.299.705/0001-34", full:"ROOT CAPITAL FICUS FIDC" },
     { key:"SOLIS",                       cnpj:"13.054.728/0001-48", full:"SOLIS CAPITAL ANTARES CrPr FICFIM LP" },
     { key:"EV ENERGIA",                  cnpj:"56.873.069/0001-84", full:"EV ENERGIA FIC FIP INFRA RESP LIMITADA" },
+    { key:"ARTESANAL CDI",              cnpj:"57.555.376/0001-80", full:"ARTESANAL CDI FIC FIDC I RL" },
+    { key:"SCORE EQI",                  cnpj:"52.746.497/0001-95", full:"SCORE EQI PREC FIDC RESP LIMITADA SÊNIOR" },
+    { key:"CETER FIDC",                 cnpj:"39.806.561/0001-18", full:"CETER FIDC RL" },
+    { key:"MENES FIDC",                 cnpj:"38.226.673/0001-37", full:"MENES FIDC SUB A" },
+    { key:"POLIG ALPHA",                cnpj:"54.519.721/0001-31", full:"POLIG ALPHA FC FIDC" },
+    { key:"AGRO RDA",                   cnpj:"60.743.809/0001-35", full:"AGRO RDA SR 1 FIAGRO" },
+    { key:"BTGP RE HF",                 cnpj:"57.469.492/0001-86", full:"BTGP RE HF MULT FII" },
+    { key:"BTG CRD IMOB",               cnpj:"60.027.987/0001-60", full:"BTG CRÉDITO IMOBILIÁRIO CDI FII" },
+    { key:"RIZA EQUITUS",               cnpj:"57.593.613/0001-05", full:"RIZA EQUITUS FII" },
+    { key:"VALORA CDI",                 cnpj:"64.125.652/0001-35", full:"VALORA CDI FIP INFRA" },
+    { key:"VALORA PRE",                 cnpj:"64.124.715/0001-39", full:"VALORA PRE FIP INFRA" },
+    { key:"AF INV GER",                 cnpj:"29.044.189/0001-04", full:"AF INVEST FI RF GERAES 30 CP" },
+    { key:"COMPASS YLD",                cnpj:"36.318.479/0001-56", full:"COMPASS YIELD 30 FIF RENDA FIXA" },
+    { key:"CR CORP I FRF",              cnpj:"14.171.644/0001-57", full:"BTG PACTUAL CRÉDITO CORPORATIVO I" },
+    { key:"TIVIO INST",                 cnpj:"06.866.051/0001-87", full:"TIVIO INSTITUCIONAL FIRF" },
+    { key:"VIN CRE",                    cnpj:"47.684.408/0001-93", full:"VIN CRE FC FM CP" },
+    { key:"SOL ANT",                    cnpj:"13.054.728/0001-48", full:"SOLIS CAPITAL ANTARES CrPr FICFIM LP" },
+    { key:"AGRO MILENIO",               cnpj:"61.700.255/0001-51", full:"AGROFIN MILENIO EQI FIC AGRO RL" },
+    { key:"BTAG 11",                    cnpj:"BTAG11", full:"FIAGRO BTG AGRO CI (BTAG11)" },
+    { key:"BDIF 11",                    cnpj:"BDIF11", full:"FIC INFRA BTG CI (BDIF11)" },
     { key:"CRA BANDEIRANTES",            cnpj:"", full:"CRA Bandeirantes" },
     { key:"CANAL COMPANHIA",             cnpj:"", full:"CRA Canal Companhia de Securitizacao" },
     { key:"CRA AGRION",                  cnpj:"", full:"CRA Agrion - VENC 2033" },
@@ -3230,10 +3287,28 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     }).filter(r => r.key);
   }
 
-  function extResetMapping() {
-    if (!confirm('Restaurar tabela padrão? Isso vai sobrescrever o mapeamento atual.')) return;
-    extRenderMapping(extCurrentDefault());
+  // Acrescenta as linhas da tabela padrão que ainda não existem (mesmo trecho) ou que
+  // estão com CNPJ em branco aqui — não apaga nem altera CNPJs já preenchidos.
+  function extMergeDefaultMapping() {
+    const rows = extGetMappingRows();
+    const byKey = new Map(rows.map(r => [r.key.toUpperCase(), r]));
+    let added = 0, filled = 0;
+    extCurrentDefault().forEach(d => {
+      const cur = byKey.get(d.key.toUpperCase());
+      if (!cur) { rows.push({ ...d }); added++; }
+      else if (!cur.cnpj && d.cnpj) { cur.cnpj = d.cnpj; if (!cur.full) cur.full = d.full; filled++; }
+    });
+    if (!added && !filled) { alert('A tabela já contém todos os fundos do padrão.'); return; }
+    extRenderMapping(rows);
     extSaveMappingToSupabase();
+    alert(`${added} fundo(s) adicionado(s) e ${filled} CNPJ(s) preenchido(s).`);
+  }
+
+  function toggleMappingPanel(btn, id) {
+    const panel = document.getElementById(id);
+    const open = panel.style.display === 'none';
+    panel.style.display = open ? '' : 'none';
+    btn.textContent = open ? 'Ocultar tabela' : 'Exibir tabela';
   }
 
   function extExportMapping() {
@@ -3805,12 +3880,6 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       const ins = tr.querySelectorAll('input');
       return { key: ins[0].value.trim(), cnpj: ins[1].value.trim(), full: ins[2].value.trim() };
     }).filter(r => r.key);
-  }
-
-  function xpnResetMapping() {
-    if (!confirm('Restaurar tabela padrão? Isso vai sobrescrever o mapeamento XP atual (usado também em Extratos → Excel).')) return;
-    xpnRenderMapping(DEFAULT_MAPPING_XP);
-    xpnSaveMapping();
   }
 
   function xpnExportMapping() {
