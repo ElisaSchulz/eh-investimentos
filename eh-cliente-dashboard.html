@@ -1344,7 +1344,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       <div class="broker-selector">
         <button class="broker-btn active" id="btnXP" onclick="extSelectBroker('XP')">
           <span class="broker-btn-name">XP Investimentos</span>
-          <span class="broker-btn-sub">Extrato de Conta Depósito</span>
+          <span class="broker-btn-sub">Extrato de Conta Depósito · layout antigo e novo</span>
         </button>
         <button class="broker-btn" id="btnEQI" onclick="extSelectBroker('EQI')">
           <span class="broker-btn-name">EQI / BTG</span>
@@ -1441,7 +1441,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       </div>
 
       <div class="eqi-notice-dash visible">
-        <strong style="color:var(--white);">Quando usar:</strong> se o extrato XP (<strong style="color:var(--white);">Extrato da Conta Investimento</strong>) não for lido pela ferramenta <strong style="color:var(--white);">Extratos → Excel</strong>, use esta. Ela entende o novo desenho do PDF, em que datas e valores vêm com espaços (“31 / 07 / 2026”, “R $ 1 . 396 , 64”). A tabela de CNPJ é a mesma do modo XP.
+        <strong style="color:var(--white);">Quando usar:</strong> o modo XP de <strong style="color:var(--white);">Extratos → Excel</strong> já reconhece este layout automaticamente; esta ferramenta continua disponível como alternativa. Ela entende o novo desenho do PDF, em que datas e valores vêm com espaços (“31 / 07 / 2026”, “R $ 1 . 396 , 64”). A tabela de CNPJ é a mesma do modo XP.
       </div>
 
       <!-- Upload -->
@@ -3700,13 +3700,19 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       extLog(`── ${f.name}`,'head'); extSetFileStatus(f,'processando...','');
       try {
         const text=await extExtractText(f);
-        const sheetName=extGetSheetName(text,f.name);
+        // Modo XP aceita os dois layouts: o antigo e o novo ("XP Extratos Novos", com
+        // datas/valores espaçados). Usa o parser que encontrar mais transações.
+        const oldRows=extCurrentBroker==='XP'?extParseXP(text):[];
+        const newRows=extCurrentBroker==='XP'?xpnParse(text):[];
+        const xpNovo=newRows.length>oldRows.length;
+        const sheetName=xpNovo?xpnGetSheetName(text,f.name):extGetSheetName(text,f.name);
         extLog(`Cliente: "${sheetName}"`,'ok');
         let rows;
         if (extCurrentBroker==='XP') {
-          const rawRows=extParseXP(text);
+          const rawRows=xpNovo?newRows:oldRows;
           if(!rawRows.length){extLog('Nenhuma transação encontrada','err');extSetFileStatus(f,'erro','file-status-err');continue;}
-          rows=rawRows.map(r=>{const tipo=extClassifyTipoXP(r.historico);const cnpj=['IOF','IRRF'].includes(tipo)?'—':extLookupCNPJ(r.historico,mapping);return{...r,tipo,cnpj,isGross:true,needsGross:false};});
+          if(xpNovo) extLog('Layout novo da XP detectado','ok');
+          rows=rawRows.map(r=>{const tipo=extClassifyTipoXP(r.historico);const cnpj=['IOF','IRRF'].includes(tipo)?'—':(xpNovo?xpnLookupCNPJ:extLookupCNPJ)(r.historico,mapping);return{...r,tipo,cnpj,isGross:true,needsGross:false};});
         } else {
           rows=extParseEQI(text,mapping);
           if(!rows.length){extLog('Nenhuma transação na Conta Corrente encontrada','err');extSetFileStatus(f,'erro','file-status-err');continue;}
