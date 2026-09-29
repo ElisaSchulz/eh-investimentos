@@ -2664,6 +2664,13 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     }).filter(r => r && r.email && r.nome);
   }
 
+  // Botão dos emails no visual da EH (âmbar #EE9A1E, texto navy, caixa alta espaçada,
+  // Manrope, cantos de 6px). Feito com tabela para renderizar igual no Gmail e no Outlook;
+  // fica numa linha só para o buildHtmlEmail tratá-lo como bloco.
+  function emailButton(url, label) {
+    return `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:22px 0 6px;border-collapse:separate;"><tr><td bgcolor="#EE9A1E" style="background:#EE9A1E;border-radius:6px;mso-padding-alt:14px 30px;"><a href="${url}" target="_blank" style="display:inline-block;padding:14px 30px;font-family:'Manrope',Arial,Helvetica,sans-serif;font-size:12px;line-height:1;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;color:#001848;text-decoration:none;border-radius:6px;">${label}</a></td></tr></table>`;
+  }
+
   function applyTpl(client) {
     const num  = parseFloat((client.desempenho||'0').replace(',','.').replace('%',''));
     const up   = num >= 100;
@@ -2681,7 +2688,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     }
     const tpl = templateData[tplId] || { assunto: '', corpo: '' };
     const linkHtml = client.link_relatorio
-      ? `<p style="margin-top:16px;"><a href="${client.link_relatorio}" style="display:inline-block;background:#EE9A1E;color:#001848;padding:10px 22px;text-decoration:none;font-weight:700;font-size:13px;">↓ Baixar Relatório</a></p>`
+      ? emailButton(client.link_relatorio, 'Baixar relatório')
       : '';
     const r = s => (s||'')
       .replace(/{{nome}}/g, client.nome||'')
@@ -2937,7 +2944,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   // Assunto e corpo da carta para um cliente
   function applyCarta(client, carta) {
     const btnHtml = carta.url
-      ? `<p style="margin-top:16px;"><a href="${carta.url}" style="display:inline-block;background:#EE9A1E;color:#001848;padding:10px 22px;text-decoration:none;font-weight:700;font-size:13px;">↓ Baixar Carta Mensal</a></p>`
+      ? emailButton(carta.url, 'Baixar carta mensal')
       : '';
     let corpo = carta.corpo.includes('{{btn_carta}}') ? carta.corpo : carta.corpo + '\n\n{{btn_carta}}';
     const r = s => (s||'').replace(/{{nome}}/g, client.nome||'').replace(/{{btn_carta}}/g, btnHtml);
