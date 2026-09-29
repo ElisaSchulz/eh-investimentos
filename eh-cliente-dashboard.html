@@ -1292,6 +1292,42 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
             <button class="btn-upload" onclick="addClientRow()" style="background:rgba(238,154,30,0.15);color:var(--gold-text);border:1px solid var(--border);">+ Adicionar linha</button>
             <button class="btn-upload" onclick="clearAllRows()" style="background:rgba(224,85,85,0.1);color:var(--err-text);border:1px solid rgba(224,85,85,0.3);">Limpar tudo</button>
           </div>
+          <!-- CARTA MENSAL -->
+          <div style="margin-top:1.5rem;border:1px solid var(--border);background:rgba(238,154,30,0.05);padding:1.1rem 1.2rem;">
+            <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-size:0.8rem;color:var(--white);font-weight:600;">
+              <input type="checkbox" id="cartaEnviar" onchange="cartaToggle()" style="width:16px;height:16px;accent-color:var(--gold);" />
+              Enviar a carta mensal junto
+            </label>
+            <p style="font-size:0.72rem;color:var(--gray);line-height:1.6;margin:0.4rem 0 0;">
+              Cada cliente da tabela recebe também um <strong style="color:var(--white);">email separado</strong> com a carta mensal (um por endereço, mesmo que apareça em mais de uma linha).
+              O PDF vai como botão <strong style="color:var(--white);">↓ Baixar Carta Mensal</strong>, igual ao relatório.
+            </p>
+            <div id="cartaPanel" style="display:none;margin-top:1rem;">
+              <div class="upload-field" style="margin-bottom:0.9rem;">
+                <label>PDF da carta mensal</label>
+                <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+                  <label style="cursor:pointer;">
+                    <input type="file" accept=".pdf" style="display:none;" onchange="onCartaPdfSelect(event)" />
+                    <span id="cartaPdfBtn" style="display:inline-block;background:rgba(238,154,30,0.12);border:1px solid var(--border);color:var(--gold-text);padding:0.35rem 0.8rem;font-size:0.62rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;">+ PDF</span>
+                  </label>
+                  <span id="cartaPdfName" style="font-size:0.72rem;color:var(--gray);">nenhum arquivo</span>
+                </div>
+              </div>
+              <div class="upload-field" style="margin-bottom:0.9rem;">
+                <label>Assunto</label>
+                <input type="text" id="cartaAssunto" placeholder="ex: EH Investimentos — Carta Mensal de Agosto" oninput="cartaMarkUnsaved()" />
+              </div>
+              <div class="upload-field" style="margin-bottom:0.9rem;">
+                <label>Texto (use {{nome}}; {{btn_carta}} marca onde entra o botão — sem ele, o botão vai no final)</label>
+                <textarea id="cartaCorpo" rows="9" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="cartaMarkUnsaved()"></textarea>
+              </div>
+              <div style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">
+                <button class="btn-upload" onclick="salvarCarta()" style="background:rgba(238,154,30,0.15);color:var(--gold-text);border:1px solid var(--border);">Salvar carta</button>
+                <span id="cartaSaveText" style="font-size:0.68rem;color:var(--gray);"></span>
+              </div>
+            </div>
+          </div>
+
           <div style="margin-top:1.5rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:center;">
             <button class="btn-upload" onclick="previewEmails()" style="background:rgba(255,255,255,0.08);color:var(--white);">Pré-visualizar</button>
             <button class="btn-upload" onclick="salvarRascunho()" style="background:rgba(238,154,30,0.15);color:var(--gold-text);border:1px solid var(--border);">
@@ -1607,7 +1643,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', extratos:'Extratos → Excel', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos' };
     const topbar = document.getElementById('topbarTitle');
     if (topbar) topbar.textContent = titles[viewId] || viewId;
-    if (viewId === 'emails') { loadTemplates().then(() => buildTemplateAccordion()); if (clientRows.length === 0) addClientRow(); loadRascunho(); }
+    if (viewId === 'emails') { loadTemplates().then(() => { buildTemplateAccordion(); fillCartaFields(); }); if (clientRows.length === 0) addClientRow(); loadRascunho(); }
     if (viewId === 'extratos') extLoadMappingFromSupabase();
     if (viewId === 'cotas') ctLoadXpMapping();
     if (viewId === 'clientes') loadClientesView();
@@ -2675,6 +2711,18 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         <div class="preview-body">${body}</div>
       </div>`;
     }).join('');
+    if (document.getElementById('cartaEnviar')?.checked) {
+      const errCarta = cartaErro();
+      const cm = applyCarta(clients[0], getCarta());
+      document.getElementById('previewList').innerHTML += `<div class="preview-card">
+        <div class="preview-card-header">
+          <div class="preview-meta"><strong>Carta mensal</strong> — exemplo para ${clients[0].nome} (vai para todos os ${clients.length} cliente(s))<br/><strong>Assunto:</strong> ${cm.subject}</div>
+          <span style="font-size:0.6rem;color:var(--gold-text);">📄 Carta Mensal</span>
+        </div>
+        ${errCarta ? `<div style="color:var(--err-text);font-size:0.75rem;padding:0.6rem 1rem;">⚠ ${errCarta}</div>` : ''}
+        <div class="preview-body">${cm.body}</div>
+      </div>`;
+    }
     area.scrollIntoView({ behavior: 'smooth' });
   }
 
@@ -2802,10 +2850,121 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     await loadRascunho();
   }
 
+  // ── CARTA MENSAL ──
+  // Email separado, enviado a cada cliente da tabela junto com o disparo dos relatórios.
+  // Texto e assunto ficam em email_templates (id "carta_mensal"); o link do PDF, na
+  // linha "carta_mensal_pdf" (corpo = URL pública, assunto = nome do arquivo).
+  const CARTA_DEFAULT_CORPO = 'Bom dia, <strong>{{nome}}</strong>,\n\nSegue nosso relatório mensal com a visão do mês de agosto. Nela abordamos os mercados locais e globais, além do que esperamos para as nossas carteiras.\n\nAproveitem a leitura e ficamos à disposição para quaisquer esclarecimentos.\n\nAgradecemos e um abraço,\n\n{{btn_carta}}';
+
+  function fillCartaFields() {
+    const tpl = templateData['carta_mensal'] || {};
+    const pdf = templateData['carta_mensal_pdf'] || {};
+    const subj = document.getElementById('cartaAssunto');
+    const body = document.getElementById('cartaCorpo');
+    if (subj && !subj.value) subj.value = tpl.assunto || '';
+    if (body && !body.value) body.value = tpl.corpo || CARTA_DEFAULT_CORPO;
+    if (pdf.corpo && !document.getElementById('cartaPdfBtn').dataset.url) cartaSetPdf(pdf.corpo, pdf.assunto || 'Carta mensal.pdf');
+  }
+
+  function cartaToggle() {
+    document.getElementById('cartaPanel').style.display = document.getElementById('cartaEnviar').checked ? 'block' : 'none';
+  }
+
+  function cartaMarkUnsaved() {
+    const t = document.getElementById('cartaSaveText');
+    if (t) t.textContent = 'Alterações não salvas';
+  }
+
+  function cartaSetPdf(url, filename) {
+    const btn = document.getElementById('cartaPdfBtn');
+    btn.dataset.url = url;
+    btn.dataset.filename = filename;
+    btn.textContent = '✓ Trocar PDF';
+    btn.style.color = '#4caf82';
+    btn.style.borderColor = 'rgba(76,175,130,0.4)';
+    document.getElementById('cartaPdfName').textContent = filename;
+  }
+
+  async function onCartaPdfSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const btn = document.getElementById('cartaPdfBtn');
+    const nameEl = document.getElementById('cartaPdfName');
+    btn.textContent = '...';
+    nameEl.textContent = file.name;
+    try {
+      const sanitize = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9._-]/g,'_').replace(/_+/g,'_');
+      const filePath = `email-cartas/${Date.now()}_${sanitize(file.name)}`;
+      const { error } = await sb.storage.from('reports').upload(filePath, file, { contentType: 'application/pdf', upsert: false });
+      if (error) throw error;
+      const { data } = sb.storage.from('reports').getPublicUrl(filePath);
+      cartaSetPdf(data.publicUrl, file.name);
+      cartaMarkUnsaved();
+    } catch(e) {
+      console.error('Carta PDF upload error:', e);
+      delete btn.dataset.url;
+      btn.textContent = '✕ Erro';
+      btn.style.color = '#e05555';
+      nameEl.textContent = 'Erro no upload: ' + e.message;
+    }
+    event.target.value = '';
+  }
+
+  function getCarta() {
+    const btn = document.getElementById('cartaPdfBtn');
+    return {
+      assunto:  (document.getElementById('cartaAssunto')?.value || '').trim(),
+      corpo:    (document.getElementById('cartaCorpo')?.value || '').trim(),
+      url:      btn?.dataset.url || '',
+      filename: btn?.dataset.filename || ''
+    };
+  }
+
+  async function salvarCarta() {
+    const c = getCarta();
+    const t = document.getElementById('cartaSaveText');
+    const now = new Date().toISOString();
+    const rows = [
+      { id:'carta_mensal',     nome:'Carta Mensal',       assunto:c.assunto,  corpo:c.corpo, updated_at:now, updated_by:currentUser.id },
+      { id:'carta_mensal_pdf', nome:'Carta Mensal — PDF', assunto:c.filename, corpo:c.url,   updated_at:now, updated_by:currentUser.id }
+    ];
+    const { error } = await sb.from('email_templates').upsert(rows, { onConflict: 'id' });
+    if (error) { if (t) t.textContent = 'Erro ao salvar: ' + error.message; return; }
+    rows.forEach(r => { templateData[r.id] = { assunto: r.assunto, corpo: r.corpo }; });
+    if (t) t.textContent = 'Salvo — ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+  }
+
+  // Assunto e corpo da carta para um cliente
+  function applyCarta(client, carta) {
+    const btnHtml = carta.url
+      ? `<p style="margin-top:16px;"><a href="${carta.url}" style="display:inline-block;background:#EE9A1E;color:#001848;padding:10px 22px;text-decoration:none;font-weight:700;font-size:13px;">↓ Baixar Carta Mensal</a></p>`
+      : '';
+    let corpo = carta.corpo.includes('{{btn_carta}}') ? carta.corpo : carta.corpo + '\n\n{{btn_carta}}';
+    const r = s => (s||'').replace(/{{nome}}/g, client.nome||'').replace(/{{btn_carta}}/g, btnHtml);
+    return { subject: r(carta.assunto), body: r(corpo) };
+  }
+
+  // Erro de validação da carta (ou '' se estiver tudo certo / carta desmarcada)
+  function cartaErro() {
+    if (!document.getElementById('cartaEnviar')?.checked) return '';
+    const c = getCarta();
+    if (!c.url) return 'Carta mensal: envie o PDF da carta.';
+    if (!c.assunto) return 'Carta mensal: preencha o assunto.';
+    if (!c.corpo) return 'Carta mensal: preencha o texto.';
+    return '';
+  }
+
   async function sendAllEmails() {
     const clients = getClients();
     if (!clients.length) { alert('Adicione pelo menos um cliente.'); return; }
-    if (!confirm(`Confirmar envio de ${clients.length} email(s)?`)) return;
+    const errCarta = cartaErro();
+    if (errCarta) { alert(errCarta); return; }
+    const comCarta = document.getElementById('cartaEnviar')?.checked;
+    const carta = comCarta ? getCarta() : null;
+    if (!confirm(`Confirmar envio de ${clients.length} email(s)${comCarta ? ' + carta mensal' : ''}?`)) return;
+    if (comCarta) await salvarCarta();
+    const cartaEnviada = new Set(); // um email de carta por endereço
+    let cartasSent = 0;
     const btn = document.getElementById('sendBtn');
     btn.disabled = true; btn.textContent = 'Enviando...';
 
@@ -2826,6 +2985,19 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         const result = await res.json();
         if (result.success) { sent++; }
         else { errors.push(`${toEmail}: ${result.error || 'Erro desconhecido'}`); }
+        if (comCarta && !cartaEnviada.has(toEmail.toLowerCase())) {
+          cartaEnviada.add(toEmail.toLowerCase());
+          const cm = applyCarta(c, carta);
+          await new Promise(r => setTimeout(r, 400));
+          const resC = await fetch(GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ to_email: toEmail, subject: cm.subject, html_message: buildHtmlEmail(cm.body) })
+          });
+          const resultC = await resC.json();
+          if (resultC.success) { cartasSent++; }
+          else { errors.push(`${toEmail} (carta): ${resultC.error || 'Erro desconhecido'}`); }
+        }
         } // end for toEmail
       } catch(e) {
         errors.push(`${c.email}: ${e.message}`);
@@ -2833,7 +3005,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       await new Promise(r => setTimeout(r, 400));
     }
     btn.disabled = false; btn.textContent = 'Disparar Emails';
-    showFb('sendFeedback', errors.length ? `${sent} enviado(s). Erros: ${errors.join(' | ')}` : `✓ ${sent} email(s) enviado(s) com sucesso!`, errors.length ? 'error' : 'success');
+    const cartaMsg = comCarta ? ` + ${cartasSent} carta(s) mensal(is)` : '';
+    showFb('sendFeedback', errors.length ? `${sent} enviado(s)${cartaMsg}. Erros: ${errors.join(' | ')}` : `✓ ${sent} email(s) enviado(s)${cartaMsg} com sucesso!`, errors.length ? 'error' : 'success');
 
     // Mark rascunho as sent if no errors
     if (!errors.length) {
