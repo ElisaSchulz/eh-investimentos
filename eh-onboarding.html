@@ -1373,8 +1373,7 @@
 <script>
   const SUPABASE_URL = 'https://migyqowqjfhvdcrtryms.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pZ3lxb3dxamZodmRjcnRyeW1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxODU1NjIsImV4cCI6MjA5MDc2MTU2Mn0.kydlPAkhBukqNDeLCS9Uhg-D5jZF9EL8Wi2oCDnY4eI';
-  const ZAPSIGN_KEY   = '204b8e93-059a-4557-ac67-45e00f8eda6f1078d574-4e58-41da-8ba5-83dd7004e27a';
-  const ZAPSIGN_URL   = 'https://api.zapsign.com.br/api/v1';
+  // O token da API do ZapSign fica só nas propriedades do Apps Script (apps-script/zapsign-proxy.gs)
   const ZAPSIGN_PROXY = 'https://script.google.com/macros/s/AKfycbwsNmzfCTAwYSvk7mq_J3E0TD-oNQmwK3J1j3H1a1M9GG2vMyswnPe_IZcIg8BixxgvRA/exec';
   const ADMIN_EMAILS = ['elisacmazzo@gmail.com', 'contato@eduardohorta.com.br'];
 
@@ -1800,44 +1799,26 @@
       const suitBase64 = await EHDocs.pdfBase64('suitability', dados);
       btn.textContent = 'Enviando para ZapSign...';
 
-      // Send to ZapSign via proxy (CORS workaround)
-      const zapResp = await fetch(ZAPSIGN_PROXY, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({
-          zapKey: ZAPSIGN_KEY,
-          body: {
-            name: `Suitability - ${nome}`,
-            base64_pdf: suitBase64,
-            signers: [
-              {
-                name: nome,
-                email: email,
-                phone_country: '55',
-                send_automatic_email: true,
-                send_automatic_whatsapp: false
-              },
-              {
-                name: 'Eduardo Barbosa Horta dos Santos',
-                email: 'contato@ehinvestimentos.com.br',
-                send_automatic_email: true
-              }
-            ],
-            lang: 'pt-br',
-            brand_name: 'EH Investimentos',
-            sandbox: true
+      const zapFinal = await zapsignCriarDocumento({
+        name: `Suitability - ${nome}`,
+        base64_pdf: suitBase64,
+        signers: [
+          {
+            name: nome,
+            email: email,
+            phone_country: '55',
+            send_automatic_email: true,
+            send_automatic_whatsapp: false
+          },
+          {
+            name: 'Eduardo Barbosa Horta dos Santos',
+            email: 'contato@ehinvestimentos.com.br',
+            send_automatic_email: true
           }
-        })
+        ],
+        lang: 'pt-br',
+        brand_name: 'EH Investimentos'
       });
-
-      const zapText = await zapResp.text();
-      let zapData;
-      try { zapData = JSON.parse(zapText); }
-      catch(je) { throw new Error('Proxy retornou: ' + zapText.slice(0, 200)); }
-      const realData = zapData.result || zapData;
-      if (zapData.error) throw new Error(zapData.error);
-      if (!realData.token) throw new Error(JSON.stringify(realData));
-      const zapFinal = realData;
 
       // Save to DB
       await sb.from('suitability').upsert({
@@ -2037,33 +2018,16 @@
       const contratoBase64 = await EHDocs.pdfBase64('contrato', dados);
       btn.textContent = 'Enviando para ZapSign...';
 
-      const zapResp = await fetch(ZAPSIGN_PROXY, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({
-          zapKey: ZAPSIGN_KEY,
-          body: {
-            name: `Contrato - ${nome}`,
-            base64_pdf: contratoBase64,
-            signers: [
-              { name: nome, email: email, send_automatic_email: true },
-              { name: 'Eduardo Barbosa Horta dos Santos', email: 'contato@ehinvestimentos.com.br', send_automatic_email: true }
-            ],
-            lang: 'pt-br',
-            brand_name: 'EH Investimentos',
-            sandbox: true
-          }
-        })
+      const zapFinal = await zapsignCriarDocumento({
+        name: `Contrato - ${nome}`,
+        base64_pdf: contratoBase64,
+        signers: [
+          { name: nome, email: email, send_automatic_email: true },
+          { name: 'Eduardo Barbosa Horta dos Santos', email: 'contato@ehinvestimentos.com.br', send_automatic_email: true }
+        ],
+        lang: 'pt-br',
+        brand_name: 'EH Investimentos'
       });
-
-      const zapText = await zapResp.text();
-      let zapData;
-      try { zapData = JSON.parse(zapText); }
-      catch(je) { throw new Error('Proxy retornou: ' + zapText.slice(0, 200)); }
-      const realData = zapData.result || zapData;
-      if (zapData.error) throw new Error(zapData.error);
-      if (!realData.token) throw new Error(JSON.stringify(realData));
-      const zapFinal = realData;
 
       await sb.from('contratos').upsert({
         user_id: currentUser.id,
@@ -2084,6 +2048,31 @@
       btn.disabled = false;
       btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg> Enviar para assinatura';
     }
+  }
+
+  // ── ZAPSIGN ──
+  // Cria o documento pelo proxy (apps-script/zapsign-proxy.gs), que guarda o token da API.
+  // Produção exige a sessão do portal; o modo dev (DEV_MODE_NO_AUTH) usa o ambiente de
+  // testes do ZapSign (sandbox.api.zapsign.com.br), sem validade jurídica nem custo.
+  async function zapsignCriarDocumento(doc) {
+    const { data: { session } = {} } = await sb.auth.getSession();
+    const zapResp = await fetch(ZAPSIGN_PROXY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        ambiente: DEV_MODE_NO_AUTH ? 'teste' : 'producao',
+        accessToken: session?.access_token || '',
+        body: doc
+      })
+    });
+    const zapText = await zapResp.text();
+    let zapData;
+    try { zapData = JSON.parse(zapText); }
+    catch(je) { throw new Error('Proxy retornou: ' + zapText.slice(0, 200)); }
+    if (zapData.error) throw new Error(zapData.error);
+    const realData = zapData.result || zapData;
+    if (!realData.token) throw new Error(JSON.stringify(realData));
+    return realData;
   }
 
   // ── HELPERS ──
