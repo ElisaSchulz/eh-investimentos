@@ -771,10 +771,6 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 017 7h2"/><path d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
     Extratos → Excel
   </button>
-  <button class="mobile-drawer-link" id="mobileExtratosNovosBtn" style="display:none;" onclick="showView('extratosnovos',this);closeDrawer()">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
-    XP Extratos Novos
-  </button>
   <button class="mobile-drawer-link" id="mobileCotasBtn" style="display:none;" onclick="showView('cotas',this);closeDrawer()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
     Cotas dos Fundos
@@ -835,10 +831,6 @@
     <button class="sidebar-link" onclick="showView('extratos',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 017 7h2"/><path d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
       Extratos → Excel
-    </button>
-    <button class="sidebar-link" onclick="showView('extratosnovos',this)">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
-      XP Extratos Novos
     </button>
     <button class="sidebar-link" onclick="showView('cotas',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
@@ -1300,6 +1292,30 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
             <button class="btn-upload" onclick="addClientRow()" style="background:rgba(238,154,30,0.15);color:var(--gold-text);border:1px solid var(--border);">+ Adicionar linha</button>
             <button class="btn-upload" onclick="clearAllRows()" style="background:rgba(224,85,85,0.1);color:var(--err-text);border:1px solid rgba(224,85,85,0.3);">Limpar tudo</button>
           </div>
+          <!-- CARTA MENSAL -->
+          <div style="margin-top:1.5rem;border:1px solid var(--border);background:rgba(238,154,30,0.05);padding:1.1rem 1.2rem;">
+            <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-size:0.8rem;color:var(--white);font-weight:600;">
+              <input type="checkbox" id="cartaEnviar" onchange="cartaToggle()" style="width:16px;height:16px;accent-color:var(--gold);" />
+              Enviar a carta mensal junto
+            </label>
+            <p style="font-size:0.72rem;color:var(--gray);line-height:1.6;margin:0.4rem 0 0;">
+              Todos os emails deste disparo levam o botão <strong style="color:var(--white);">Ler a Carta Mensal</strong> ao lado do <strong style="color:var(--white);">Baixar Relatório</strong>.
+              Para colocar o botão da carta em outro ponto do texto, use <code style="background:rgba(238,154,30,0.15);color:var(--gold-text);padding:0.1rem 0.4rem;">{{btn_carta}}</code> no template.
+            </p>
+            <div id="cartaPanel" style="display:none;margin-top:1rem;">
+              <div class="upload-field" style="margin-bottom:0.9rem;">
+                <label>PDF da carta mensal (fica salvo para os próximos disparos)</label>
+                <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+                  <label style="cursor:pointer;">
+                    <input type="file" accept=".pdf" style="display:none;" onchange="onCartaPdfSelect(event)" />
+                    <span id="cartaPdfBtn" style="display:inline-block;background:rgba(238,154,30,0.12);border:1px solid var(--border);color:var(--gold-text);padding:0.35rem 0.8rem;font-size:0.62rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;">+ PDF</span>
+                  </label>
+                  <span id="cartaPdfName" style="font-size:0.72rem;color:var(--gray);">nenhum arquivo</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div style="margin-top:1.5rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:center;">
             <button class="btn-upload" onclick="previewEmails()" style="background:rgba(255,255,255,0.08);color:var(--white);">Pré-visualizar</button>
             <button class="btn-upload" onclick="salvarRascunho()" style="background:rgba(238,154,30,0.15);color:var(--gold-text);border:1px solid var(--border);">
@@ -1424,93 +1440,6 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           <table class="ext-preview-table" id="extPreviewTable"></table>
         </div>
         <button class="btn-download-ext" id="extBtnDownload">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Baixar Excel
-        </button>
-      </div>
-    </div>
-
-    <!-- XP EXTRATOS NOVOS VIEW (admin only) -->
-    <!-- Mesma saída da ferramenta "Extratos → Excel" (modo XP), porém para o novo
-         layout do "Extrato da Conta Investimento" da XP, em que o PDF.js devolve o
-         texto espaçado ("31 / 07 / 2026", "R $   1 . 396 , 64"). -->
-    <div class="view" id="view-extratosnovos">
-      <div class="welcome-banner">
-        <h2>XP <em>Extratos Novos</em></h2>
-        <p>Para os extratos da XP no novo layout. Gera o mesmo Excel da ferramenta Extratos → Excel (modo XP), com CNPJ, tipo e valores.</p>
-      </div>
-
-      <div class="eqi-notice-dash visible">
-        <strong style="color:var(--white);">Quando usar:</strong> o modo XP de <strong style="color:var(--white);">Extratos → Excel</strong> já reconhece este layout automaticamente; esta ferramenta continua disponível como alternativa. Ela entende o novo desenho do PDF, em que datas e valores vêm com espaços (“31 / 07 / 2026”, “R $ 1 . 396 , 64”). A tabela de CNPJ é a mesma do modo XP.
-      </div>
-
-      <!-- Upload -->
-      <div class="upload-panel">
-        <h3>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          1. Extratos PDF (novo layout XP)
-        </h3>
-        <div class="extrato-upload-zone" id="xpnUploadZone">
-          <input type="file" id="xpnFileInput" accept=".pdf" multiple />
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--gold-text);margin:0 auto 0.6rem;display:block;"><path d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
-          <div style="font-size:0.85rem;color:var(--gray-light);margin-bottom:0.3rem;">Arraste os PDFs aqui</div>
-          <div style="font-size:0.68rem;color:var(--gray);">ou clique para selecionar · vários arquivos aceitos</div>
-        </div>
-        <div class="file-list-ext" id="xpnFileList"></div>
-        <div class="ext-progress-wrap" id="xpnProgressWrap">
-          <div class="ext-progress-bar"><div class="ext-progress-fill" id="xpnProgressFill"></div></div>
-          <div class="ext-progress-label" id="xpnProgressLabel"></div>
-        </div>
-      </div>
-
-      <!-- Mapping -->
-      <div class="upload-panel">
-        <h3>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
-          2. Tabela CNPJ
-          <span style="font-size:0.62rem;font-weight:400;color:var(--gray);margin-left:0.5rem;">— XP (compartilhada)</span>
-        </h3>
-        <p style="font-size:0.78rem;color:var(--gray);margin-bottom:1rem;line-height:1.6;">Mapeie trechos do nome do fundo para o CNPJ. Esta é a <strong style="color:var(--gray-light);">mesma tabela XP</strong> usada em Extratos → Excel: o que você editar aqui vale nos dois lugares.</p>
-
-        <button type="button" class="btn-upload mapping-toggle-btn" onclick="toggleMappingPanel(this,'xpnMappingPanel')" style="background:rgba(255,255,255,0.06);color:var(--gray-light);font-size:0.62rem;padding:0.4rem 0.8rem;margin-bottom:0.9rem;">Exibir tabela</button>
-        <div id="xpnMappingPanel" style="display:none;">
-        <div class="mapping-toolbar-ext">
-          <div class="save-indicator-ext">
-            <div class="save-dot saved" id="xpnSaveDot"></div>
-            <span id="xpnSaveLabel">Salvo</span>
-          </div>
-          <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
-            <button onclick="xpnExportMapping()" class="btn-upload" style="background:rgba(255,255,255,0.06);color:var(--gray-light);font-size:0.62rem;padding:0.4rem 0.8rem;">↓ Exportar Excel</button>
-            <label class="btn-upload" style="background:rgba(255,255,255,0.06);color:var(--gray-light);font-size:0.62rem;padding:0.4rem 0.8rem;cursor:pointer;">↑ Importar Excel<input type="file" accept=".xlsx,.xls" style="display:none" onchange="xpnImportMapping(this)"></label>
-          </div>
-        </div>
-
-        <div style="overflow-x:auto;">
-          <table class="mapping-table-ext">
-            <thead><tr><th>Trecho do nome</th><th>CNPJ</th><th>Nome completo</th><th></th></tr></thead>
-            <tbody id="xpnMappingBody"></tbody>
-          </table>
-        </div>
-        <button onclick="xpnAddMappingRow()" class="btn-upload" style="margin-top:0.8rem;background:rgba(238,154,30,0.1);color:var(--gold-text);border:1px solid var(--border);">+ Adicionar fundo</button>
-        </div>
-      </div>
-
-      <!-- Process -->
-      <button class="btn-process-ext" id="xpnBtnProcess" onclick="xpnProcessAll()" disabled>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
-        <span id="xpnBtnLabel">Processar e gerar Excel</span>
-      </button>
-
-      <div class="ext-status-box" id="xpnStatusBox"></div>
-
-      <!-- Preview -->
-      <div class="ext-preview-section" id="xpnPreviewSection">
-        <div class="section-header"><div class="section-title">3. Preview & Download</div></div>
-        <div class="ext-chips" id="xpnSummaryChips"></div>
-        <div class="ext-preview-wrap">
-          <table class="ext-preview-table" id="xpnPreviewTable"></table>
-        </div>
-        <button class="btn-download-ext" id="xpnBtnDownload">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Baixar Excel
         </button>
@@ -1642,7 +1571,6 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       document.getElementById('mobileAdminSection').style.display = 'block';
       document.getElementById('mobileUploadBtn').style.display = 'flex';
       document.getElementById('mobileExtratosBtn').style.display = 'flex';
-      document.getElementById('mobileExtratosNovosBtn').style.display = 'flex';
       document.getElementById('mobileCotasBtn').style.display = 'flex';
       document.getElementById('mobileClientesBtn').style.display = 'flex';
       document.getElementById('mobileEmailsBtn').style.display = 'flex';
@@ -1700,12 +1628,11 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.querySelectorAll('.mobile-drawer-link').forEach(l => l.classList.remove('active'));
     document.getElementById('view-' + viewId).classList.add('active');
     if (btn) btn.classList.add('active');
-    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', extratos:'Extratos → Excel', extratosnovos:'XP Extratos Novos', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos' };
+    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', extratos:'Extratos → Excel', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos' };
     const topbar = document.getElementById('topbarTitle');
     if (topbar) topbar.textContent = titles[viewId] || viewId;
-    if (viewId === 'emails') { loadTemplates().then(() => buildTemplateAccordion()); if (clientRows.length === 0) addClientRow(); loadRascunho(); }
+    if (viewId === 'emails') { loadTemplates().then(() => { buildTemplateAccordion(); fillCartaFields(); }); if (clientRows.length === 0) addClientRow(); loadRascunho(); }
     if (viewId === 'extratos') extLoadMappingFromSupabase();
-    if (viewId === 'extratosnovos') xpnLoadMapping();
     if (viewId === 'cotas') ctLoadXpMapping();
     if (viewId === 'clientes') loadClientesView();
     if (viewId === 'gerador') geradorCarregarClientes();
@@ -2725,6 +2652,24 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     }).filter(r => r && r.email && r.nome);
   }
 
+  // Botões dos emails no visual do site da EH (index.html):
+  //  - principal (relatório): fundo navy #002060, texto branco em negrito — como "Iniciar Conversa"
+  //  - secundário (carta): contorno fino e texto navy — como "Conhecer a EH", sem a seta
+  // Cada botão é uma tabela alinhada à esquerda: ficam lado a lado e quebram linha em
+  // telas estreitas, e renderizam igual no Gmail e no Outlook.
+  // Tudo numa linha só, começando por <div>, para o buildHtmlEmail tratar como bloco.
+  function emailButtons(btns) {
+    const font = "font-family:'Manrope',Arial,Helvetica,sans-serif;font-size:14px;line-height:1;text-decoration:none;border-radius:6px;display:inline-block;";
+    const cell = b => b.secundario
+      ? `<table role="presentation" align="left" cellspacing="0" cellpadding="0" border="0" style="margin:0 12px 12px 0;border-collapse:separate;"><tr><td bgcolor="#FFFFFF" style="background:#FFFFFF;border:1px solid #BFC7D7;border-radius:6px;mso-padding-alt:15px 27px;"><a href="${b.url}" target="_blank" style="${font}padding:15px 27px;font-weight:600;color:#002060;">${b.label}</a></td></tr></table>`
+      : `<table role="presentation" align="left" cellspacing="0" cellpadding="0" border="0" style="margin:0 12px 12px 0;border-collapse:separate;"><tr><td bgcolor="#002060" style="background:#002060;border-radius:6px;mso-padding-alt:16px 28px;"><a href="${b.url}" target="_blank" style="${font}padding:16px 28px;font-weight:700;letter-spacing:0.02em;color:#FFFFFF;">${b.label}</a></td></tr></table>`;
+    const list = btns.filter(b => b && b.url);
+    if (!list.length) return '';
+    return `<div style="margin:22px 0 0;">${list.map(cell).join('')}<div style="clear:both;font-size:0;line-height:0;"></div></div>`;
+  }
+
+
+
   function applyTpl(client) {
     const num  = parseFloat((client.desempenho||'0').replace(',','.').replace('%',''));
     const up   = num >= 100;
@@ -2741,16 +2686,24 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       tplId = sel;
     }
     const tpl = templateData[tplId] || { assunto: '', corpo: '' };
-    const linkHtml = client.link_relatorio
-      ? `<p style="margin-top:16px;"><a href="${client.link_relatorio}" style="display:inline-block;background:#EE9A1E;color:#001848;padding:10px 22px;text-decoration:none;font-weight:700;font-size:13px;">↓ Baixar Relatório</a></p>`
-      : '';
+    // Carta mensal (se marcada): vai ao lado do botão do relatório, ou onde o
+    // template tiver {{btn_carta}}; sem nenhum dos dois, entra no final do email.
+    const carta = cartaAtiva();
+    const btnRel   = { url: client.link_relatorio, label: 'Baixar Relatório' };
+    const btnCarta = carta ? { url: carta.url, label: 'Ler a Carta Mensal', secundario: true } : null;
+    const cartaPropria = !!btnCarta && (tpl.corpo||'').includes('{{btn_carta}}');
+    const linkHtml  = emailButtons([btnRel, cartaPropria ? null : btnCarta]);
+    const cartaHtml = emailButtons([btnCarta]);
+    let corpo = tpl.corpo;
+    if (btnCarta && !cartaPropria && !(corpo||'').includes('{{btn_relatorio}}')) corpo = (corpo||'') + '\n\n{{btn_carta}}';
     const r = s => (s||'')
       .replace(/{{nome}}/g, client.nome||'')
       .replace(/{{desempenho}}/g, client.desempenho||'')
       .replace(/{{valor}}/g, client.valor||'')
       .replace(/{{link_relatorio}}/g, client.link_relatorio||'')
-      .replace(/{{btn_relatorio}}/g, linkHtml);
-    return { subject: r(tpl.assunto), body: r(tpl.corpo), up, freq: sel, tplId };
+      .replace(/{{btn_relatorio}}/g, linkHtml)
+      .replace(/{{btn_carta}}/g, cartaHtml);
+    return { subject: r(tpl.assunto), body: r(corpo), up, freq: sel, tplId };
   }
 
   function previewEmails() {
@@ -2772,6 +2725,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         <div class="preview-body">${body}</div>
       </div>`;
     }).join('');
+    const errCarta = cartaErro();
+    if (errCarta) document.getElementById('previewList').insertAdjacentHTML('afterbegin', `<div style="color:var(--err-text);font-size:0.78rem;margin-bottom:0.8rem;">⚠ ${errCarta}</div>`);
     area.scrollIntoView({ behavior: 'smooth' });
   }
 
@@ -2899,10 +2854,77 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     await loadRascunho();
   }
 
+  // ── CARTA MENSAL ──
+  // Com a caixa marcada, os emails do disparo levam também o botão "Ler a Carta Mensal".
+  // O link do PDF fica salvo em email_templates (id "carta_mensal_pdf": corpo = URL
+  // pública, assunto = nome do arquivo), para não precisar reenviar o PDF.
+  function fillCartaFields() {
+    const pdf = templateData['carta_mensal_pdf'] || {};
+    if (pdf.corpo && !document.getElementById('cartaPdfBtn').dataset.url) cartaSetPdf(pdf.corpo, pdf.assunto || 'Carta mensal.pdf');
+  }
+
+  function cartaToggle() {
+    document.getElementById('cartaPanel').style.display = document.getElementById('cartaEnviar').checked ? 'block' : 'none';
+  }
+
+  function cartaSetPdf(url, filename) {
+    const btn = document.getElementById('cartaPdfBtn');
+    btn.dataset.url = url;
+    btn.dataset.filename = filename;
+    btn.textContent = '✓ Trocar PDF';
+    btn.style.color = '#4caf82';
+    btn.style.borderColor = 'rgba(76,175,130,0.4)';
+    document.getElementById('cartaPdfName').textContent = filename;
+  }
+
+  async function onCartaPdfSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const btn = document.getElementById('cartaPdfBtn');
+    const nameEl = document.getElementById('cartaPdfName');
+    btn.textContent = '...';
+    nameEl.textContent = file.name;
+    try {
+      const sanitize = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9._-]/g,'_').replace(/_+/g,'_');
+      const filePath = `email-cartas/${Date.now()}_${sanitize(file.name)}`;
+      const { error } = await sb.storage.from('reports').upload(filePath, file, { contentType: 'application/pdf', upsert: false });
+      if (error) throw error;
+      const { data } = sb.storage.from('reports').getPublicUrl(filePath);
+      cartaSetPdf(data.publicUrl, file.name);
+      const row = { id:'carta_mensal_pdf', nome:'Carta Mensal — PDF', assunto:file.name, corpo:data.publicUrl, updated_at:new Date().toISOString(), updated_by:currentUser.id };
+      const { error: ue } = await sb.from('email_templates').upsert([row], { onConflict: 'id' });
+      if (ue) console.warn('Carta PDF save:', ue.message);
+      else templateData[row.id] = { assunto: row.assunto, corpo: row.corpo };
+    } catch(e) {
+      console.error('Carta PDF upload error:', e);
+      delete btn.dataset.url;
+      btn.textContent = '✕ Erro';
+      btn.style.color = '#e05555';
+      nameEl.textContent = 'Erro no upload: ' + e.message;
+    }
+    event.target.value = '';
+  }
+
+  // Carta a incluir nos emails ({ url }) ou null se a caixa estiver desmarcada / sem PDF
+  function cartaAtiva() {
+    if (!document.getElementById('cartaEnviar')?.checked) return null;
+    const url = document.getElementById('cartaPdfBtn')?.dataset.url || '';
+    return url ? { url } : null;
+  }
+
+  // Erro de validação da carta (ou '' se estiver tudo certo / carta desmarcada)
+  function cartaErro() {
+    if (!document.getElementById('cartaEnviar')?.checked) return '';
+    return cartaAtiva() ? '' : 'Carta mensal: envie o PDF da carta ou desmarque a opção.';
+  }
+
   async function sendAllEmails() {
     const clients = getClients();
     if (!clients.length) { alert('Adicione pelo menos um cliente.'); return; }
-    if (!confirm(`Confirmar envio de ${clients.length} email(s)?`)) return;
+    const errCarta = cartaErro();
+    if (errCarta) { alert(errCarta); return; }
+    const comCarta = !!cartaAtiva();
+    if (!confirm(`Confirmar envio de ${clients.length} email(s)${comCarta ? ' com a carta mensal' : ''}?`)) return;
     const btn = document.getElementById('sendBtn');
     btn.disabled = true; btn.textContent = 'Enviando...';
 
@@ -2930,7 +2952,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       await new Promise(r => setTimeout(r, 400));
     }
     btn.disabled = false; btn.textContent = 'Disparar Emails';
-    showFb('sendFeedback', errors.length ? `${sent} enviado(s). Erros: ${errors.join(' | ')}` : `✓ ${sent} email(s) enviado(s) com sucesso!`, errors.length ? 'error' : 'success');
+    const cartaMsg = comCarta ? ' com a carta mensal' : '';
+    showFb('sendFeedback', errors.length ? `${sent} enviado(s)${cartaMsg}. Erros: ${errors.join(' | ')}` : `✓ ${sent} email(s) enviado(s)${cartaMsg} com sucesso!`, errors.length ? 'error' : 'success');
 
     // Mark rascunho as sent if no errors
     if (!errors.length) {
@@ -3700,8 +3723,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       extLog(`── ${f.name}`,'head'); extSetFileStatus(f,'processando...','');
       try {
         const text=await extExtractText(f);
-        // Modo XP aceita os dois layouts: o antigo e o novo ("XP Extratos Novos", com
-        // datas/valores espaçados). Usa o parser que encontrar mais transações.
+        // Modo XP aceita os dois layouts: o antigo e o novo (datas/valores
+        // espaçados). Usa o parser que encontrar mais transações.
         const oldRows=extCurrentBroker==='XP'?extParseXP(text):[];
         const newRows=extCurrentBroker==='XP'?xpnParse(text):[];
         const xpNovo=newRows.length>oldRows.length;
@@ -3796,163 +3819,13 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   // ═══════════════════════════════════════════════════════
-  // ── XP EXTRATOS NOVOS ──────────────────────────────────
+  // ── XP LAYOUT NOVO (usado pelo modo XP de Extratos → Excel) ──
   // ═══════════════════════════════════════════════════════
-  // Mesma saída do modo XP de "Extratos → Excel", para o novo layout do
-  // "Extrato da Conta Investimento" da XP. No layout novo o PDF.js devolve
+  // No layout novo do "Extrato da Conta Investimento" da XP o PDF.js devolve
   // o texto espaçado — "31 / 07 / 2026", "R $   1 . 396 , 64", "- R $ 209 , 49" —
-  // e por isso os regex da ferramenta antiga não encontram nenhuma linha.
-  // Aqui o texto é normalizado antes do parse; textos já limpos (layout antigo)
-  // passam intactos pela normalização, então a ferramenta lê os dois desenhos.
-
-  let xpnSelectedFiles = [];
-  let xpnAllProcessedRows = [];
-  let xpnMappingSaveTimer = null;
-
-  // ── Mapeamento (compartilha a tabela XP com a ferramenta antiga) ──
-  async function xpnLoadMapping() {
-    xpnMarkSave('loading');
-    try {
-      const { data, error } = await sb.from('cnpj_mapping_xp').select('*').order('key');
-      if (error) throw error;
-      const rows = (data && data.length > 0) ? data.map(r => ({ key: r.key, cnpj: r.cnpj || '', full: r.full_name || '' })) : DEFAULT_MAPPING_XP;
-      xpnRenderMapping(rows);
-      xpnMarkSave('saved');
-    } catch(e) {
-      console.warn('Mapping load (XP novos):', e.message);
-      xpnRenderMapping(DEFAULT_MAPPING_XP);
-      xpnMarkSave('saved');
-    }
-  }
-
-  async function xpnSaveMapping() {
-    xpnMarkSave('unsaved');
-    clearTimeout(xpnMappingSaveTimer);
-    xpnMappingSaveTimer = setTimeout(async () => {
-      const rows = xpnGetMappingRows();
-      try {
-        await sb.from('cnpj_mapping_xp').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-        if (rows.length > 0) {
-          const inserts = rows.map(r => ({ key: r.key, cnpj: r.cnpj, full_name: r.full, updated_at: new Date().toISOString() }));
-          const { error } = await sb.from('cnpj_mapping_xp').insert(inserts);
-          if (error) throw error;
-        }
-        xpnMarkSave('saved');
-      } catch(e) {
-        console.warn('Mapping save (XP novos):', e.message);
-        xpnMarkSave('error');
-      }
-    }, 1500);
-  }
-
-  function xpnMarkSave(state) {
-    const dot = document.getElementById('xpnSaveDot');
-    const label = document.getElementById('xpnSaveLabel');
-    if (!dot || !label) return;
-    if (state === 'saved') {
-      dot.className = 'save-dot saved';
-      label.textContent = 'Salvo — ' + new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
-    } else if (state === 'unsaved') {
-      dot.className = 'save-dot unsaved';
-      label.textContent = 'Salvando...';
-    } else if (state === 'loading') {
-      dot.className = 'save-dot';
-      label.textContent = 'Carregando...';
-    } else {
-      dot.className = 'save-dot unsaved';
-      label.textContent = 'Erro ao salvar';
-    }
-  }
-
-  function xpnRenderMapping(rows) {
-    document.getElementById('xpnMappingBody').innerHTML = '';
-    rows.forEach(r => xpnAddMappingRow(r.key, r.cnpj, r.full));
-  }
-
-  function xpnAddMappingRow(key='', cnpj='', full='') {
-    const tbody = document.getElementById('xpnMappingBody');
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><input type="text" placeholder="ex: BV Institucional" value="${extEscHtml(key)}" /></td>
-      <td><input type="text" placeholder="00.000.000/0000-00" value="${extEscHtml(cnpj)}" style="color:var(--gold-text);" /></td>
-      <td><input type="text" placeholder="Nome completo (opcional)" value="${extEscHtml(full)}" /></td>
-      <td><button onclick="this.closest('tr').remove();xpnSaveMapping();" style="background:none;border:none;color:#e05555;cursor:pointer;font-size:1rem;padding:0.3rem;">✕</button></td>`;
-    tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => xpnSaveMapping()));
-    tbody.appendChild(tr);
-  }
-
-  function xpnGetMappingRows() {
-    return Array.from(document.querySelectorAll('#xpnMappingBody tr')).map(tr => {
-      const ins = tr.querySelectorAll('input');
-      return { key: ins[0].value.trim(), cnpj: ins[1].value.trim(), full: ins[2].value.trim() };
-    }).filter(r => r.key);
-  }
-
-  function xpnExportMapping() {
-    const rows = xpnGetMappingRows();
-    const data = [['Trecho do Nome','CNPJ','Nome Completo'], ...rows.map(r => [r.key, r.cnpj, r.full])];
-    const ws = XLSX.utils.aoa_to_sheet(data);
-    ws['!cols'] = [28, 22, 42].map(w => ({ wch: w }));
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Mapeamento CNPJ');
-    XLSX.writeFile(wb, 'mapeamento_xp_eh.xlsx');
-  }
-
-  function xpnImportMapping(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      try {
-        const wb = XLSX.read(e.target.result, { type: 'array' });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
-        const rows = data.slice(1).filter(r => r[0]).map(r => ({ key: String(r[0]||'').trim(), cnpj: String(r[1]||'').trim(), full: String(r[2]||'').trim() }));
-        if (!rows.length) { alert('Nenhuma linha encontrada.'); return; }
-        xpnRenderMapping(rows);
-        xpnSaveMapping();
-        alert('✓ ' + rows.length + ' fundos importados.');
-      } catch(err) { alert('Erro: ' + err.message); }
-      input.value = '';
-    };
-    reader.readAsArrayBuffer(file);
-  }
-
-  // ── Upload ──
-  const xpnUploadZone = document.getElementById('xpnUploadZone');
-  const xpnFileInput  = document.getElementById('xpnFileInput');
-  xpnUploadZone.addEventListener('click', () => xpnFileInput.click());
-  xpnUploadZone.addEventListener('dragover', e => { e.preventDefault(); xpnUploadZone.classList.add('drag-over'); });
-  xpnUploadZone.addEventListener('dragleave', () => xpnUploadZone.classList.remove('drag-over'));
-  xpnUploadZone.addEventListener('drop', e => {
-    e.preventDefault(); xpnUploadZone.classList.remove('drag-over');
-    const pdfs = [...e.dataTransfer.files].filter(f => f.type === 'application/pdf');
-    if (pdfs.length) xpnSetFiles(pdfs);
-  });
-  xpnFileInput.addEventListener('change', () => { if (xpnFileInput.files.length) xpnSetFiles([...xpnFileInput.files]); });
-
-  function xpnSetFiles(files) {
-    xpnSelectedFiles = files;
-    const list = document.getElementById('xpnFileList');
-    list.innerHTML = '';
-    files.forEach(f => {
-      const div = document.createElement('div');
-      div.className = 'file-item-ext';
-      div.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--gold-text);flex-shrink:0;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <span class="file-item-ext-name">${f.name}</span>
-        <span class="file-item-ext-status file-status-wait" id="xfs_${f.name.replace(/\W/g,'_')}">aguardando</span>`;
-      list.appendChild(div);
-    });
-    document.getElementById('xpnBtnProcess').disabled = false;
-    const n = files.length;
-    document.getElementById('xpnBtnLabel').textContent = n === 1 ? 'Processar e gerar Excel' : `Processar ${n} extratos e gerar Excel`;
-  }
-
-  function xpnSetFileStatus(file, status, cls) {
-    const el = document.getElementById('xfs_' + file.name.replace(/\W/g, '_'));
-    if (el) { el.textContent = status; el.className = 'file-item-ext-status ' + (cls || ''); }
-  }
+  // e por isso os regex do parser antigo (extParseXP) não encontram nenhuma linha.
+  // Aqui o texto é normalizado antes do parse; extProcessAll roda os dois
+  // parsers e fica com o que encontrar mais transações.
 
   // ── Normalização do novo layout ──
   // "31 / 07 / 2026" -> "31/07/2026" · "R $   1 . 396 , 64" -> "R$ 1.396,64" · "- R $" -> "-R$"
@@ -4009,21 +3882,6 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       .sort((a, b) => chave(a.dataMov).localeCompare(chave(b.dataMov)));
   }
 
-  // ── Classificação (mesmas regras do modo XP) ──
-  function xpnClassifyTipo(h) {
-    const u = h.toUpperCase();
-    if (u.includes('IRRF')) return 'IRRF';
-    if (u.includes('IOF')) return 'IOF';
-    if (u.includes('RESGATE')) return 'Resgate';
-    if (u.includes('INTEGRALIZ')) return 'Integralização';
-    if (u.includes('RENDIMENTO')) return 'Rendimento';
-    if (u.includes('AMORTIZ')) return 'Amortização';
-    if (u.includes('JUROS')||u.includes('PGTO')||u.includes('PGT ')) return 'Juros';
-    if (u.includes('TED')) return 'TED';
-    if (u.includes('PIX')) return 'PIX';
-    return 'Outro';
-  }
-
   // ── CNPJ: busca por trecho, ignorando acentos e espaços ──
   function xpnStrip(s) {
     return (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
@@ -4062,120 +3920,6 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   // Excel não aceita : \ / ? * [ ] no nome da aba
   function xpnSafeSheetName(s) {
     return (s || 'Extrato').replace(/[:\\\/\?\*\[\]]/g,' ').replace(/\s+/g,' ').trim().slice(0,31) || 'Extrato';
-  }
-
-  // ── Processamento ──
-  async function xpnProcessAll() {
-    if (!xpnSelectedFiles.length) return;
-    document.getElementById('xpnPreviewSection').classList.remove('visible');
-    document.getElementById('xpnStatusBox').innerHTML = '';
-    document.getElementById('xpnStatusBox').classList.add('visible');
-    document.getElementById('xpnBtnProcess').disabled = true;
-    xpnAllProcessedRows = [];
-    const mapping = xpnGetMappingRows();
-    const fill = document.getElementById('xpnProgressFill');
-    const plabel = document.getElementById('xpnProgressLabel');
-    document.getElementById('xpnProgressWrap').classList.add('visible');
-
-    for (let i = 0; i < xpnSelectedFiles.length; i++) {
-      const f = xpnSelectedFiles[i];
-      fill.style.width = Math.round((i / xpnSelectedFiles.length) * 100) + '%';
-      plabel.textContent = `Processando ${i+1} de ${xpnSelectedFiles.length}: ${f.name}`;
-      xpnLog(`── ${f.name}`, 'head');
-      xpnSetFileStatus(f, 'processando...', '');
-      try {
-        const text = await extExtractText(f);
-        const sheetName = xpnGetSheetName(text, f.name);
-        xpnLog(`Cliente: "${sheetName}"`, 'ok');
-        const rawRows = xpnParse(text);
-        if (!rawRows.length) {
-          xpnLog('Nenhuma transação encontrada — confira se o PDF é o Extrato da Conta Investimento (XP)', 'err');
-          xpnSetFileStatus(f, 'erro', 'file-status-err');
-          continue;
-        }
-        const rows = rawRows.map(r => {
-          const tipo = xpnClassifyTipo(r.historico);
-          const cnpj = ['IOF','IRRF'].includes(tipo) ? '—' : xpnLookupCNPJ(r.historico, mapping);
-          return { ...r, tipo, cnpj };
-        });
-        const semCnpj = rows.filter(r => r.cnpj === '—' && !['IOF','IRRF','TED','PIX'].includes(r.tipo)).length;
-        if (semCnpj > 0) xpnLog(`${semCnpj} linha(s) sem CNPJ na tabela de mapeamento`, 'warn');
-        xpnAllProcessedRows.push({ sheetName, rows, filename: f.name });
-        xpnLog(`${rows.length} transações · aba: "${sheetName}"`, 'ok');
-        xpnSetFileStatus(f, `✓ ${rows.length} transações`, 'file-status-ok');
-      } catch(e) {
-        xpnLog('Erro: ' + e.message, 'err'); console.error(e);
-        xpnSetFileStatus(f, 'erro', 'file-status-err');
-      }
-    }
-    fill.style.width = '100%';
-    plabel.textContent = `Concluído — ${xpnAllProcessedRows.length} de ${xpnSelectedFiles.length} arquivo(s)`;
-    if (xpnAllProcessedRows.length > 0) {
-      xpnRenderPreview(xpnAllProcessedRows);
-      xpnLog(`Pronto! ${xpnAllProcessedRows.length} aba(s) gerada(s).`, 'ok');
-    }
-    document.getElementById('xpnBtnProcess').disabled = false;
-  }
-
-  function xpnLog(msg, type='') {
-    const box = document.getElementById('xpnStatusBox');
-    const cls = type==='ok'?'ext-log-ok':type==='warn'?'ext-log-warn':type==='err'?'ext-log-err':type==='head'?'ext-log-head':'';
-    box.innerHTML += `<div class="${cls}">› ${msg}</div>`;
-    box.scrollTop = box.scrollHeight;
-  }
-
-  function xpnRenderPreview(sheets) {
-    document.getElementById('xpnPreviewSection').classList.add('visible');
-    const totalTx = sheets.reduce((s,sh) => s + sh.rows.length, 0);
-    const totalIn = sheets.flatMap(s => s.rows).filter(r => r.valor > 0).reduce((s,r) => s + r.valor, 0);
-    const totalOut = sheets.flatMap(s => s.rows).filter(r => r.valor < 0).reduce((s,r) => s + r.valor, 0);
-    document.getElementById('xpnSummaryChips').innerHTML = `
-      <div class="ext-chip">Clientes <span>${sheets.length}</span></div>
-      <div class="ext-chip">Transações <span>${totalTx}</span></div>
-      <div class="ext-chip">Entradas <span style="color:var(--ok-text)">${extFmtVal(totalIn)}</span></div>
-      <div class="ext-chip">Saídas <span style="color:#e05555">${extFmtVal(Math.abs(totalOut))}</span></div>`;
-    const table = document.getElementById('xpnPreviewTable');
-    table.innerHTML = `<thead><tr><th>Aba</th><th>CNPJ</th><th>Data</th><th>Descrição</th><th>Valor</th><th>Saldo</th><th>Tipo</th></tr></thead>`;
-    const tbody = document.createElement('tbody');
-    let count = 0;
-    for (const sh of sheets) {
-      for (const r of sh.rows) {
-        if (count++ > 60) break;
-        const tr = document.createElement('tr');
-        const valCls = r.valor < 0 ? 'td-neg' : 'td-pos';
-        const cnpjCls = r.cnpj === '—' ? 'td-na' : 'td-cnpj';
-        const hist = r.historico.length > 38 ? r.historico.slice(0,37) + '…' : r.historico;
-        tr.innerHTML = `<td class="td-sheet">${sh.sheetName}</td><td class="${cnpjCls}">${r.cnpj}</td><td>${r.dataMov}</td><td title="${extEscHtml(r.historico)}">${hist}</td><td class="${valCls}">${r.valor<0?'-':'+'}${extFmtVal(Math.abs(r.valor))}</td><td>${extFmtVal(r.saldo)}</td><td>${r.tipo}</td>`;
-        tbody.appendChild(tr);
-      }
-    }
-    if (totalTx > 60) {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td colspan="7" style="text-align:center;color:var(--gray);padding:0.8rem;font-size:0.68rem;">… e mais ${totalTx-60} transações no Excel</td>`;
-      tbody.appendChild(tr);
-    }
-    table.appendChild(tbody);
-    document.getElementById('xpnBtnDownload').onclick = xpnDownloadExcel;
-  }
-
-  function xpnDownloadExcel() {
-    const wb = XLSX.utils.book_new();
-    const header = ['CNPJ','Data Mov.','Data Liq.','Histórico','Valor (R$)','Saldo (R$)','Tipo'];
-    const sorted = [...xpnAllProcessedRows].sort((a,b) =>
-      a.sheetName.localeCompare(b.sheetName, 'pt-BR', { sensitivity: 'base' })
-    );
-    const usedNames = new Set();
-    for (const sh of sorted) {
-      let name = sh.sheetName.slice(0,31); let suffix = 2;
-      while (usedNames.has(name)) { name = sh.sheetName.slice(0,28) + '_' + suffix++; }
-      usedNames.add(name);
-      const data = [header, ...sh.rows.map(r => [r.cnpj, r.dataMov, r.dataLiq, r.historico, r.valor, r.saldo, r.tipo])];
-      const ws = XLSX.utils.aoa_to_sheet(data);
-      ws['!cols'] = [22,13,13,50,14,14,16].map(w => ({ wch: w }));
-      XLSX.utils.book_append_sheet(wb, ws, name);
-    }
-    const today = new Date().toISOString().slice(0,10);
-    XLSX.writeFile(wb, `extratos_xp_novos_${today}.xlsx`);
   }
 
   // ══════════ COTAS DOS FUNDOS (admin) ══════════
