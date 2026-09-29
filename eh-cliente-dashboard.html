@@ -1329,6 +1329,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           </div>
           <div class="upload-feedback" id="sendFeedback"></div>
 
+          <!-- ÚLTIMO DISPARO (fica salvo no Supabase) -->
+          <div id="ultimoDisparo" style="display:none;margin-top:1.2rem;"></div>
+
           <!-- RASCUNHO SALVO -->
           <div id="rascunhoSection" style="display:none;margin-top:1.5rem;">
             <div class="section-header" style="margin-bottom:0.8rem;">
@@ -1631,7 +1634,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', extratos:'Extratos → Excel', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos' };
     const topbar = document.getElementById('topbarTitle');
     if (topbar) topbar.textContent = titles[viewId] || viewId;
-    if (viewId === 'emails') { loadTemplates().then(() => { buildTemplateAccordion(); fillCartaFields(); }); if (clientRows.length === 0) addClientRow(); loadRascunho(); }
+    if (viewId === 'emails') { loadTemplates().then(() => { buildTemplateAccordion(); fillCartaFields(); renderUltimoDisparo(); }); if (clientRows.length === 0) addClientRow(); loadRascunho(); }
     if (viewId === 'extratos') extLoadMappingFromSupabase();
     if (viewId === 'cotas') ctLoadXpMapping();
     if (viewId === 'clientes') loadClientesView();
@@ -2929,7 +2932,13 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     btn.disabled = true; btn.textContent = 'Enviando...';
 
     let sent = 0; const errors = [];
-    for (const c of clients) {
+    // Registro do disparo, salvo no Supabase durante o envio: se a página for fechada
+    // no meio, o painel "Último disparo" mostra até onde foi.
+    const disparo = { inicio: new Date().toISOString(), fim: null, total: clients.length, carta: comCarta, destinatarios: [] };
+    await salvarUltimoDisparo(disparo);
+    for (const [i, c] of clients.entries()) {
+      showFb('sendFeedback', `Enviando ${i+1} de ${clients.length}: ${c.nome}… não feche esta página.`, 'success', true);
+      const errAntes = errors.length;
       const { subject, body } = applyTpl(c);
       // Support multiple emails separated by ; or ,
       const emails = c.email.split(/[;,]/).map(e => e.trim()).filter(Boolean);
@@ -2949,17 +2958,71 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       } catch(e) {
         errors.push(`${c.email}: ${e.message}`);
       }
+      disparo.destinatarios.push({ nome: c.nome, email: c.email, ok: errors.length === errAntes, erro: errors.slice(errAntes).join(' | ') });
+      await salvarUltimoDisparo(disparo);
       await new Promise(r => setTimeout(r, 400));
     }
+    disparo.fim = new Date().toISOString();
+    disparo.enviados = sent;
+    disparo.erros = errors;
+    await salvarUltimoDisparo(disparo);
     btn.disabled = false; btn.textContent = 'Disparar Emails';
     const cartaMsg = comCarta ? ' com a carta mensal' : '';
-    showFb('sendFeedback', errors.length ? `${sent} enviado(s)${cartaMsg}. Erros: ${errors.join(' | ')}` : `✓ ${sent} email(s) enviado(s)${cartaMsg} com sucesso!`, errors.length ? 'error' : 'success');
+    const hora = new Date().toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+    showFb('sendFeedback', errors.length ? `${sent} enviado(s)${cartaMsg} em ${hora}. Erros: ${errors.join(' | ')}` : `✓ ${sent} email(s) enviado(s)${cartaMsg} com sucesso — ${hora}`, errors.length ? 'error' : 'success', true);
 
     // Mark rascunho as sent if no errors
     if (!errors.length) {
       await sb.from('email_disparos').update({ status: 'enviado', sent_at: new Date().toISOString() }).eq('status','pendente').eq('created_by', currentUser.id);
       await loadRascunho();
     }
+  }
+
+  // ── ÚLTIMO DISPARO ──
+  // Resumo do último disparo, salvo em email_templates (id "ultimo_disparo", corpo = JSON)
+  // e mostrado abaixo do botão Disparar Emails, também depois de recarregar a página.
+  async function salvarUltimoDisparo(d) {
+    const row = { id:'ultimo_disparo', nome:'Último disparo', assunto:d.inicio, corpo:JSON.stringify(d), updated_at:new Date().toISOString(), updated_by:currentUser.id };
+    templateData[row.id] = { assunto: row.assunto, corpo: row.corpo };
+    renderUltimoDisparo();
+    try {
+      const { error } = await sb.from('email_templates').upsert([row], { onConflict: 'id' });
+      if (error) console.warn('Último disparo:', error.message);
+    } catch(e) { console.warn('Último disparo:', e.message); }
+  }
+
+  function renderUltimoDisparo() {
+    const box = document.getElementById('ultimoDisparo');
+    if (!box) return;
+    let d;
+    try { d = JSON.parse(templateData['ultimo_disparo']?.corpo || 'null'); } catch(e) { d = null; }
+    if (!d) { box.style.display = 'none'; return; }
+    const fmt = iso => new Date(iso).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    const dest = d.destinatarios || [];
+    const falhas = dest.filter(x => !x.ok);
+    let cor, status;
+    if (!d.fim) {
+      cor = '#F4AE45';
+      status = `Iniciado em ${fmt(d.inicio)} e não concluído — ${dest.length} de ${d.total} cliente(s) processado(s). Se a página foi fechada durante o envio, os clientes que não aparecem abaixo não receberam.`;
+    } else if (falhas.length) {
+      cor = '#e05555';
+      status = `${fmt(d.fim)} — ${d.enviados} email(s) enviado(s)${d.carta ? ' com a carta mensal' : ''}, ${falhas.length} cliente(s) com erro.`;
+    } else {
+      cor = '#4caf82';
+      status = `${fmt(d.fim)} — ✓ ${d.enviados} email(s) enviado(s)${d.carta ? ' com a carta mensal' : ''} para ${d.total} cliente(s), sem erros.`;
+    }
+    const linhas = dest.map(x => `<div style="display:flex;gap:0.6rem;padding:0.35rem 0;border-bottom:1px solid var(--border-dim);font-size:0.75rem;">
+        <span style="color:${x.ok ? '#4caf82' : '#e05555'};width:1rem;">${x.ok ? '✓' : '✕'}</span>
+        <span style="color:var(--white);">${escHtml(x.nome)}</span>
+        <span style="color:var(--gray);">${escHtml(x.email)}</span>
+        ${x.erro ? `<span style="color:var(--err-text);">${escHtml(x.erro)}</span>` : ''}
+      </div>`).join('');
+    box.style.display = 'block';
+    box.innerHTML = `<div style="border:1px solid var(--border);border-left:3px solid ${cor};padding:0.9rem 1rem;">
+        <div style="font-size:0.62rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold-text);margin-bottom:0.4rem;">Último disparo</div>
+        <div style="font-size:0.8rem;color:var(--white);line-height:1.6;">${status}</div>
+        ${dest.length ? `<details style="margin-top:0.6rem;"><summary style="cursor:pointer;font-size:0.72rem;color:var(--gray);">Ver clientes (${dest.length})</summary><div style="margin-top:0.4rem;">${linhas}</div></details>` : ''}
+      </div>`;
   }
 
   // Paste from Excel
@@ -3024,12 +3087,14 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   pz.addEventListener('blur',  () => pz.style.borderColor = '');
 
   // ── HELPERS ──
-  function showFb(id, msg, type) {
+  // fixo = true: a mensagem fica na tela até a próxima (não some após 5s)
+  function showFb(id, msg, type, fixo = false) {
     const el = document.getElementById(id);
     if (!el) return;
+    clearTimeout(el._fbTimer);
     el.className = 'upload-feedback ' + type;
     el.textContent = msg;
-    setTimeout(() => { el.className = 'upload-feedback'; }, 5000);
+    if (!fixo) el._fbTimer = setTimeout(() => { el.className = 'upload-feedback'; }, 5000);
   }
 
   function fmtDate(iso) {
