@@ -1299,7 +1299,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
               Enviar a carta mensal junto
             </label>
             <p style="font-size:0.72rem;color:var(--gray);line-height:1.6;margin:0.4rem 0 0;">
-              Todos os emails deste disparo levam o botão <strong style="color:var(--white);">Ler a Carta Mensal →</strong> ao lado do <strong style="color:var(--white);">Baixar Relatório</strong>.
+              Todos os emails deste disparo levam o botão <strong style="color:var(--white);">Ler a Carta Mensal</strong> ao lado do <strong style="color:var(--white);">Baixar Relatório</strong>.
               Para colocar o botão da carta em outro ponto do texto, use <code style="background:rgba(238,154,30,0.15);color:var(--gold-text);padding:0.1rem 0.4rem;">{{btn_carta}}</code> no template.
             </p>
             <div id="cartaPanel" style="display:none;margin-top:1rem;">
@@ -2654,14 +2654,14 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
   // Botões dos emails no visual do site da EH (index.html):
   //  - principal (relatório): fundo navy #002060, texto branco em negrito — como "Iniciar Conversa"
-  //  - secundário (carta): contorno fino, texto navy e seta — como "Conhecer a EH →"
+  //  - secundário (carta): contorno fino e texto navy — como "Conhecer a EH", sem a seta
   // Cada botão é uma tabela alinhada à esquerda: ficam lado a lado e quebram linha em
   // telas estreitas, e renderizam igual no Gmail e no Outlook.
   // Tudo numa linha só, começando por <div>, para o buildHtmlEmail tratar como bloco.
   function emailButtons(btns) {
     const font = "font-family:'Manrope',Arial,Helvetica,sans-serif;font-size:14px;line-height:1;text-decoration:none;border-radius:6px;display:inline-block;";
     const cell = b => b.secundario
-      ? `<table role="presentation" align="left" cellspacing="0" cellpadding="0" border="0" style="margin:0 12px 12px 0;border-collapse:separate;"><tr><td bgcolor="#FFFFFF" style="background:#FFFFFF;border:1px solid #BFC7D7;border-radius:6px;mso-padding-alt:15px 27px;"><a href="${b.url}" target="_blank" style="${font}padding:15px 27px;font-weight:600;color:#002060;">${b.label}&nbsp;&rarr;</a></td></tr></table>`
+      ? `<table role="presentation" align="left" cellspacing="0" cellpadding="0" border="0" style="margin:0 12px 12px 0;border-collapse:separate;"><tr><td bgcolor="#FFFFFF" style="background:#FFFFFF;border:1px solid #BFC7D7;border-radius:6px;mso-padding-alt:15px 27px;"><a href="${b.url}" target="_blank" style="${font}padding:15px 27px;font-weight:600;color:#002060;">${b.label}</a></td></tr></table>`
       : `<table role="presentation" align="left" cellspacing="0" cellpadding="0" border="0" style="margin:0 12px 12px 0;border-collapse:separate;"><tr><td bgcolor="#002060" style="background:#002060;border-radius:6px;mso-padding-alt:16px 28px;"><a href="${b.url}" target="_blank" style="${font}padding:16px 28px;font-weight:700;letter-spacing:0.02em;color:#FFFFFF;">${b.label}</a></td></tr></table>`;
     const list = btns.filter(b => b && b.url);
     if (!list.length) return '';
