@@ -757,6 +757,10 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
     Cartas Mensais
   </button>
+  <button class="mobile-drawer-link" onclick="showView('documentos',this);closeDrawer()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+    Meus Documentos
+  </button>
   <button class="mobile-drawer-link" onclick="showView('perfil',this);closeDrawer()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
     Meu Perfil
@@ -765,7 +769,7 @@
   <div class="mobile-drawer-section" id="mobileAdminSection" style="display:none;">Administração</div>
   <button class="mobile-drawer-link" id="mobileUploadBtn" style="display:none;" onclick="showView('upload',this);closeDrawer()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    Upload de Relatório
+    Upload de Documentos
   </button>
   <button class="mobile-drawer-link" id="mobileExtratosBtn" style="display:none;" onclick="showView('extratos',this);closeDrawer()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 017 7h2"/><path d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
@@ -817,6 +821,10 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
       Cartas Mensais
     </button>
+    <button class="sidebar-link" onclick="showView('documentos',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+      Meus Documentos
+    </button>
     <button class="sidebar-link" onclick="showView('perfil',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
       Meu Perfil
@@ -826,7 +834,7 @@
     <div class="sidebar-section-label">Administração</div>
     <button class="sidebar-link" onclick="showView('upload',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      Upload de Relatório
+      Upload de Documentos
     </button>
     <button class="sidebar-link" onclick="showView('extratos',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 017 7h2"/><path d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
@@ -934,6 +942,13 @@
       <div class="section-header"><div class="section-title">Cartas Publicadas</div></div>
       <div class="reports-grid" id="cartasGrid"><div class="loading-state"><div class="spinner"></div> Carregando...</div></div>
     </div>
+
+    <!-- MEUS DOCUMENTOS (contrato, política de investimentos e API assinados) -->
+    <div class="view" id="view-documentos">
+      <div class="welcome-banner"><h2>Meus <em>Documentos</em></h2><p>Seus documentos assinados com a EH Investimentos: contrato, política de investimentos e análise de perfil de investidor (API).</p></div>
+      <div class="section-header"><div class="section-title">Documentos Assinados</div></div>
+      <div class="reports-grid" id="documentosGrid"><div class="loading-state"><div class="spinner"></div> Carregando...</div></div>
+    </div>
     <!-- MEU PERFIL -->
     <div class="view" id="view-perfil">
       <div class="section-header" style="margin-bottom:2rem;"><div class="section-title">Meu Perfil</div></div>
@@ -980,21 +995,31 @@
     <!-- UPLOAD -->
     <div class="view" id="view-upload">
       <div class="upload-panel">
-        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Publicar Novo Relatório</h3>
+        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Publicar Novo Documento</h3>
         <div class="upload-form">
-          <div class="upload-field"><label>Nome do Relatório</label><input type="text" id="reportName" placeholder="Ex: Relatório Mensal — Janeiro 2025" /></div>
-          <div class="upload-field"><label>Mês / Período</label><input type="text" id="reportPeriod" placeholder="Ex: Janeiro 2025" /></div>
+          <div class="upload-field"><label>Nome do Documento</label><input type="text" id="reportName" placeholder="Ex: Relatório Mensal — Janeiro 2025" /></div>
+          <div class="upload-field"><label>Mês / Período / Data</label><input type="text" id="reportPeriod" placeholder="Ex: Janeiro 2025" /></div>
           <div class="upload-field"><label>Tipo</label>
-            <select id="reportType">
-              <option value="Relatório Mensal">Relatório Mensal</option>
-              <option value="Relatório Trimestral">Relatório Trimestral</option>
-              <option value="Relatório Anual">Relatório Anual</option>
-              <option value="Carta Mensal">Carta Mensal</option>
-              <option value="Especial">Especial</option>
+            <select id="reportType" onchange="onDocTypeChange()">
+              <optgroup label="Relatórios">
+                <option value="Relatório Mensal">Relatório Mensal</option>
+                <option value="Relatório Trimestral">Relatório Trimestral</option>
+                <option value="Relatório Anual">Relatório Anual</option>
+                <option value="Especial">Especial</option>
+              </optgroup>
+              <optgroup label="Cartas">
+                <option value="Carta Mensal">Carta Mensal</option>
+              </optgroup>
+              <optgroup label="Documentos assinados">
+                <option value="Contrato">Contrato assinado</option>
+                <option value="Política de Investimentos">Política de Investimentos assinada</option>
+                <option value="API">API (Análise de Perfil de Investidor) assinada</option>
+              </optgroup>
             </select>
           </div>
           <div class="upload-field" style="grid-column:1/-1;"><label>Destinatário</label>
             <select id="reportRecipient"><option value="">Todos os clientes</option></select>
+            <div id="recipientHint" style="display:none;margin-top:0.5rem;font-family:'Manrope',sans-serif;font-size:12px;color:var(--gold-text);">Documentos assinados são pessoais: escolha o cliente. Ele verá o arquivo em "Meus Documentos".</div>
           </div>
         </div>
         <div class="drop-zone" id="dropZone">
@@ -1009,12 +1034,12 @@
         <div style="margin-top:1rem;">
           <button class="btn-upload" id="uploadBtn" onclick="doUpload()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Publicar Relatório
+            Publicar Documento
           </button>
         </div>
         <div class="upload-feedback" id="uploadFeedback"></div>
       </div>
-      <div class="section-header"><div class="section-title">Relatórios Publicados</div></div>
+      <div class="section-header"><div class="section-title">Documentos Publicados</div></div>
       <div class="reports-grid" id="adminReportsGrid"><div class="loading-state"><div class="spinner"></div> Carregando...</div></div>
     </div>
 
@@ -1631,7 +1656,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.querySelectorAll('.mobile-drawer-link').forEach(l => l.classList.remove('active'));
     document.getElementById('view-' + viewId).classList.add('active');
     if (btn) btn.classList.add('active');
-    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Relatório', extratos:'Extratos → Excel', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos' };
+    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Documentos', documentos:'Meus Documentos', extratos:'Extratos → Excel', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos' };
     const topbar = document.getElementById('topbarTitle');
     if (topbar) topbar.textContent = titles[viewId] || viewId;
     if (viewId === 'emails') { loadTemplates().then(() => { buildTemplateAccordion(); fillCartaFields(); renderUltimoDisparo(); }); if (clientRows.length === 0) addClientRow(); loadRascunho(); }
@@ -2092,15 +2117,24 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   // ── REPORTS ──
+  // Tipos publicados pelo "Upload de Documentos" que vão para "Meus Documentos" (não para Relatórios).
+  const DOC_ASSINADO_TYPES = ['Contrato', 'Política de Investimentos', 'API'];
+  const DOC_TYPE_LABELS = { 'Contrato':'Contrato', 'Política de Investimentos':'Política de Investimentos', 'API':'API · Perfil de Investidor' };
+  const isDocAssinado = r => DOC_ASSINADO_TYPES.includes(r.type);
+  const isRelatorio   = r => r.type !== 'Carta Mensal' && !isDocAssinado(r);
+
   async function loadReports() {
     try {
       const { data, error } = await sb.from('reports').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       allReports = data || [];
       const cartas     = allReports.filter(r => r.type === 'Carta Mensal');
-      const relatorios = allReports.filter(r => r.type !== 'Carta Mensal');
+      const relatorios = allReports.filter(isRelatorio);
+      // Documentos assinados são pessoais: só os do próprio cliente aparecem em "Meus Documentos".
+      const documentos = allReports.filter(r => isDocAssinado(r) && r.user_id === currentUser.id);
       renderGrid(relatorios, 'reportsGrid');
       renderGrid(cartas, 'cartasGrid');
+      renderGrid(documentos, 'documentosGrid', 'Nenhum documento assinado disponível ainda.');
       if (isAdmin) renderAdminGrid(allReports, 'adminReportsGrid');
       const _statCount  = document.getElementById('statCount');
       const _statLatest = document.getElementById('statLatest');
@@ -2150,11 +2184,11 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     showView(viewId, btn || null);
   }
 
-  function renderGrid(reports, gridId) {
+  function renderGrid(reports, gridId, emptyMsg) {
     const grid = document.getElementById(gridId);
     if (!grid) return;
     if (!reports || !reports.length) {
-      grid.innerHTML = `<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>Nenhum documento disponível ainda.</p></div>`;
+      grid.innerHTML = `<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>${emptyMsg || 'Nenhum documento disponível ainda.'}</p></div>`;
       return;
     }
     grid.innerHTML = reports.map(r => {
@@ -2162,7 +2196,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       return `<div class="report-card">
         <div class="report-card-top">
           <div class="report-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-          <span class="report-badge">${r.type || 'Mensal'}</span>
+          <span class="report-badge">${DOC_TYPE_LABELS[r.type] || r.type || 'Mensal'}</span>
         </div>
         <div>
           <div class="report-name">${r.name || 'Documento'}</div>
@@ -2179,17 +2213,17 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   function renderAdminGrid(reports, gridId) {
     const grid = document.getElementById(gridId);
     if (!grid) return;
-    if (!reports || !reports.length) { grid.innerHTML = `<div class="empty-state"><p>Nenhum relatório publicado ainda.</p></div>`; return; }
+    if (!reports || !reports.length) { grid.innerHTML = `<div class="empty-state"><p>Nenhum documento publicado ainda.</p></div>`; return; }
     grid.innerHTML = reports.map(r => `
       <div class="report-card">
         <div class="report-card-top">
           <div class="report-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-          <span class="report-badge">${r.type || 'Mensal'}</span>
+          <span class="report-badge">${DOC_TYPE_LABELS[r.type] || r.type || 'Mensal'}</span>
         </div>
         <div>
           <div class="report-name">${r.name || 'Documento'}</div>
           <div class="report-meta" style="margin-top:0.2rem;">${r.period || fmtDate(r.created_at)}</div>
-          <div style="margin-top:0.2rem;font-size:0.65rem;color:var(--gold-text);">${r.user_id ? '👤 Específico' : '👥 Todos'}</div>
+          <div style="margin-top:0.2rem;font-size:0.65rem;color:var(--gold-text);">${r.user_id ? '👤 ' + (clientNames[r.user_id] || 'Específico') : '👥 Todos'}</div>
         </div>
         <div style="display:flex;gap:0.8rem;padding-top:0.8rem;border-top:1px solid var(--border-dim);">
           <a style="font-size:0.65rem;color:var(--gold-text);text-decoration:none;" href="${r.file_url}" target="_blank">↓ Baixar</a>
@@ -2209,7 +2243,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   function filterReports(type, btn) {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    const rel = allReports.filter(r => r.type !== 'Carta Mensal');
+    const rel = allReports.filter(isRelatorio);
     renderGrid(type === 'all' ? rel : rel.filter(r => r.type === type), 'reportsGrid');
   }
 
@@ -2234,6 +2268,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const period = document.getElementById('reportPeriod').value.trim();
     const type   = document.getElementById('reportType').value;
     if (!name || !period) { showFb('uploadFeedback','Preencha nome e período.','error'); return; }
+    if (DOC_ASSINADO_TYPES.includes(type) && !document.getElementById('reportRecipient').value) {
+      showFb('uploadFeedback','Documentos assinados precisam de um cliente como destinatário.','error'); return;
+    }
     const btn = document.getElementById('uploadBtn');
     btn.disabled = true; btn.textContent = 'Publicando...';
     const prog = document.getElementById('uploadProgress');
@@ -2260,23 +2297,36 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       selectedFile = null;
       loadReports();
     } catch(e) { prog.style.display = 'none'; showFb('uploadFeedback','Erro: ' + e.message,'error'); }
-    btn.disabled = false; btn.textContent = 'Publicar Relatório';
+    btn.disabled = false; btn.textContent = 'Publicar Documento';
   }
 
   async function deleteReport(id, filePath) {
-    if (!confirm('Remover este relatório permanentemente?')) return;
+    if (!confirm('Remover este documento permanentemente?')) return;
     if (filePath) await sb.storage.from('reports').remove([filePath]);
     await sb.from('reports').delete().eq('id', id);
     loadReports();
   }
 
+  // Documentos assinados não podem ir para "Todos os clientes".
+  function onDocTypeChange() {
+    const assinado = DOC_ASSINADO_TYPES.includes(document.getElementById('reportType').value);
+    const sel = document.getElementById('reportRecipient');
+    const todos = sel.querySelector('option[value=""]');
+    if (todos) todos.textContent = assinado ? 'Selecione o cliente…' : 'Todos os clientes';
+    document.getElementById('recipientHint').style.display = assinado ? 'block' : 'none';
+  }
+
+  let clientNames = {};
   async function loadClients() {
     try {
       const { data } = await sb.from('profiles').select('id, full_name, email');
       const sel = document.getElementById('reportRecipient');
       if (!sel || !data) return;
       sel.innerHTML = '<option value="">Todos os clientes</option>';
-      data.forEach(p => { sel.innerHTML += `<option value="${p.id}">${p.full_name || p.email}</option>`; });
+      clientNames = {};
+      data.forEach(p => { clientNames[p.id] = p.full_name || p.email; sel.innerHTML += `<option value="${p.id}">${p.full_name || p.email}</option>`; });
+      onDocTypeChange();
+      if (allReports.length) renderAdminGrid(allReports, 'adminReportsGrid');
     } catch(e) { console.warn('loadClients:', e.message); }
   }
 
