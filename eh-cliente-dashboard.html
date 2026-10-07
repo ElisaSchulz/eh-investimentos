@@ -4283,6 +4283,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     { cnpj:"57.609.674/0001-05", nome:"PATRIMONIAL ANDERMATT FIC FIDC RL" },
     { cnpj:"33.269.968/0001-77", nome:"PATRIMONIAL ASPEN FICFIDC RL" },
     { cnpj:"56.267.236/0001-43", nome:"PATRIMONIAL CHAMONIX HY FIDC RL" },
+    { cnpj:"66.935.232/0001-40", nome:"PATRIMONIAL TIGNES FIC FIDC" },
     { cnpj:"61.516.572/0001-12", nome:"PDIVER GAMA PEARL DIVER FIM RL" },
     { cnpj:"54.635.245/0001-14", nome:"PERSEVERA PLANO & PLANO FII RL" },
     { cnpj:"54.519.721/0001-31", nome:"POLIGONO APLHA" },
@@ -4293,6 +4294,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     { cnpj:"63.085.032/0001-57", nome:"RBR INFRA CRÉDITO CDI FIP RL" },
     { cnpj:"10.500.884/0001-05", nome:"REAL INVESTOR FIA BDR" },
     { cnpj:"57.593.613/0001-05", nome:"RIZA EQUITUS REAL ESTATE FII RL" },
+    { cnpj:"66.834.182/0001-04", nome:"RIZA RENDA IMOBILIÁRIA FEEDER FII RL" },
     { cnpj:"42.260.903/0001-51", nome:"RIZA STATHEROS FIC FIM CRÉDITO PRIVADO" },
     { cnpj:"64.299.705/0001-34", nome:"ROOT CAPITAL FICUS FIDC RL" },
     { cnpj:"34.431.415/0001-31", nome:"ROOT CAPITAL HIGH YIELD FICFIM CP" },
@@ -4423,11 +4425,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
   const ctMasterTokens = CT_FUNDOS_MASTER.map(m => ({ ...m, tokens: ctNormName(m.nome) }));
 
-  // ── Modelo "Para Colar": colunas na ordem exata da planilha da Elisa (exemplo.xlsx) ──
+  // ── Modelo "Para Colar": colunas na ordem exata da lista da Elisa ──
   // Linha 1 = nomes, linha 2 = CNPJs, linhas 3+ = uma linha por data de cota (copiar e colar).
-  // Os CNPJs abaixo são os DA PLANILHA (SRM SR3/SR4 usam -21/-22 de propósito — a cota varia
-  // por série; no extrato as três séries vêm com -20, por isso o alinhamento também compara
-  // a série do nome: SEN 2 -> SR2, SEN 3 -> SR3, "- 4" -> SR4).
+  // A cota é casada pelo CNPJ do extrato; fundos sem extrato no lote ficam com a coluna em branco.
   const CT_PASTE_TEMPLATE = [
     { cnpj:"61.700.255/0001-51", nome:"AGROFIN MILENIO FIAGRO" },
     { cnpj:"54.869.435/0001-04", nome:"ARX CHILLON RECEBÍVEIS FII" },
@@ -4439,30 +4439,23 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     { cnpj:"60.027.987/0001-60", nome:"BTG CREDITO IMOBILIARIO CDI" },
     { cnpj:"60.922.008/0001-37", nome:"BTG PACTUAL PRIME LOGÍSTICA FII" },
     { cnpj:"57.469.492/0001-86", nome:"BTG PACTUAL REAL STATE HEDGE FUND" },
-    { cnpj:"55.912.292/0001-20", nome:"FIC FIDC SRM EXODUS SR2" },
-    { cnpj:"55.912.292/0001-21", nome:"FIC FIDC SRM EXODUS SR3" },
-    { cnpj:"55.912.292/0001-22", nome:"FIC FIDC SRM EXODUS SR4" },
     { cnpj:"49.343.067/0001-18", nome:"FIP IE BTG ENERGY" },
-    { cnpj:"64.118.207/0001-48", nome:"JIVEMAUÁ BN CRÉDITO SEC II FIDC SUB. SNR" },
     { cnpj:"63.441.263/0001-56", nome:"MANATI RENDA IMOBILIÁRIA" },
     { cnpj:"43.741.195/0001-33", nome:"MAUÁ CAPITAL CRÉDITO ESTRUTURADO" },
     { cnpj:"65.511.886/0001-83", nome:"MAUÁ CAPITAL CRÉDITO LIQUIDEZ 180 FII" },
-    { cnpj:"62.526.654/0001-00", nome:"MAUÁ LAJES CORPORATIVAS FEEDER FII" },
-    { cnpj:"62.603.652/0001-78", nome:"MAUÁ PLANTA FII RL" },
     { cnpj:"46.153.220/0001-56", nome:"NEWAVE ENERGIA I ADV FIP" },
     { cnpj:"63.932.359/0001-17", nome:"PACKEM SR2 FIAGRO CETIP" },
+    { cnpj:"66.935.232/0001-40", nome:"PATRIMONIAL TIGNES FIC FIDC" },
+    { cnpj:"54.635.245/0001-14", nome:"PERSEVERA PLANO & PLANO FII RL" },
     { cnpj:"65.813.874/0001-03", nome:"POLO CAPITAL YIELD" },
+    { cnpj:"63.085.032/0001-57", nome:"RBR INFRA CRÉDITO CDI FIP RL" },
     { cnpj:"57.593.613/0001-05", nome:"RIZA EQUITUS REAL ESTATE FII RL" },
-    { cnpj:"64.299.705/0001-34", nome:"ROOT CAPITAL FICUS FIDC RL" },
+    { cnpj:"66.834.182/0001-04", nome:"RIZA RENDA IMOBILIÁRIA FEEDER FII RL" },
     { cnpj:"52.746.497/0001-95", nome:"SCORE EQI PREC FIDC RESPONSABILIDADE LIM" },
-    { cnpj:"60.743.809/0001-35", nome:"VALORA AGRO RENDA SR1 FIAGRO" },
-    { cnpj:"60.743.809/0001-36", nome:"VALORA AGRO RENDA SR2 FIAGRO" },
     { cnpj:"64.125.652/0001-35", nome:"VALORA INFRA DÍVIDA CDI" },
     { cnpj:"64.124.715/0001-39", nome:"VALORA INFRA DÍVIDA PRÉ" },
-    { cnpj:"53.779.703/0001-26", nome:"XP CREDIT OPPORTUNITIES FIDC" },
     { cnpj:"61.424.730/0001-04", nome:"XP RENDA IMOBILIÁRIA FEEDER FII RL" },
     { cnpj:"39.669.815/0001-01", nome:"XP SELECTION ALTERNATIVO FIP MULTI - CLASSE A" },
-    { cnpj:"56.873.069/0001-84", nome:"EV ENERGIA FIC FIP INFRA RESP LIMITADA" },
   ];
 
   // Encontra a cota para uma coluna do modelo: CNPJ igual (sem conflito de série no nome);
