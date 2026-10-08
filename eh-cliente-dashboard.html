@@ -4661,14 +4661,12 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     // A partir da linha 3, UMA LINHA POR DATA DE COTA: cada cota aparece na linha da sua
     // própria data (ex: Brasol com cota de 29/06 sai na linha 29/06, os demais na de 30/06).
     const row1 = [''], row2 = [''];
-    const usados = new Set();
     const hits = [];
     for (const col of CT_PASTE_TEMPLATE) {
       row1.push(col.nome);
       row2.push(col.cnpj);
       const hit = ctMatchTemplateCol(col, uniq);
       hits.push(hit);
-      if (hit) usados.add(hit.cnpj + '|' + ctSquash(hit.fundo));
     }
     const data3 = [row1, row2];
     const dtKey = d => { const p = (d || '').split('/'); return p.length === 3 ? p[2] + p[1] + p[0] : d; };
@@ -4676,12 +4674,6 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     if (!datas.length) data3.push([ctMostCommonDate()]);
     for (const d of datas) {
       data3.push([d, ...hits.map(h => (h && h.dataCota === d) ? h.cota : '')]);
-    }
-    const fora = uniq.filter(r => !usados.has(r.cnpj + '|' + ctSquash(r.fundo)));
-    if (fora.length) {
-      data3.push([], ['Fundos encontrados nos extratos mas sem coluna no modelo:']);
-      data3.push(['Data Cota', 'Fundo', 'CNPJ', 'Valor Cota']);
-      fora.forEach(r => data3.push([r.dataCota, r.fundo, r.cnpj, r.cota]));
     }
     const ws3 = XLSX.utils.aoa_to_sheet(data3);
     ws3['!cols'] = [{ wch: 12 }, ...CT_PASTE_TEMPLATE.map(() => ({ wch: 15 }))];
