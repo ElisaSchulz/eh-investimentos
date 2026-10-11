@@ -1223,13 +1223,15 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
             <p style="font-size:0.75rem;color:var(--gray);line-height:1.6;margin-bottom:1.1rem;">
               Escreva o comentário do mês <strong style="color:var(--white);">uma única vez</strong> e clique em gerar: os 10 templates
               (Mensal, Trimestral, Pagamento Pendente, Sem Pagamento e Elisa — todos com variação acima/abaixo do CDI) são montados automaticamente.
+              Se preencher também o <strong style="color:var(--white);">comentário Offshore</strong>, são gerados os 4 templates Offshore
+              (Mensal e Trimestral, com variação resultado positivo/negativo).
               A saudação, os parágrafos de pagamento e o encerramento podem ser ajustados em
               <strong style="color:var(--white);">Blocos fixos</strong> logo abaixo.
-              Os templates <strong style="color:var(--white);">Offshore e Personalizado (texto livre) não são alterados</strong>.
+              O template <strong style="color:var(--white);">Personalizado (texto livre) não é alterado</strong>.
               Depois de gerar, revise cada template (pode ajustar o que quiser) e clique em <strong style="color:var(--white);">Salvar todos os templates</strong>.
             </p>
             <div class="upload-field" style="margin-bottom:0.9rem;">
-              <label>Assunto do mês (aplicado aos 7 templates — deixe vazio para manter os assuntos atuais)</label>
+              <label>Assunto do mês (aplicado a todos os templates gerados — deixe vazio para manter os assuntos atuais)</label>
               <input type="text" id="gen-assunto" placeholder="ex: EH Investimentos — Fechamento de Junho" oninput="markTplUnsaved()" />
             </div>
             <div class="upload-field" style="margin-bottom:0.9rem;">
@@ -1243,6 +1245,21 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
             <div class="upload-field" style="margin-bottom:1.1rem;">
               <label>Parágrafo — carteira ABAIXO do CDI</label>
               <textarea id="gen-abaixo" rows="3" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
+            </div>
+
+            <!-- Offshore: comentário próprio (mercado internacional) e resultado positivo/negativo no mês -->
+            <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#6496FF;margin:0.4rem 0 0.6rem;">● Offshore</p>
+            <div class="upload-field" style="margin-bottom:0.9rem;">
+              <label>Comentário do mês — Offshore (deixe vazio para não gerar os templates Offshore)</label>
+              <textarea id="gen-off-comentario" rows="6" placeholder="ex: Setembro foi o mês em que os principais bancos centrais..." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
+            </div>
+            <div class="upload-field" style="margin-bottom:0.9rem;">
+              <label>Parágrafo Offshore — resultado POSITIVO no mês</label>
+              <textarea id="gen-off-positivo" rows="3" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
+            </div>
+            <div class="upload-field" style="margin-bottom:1.1rem;">
+              <label>Parágrafo Offshore — resultado NEGATIVO no mês</label>
+              <textarea id="gen-off-negativo" rows="3" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(138,155,184,0.25);color:var(--white);font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.85rem 1rem;outline:none;resize:vertical;line-height:1.7;" oninput="markTplUnsaved()"></textarea>
             </div>
 
             <!-- Blocos fixos (saudação, pagamentos, encerramento) -->
@@ -1282,7 +1299,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
                 </div>
               </div>
             </div>
-            <button class="btn-upload" onclick="gerarTemplatesDoMes()" style="background:var(--gold);color:var(--navy-dark);">⚡ Gerar os 10 templates</button>
+            <button class="btn-upload" onclick="gerarTemplatesDoMes()" style="background:var(--gold);color:var(--navy-dark);">⚡ Gerar templates do mês</button>
           </div>
 
           <div id="templateAccordion" style="display:flex;flex-direction:column;gap:1px;background:var(--border-dim);border:1px solid var(--border-dim);"></div>
@@ -1309,7 +1326,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           </div>
           <div style="overflow-x:auto;margin-top:0.8rem;">
             <table id="clientsTable">
-              <thead><tr><th>Email</th><th>Nome</th><th>% do CDI</th><th>Template</th><th>Valor do Serviço</th><th>Relatório PDF</th><th></th></tr></thead>
+              <thead><tr><th>Email</th><th>Nome</th><th>% do CDI <span style="font-weight:400;text-transform:none;letter-spacing:0;">(Offshore: % no mês)</span></th><th>Template</th><th>Valor do Serviço</th><th>Relatório PDF</th><th></th></tr></thead>
               <tbody id="clientsTableBody"></tbody>
             </table>
           </div>
@@ -1703,6 +1720,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     // Close
     document.getElementById('tpl-dd-list-' + id).classList.remove('open');
     btn.classList.remove('open');
+    updateBadge(id);
   }
 
   // Close dropdowns when clicking outside
@@ -2352,7 +2370,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     { id:'sem_cobranca_abaixo', label:'Sem Pagamento — Abaixo do CDI',        dot:'#5BC8AF', freq:null,         perf:'abaixo' },
     { id:'elisa_acima',         label:'Elisa (PIX Elisa) — Acima do CDI',     dot:'#E87FB0', freq:null,         perf:'acima' },
     { id:'elisa_abaixo',        label:'Elisa (PIX Elisa) — Abaixo do CDI',    dot:'#E87FB0', freq:null,         perf:'abaixo' },
-    { id:'offshore',            label:'Carteira Offshore',                     dot:'#6496FF', freq:null,         perf:null },
+    { id:'offshore_mensal_positivo',     label:'Offshore Mensal — Resultado Positivo',     dot:'#6496FF', freq:'Mensal',     perf:'positivo' },
+    { id:'offshore_mensal_negativo',     label:'Offshore Mensal — Resultado Negativo',     dot:'#6496FF', freq:'Mensal',     perf:'negativo' },
+    { id:'offshore_trimestral_positivo', label:'Offshore Trimestral — Resultado Positivo', dot:'#6496FF', freq:'Trimestral', perf:'positivo' },
+    { id:'offshore_trimestral_negativo', label:'Offshore Trimestral — Resultado Negativo', dot:'#6496FF', freq:'Trimestral', perf:'negativo' },
     { id:'personalizado',       label:'Email Personalizado (texto livre)',     dot:'#8A9BB8', freq:null,         perf:null },
   ];
 
@@ -2492,6 +2513,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     'gen-saudacao':          'Olá, <strong>{{nome}}</strong>,\n\nBom dia!',
     'gen-acima':             '<strong>Sua carteira tem uma boa diversificação e proteção que ajudou bem a superar o CDI de forma satisfatória. Segue bem no acumulado.</strong>',
     'gen-abaixo':            '<strong>Algumas diversificações na sua carteira seguraram um pouco o resultado, ficando o rendimento levemente abaixo do CDI. Isso não compromete o trabalho e seguimos com a estratégia de longo prazo e retornos médios. O resultado segue bem no acumulado.</strong>',
+    'gen-off-comentario':    '',
+    'gen-off-positivo':      '<strong>Em um mês de juros em alta e bolsas majoritariamente negativas, sua carteira se beneficiou da diversificação e encerrou o mês com resultado positivo. Segue bem no acumulado.</strong>',
+    'gen-off-negativo':      '<strong>Em um mês de juros em alta e bolsas majoritariamente negativas, sua carteira também sentiu o movimento e encerrou o mês em leve queda. É um comportamento esperado em períodos como este, e a diversificação ajudou a limitar o impacto. Seguimos com a estratégia de longo prazo, e o resultado segue bem no acumulado.</strong>',
     'gen-pag-mensal':        'O valor para pagamento do mês é de <strong>{{valor}}</strong>. Pix 31988381101 . Eduardo Barbosa Horta dos Santos.',
     'gen-pag-trimestral':    'Fechamos mais um trimestre. O valor para pagamento é de <strong>{{valor}}</strong>. Pix 31988381101 . Eduardo Barbosa Horta dos Santos.',
     'gen-pag-cobranca':      'Não identificamos o pagamento referente ao mês passado. Caso tenha realizado, favor enviar comprovante. Caso contrário, o valor para pagamento do mês é de <strong>{{valor}}</strong>. Pix <strong>31988381101</strong>. Eduardo Barbosa Horta dos Santos.',
@@ -2519,7 +2543,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   function gerarTemplatesDoMes() {
     const assunto    = document.getElementById('gen-assunto').value.trim();
     const comentario = document.getElementById('gen-comentario').value.trim();
-    if (!comentario) { showFb('templateFeedback', 'Escreva o comentário do mês antes de gerar.', 'error'); return; }
+    const comentOff  = document.getElementById('gen-off-comentario').value.trim();
+    if (!comentario && !comentOff) { showFb('templateFeedback', 'Escreva o comentário do mês (ou o Offshore) antes de gerar.', 'error'); return; }
     const saud   = genVal('gen-saudacao');
     const acima  = genVal('gen-acima');
     const abaixo = genVal('gen-abaixo');
@@ -2529,8 +2554,12 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const pagE   = genVal('gen-pag-elisa');
     const enc    = genVal('gen-encerramento');
     const junta = parts => parts.filter(Boolean).join('\n\n');
-    // Offshore e Personalizado (texto livre) não são gerados
-    const gerados = {
+    const offPos = genVal('gen-off-positivo');
+    const offNeg = genVal('gen-off-negativo');
+    // Personalizado (texto livre) não é gerado. Cada grupo só é gerado se o
+    // respectivo comentário estiver preenchido.
+    const gerados = {};
+    if (comentario) Object.assign(gerados, {
       mensal_acima:        junta([saud, comentario, acima,  pagM, enc]),
       mensal_abaixo:       junta([saud, comentario, abaixo, pagM, enc]),
       trimestral_acima:    junta([saud, comentario, acima,  pagT, enc]),
@@ -2541,7 +2570,13 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       sem_cobranca_abaixo: junta([saud, comentario, abaixo,       enc]),
       elisa_acima:         junta([saud, comentario, acima,  pagE, enc]),
       elisa_abaixo:        junta([saud, comentario, abaixo, pagE, enc]),
-    };
+    });
+    if (comentOff) Object.assign(gerados, {
+      offshore_mensal_positivo:     junta([saud, comentOff, offPos, pagM, enc]),
+      offshore_mensal_negativo:     junta([saud, comentOff, offNeg, pagM, enc]),
+      offshore_trimestral_positivo: junta([saud, comentOff, offPos, pagT, enc]),
+      offshore_trimestral_negativo: junta([saud, comentOff, offNeg, pagT, enc]),
+    });
     Object.entries(gerados).forEach(([tplId, corpo]) => {
       const bodyEl = document.getElementById('body-' + tplId);
       if (bodyEl) bodyEl.value = corpo;
@@ -2550,7 +2585,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       if (statusEl) statusEl.textContent = '● gerado — revisar e salvar';
     });
     markTplUnsaved();
-    showFb('templateFeedback', '✓ 10 templates gerados (Offshore e Personalizado mantidos). Revise abaixo e clique em "Salvar todos os templates".', 'success');
+    const qtd = Object.keys(gerados).length;
+    const grupos = [comentario && 'Brasil', comentOff && 'Offshore'].filter(Boolean).join(' e ');
+    showFb('templateFeedback', `✓ ${qtd} templates gerados (${grupos}). Revise abaixo e clique em "Salvar todos os templates".`, 'success');
   }
 
   function addClientRow(data = {}) {
@@ -2590,14 +2627,19 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
               <span style="font-size:0.62rem;color:var(--gray);margin-left:auto;">auto ↑↓ CDI</span>
             </div>
             <div class="tpl-dd-sep"></div>
-            <div class="tpl-dd-item" data-val="offshore" onclick="tplDdSelect('${id}','offshore','Carteira Offshore','#6496FF')">
-              <span class="tpl-dd-dot" style="background:#6496FF"></span>Carteira Offshore
+            <div class="tpl-dd-item" data-val="offshore_mensal" onclick="tplDdSelect('${id}','offshore_mensal','Offshore Mensal','#6496FF')">
+              <span class="tpl-dd-dot" style="background:#6496FF"></span>Offshore Mensal
+              <span style="font-size:0.62rem;color:var(--gray);margin-left:auto;">auto +/− no mês</span>
+            </div>
+            <div class="tpl-dd-item" data-val="offshore_trimestral" onclick="tplDdSelect('${id}','offshore_trimestral','Offshore Trimestral','#6496FF')">
+              <span class="tpl-dd-dot" style="background:#6496FF"></span>Offshore Trimestral
+              <span style="font-size:0.62rem;color:var(--gray);margin-left:auto;">auto +/− no mês</span>
             </div>
             <div class="tpl-dd-item" data-val="personalizado" onclick="tplDdSelect('${id}','personalizado','Personalizado','#8A9BB8')">
               <span class="tpl-dd-dot" style="background:#8A9BB8"></span>Personalizado
             </div>
           </div>
-          <input type="hidden" id="tpl-val-${id}" value="${data.template||'mensal'}" />
+          <input type="hidden" id="tpl-val-${id}" value="${normTpl(data.template)}" />
         </div>
       </td>
       <td><input type="text" placeholder="ex: R$ 1.500,00" value="${data.valor||''}" /></td>
@@ -2619,18 +2661,20 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     // Initialize template button label from data.template
     // (usa tplDdSelect, que atualiza rótulo do botão, item selecionado e valor oculto —
     //  antes procurava um elemento "tpl-btn-" inexistente e o rótulo ficava sempre "Mensal")
-    if (data.template && data.template !== 'mensal') {
+    const tplIni = normTpl(data.template);
+    if (tplIni !== 'mensal') {
       const tplDef = {
         mensal:       { label:'Mensal',             color:'#4caf82' },
         trimestral:   { label:'Trimestral',          color:'#4caf82' },
         cobranca:     { label:'Pagamento Pendente',  color:'#F4AE45' },
         sem_cobranca: { label:'Sem Pagamento',       color:'#5BC8AF' },
         elisa:        { label:'Elisa (PIX Elisa)',   color:'#E87FB0' },
-        offshore:     { label:'Carteira Offshore',   color:'#6496FF' },
+        offshore_mensal:     { label:'Offshore Mensal',     color:'#6496FF' },
+        offshore_trimestral: { label:'Offshore Trimestral', color:'#6496FF' },
         personalizado:{ label:'Personalizado',       color:'#8A9BB8' },
       };
-      const def = tplDef[data.template];
-      if (def) tplDdSelect(id, data.template, def.label, def.color);
+      const def = tplDef[tplIni];
+      if (def) tplDdSelect(id, tplIni, def.label, def.color);
     }
     updateBadge(id);
   }
@@ -2680,6 +2724,13 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     if (!input || !badge) return;
     const num = parseFloat((input.value||'').replace(',','.').replace('%',''));
     if (isNaN(num) || !input.value.trim()) { badge.innerHTML = ''; return; }
+    const tpl = document.getElementById('tpl-val-' + id)?.value || '';
+    if (isOffshore(tpl)) {
+      badge.innerHTML = num >= 0
+        ? '<span class="badge-acima">▲ Positivo no mês</span>'
+        : '<span class="badge-abaixo">▼ Negativo no mês</span>';
+      return;
+    }
     badge.innerHTML = num >= 100
       ? '<span class="badge-acima">▲ Acima do CDI</span>'
       : '<span class="badge-abaixo">▼ Abaixo do CDI</span>';
@@ -2723,19 +2774,26 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
 
 
+  // Rascunhos antigos guardavam o template único "offshore": hoje vira Offshore Mensal
+  function normTpl(t) { return !t ? 'mensal' : (t === 'offshore' ? 'offshore_mensal' : t); }
+  function isOffshore(t) { return (t||'').startsWith('offshore'); }
+
   function applyTpl(client) {
-    const num  = parseFloat((client.desempenho||'0').replace(',','.').replace('%',''));
-    const up   = num >= 100;
-    const perf = up ? 'acima' : 'abaixo';
-    const sel  = client.template || 'mensal';
+    const num  = parseFloat((client.desempenho||'0').replace(',','.').replace('%','')) || 0;
+    const sel  = normTpl(client.template);
+    // Offshore: "desempenho" é a rentabilidade do mês (ex: 1,2% ou -0,8%) → positivo/negativo.
+    // Demais: % do CDI → acima/abaixo de 100%.
+    const offshore = isOffshore(sel);
+    const up   = offshore ? num >= 0 : num >= 100;
+    const perf = offshore ? (up ? 'positivo' : 'negativo') : (up ? 'acima' : 'abaixo');
 
     // Templates that auto-select acima/abaixo based on desempenho
-    const autoTemplates = ['mensal', 'trimestral', 'cobranca', 'sem_cobranca', 'elisa'];
+    const autoTemplates = ['mensal', 'trimestral', 'cobranca', 'sem_cobranca', 'elisa', 'offshore_mensal', 'offshore_trimestral'];
     let tplId;
     if (autoTemplates.includes(sel)) {
       tplId = `${sel}_${perf}`;
     } else {
-      // offshore, personalizado — fixed, ignore desempenho
+      // personalizado — fixed, ignore desempenho
       tplId = sel;
     }
     const tpl = templateData[tplId] || { assunto: '', corpo: '' };
@@ -2756,7 +2814,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       .replace(/{{link_relatorio}}/g, client.link_relatorio||'')
       .replace(/{{btn_relatorio}}/g, linkHtml)
       .replace(/{{btn_carta}}/g, cartaHtml);
-    return { subject: r(tpl.assunto), body: r(corpo), up, freq: sel, tplId };
+    return { subject: r(tpl.assunto), body: r(corpo), up, offshore, freq: sel, tplId };
   }
 
   function previewEmails() {
@@ -2765,11 +2823,11 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const area = document.getElementById('previewArea');
     area.style.display = 'block';
     document.getElementById('previewList').innerHTML = clients.map(c => {
-      const { subject, body, up } = applyTpl(c);
-      const { up: up2, freq, tplId: resolvedTpl } = applyTpl(c);
-      const tplDef = TEMPLATE_DEFS.find(t => t.id === (c.template !== 'auto' ? c.template : (freq+'_'+(up2?'acima':'abaixo'))));
-      const tplName = tplDef ? tplDef.label : (c.template === 'auto' ? 'Auto' : c.template);
-      const badge = `<span class="${up2?'badge-acima':'badge-abaixo'}">${up2?'▲':'▼'} ${up2?'Acima':'Abaixo'} CDI</span> <span style="font-size:0.6rem;color:var(--gray);margin-left:0.3rem;">· ${tplName}</span>`;
+      const { subject, body, up: up2, offshore, tplId: resolvedTpl } = applyTpl(c);
+      const tplDef = TEMPLATE_DEFS.find(t => t.id === resolvedTpl);
+      const tplName = tplDef ? tplDef.label : c.template;
+      const perfTxt = offshore ? (up2 ? 'Positivo no mês' : 'Negativo no mês') : (up2 ? 'Acima CDI' : 'Abaixo CDI');
+      const badge = `<span class="${up2?'badge-acima':'badge-abaixo'}">${up2?'▲':'▼'} ${perfTxt}</span> <span style="font-size:0.6rem;color:var(--gray);margin-left:0.3rem;">· ${tplName}</span>`;
       return `<div class="preview-card">
         <div class="preview-card-header">
           <div class="preview-meta"><strong>${c.nome}</strong> &lt;${c.email}&gt;<br/><strong>Assunto:</strong> ${subject}</div>
@@ -2862,7 +2920,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         <div>
           <div style="font-size:0.82rem;font-weight:500;color:var(--white);">${r.nome} <span style="color:var(--gray);font-weight:300;">&lt;${r.email}&gt;</span></div>
           <div style="font-size:0.68rem;color:var(--gray);margin-top:0.2rem;">
-            ${r.frequencia} · ${r.desempenho} do CDI · ${r.valor}
+            ${r.frequencia} · ${r.desempenho} ${isOffshore(r.frequencia) ? 'no mês' : 'do CDI'} · ${r.valor}
             ${r.link_relatorio ? ` · <span style="color:var(--gold-text);">📄 ${r.pdf_filename || 'PDF anexado'}</span>` : ''}
           </div>
         </div>
@@ -3092,7 +3150,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       'cobrança':'cobranca', 'cobranca':'cobranca',
       'sempagamento':'sem_cobranca', 'semcobrança':'sem_cobranca', 'semcobranca':'sem_cobranca', 'sem_cobranca':'sem_cobranca',
       'elisa':'elisa', 'pixelisa':'elisa',
-      'offshore':'offshore', 'carteiraoffshore':'offshore',
+      'offshore':'offshore_mensal', 'carteiraoffshore':'offshore_mensal',
+      'offshoremensal':'offshore_mensal', 'offshoretrimestral':'offshore_trimestral',
       'personalizado':'personalizado', 'emailpersonalizado':'personalizado',
     };
 
