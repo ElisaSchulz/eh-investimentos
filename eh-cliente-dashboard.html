@@ -709,6 +709,30 @@
     .main .inicio-feature-empty, .main .stat-value.gold { font-style: normal; }
     .main .ob-banner-text strong { font-family: 'Fraunces', serif !important; font-weight: 600; font-size: 1.3rem; }
     .main .inicio-greeting, .main .inicio-greeting em { font-weight: 600 !important; letter-spacing: -0.015em; }
+
+    /* ── MENSAGENS PADRÃO (admin) ── */
+    .msg-tabs { display: flex; border-bottom: 1px solid var(--rule); margin-bottom: 2rem; overflow-x: auto; }
+    .msg-tab-content { display: none; }
+    .msg-tab-content.active { display: block; }
+    .msg-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 1.2rem; align-items: center; }
+    .msg-actions .btn-download-ext { margin-top: 0; }
+    .msg-hint { font-size: 0.78rem; color: var(--gray); line-height: 1.6; margin-top: 0.4rem; }
+    .msg-preview { width: 100%; min-height: 340px; background: var(--navy-3); border: 1px solid var(--rule-strong); color: var(--cream); font-family: 'Manrope', sans-serif; font-size: 13px; line-height: 1.65; padding: 1rem 1.1rem; resize: vertical; outline: none; }
+    .msg-preview:focus { border-color: var(--gold); }
+    .ord-rows { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+    .ord-rows th { font-family: 'Manrope', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cream-faint); text-align: left; padding: 0.4rem 0.5rem 0.4rem 0; border-bottom: 1px solid var(--rule-strong); }
+    .ord-rows td { padding: 0.25rem 0.5rem 0.25rem 0; border-bottom: 1px solid var(--rule-soft); }
+    .ord-rows input { width: 100%; background: transparent; border: none; color: var(--cream); font-family: 'Manrope', sans-serif; font-size: 13px; padding: 0.5rem 0; outline: none; border-bottom: 1px solid transparent; }
+    .ord-rows input:focus { border-bottom-color: var(--gold); }
+    .ord-rows td.ord-del { width: 32px; text-align: center; }
+    .ord-rows td.ord-del button { background: none; border: none; color: var(--gray); cursor: pointer; font-size: 16px; line-height: 1; }
+    .ord-rows td.ord-del button:hover { color: #e05555; }
+    .ord-total { text-align: right; font-size: 13px; color: var(--cream-soft); margin-top: 0.8rem; }
+    .ord-total strong { color: var(--gold-text); font-size: 15px; margin-left: 0.5rem; }
+    .ord-preview-wrap { background: #fff; padding: 1.2rem; overflow-x: auto; }
+    @media (max-width: 768px) {
+      .ord-rows th:nth-child(1), .ord-rows td:nth-child(1) { width: 34%; }
+    }
   </style>
   <link rel="stylesheet" href="eh-tema.css" />
 </head>
@@ -791,6 +815,10 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
     Gerador de Documentos
   </button>
+  <button class="mobile-drawer-link" id="mobileMensagensBtn" style="display:none;" onclick="showView('mensagens',this);closeDrawer()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    Mensagens Padrão
+  </button>
   <div class="mobile-drawer-divider"></div>
   <div style="padding:0.8rem;">
     <div style="font-size:0.78rem;font-weight:500;color:var(--white);" id="mobileUserName">...</div>
@@ -855,6 +883,10 @@
     <button class="sidebar-link" onclick="showView('gerador',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
       Gerador de Documentos
+    </button>
+    <button class="sidebar-link" onclick="showView('mensagens',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      Mensagens Padrão
     </button>
   </div>
   <div class="sidebar-bottom">
@@ -1535,6 +1567,141 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       </div>
     </div>
 
+
+    <!-- MENSAGENS PADRÃO (admin only) -->
+    <div class="view" id="view-mensagens">
+      <div class="welcome-banner">
+        <h2>Mensagens <em>Padrão</em></h2>
+        <p>Monte rapidamente as mensagens de aprovação de ordens para os clientes e as tabelas de ordem para os bancos. Ativos e fundos salvos ficam disponíveis para todos os admins.</p>
+      </div>
+
+      <div class="msg-tabs">
+        <button class="email-tab active" onclick="msgSwitchTab('cliente',this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          Aprovação do Cliente
+        </button>
+        <button class="email-tab" onclick="msgSwitchTab('banco',this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V10M19 21V10M9 21V10M15 21V10"/><path d="M12 3l9 5H3z"/></svg>
+          Ordem ao Banco
+        </button>
+      </div>
+
+      <!-- ABA: APROVAÇÃO DO CLIENTE -->
+      <div class="msg-tab-content active" id="msgtab-cliente">
+        <div class="upload-panel">
+          <h3>Cliente e operação</h3>
+          <div class="upload-form">
+            <div class="upload-field"><label>Cliente</label>
+              <select id="mc_cliente" onchange="mcClienteChange()"><option value="">Carregando…</option></select>
+            </div>
+            <div class="upload-field"><label>Nome na mensagem</label><input type="text" id="mc_nome" placeholder="Daniel" /></div>
+            <div class="upload-field"><label>Saudação</label>
+              <select id="mc_saudacao"><option>bom dia</option><option>boa tarde</option><option>boa noite</option></select>
+            </div>
+            <div class="upload-field"><label>Operação</label>
+              <select id="mc_operacao"><option value="compra">Compra</option><option value="venda">Venda</option><option value="resgate">Resgate</option></select>
+            </div>
+            <div class="upload-field"><label>Aprovação via</label>
+              <select id="mc_canal"><option value="push">Notificação (push) no app</option><option value="email">Email da instituição</option></select>
+            </div>
+            <div class="upload-field"><label>Instituição</label>
+              <input type="text" id="mc_instituicao" list="mc_instituicoes" value="XP" />
+              <datalist id="mc_instituicoes"><option value="XP"><option value="BTG Pactual"><option value="EQI"><option value="Itaú"><option value="Safra"><option value="Warren"></datalist>
+            </div>
+            <div class="upload-field"><label>Limite da carteira (%)</label><input type="text" id="mc_limite" placeholder="5 (opcional)" /></div>
+          </div>
+        </div>
+
+        <div class="upload-panel">
+          <h3>Ativo</h3>
+          <div class="upload-form">
+            <div class="upload-field" style="grid-column:1/-1;"><label>Carregar ativo salvo</label>
+              <select id="mc_ativo_salvo" onchange="mcCarregarAtivo(this.value)"><option value="">— Novo ativo —</option></select>
+            </div>
+            <div class="upload-field"><label>Tipo</label>
+              <select id="mc_tipo">
+                <option>FII</option><option>CRA</option><option>CRI</option><option value="Debênture">Debênture</option>
+                <option value="Fundo">Fundo</option><option>CDB</option><option>LCA</option><option>LCI</option><option value="">Outro (só o nome)</option>
+              </select>
+            </div>
+            <div class="upload-field" style="grid-column:span 2;"><label>Nome do ativo</label><input type="text" id="mc_ativo" placeholder="RIZA RENDA IMOBILIÁRIA" /></div>
+            <div class="upload-field" style="grid-column:1/-1;"><label>Características (uma por linha)</label>
+              <textarea id="mc_caracteristicas" rows="8" placeholder="Retorno alvo: IPCA + 9,0% a.a.&#10;Rendimentos mensais isentos de IR para pessoa física&#10;Prazo: 5 anos"></textarea>
+            </div>
+          </div>
+          <div class="msg-actions">
+            <button class="btn-download-ext" onclick="mcSalvarAtivo()">Salvar ativo</button>
+            <button class="btn-download-ext" id="mc_btn_excluir" onclick="mcExcluirAtivo()" style="display:none;">Excluir ativo salvo</button>
+          </div>
+          <div class="upload-feedback" id="mcAtivoFb"></div>
+        </div>
+
+        <div class="upload-panel">
+          <h3>Mensagem</h3>
+          <textarea class="msg-preview" id="mc_preview" spellcheck="false"></textarea>
+          <div class="msg-hint">A mensagem se atualiza ao mudar os campos acima. Você pode ajustar o texto aqui antes de copiar.</div>
+          <div class="msg-actions">
+            <button class="btn-upload" onclick="mcCopiar()">Copiar mensagem</button>
+            <button class="btn-download-ext" onclick="mcWhatsApp()">Abrir no WhatsApp</button>
+            <button class="btn-download-ext" onclick="mcEmail()">Abrir no email</button>
+          </div>
+          <div class="upload-feedback" id="mcFb"></div>
+        </div>
+      </div>
+
+      <!-- ABA: ORDEM AO BANCO -->
+      <div class="msg-tab-content" id="msgtab-banco">
+        <div class="upload-panel">
+          <h3>Ordem</h3>
+          <div class="upload-form">
+            <div class="upload-field"><label>Cliente</label>
+              <select id="mo_cliente" onchange="moClienteChange()"><option value="">Carregando…</option></select>
+            </div>
+            <div class="upload-field"><label>Nome na ordem</label><input type="text" id="mo_nome" placeholder="DANIEL" /></div>
+            <div class="upload-field"><label>Conta</label><input type="text" id="mo_conta" placeholder="Número da conta" /></div>
+            <div class="upload-field"><label>Tipo de ordem</label>
+              <select id="mo_tipo"><option value="compra">Compra (aplicação)</option><option value="resgate">Resgate</option></select>
+            </div>
+            <div class="upload-field"><label>Data da ordem</label><input type="date" id="mo_data" /></div>
+          </div>
+        </div>
+
+        <div class="upload-panel">
+          <h3>Fundos / ativos</h3>
+          <table class="ord-rows">
+            <thead><tr><th style="width:24%;">CNPJ</th><th>Fundo</th><th style="width:20%;">Valor (R$)</th><th></th></tr></thead>
+            <tbody id="mo_rows"></tbody>
+          </table>
+          <datalist id="mo_fundos_list"></datalist>
+          <div class="ord-total">Total <strong id="mo_total">R$ 0,00</strong></div>
+          <div class="msg-actions">
+            <button class="btn-download-ext" onclick="moAddRow()">+ Adicionar linha</button>
+            <button class="btn-download-ext" onclick="moTogglePaste()">Colar do Excel</button>
+            <button class="btn-download-ext" onclick="moLimpar()">Limpar</button>
+          </div>
+          <div id="mo_paste_box" style="display:none;margin-top:1rem;">
+            <div class="upload-field"><label>Cole aqui as linhas (CNPJ, Fundo, Valor separados por tab)</label>
+              <textarea id="mo_paste" rows="6" placeholder="38.226.673/0001-37	MENESTYS I FIC FIDC RL	R$ 24.000,00"></textarea>
+            </div>
+            <div class="msg-actions"><button class="btn-upload" onclick="moImportarColado()">Importar linhas</button></div>
+          </div>
+          <div class="msg-hint">Ao digitar um CNPJ ou nome já usado antes, o outro campo é preenchido automaticamente.</div>
+        </div>
+
+        <div class="upload-panel">
+          <h3>Tabela para o banco</h3>
+          <div class="ord-preview-wrap"><div id="mo_preview"></div></div>
+          <div class="msg-actions">
+            <button class="btn-upload" onclick="moCopiar()">Copiar tabela</button>
+            <button class="btn-download-ext" onclick="moBaixarPng()">Baixar imagem</button>
+            <button class="btn-download-ext" onclick="moBaixarExcel()">Baixar Excel</button>
+          </div>
+          <div class="msg-hint">"Copiar tabela" mantém a formatação ao colar no email e as colunas ao colar no Excel. Os fundos e a conta do cliente são salvos para as próximas ordens.</div>
+          <div class="upload-feedback" id="moFb"></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </main>
 
@@ -1620,6 +1787,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       document.getElementById('mobileClientesBtn').style.display = 'flex';
       document.getElementById('mobileEmailsBtn').style.display = 'flex';
       document.getElementById('mobileGeradorBtn').style.display = 'flex';
+      document.getElementById('mobileMensagensBtn').style.display = 'flex';
     }
     loadReports();
     checkOnboarding();
@@ -1673,7 +1841,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.querySelectorAll('.mobile-drawer-link').forEach(l => l.classList.remove('active'));
     document.getElementById('view-' + viewId).classList.add('active');
     if (btn) btn.classList.add('active');
-    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Documentos', documentos:'Meus Documentos', extratos:'Extratos → Excel', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos' };
+    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Documentos', documentos:'Meus Documentos', extratos:'Extratos → Excel', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos', mensagens:'Mensagens Padrão' };
     const topbar = document.getElementById('topbarTitle');
     if (topbar) topbar.textContent = titles[viewId] || viewId;
     if (viewId === 'emails') { loadTemplates().then(() => { buildTemplateAccordion(); fillCartaFields(); renderUltimoDisparo(); }); if (clientRows.length === 0) addClientRow(); loadRascunho(); }
@@ -1681,6 +1849,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     if (viewId === 'cotas') ctLoadXpMapping();
     if (viewId === 'clientes') loadClientesView();
     if (viewId === 'gerador') geradorCarregarClientes();
+    if (viewId === 'mensagens') msgInit();
     if (viewId === 'perfil') populatePerfil();
   }
 
@@ -2350,8 +2519,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
   // ── EMAIL ──
   function switchEmailTab(tab, btn) {
-    document.querySelectorAll('.email-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.email-tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#view-emails .email-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#view-emails .email-tab-content').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab-' + tab).classList.add('active');
   }
@@ -4739,6 +4908,416 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     XLSX.utils.book_append_sheet(wb, ws3, 'Para Colar');
 
     XLSX.writeFile(wb, `cotas_fundos_${new Date().toISOString().slice(0,10)}.xlsx`);
+  }
+
+  // ── MENSAGENS PADRÃO (admin) ──
+  // Aba "Aprovação do Cliente": mensagem pedindo para o cliente aprovar a ordem no app/email.
+  // Aba "Ordem ao Banco": tabela CNPJ / Fundo / Valor no formato enviado aos bancos.
+  // Ativos, fundos (CNPJ ↔ nome) e contas ficam numa linha JSON da tabela email_templates,
+  // compartilhada entre os admins.
+  const MSG_LIB_ID = 'msg_biblioteca';
+  let msgLib = { ativos: [], fundos: [], contas: {} };
+  let msgClientes = [];
+  let moRowSeq = 0;
+
+  function msgSwitchTab(tab, btn) {
+    document.querySelectorAll('#view-mensagens .email-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#view-mensagens .msg-tab-content').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('msgtab-' + tab).classList.add('active');
+  }
+
+  async function msgInit() {
+    const view = document.getElementById('view-mensagens');
+    if (!view.dataset.bound) {
+      view.dataset.bound = '1';
+      const h = new Date().getHours();
+      gset('mc_saudacao', h < 12 ? 'bom dia' : h < 18 ? 'boa tarde' : 'boa noite');
+      gset('mo_data', hojeISO());
+      ['mc_nome','mc_saudacao','mc_operacao','mc_canal','mc_instituicao','mc_limite','mc_tipo','mc_ativo','mc_caracteristicas']
+        .forEach(id => { const el = document.getElementById(id); el.addEventListener('input', mcGerar); el.addEventListener('change', mcGerar); });
+      ['mo_nome','mo_conta','mo_tipo','mo_data']
+        .forEach(id => { const el = document.getElementById(id); el.addEventListener('input', moRender); el.addEventListener('change', moRender); });
+      moAddRow();
+      mcGerar();
+    }
+    await Promise.all([msgCarregarBiblioteca(), msgCarregarClientes()]);
+  }
+
+  async function msgCarregarBiblioteca() {
+    try {
+      const { data } = await sb.from('email_templates').select('corpo').eq('id', MSG_LIB_ID).maybeSingle();
+      if (data?.corpo) {
+        const lib = JSON.parse(data.corpo);
+        msgLib = { ativos: lib.ativos || [], fundos: lib.fundos || [], contas: lib.contas || {} };
+      }
+    } catch (e) { /* biblioteca vazia ou inválida: segue com a padrão */ }
+    mcRenderAtivosSalvos();
+    moRenderFundosList();
+  }
+
+  async function msgSalvarBiblioteca() {
+    const { error } = await sb.from('email_templates').upsert({
+      id: MSG_LIB_ID, nome: 'Mensagens Padrão — biblioteca', assunto: '',
+      corpo: JSON.stringify(msgLib), updated_at: new Date().toISOString(), updated_by: currentUser.id
+    }, { onConflict: 'id' });
+    if (error) throw error;
+  }
+
+  async function msgCarregarClientes() {
+    try {
+      const [{ data: cad }, { data: profs }] = await Promise.all([
+        sb.from('cadastro_clientes').select('user_id, nome_completo, email'),
+        sb.from('profiles').select('id, full_name, email')
+      ]);
+      const porId = {};
+      (profs || []).forEach(p => { porId[p.id] = { user_id: p.id, nome: p.full_name, email: p.email }; });
+      (cad || []).forEach(c => { porId[c.user_id] = { ...porId[c.user_id], user_id: c.user_id, nome: c.nome_completo || porId[c.user_id]?.nome, email: c.email || porId[c.user_id]?.email }; });
+      msgClientes = Object.values(porId)
+        .filter(c => !ADMIN_EMAILS.includes((c.email || '').toLowerCase()))
+        .sort((a, b) => (a.nome || a.email || '').localeCompare(b.nome || b.email || '', 'pt-BR'));
+    } catch (e) { msgClientes = []; }
+    const opts = '<option value="">— Digitar manualmente —</option>' +
+      msgClientes.map(c => `<option value="${c.user_id}">${escHtml(c.nome || c.email)}</option>`).join('');
+    ['mc_cliente', 'mo_cliente'].forEach(id => {
+      const sel = document.getElementById(id); const atual = sel.value;
+      sel.innerHTML = opts; sel.value = atual;
+    });
+  }
+
+  const msgPrimeiroNome = n => {
+    const p = (n || '').trim().split(/\s+/)[0] || '';
+    return p ? p.charAt(0).toUpperCase() + p.slice(1).toLowerCase() : '';
+  };
+
+  // ── Aprovação do cliente ──
+  function mcClienteChange() {
+    const c = msgClientes.find(x => x.user_id === gv('mc_cliente'));
+    gset('mc_nome', c ? msgPrimeiroNome(c.nome || c.email) : '');
+    mcGerar();
+  }
+
+  function mcAtivoNome() {
+    const tipo = gv('mc_tipo'), nome = gv('mc_ativo');
+    if (!tipo) return nome;
+    return (tipo === 'Fundo' && /^fundo\b/i.test(nome)) ? nome : `${tipo} ${nome}`.trim();
+  }
+
+  function mcGerar() {
+    const nome   = gv('mc_nome') || '[Nome]';
+    const inst   = gv('mc_instituicao') || 'corretora';
+    const tipo   = gv('mc_tipo');
+    const artigo = ['Debênture', 'LCA', 'LCI'].includes(tipo) ? 'da' : 'do';
+    const ativo  = mcAtivoNome() || '[ativo]';
+    const op     = gv('mc_operacao');
+    const via    = gv('mc_canal') === 'email'
+      ? `um email da ${inst}`
+      : `uma notificação (push) no app da ${inst}`;
+    const limite = gv('mc_limite').replace('%', '').trim();
+    const itens  = gv('mc_caracteristicas').split('\n').map(l => l.replace(/^\s*[-•*]\s*/, '').trim()).filter(Boolean);
+
+    let txt = `Olá, ${nome}, ${gv('mc_saudacao')}! Tudo bem?\n\n`;
+    txt += `Você vai receber ${via} para aprovar a operação de ${op} ${artigo} ${ativo}. Pode aprovar.`;
+    if (limite) txt += `\n\nA operação não deverá exceder ${limite}% da carteira.`;
+    if (itens.length) {
+      txt += `${limite ? ' Segue' : '\n\nSegue'} um breve resumo:\n\n${ativo}\n` + itens.map(i => '- ' + i).join('\n');
+    }
+    document.getElementById('mc_preview').value = txt;
+  }
+
+  function mcRenderAtivosSalvos() {
+    const sel = document.getElementById('mc_ativo_salvo'); const atual = sel.value;
+    sel.innerHTML = '<option value="">— Novo ativo —</option>' + msgLib.ativos
+      .map((a, i) => ({ a, i }))
+      .sort((x, y) => (x.a.tipo + ' ' + x.a.nome).localeCompare(y.a.tipo + ' ' + y.a.nome, 'pt-BR'))
+      .map(({ a, i }) => `<option value="${i}">${escHtml(((a.tipo ? a.tipo + ' ' : '') + a.nome).trim())}</option>`).join('');
+    sel.value = msgLib.ativos[atual] ? atual : '';
+    document.getElementById('mc_btn_excluir').style.display = sel.value ? '' : 'none';
+  }
+
+  function mcCarregarAtivo(idx) {
+    const a = msgLib.ativos[idx];
+    document.getElementById('mc_btn_excluir').style.display = a ? '' : 'none';
+    if (!a) return;
+    gset('mc_tipo', a.tipo || ''); gset('mc_ativo', a.nome); gset('mc_caracteristicas', a.caracteristicas || '');
+    if (a.limite) gset('mc_limite', a.limite);
+    mcGerar();
+  }
+
+  async function mcSalvarAtivo() {
+    const ativo = { tipo: gv('mc_tipo'), nome: gv('mc_ativo'), caracteristicas: gv('mc_caracteristicas'), limite: gv('mc_limite') };
+    if (!ativo.nome) { showFb2('mcAtivoFb', 'Informe o nome do ativo.', 'error'); return; }
+    const chave = a => ((a.tipo || '') + '|' + a.nome).toLowerCase();
+    const i = msgLib.ativos.findIndex(a => chave(a) === chave(ativo));
+    if (i >= 0) msgLib.ativos[i] = ativo; else msgLib.ativos.push(ativo);
+    try {
+      await msgSalvarBiblioteca();
+      mcRenderAtivosSalvos();
+      gset('mc_ativo_salvo', String(i >= 0 ? i : msgLib.ativos.length - 1));
+      document.getElementById('mc_btn_excluir').style.display = '';
+      showFb2('mcAtivoFb', i >= 0 ? '✓ Ativo atualizado.' : '✓ Ativo salvo.', 'success');
+    } catch (e) { showFb2('mcAtivoFb', 'Erro ao salvar: ' + e.message, 'error'); }
+  }
+
+  async function mcExcluirAtivo() {
+    const idx = gv('mc_ativo_salvo'); const a = msgLib.ativos[idx];
+    if (!a || !confirm(`Excluir o ativo salvo "${a.nome}"?`)) return;
+    msgLib.ativos.splice(idx, 1);
+    try {
+      await msgSalvarBiblioteca();
+      gset('mc_ativo_salvo', '');
+      mcRenderAtivosSalvos();
+      showFb2('mcAtivoFb', '✓ Ativo excluído.', 'success');
+    } catch (e) { showFb2('mcAtivoFb', 'Erro ao excluir: ' + e.message, 'error'); }
+  }
+
+  async function msgCopiarTexto(texto, fbId) {
+    try { await navigator.clipboard.writeText(texto); showFb2(fbId, '✓ Copiado!', 'success'); }
+    catch (e) { showFb2(fbId, 'Não foi possível copiar automaticamente. Selecione o texto e copie.', 'error'); }
+  }
+
+  function mcCopiar() { msgCopiarTexto(document.getElementById('mc_preview').value, 'mcFb'); }
+  function mcWhatsApp() { window.open('https://wa.me/?text=' + encodeURIComponent(document.getElementById('mc_preview').value), '_blank'); }
+  function mcEmail() {
+    const c = msgClientes.find(x => x.user_id === gv('mc_cliente'));
+    const assunto = `Aprovação de ${gv('mc_operacao')} — ${mcAtivoNome()}`;
+    window.location.href = `mailto:${encodeURIComponent(c?.email || '')}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(document.getElementById('mc_preview').value)}`;
+  }
+
+  // ── Ordem ao banco ──
+  const moSoDigitos = s => (s || '').replace(/\D/g, '');
+  function moFmtCnpj(s) {
+    const d = moSoDigitos(s);
+    return d.length === 14 ? d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5') : (s || '').trim();
+  }
+  function moParseValor(s) {
+    let t = (s || '').replace(/R\$|\s/g, '');
+    if (!t) return 0;
+    if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.');
+    else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');
+    const n = parseFloat(t);
+    return isNaN(n) ? 0 : n;
+  }
+  const moFmtValor = n => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  function moClienteChange() {
+    const c = msgClientes.find(x => x.user_id === gv('mo_cliente'));
+    gset('mo_nome', c ? msgPrimeiroNome(c.nome || c.email).toUpperCase() : '');
+    gset('mo_conta', c ? (msgLib.contas[c.user_id] || '') : '');
+    moRender();
+  }
+
+  function moRenderFundosList() {
+    document.getElementById('mo_fundos_list').innerHTML = msgLib.fundos
+      .map(f => `<option value="${escHtml(f.nome)}">${escHtml(f.cnpj)}</option>`).join('');
+  }
+
+  function moAddRow(d = {}) {
+    const id = ++moRowSeq;
+    const tr = document.createElement('tr');
+    tr.id = 'mo-row-' + id;
+    tr.innerHTML = `
+      <td><input type="text" class="mo-cnpj" placeholder="00.000.000/0000-00" value="${escHtml(d.cnpj || '')}" /></td>
+      <td><input type="text" class="mo-fundo" list="mo_fundos_list" placeholder="Nome do fundo" value="${escHtml(d.fundo || '')}" /></td>
+      <td><input type="text" class="mo-quantia" inputmode="decimal" placeholder="24.000,00" value="${escHtml(d.valor || '')}" /></td>
+      <td class="ord-del"><button title="Remover linha" onclick="document.getElementById('mo-row-${id}').remove();moRender()">×</button></td>`;
+    const cnpj = tr.querySelector('.mo-cnpj'), fundo = tr.querySelector('.mo-fundo'), valor = tr.querySelector('.mo-quantia');
+    cnpj.addEventListener('input', moRender);
+    fundo.addEventListener('input', moRender);
+    valor.addEventListener('input', moRender);
+    cnpj.addEventListener('change', () => {
+      cnpj.value = moFmtCnpj(cnpj.value);
+      const f = msgLib.fundos.find(x => moSoDigitos(x.cnpj) === moSoDigitos(cnpj.value));
+      if (f && !fundo.value.trim()) fundo.value = f.nome;
+      moRender();
+    });
+    fundo.addEventListener('change', () => {
+      const f = msgLib.fundos.find(x => x.nome.toLowerCase() === fundo.value.trim().toLowerCase());
+      if (f && !cnpj.value.trim()) cnpj.value = f.cnpj;
+      moRender();
+    });
+    valor.addEventListener('change', () => { const n = moParseValor(valor.value); if (n) valor.value = n.toLocaleString('pt-BR', { minimumFractionDigits: 2 }); moRender(); });
+    document.getElementById('mo_rows').appendChild(tr);
+    moRender();
+    return tr;
+  }
+
+  function moLinhas() {
+    return [...document.querySelectorAll('#mo_rows tr')].map(tr => ({
+      cnpj: moFmtCnpj(tr.querySelector('.mo-cnpj').value),
+      fundo: tr.querySelector('.mo-fundo').value.trim(),
+      valor: moParseValor(tr.querySelector('.mo-quantia').value)
+    })).filter(l => l.cnpj || l.fundo || l.valor);
+  }
+
+  function moLimpar() {
+    if (moLinhas().length && !confirm('Limpar todas as linhas da ordem?')) return;
+    document.getElementById('mo_rows').innerHTML = '';
+    moAddRow();
+  }
+
+  function moTogglePaste() {
+    const box = document.getElementById('mo_paste_box');
+    box.style.display = box.style.display === 'none' ? '' : 'none';
+    if (box.style.display === '') document.getElementById('mo_paste').focus();
+  }
+
+  function moImportarColado() {
+    const linhas = gv('mo_paste').split(/\r?\n/).map(l => l.split('\t').map(c => c.trim()).filter(Boolean)).filter(c => c.length);
+    let n = 0;
+    linhas.forEach(cols => {
+      if (/^total$/i.test(cols[0]) || /^cnpj$/i.test(cols[0])) return;
+      const iCnpj = cols.findIndex(c => moSoDigitos(c).length === 14);
+      const iValor = cols.findIndex((c, i) => i !== iCnpj && /^(R\$\s*)?[\d.,]+$/.test(c));
+      const fundo = cols.find((c, i) => i !== iCnpj && i !== iValor) || '';
+      if (iCnpj < 0 && iValor < 0) return;
+      // Reaproveita a última linha se ela estiver vazia
+      const ultima = document.querySelector('#mo_rows tr:last-child');
+      const vazia = ultima && [...ultima.querySelectorAll('input')].every(i => !i.value.trim());
+      const d = { cnpj: iCnpj >= 0 ? moFmtCnpj(cols[iCnpj]) : '', fundo, valor: iValor >= 0 ? moParseValor(cols[iValor]).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '' };
+      if (vazia) ultima.remove();
+      moAddRow(d);
+      n++;
+    });
+    if (n) { gset('mo_paste', ''); document.getElementById('mo_paste_box').style.display = 'none'; showFb2('moFb', `✓ ${n} linha(s) importada(s).`, 'success'); }
+    else showFb2('moFb', 'Nenhuma linha reconhecida. Use colunas CNPJ, Fundo e Valor.', 'error');
+  }
+
+  function moDados() {
+    const linhas = moLinhas();
+    const resgate = gv('mo_tipo') === 'resgate';
+    const d = isoParaData(gv('mo_data'));
+    return {
+      titulo: `ORDEM DE ${resgate ? 'RESGATE' : 'COMPRA'} – CLIENTE ${(gv('mo_nome') || '[NOME]').toUpperCase()}`,
+      data: d ? d.toLocaleDateString('pt-BR') : '',
+      conta: gv('mo_conta'),
+      colValor: resgate ? 'Valor do Resgate (R$)' : 'Valor da Aplicação (R$)',
+      linhas,
+      total: linhas.reduce((s, l) => s + l.valor, 0)
+    };
+  }
+
+  // HTML com estilos inline para manter a formatação ao colar no email.
+  function moTabelaHtml(o) {
+    const f = "font-family:Calibri,Arial,sans-serif;font-size:11pt;";
+    const td = f + 'padding:3px 10px;border-bottom:1px solid #d9d9d9;';
+    const linhas = o.linhas.map((l, i) => {
+      const bg = i % 2 ? '#f2f2f2' : '#ffffff';
+      return `<tr style="background:${bg};"><td style="${td}text-align:right;color:#000;">${escHtml(l.cnpj)}</td>` +
+        `<td style="${td}color:#000;">${escHtml(l.fundo)}</td>` +
+        `<td style="${td}text-align:right;color:#0000ff;">${moFmtValor(l.valor)}</td></tr>`;
+    }).join('');
+    return `<div style="${f}color:#000;">` +
+      `<div style="${f}font-size:14pt;font-weight:bold;color:#203864;margin-bottom:2px;">${escHtml(o.titulo)}</div>` +
+      `<table style="border-collapse:collapse;${f}margin-bottom:10px;">` +
+      `<tr><td style="${f}font-weight:bold;padding:1px 40px 1px 0;color:#000;">Data da ordem:</td><td style="${f}color:#0000ff;">${escHtml(o.data)}</td></tr>` +
+      (o.conta ? `<tr><td style="${f}font-weight:bold;padding:1px 40px 1px 0;color:#000;">Conta:</td><td style="${f}color:#0000ff;">${escHtml(o.conta)}</td></tr>` : '') +
+      `</table>` +
+      `<table style="border-collapse:collapse;${f}min-width:560px;">` +
+      `<thead><tr style="background:#203864;">` +
+      `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:center;">CNPJ</th>` +
+      `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:center;">Fundo</th>` +
+      `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:right;">${o.colValor}</th></tr></thead>` +
+      `<tbody>${linhas}` +
+      `<tr style="background:#d9e1f2;"><td style="${f}font-weight:bold;padding:4px 10px;border-top:2px solid #203864;color:#000;">TOTAL</td>` +
+      `<td style="${f}border-top:2px solid #203864;"></td>` +
+      `<td style="${f}font-weight:bold;padding:4px 10px;text-align:right;border-top:2px solid #203864;color:#000;">${moFmtValor(o.total)}</td></tr>` +
+      `</tbody></table></div>`;
+  }
+
+  function moTabelaTexto(o) {
+    return [o.titulo, `Data da ordem:\t${o.data}`, ...(o.conta ? [`Conta:\t${o.conta}`] : []), '',
+      `CNPJ\tFundo\t${o.colValor}`,
+      ...o.linhas.map(l => `${l.cnpj}\t${l.fundo}\t${moFmtValor(l.valor)}`),
+      `TOTAL\t\t${moFmtValor(o.total)}`].join('\n');
+  }
+
+  function moRender() {
+    const o = moDados();
+    document.getElementById('mo_total').textContent = moFmtValor(o.total);
+    document.getElementById('mo_preview').innerHTML = moTabelaHtml(o);
+  }
+
+  function moValidar(o) {
+    if (!o.linhas.length) { showFb2('moFb', 'Adicione ao menos um fundo.', 'error'); return false; }
+    return true;
+  }
+
+  // Guarda fundos (CNPJ ↔ nome) e a conta do cliente para as próximas ordens.
+  async function moLembrar(o) {
+    let mudou = false;
+    o.linhas.forEach(l => {
+      if (!l.fundo || moSoDigitos(l.cnpj).length !== 14) return;
+      const f = msgLib.fundos.find(x => moSoDigitos(x.cnpj) === moSoDigitos(l.cnpj));
+      if (!f) { msgLib.fundos.push({ cnpj: l.cnpj, nome: l.fundo }); mudou = true; }
+      else if (f.nome !== l.fundo) { f.nome = l.fundo; mudou = true; }
+    });
+    const uid = gv('mo_cliente');
+    if (uid && o.conta && msgLib.contas[uid] !== o.conta) { msgLib.contas[uid] = o.conta; mudou = true; }
+    if (!mudou) return;
+    msgLib.fundos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    try { await msgSalvarBiblioteca(); moRenderFundosList(); } catch (e) { /* não bloqueia a cópia */ }
+  }
+
+  async function moCopiar() {
+    const o = moDados();
+    if (!moValidar(o)) return;
+    const html = moTabelaHtml(o), texto = moTabelaTexto(o);
+    try {
+      if (window.ClipboardItem) {
+        await navigator.clipboard.write([new ClipboardItem({
+          'text/html': new Blob([html], { type: 'text/html' }),
+          'text/plain': new Blob([texto], { type: 'text/plain' })
+        })]);
+      } else {
+        await navigator.clipboard.writeText(texto);
+      }
+      showFb2('moFb', '✓ Tabela copiada! Cole no email ou no Excel.', 'success');
+    } catch (e) {
+      showFb2('moFb', 'Não foi possível copiar automaticamente: ' + e.message, 'error');
+    }
+    moLembrar(o);
+  }
+
+  function moNomeArquivo(ext) {
+    const o = moDados();
+    return `Ordem ${gv('mo_tipo') === 'resgate' ? 'Resgate' : 'Compra'} - ${gv('mo_nome') || 'Cliente'} - ${o.data.replace(/\//g, '-')}.${ext}`;
+  }
+
+  async function moBaixarPng() {
+    const o = moDados();
+    if (!moValidar(o)) return;
+    const box = document.createElement('div');
+    box.style.cssText = 'position:fixed;left:-10000px;top:0;background:#fff;padding:16px;display:inline-block;';
+    box.innerHTML = moTabelaHtml(o);
+    document.body.appendChild(box);
+    try {
+      const canvas = await html2canvas(box, { backgroundColor: '#ffffff', scale: 2 });
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png'); a.download = moNomeArquivo('png'); a.click();
+    } catch (e) { showFb2('moFb', 'Erro ao gerar imagem: ' + e.message, 'error'); }
+    box.remove();
+    moLembrar(o);
+  }
+
+  function moBaixarExcel() {
+    const o = moDados();
+    if (!moValidar(o)) return;
+    const aoa = [[o.titulo], ['Data da ordem:', o.data], ...(o.conta ? [['Conta:', o.conta]] : []), [],
+      ['CNPJ', 'Fundo', o.colValor],
+      ...o.linhas.map(l => [l.cnpj, l.fundo, l.valor]),
+      ['TOTAL', '', o.total]];
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    const ini = aoa.length - o.linhas.length - 1;
+    for (let r = ini; r < aoa.length; r++) {
+      const cell = ws[XLSX.utils.encode_cell({ r, c: 2 })];
+      if (cell && typeof cell.v === 'number') cell.z = '"R$" #,##0.00';
+    }
+    ws['!cols'] = [{ wch: 22 }, { wch: 42 }, { wch: 24 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Ordem');
+    XLSX.writeFile(wb, moNomeArquivo('xlsx'));
+    moLembrar(o);
   }
 
 </script>
