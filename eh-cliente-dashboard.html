@@ -1654,11 +1654,19 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         <div class="upload-panel">
           <h3>Ordem</h3>
           <div class="upload-form">
-            <div class="upload-field"><label>Cliente</label>
+            <div class="upload-field" style="grid-column:1/-1;"><label>Tipo de tabela</label>
+              <select id="mo_modo" onchange="moModoChange()">
+                <option value="cliente">Um cliente, vários fundos</option>
+                <option value="fundo">Um fundo, vários clientes</option>
+              </select>
+            </div>
+            <div class="upload-field mo-so-cliente"><label>Cliente</label>
               <select id="mo_cliente" onchange="moClienteChange()"><option value="">Carregando…</option></select>
             </div>
-            <div class="upload-field"><label>Nome na ordem</label><input type="text" id="mo_nome" placeholder="DANIEL" /></div>
-            <div class="upload-field"><label>Conta</label><input type="text" id="mo_conta" placeholder="Número da conta" /></div>
+            <div class="upload-field mo-so-cliente"><label>Nome na ordem</label><input type="text" id="mo_nome" placeholder="DANIEL" /></div>
+            <div class="upload-field mo-so-cliente"><label>Conta</label><input type="text" id="mo_conta" placeholder="Número da conta" /></div>
+            <div class="upload-field mo-so-fundo" style="grid-column:span 2;display:none;"><label>Fundo</label><input type="text" id="mo_f_fundo" list="mo_fundos_list" placeholder="Nome do fundo" /></div>
+            <div class="upload-field mo-so-fundo" style="display:none;"><label>CNPJ do fundo</label><input type="text" id="mo_f_cnpj" placeholder="opcional" /></div>
             <div class="upload-field"><label>Tipo de ordem</label>
               <select id="mo_tipo"><option value="compra">Compra (aplicação)</option><option value="resgate">Resgate</option></select>
             </div>
@@ -1667,12 +1675,17 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         </div>
 
         <div class="upload-panel">
-          <h3>Fundos / ativos</h3>
-          <table class="ord-rows">
+          <h3 id="mo_rows_titulo">Fundos / ativos</h3>
+          <table class="ord-rows mo-so-cliente">
             <thead><tr><th style="width:24%;">CNPJ</th><th>Fundo</th><th style="width:20%;">Valor (R$)</th><th></th></tr></thead>
             <tbody id="mo_rows"></tbody>
           </table>
+          <table class="ord-rows mo-so-fundo" style="display:none;">
+            <thead><tr><th>Nome</th><th style="width:24%;">Conta</th><th style="width:20%;">Valor (R$)</th><th></th></tr></thead>
+            <tbody id="mo_rows_f"></tbody>
+          </table>
           <datalist id="mo_fundos_list"></datalist>
+          <datalist id="mo_clientes_list"></datalist>
           <div class="ord-total">Total <strong id="mo_total">R$ 0,00</strong></div>
           <div class="msg-actions">
             <button class="btn-download-ext" onclick="moAddRow()">+ Adicionar linha</button>
@@ -1680,12 +1693,12 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
             <button class="btn-download-ext" onclick="moLimpar()">Limpar</button>
           </div>
           <div id="mo_paste_box" style="display:none;margin-top:1rem;">
-            <div class="upload-field"><label>Cole aqui as linhas (CNPJ, Fundo, Valor separados por tab)</label>
+            <div class="upload-field"><label id="mo_paste_label">Cole aqui as linhas (CNPJ, Fundo, Valor separados por tab)</label>
               <textarea id="mo_paste" rows="6" placeholder="38.226.673/0001-37	MENESTYS I FIC FIDC RL	R$ 24.000,00"></textarea>
             </div>
             <div class="msg-actions"><button class="btn-upload" onclick="moImportarColado()">Importar linhas</button></div>
           </div>
-          <div class="msg-hint">Ao digitar um CNPJ ou nome já usado antes, o outro campo é preenchido automaticamente.</div>
+          <div class="msg-hint" id="mo_rows_hint">Ao digitar um CNPJ ou nome já usado antes, o outro campo é preenchido automaticamente.</div>
         </div>
 
         <div class="upload-panel">
@@ -4936,9 +4949,21 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       gset('mo_data', hojeISO());
       ['mc_nome','mc_saudacao','mc_operacao','mc_canal','mc_instituicao','mc_limite','mc_tipo','mc_ativo','mc_caracteristicas']
         .forEach(id => { const el = document.getElementById(id); el.addEventListener('input', mcGerar); el.addEventListener('change', mcGerar); });
-      ['mo_nome','mo_conta','mo_tipo','mo_data']
+      ['mo_nome','mo_conta','mo_tipo','mo_data','mo_f_fundo','mo_f_cnpj']
         .forEach(id => { const el = document.getElementById(id); el.addEventListener('input', moRender); el.addEventListener('change', moRender); });
+      document.getElementById('mo_f_fundo').addEventListener('change', () => {
+        const f = msgLib.fundos.find(x => x.nome.toLowerCase() === gv('mo_f_fundo').toLowerCase());
+        if (f && !gv('mo_f_cnpj')) gset('mo_f_cnpj', f.cnpj);
+        moRender();
+      });
+      document.getElementById('mo_f_cnpj').addEventListener('change', () => {
+        gset('mo_f_cnpj', moFmtCnpj(gv('mo_f_cnpj')));
+        const f = msgLib.fundos.find(x => moSoDigitos(x.cnpj) === moSoDigitos(gv('mo_f_cnpj')));
+        if (f && !gv('mo_f_fundo')) gset('mo_f_fundo', f.nome);
+        moRender();
+      });
       moAddRow();
+      moAddRowFundo();
       mcGerar();
     }
     await Promise.all([msgCarregarBiblioteca(), msgCarregarClientes()]);
@@ -4983,6 +5008,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       const sel = document.getElementById(id); const atual = sel.value;
       sel.innerHTML = opts; sel.value = atual;
     });
+    document.getElementById('mo_clientes_list').innerHTML = msgClientes
+      .filter(c => c.nome).map(c => `<option value="${escHtml(c.nome)}">`).join('');
   }
 
   const msgPrimeiroNome = n => {
@@ -5142,6 +5169,61 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     return tr;
   }
 
+  const moModo = () => gv('mo_modo') || 'cliente';
+
+  function moModoChange() {
+    const fundo = moModo() === 'fundo';
+    document.querySelectorAll('#msgtab-banco .mo-so-cliente').forEach(el => el.style.display = fundo ? 'none' : '');
+    document.querySelectorAll('#msgtab-banco .mo-so-fundo').forEach(el => el.style.display = fundo ? '' : 'none');
+    document.getElementById('mo_rows_titulo').textContent = fundo ? 'Clientes' : 'Fundos / ativos';
+    document.getElementById('mo_paste_label').textContent = fundo
+      ? 'Cole aqui as linhas (Nome, Conta, Valor separados por tab)'
+      : 'Cole aqui as linhas (CNPJ, Fundo, Valor separados por tab)';
+    document.getElementById('mo_paste').placeholder = fundo ? 'Daniel Souza\t12345\tR$ 24.000,00' : '38.226.673/0001-37\tMENESTYS I FIC FIDC RL\tR$ 24.000,00';
+    document.getElementById('mo_rows_hint').textContent = fundo
+      ? 'Ao digitar o nome de um cliente, a conta já usada antes é preenchida automaticamente.'
+      : 'Ao digitar um CNPJ ou nome já usado antes, o outro campo é preenchido automaticamente.';
+    moRender();
+  }
+
+  // Conta lembrada: pelo id do cliente quando o nome bate com o cadastro, senão pelo próprio nome.
+  function moChaveConta(nome) {
+    const n = (nome || '').trim().toLowerCase();
+    if (!n) return '';
+    const c = msgClientes.find(x => (x.nome || '').trim().toLowerCase() === n);
+    return c ? c.user_id : 'nome:' + n;
+  }
+
+  function moAddRowFundo(d = {}) {
+    const id = ++moRowSeq;
+    const tr = document.createElement('tr');
+    tr.id = 'mo-row-' + id;
+    tr.innerHTML = `
+      <td><input type="text" class="mo-cli" list="mo_clientes_list" placeholder="Nome do cliente" value="${escHtml(d.nome || '')}" /></td>
+      <td><input type="text" class="mo-conta" placeholder="Conta" value="${escHtml(d.conta || '')}" /></td>
+      <td><input type="text" class="mo-quantia" inputmode="decimal" placeholder="24.000,00" value="${escHtml(d.valor || '')}" /></td>
+      <td class="ord-del"><button title="Remover linha" onclick="document.getElementById('mo-row-${id}').remove();moRender()">×</button></td>`;
+    const cli = tr.querySelector('.mo-cli'), conta = tr.querySelector('.mo-conta'), valor = tr.querySelector('.mo-quantia');
+    [cli, conta, valor].forEach(el => el.addEventListener('input', moRender));
+    cli.addEventListener('change', () => {
+      const salva = msgLib.contas[moChaveConta(cli.value)];
+      if (salva && !conta.value.trim()) conta.value = salva;
+      moRender();
+    });
+    valor.addEventListener('change', () => { const n = moParseValor(valor.value); if (n) valor.value = n.toLocaleString('pt-BR', { minimumFractionDigits: 2 }); moRender(); });
+    document.getElementById('mo_rows_f').appendChild(tr);
+    moRender();
+    return tr;
+  }
+
+  function moLinhasFundo() {
+    return [...document.querySelectorAll('#mo_rows_f tr')].map(tr => ({
+      nome: tr.querySelector('.mo-cli').value.trim(),
+      conta: tr.querySelector('.mo-conta').value.trim(),
+      valor: moParseValor(tr.querySelector('.mo-quantia').value)
+    })).filter(l => l.nome || l.conta || l.valor);
+  }
+
   function moLinhas() {
     return [...document.querySelectorAll('#mo_rows tr')].map(tr => ({
       cnpj: moFmtCnpj(tr.querySelector('.mo-cnpj').value),
@@ -5151,9 +5233,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   function moLimpar() {
-    if (moLinhas().length && !confirm('Limpar todas as linhas da ordem?')) return;
-    document.getElementById('mo_rows').innerHTML = '';
-    moAddRow();
+    const fundo = moModo() === 'fundo';
+    if ((fundo ? moLinhasFundo() : moLinhas()).length && !confirm('Limpar todas as linhas da ordem?')) return;
+    document.getElementById(fundo ? 'mo_rows_f' : 'mo_rows').innerHTML = '';
+    fundo ? moAddRowFundo() : moAddRow();
   }
 
   function moTogglePaste() {
@@ -5165,7 +5248,23 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   function moImportarColado() {
     const linhas = gv('mo_paste').split(/\r?\n/).map(l => l.split('\t').map(c => c.trim()).filter(Boolean)).filter(c => c.length);
     let n = 0;
-    linhas.forEach(cols => {
+    if (moModo() === 'fundo') {
+      linhas.forEach(cols => {
+        if (/^(total|nome)$/i.test(cols[0])) return;
+        const ehNum = c => /^(R\$\s*)?[\d.,\-\/]+$/.test(c);
+        const iNome = cols.findIndex(c => !ehNum(c));
+        let iValor = -1;
+        for (let i = cols.length - 1; i >= 0; i--) if (i !== iNome && ehNum(cols[i])) { iValor = i; break; }
+        const iConta = cols.findIndex((c, i) => i !== iNome && i !== iValor);
+        if (iNome < 0 && iValor < 0) return;
+        const ultima = document.querySelector('#mo_rows_f tr:last-child');
+        if (ultima && [...ultima.querySelectorAll('input')].every(i => !i.value.trim())) ultima.remove();
+        const nome = iNome >= 0 ? cols[iNome] : '';
+        moAddRowFundo({ nome, conta: iConta >= 0 ? cols[iConta] : (msgLib.contas[moChaveConta(nome)] || ''),
+          valor: iValor >= 0 ? moParseValor(cols[iValor]).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '' });
+        n++;
+      });
+    } else linhas.forEach(cols => {
       if (/^total$/i.test(cols[0]) || /^cnpj$/i.test(cols[0])) return;
       const iCnpj = cols.findIndex(c => moSoDigitos(c).length === 14);
       const iValor = cols.findIndex((c, i) => i !== iCnpj && /^(R\$\s*)?[\d.,]+$/.test(c));
@@ -5180,19 +5279,36 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       n++;
     });
     if (n) { gset('mo_paste', ''); document.getElementById('mo_paste_box').style.display = 'none'; showFb2('moFb', `✓ ${n} linha(s) importada(s).`, 'success'); }
-    else showFb2('moFb', 'Nenhuma linha reconhecida. Use colunas CNPJ, Fundo e Valor.', 'error');
+    else showFb2('moFb', moModo() === 'fundo' ? 'Nenhuma linha reconhecida. Use colunas Nome, Conta e Valor.' : 'Nenhuma linha reconhecida. Use colunas CNPJ, Fundo e Valor.', 'error');
   }
 
+  // Estrutura comum às duas tabelas: infos do topo, 3 colunas (a última é o valor) e linhas.
   function moDados() {
-    const linhas = moLinhas();
     const resgate = gv('mo_tipo') === 'resgate';
     const d = isoParaData(gv('mo_data'));
+    const ordem = `ORDEM DE ${resgate ? 'RESGATE' : 'COMPRA'}`;
+    const data = d ? d.toLocaleDateString('pt-BR') : '';
+    if (moModo() === 'fundo') {
+      const linhas = moLinhasFundo();
+      const fundo = gv('mo_f_fundo') || '[FUNDO]';
+      return {
+        modo: 'fundo', data,
+        titulo: `${ordem} – ${fundo.toUpperCase()}`,
+        infos: [['Data da ordem:', data], ...(gv('mo_f_cnpj') ? [['CNPJ:', moFmtCnpj(gv('mo_f_cnpj'))]] : [])],
+        colunas: ['Nome', 'Conta', `${fundo} (R$)`],
+        alinhar: ['left', 'center'],
+        linhas, cels: l => [l.nome, l.conta],
+        total: linhas.reduce((s, l) => s + l.valor, 0)
+      };
+    }
+    const linhas = moLinhas();
     return {
-      titulo: `ORDEM DE ${resgate ? 'RESGATE' : 'COMPRA'} – CLIENTE ${(gv('mo_nome') || '[NOME]').toUpperCase()}`,
-      data: d ? d.toLocaleDateString('pt-BR') : '',
-      conta: gv('mo_conta'),
-      colValor: resgate ? 'Valor do Resgate (R$)' : 'Valor da Aplicação (R$)',
-      linhas,
+      modo: 'cliente', data,
+      titulo: `${ordem} – CLIENTE ${(gv('mo_nome') || '[NOME]').toUpperCase()}`,
+      infos: [['Data da ordem:', data], ...(gv('mo_conta') ? [['Conta:', gv('mo_conta')]] : [])],
+      colunas: ['CNPJ', 'Fundo', resgate ? 'Valor do Resgate (R$)' : 'Valor da Aplicação (R$)'],
+      alinhar: ['right', 'left'],
+      linhas, cels: l => [l.cnpj, l.fundo],
       total: linhas.reduce((s, l) => s + l.valor, 0)
     };
   }
@@ -5203,21 +5319,21 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const td = f + 'padding:3px 10px;border-bottom:1px solid #d9d9d9;';
     const linhas = o.linhas.map((l, i) => {
       const bg = i % 2 ? '#f2f2f2' : '#ffffff';
-      return `<tr style="background:${bg};"><td style="${td}text-align:right;color:#000;">${escHtml(l.cnpj)}</td>` +
-        `<td style="${td}color:#000;">${escHtml(l.fundo)}</td>` +
+      const [a, b] = o.cels(l);
+      return `<tr style="background:${bg};"><td style="${td}text-align:${o.alinhar[0]};color:#000;">${escHtml(a)}</td>` +
+        `<td style="${td}text-align:${o.alinhar[1]};color:#000;">${escHtml(b)}</td>` +
         `<td style="${td}text-align:right;color:#0000ff;">${moFmtValor(l.valor)}</td></tr>`;
     }).join('');
     return `<div style="${f}color:#000;">` +
       `<div style="${f}font-size:14pt;font-weight:bold;color:#203864;margin-bottom:2px;">${escHtml(o.titulo)}</div>` +
       `<table style="border-collapse:collapse;${f}margin-bottom:10px;">` +
-      `<tr><td style="${f}font-weight:bold;padding:1px 40px 1px 0;color:#000;">Data da ordem:</td><td style="${f}color:#0000ff;">${escHtml(o.data)}</td></tr>` +
-      (o.conta ? `<tr><td style="${f}font-weight:bold;padding:1px 40px 1px 0;color:#000;">Conta:</td><td style="${f}color:#0000ff;">${escHtml(o.conta)}</td></tr>` : '') +
+      o.infos.map(([k, v]) => `<tr><td style="${f}font-weight:bold;padding:1px 40px 1px 0;color:#000;">${k}</td><td style="${f}color:#0000ff;">${escHtml(v)}</td></tr>`).join('') +
       `</table>` +
       `<table style="border-collapse:collapse;${f}min-width:560px;">` +
       `<thead><tr style="background:#203864;">` +
-      `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:center;">CNPJ</th>` +
-      `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:center;">Fundo</th>` +
-      `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:right;">${o.colValor}</th></tr></thead>` +
+      `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:center;">${escHtml(o.colunas[0])}</th>` +
+      `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:center;">${escHtml(o.colunas[1])}</th>` +
+      `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:right;">${escHtml(o.colunas[2])}</th></tr></thead>` +
       `<tbody>${linhas}` +
       `<tr style="background:#d9e1f2;"><td style="${f}font-weight:bold;padding:4px 10px;border-top:2px solid #203864;color:#000;">TOTAL</td>` +
       `<td style="${f}border-top:2px solid #203864;"></td>` +
@@ -5226,9 +5342,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   function moTabelaTexto(o) {
-    return [o.titulo, `Data da ordem:\t${o.data}`, ...(o.conta ? [`Conta:\t${o.conta}`] : []), '',
-      `CNPJ\tFundo\t${o.colValor}`,
-      ...o.linhas.map(l => `${l.cnpj}\t${l.fundo}\t${moFmtValor(l.valor)}`),
+    return [o.titulo, ...o.infos.map(([k, v]) => `${k}\t${v}`), '',
+      o.colunas.join('\t'),
+      ...o.linhas.map(l => [...o.cels(l), moFmtValor(l.valor)].join('\t')),
       `TOTAL\t\t${moFmtValor(o.total)}`].join('\n');
   }
 
@@ -5239,21 +5355,33 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   function moValidar(o) {
-    if (!o.linhas.length) { showFb2('moFb', 'Adicione ao menos um fundo.', 'error'); return false; }
+    if (!o.linhas.length) { showFb2('moFb', o.modo === 'fundo' ? 'Adicione ao menos um cliente.' : 'Adicione ao menos um fundo.', 'error'); return false; }
     return true;
   }
 
   // Guarda fundos (CNPJ ↔ nome) e a conta do cliente para as próximas ordens.
   async function moLembrar(o) {
     let mudou = false;
-    o.linhas.forEach(l => {
+    const lembrarFundo = (cnpj, nome) => {
+      if (!nome || moSoDigitos(cnpj).length !== 14) return;
+      const f = msgLib.fundos.find(x => moSoDigitos(x.cnpj) === moSoDigitos(cnpj));
+      if (!f) { msgLib.fundos.push({ cnpj, nome }); mudou = true; }
+      else if (f.nome !== nome) { f.nome = nome; mudou = true; }
+    };
+    if (o.modo === 'fundo') {
+      lembrarFundo(moFmtCnpj(gv('mo_f_cnpj')), gv('mo_f_fundo'));
+      o.linhas.forEach(l => {
+        const k = moChaveConta(l.nome);
+        if (k && l.conta && msgLib.contas[k] !== l.conta) { msgLib.contas[k] = l.conta; mudou = true; }
+      });
+    } else o.linhas.forEach(l => {
       if (!l.fundo || moSoDigitos(l.cnpj).length !== 14) return;
       const f = msgLib.fundos.find(x => moSoDigitos(x.cnpj) === moSoDigitos(l.cnpj));
       if (!f) { msgLib.fundos.push({ cnpj: l.cnpj, nome: l.fundo }); mudou = true; }
       else if (f.nome !== l.fundo) { f.nome = l.fundo; mudou = true; }
     });
-    const uid = gv('mo_cliente');
-    if (uid && o.conta && msgLib.contas[uid] !== o.conta) { msgLib.contas[uid] = o.conta; mudou = true; }
+    const uid = gv('mo_cliente'), conta = gv('mo_conta');
+    if (o.modo === 'cliente' && uid && conta && msgLib.contas[uid] !== conta) { msgLib.contas[uid] = conta; mudou = true; }
     if (!mudou) return;
     msgLib.fundos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
     try { await msgSalvarBiblioteca(); moRenderFundosList(); } catch (e) { /* não bloqueia a cópia */ }
@@ -5281,7 +5409,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
   function moNomeArquivo(ext) {
     const o = moDados();
-    return `Ordem ${gv('mo_tipo') === 'resgate' ? 'Resgate' : 'Compra'} - ${gv('mo_nome') || 'Cliente'} - ${o.data.replace(/\//g, '-')}.${ext}`;
+    const quem = o.modo === 'fundo' ? (gv('mo_f_fundo') || 'Fundo') : (gv('mo_nome') || 'Cliente');
+    return `Ordem ${gv('mo_tipo') === 'resgate' ? 'Resgate' : 'Compra'} - ${quem.replace(/[\\/:*?"<>|]/g, '')} - ${o.data.replace(/\//g, '-')}.${ext}`;
   }
 
   async function moBaixarPng() {
@@ -5303,9 +5432,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   function moBaixarExcel() {
     const o = moDados();
     if (!moValidar(o)) return;
-    const aoa = [[o.titulo], ['Data da ordem:', o.data], ...(o.conta ? [['Conta:', o.conta]] : []), [],
-      ['CNPJ', 'Fundo', o.colValor],
-      ...o.linhas.map(l => [l.cnpj, l.fundo, l.valor]),
+    const aoa = [[o.titulo], ...o.infos, [],
+      o.colunas,
+      ...o.linhas.map(l => [...o.cels(l), l.valor]),
       ['TOTAL', '', o.total]];
     const ws = XLSX.utils.aoa_to_sheet(aoa);
     const ini = aoa.length - o.linhas.length - 1;
