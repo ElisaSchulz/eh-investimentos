@@ -1665,8 +1665,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
             </div>
             <div class="upload-field mo-so-cliente"><label>Nome na ordem</label><input type="text" id="mo_nome" placeholder="DANIEL" /></div>
             <div class="upload-field mo-so-cliente"><label>Conta</label><input type="text" id="mo_conta" placeholder="Número da conta" /></div>
-            <div class="upload-field mo-so-fundo" style="grid-column:span 2;display:none;"><label>Fundo</label><input type="text" id="mo_f_fundo" list="mo_fundos_list" placeholder="Nome do fundo" /></div>
-            <div class="upload-field mo-so-fundo" style="display:none;"><label>CNPJ do fundo</label><input type="text" id="mo_f_cnpj" placeholder="opcional" /></div>
+            <div class="upload-field mo-so-fundo" style="grid-column:span 2;display:none;"><label>Fundo / ativo</label><input type="text" id="mo_f_fundo" list="mo_fundos_list" placeholder="Nome do fundo, CRI, CRA, debênture…" /></div>
+            <div class="upload-field mo-so-fundo" style="display:none;"><label>CNPJ / código</label><input type="text" id="mo_f_cnpj" placeholder="opcional" /></div>
             <div class="upload-field"><label>Tipo de ordem</label>
               <select id="mo_tipo"><option value="compra">Compra (aplicação)</option><option value="resgate">Resgate</option></select>
             </div>
@@ -5290,11 +5290,11 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const data = d ? d.toLocaleDateString('pt-BR') : '';
     if (moModo() === 'fundo') {
       const linhas = moLinhasFundo();
-      const fundo = gv('mo_f_fundo') || '[FUNDO]';
+      const fundo = gv('mo_f_fundo') || '[ATIVO]';
       return {
         modo: 'fundo', data,
         titulo: `${ordem} – ${fundo.toUpperCase()}`,
-        infos: [['Data da ordem:', data], ...(gv('mo_f_cnpj') ? [['CNPJ:', moFmtCnpj(gv('mo_f_cnpj'))]] : [])],
+        infos: [['Data da ordem:', data], ...(gv('mo_f_cnpj') ? [[moSoDigitos(gv('mo_f_cnpj')).length === 14 ? 'CNPJ:' : 'Código:', moFmtCnpj(gv('mo_f_cnpj'))]] : [])],
         colunas: ['Nome', 'Conta', `${fundo} (R$)`],
         alinhar: ['left', 'center'],
         linhas, cels: l => [l.nome, l.conta],
