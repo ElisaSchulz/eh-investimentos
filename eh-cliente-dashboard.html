@@ -1816,6 +1816,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       document.getElementById('mobileGeradorBtn').style.display = 'flex';
       document.getElementById('mobileMensagensBtn').style.display = 'flex';
     }
+    restoreViewFromHash();
     loadReports();
     checkOnboarding();
     try { await sb.from('profiles').upsert({ id: currentUser.id, email, full_name: name, updated_at: new Date().toISOString() }, { onConflict: 'id' }); } catch(e) {}
@@ -1871,6 +1872,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Documentos', documentos:'Meus Documentos', extratos:'Extratos → Excel', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos', mensagens:'Mensagens Padrão' };
     const topbar = document.getElementById('topbarTitle');
     if (topbar) topbar.textContent = titles[viewId] || viewId;
+    // keep the active tab in the URL so a refresh returns to it
+    history.replaceState(null, '', window.location.pathname + window.location.search + (viewId === 'inicio' ? '' : '#' + viewId));
     if (viewId === 'emails') { loadTemplates().then(() => { buildTemplateAccordion(); fillCartaFields(); renderUltimoDisparo(); }); if (clientRows.length === 0) addClientRow(); loadRascunho(); }
     if (viewId === 'extratos') extLoadMappingFromSupabase();
     if (viewId === 'cotas') ctLoadXpMapping();
@@ -2396,6 +2399,17 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const btn = Array.from(document.querySelectorAll('.sidebar-link, .mobile-drawer-link'))
       .find(b => (b.getAttribute('onclick') || '').includes("showView('" + viewId + "'"));
     showView(viewId, btn || null);
+  }
+
+  // reopen the tab saved in the URL hash (e.g. #mensagens) after a refresh
+  const ADMIN_VIEWS = ['upload','extratos','cotas','emails','clientes','gerador','mensagens'];
+  function restoreViewFromHash() {
+    const viewId = decodeURIComponent(window.location.hash.substring(1));
+    if (!viewId || viewId === 'inicio' || !/^[a-z]+$/.test(viewId) || !document.getElementById('view-' + viewId)) return;
+    if (ADMIN_VIEWS.includes(viewId) && !isAdmin) return;
+    showView(viewId, null);
+    document.querySelectorAll('.sidebar-link, .mobile-drawer-link')
+      .forEach(b => { if ((b.getAttribute('onclick') || '').includes("showView('" + viewId + "'")) b.classList.add('active'); });
   }
 
   function renderGrid(reports, gridId, emptyMsg) {
