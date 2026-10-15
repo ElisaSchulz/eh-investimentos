@@ -1625,10 +1625,24 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
               </select>
             </div>
             <div class="upload-field" style="grid-column:span 2;"><label>Nome do ativo</label><input type="text" id="mc_ativo" placeholder="RIZA RENDA IMOBILIÁRIA" /></div>
-            <div class="upload-field" style="grid-column:1/-1;"><label>Características (uma por linha)</label>
-              <textarea id="mc_caracteristicas" rows="8" placeholder="Retorno alvo: IPCA + 9,0% a.a.&#10;Rendimentos mensais isentos de IR para pessoa física&#10;Prazo: 5 anos"></textarea>
+            <div class="upload-field"><label>Rendimento alvo / esperado *</label><input type="text" id="mc_c_retorno" placeholder="IPCA + 9,0% a.a." /></div>
+            <div class="upload-field"><label>Imposto de Renda *</label>
+              <select id="mc_c_ir">
+                <option value="">Selecione</option>
+                <option value="isento">Isento de IR (pessoa física)</option>
+                <option value="regressiva">Tributado (tabela regressiva)</option>
+                <option value="comecotas">Tributado com come-cotas</option>
+              </select>
+            </div>
+            <div class="upload-field"><label>Prazo / vencimento *</label><input type="text" id="mc_c_prazo" placeholder="5 anos, prorrogável por mais 1" /></div>
+            <div class="upload-field"><label>Pagamento de rendimentos</label><input type="text" id="mc_c_pagamento" placeholder="Mensal" /></div>
+            <div class="upload-field"><label>Liquidez</label><input type="text" id="mc_c_liquidez" placeholder="Balcão (CETIP), liquidez reduzida" /></div>
+            <div class="upload-field"><label>Emissor, rating e garantias</label><input type="text" id="mc_c_risco" placeholder="Rating AAA, cota sênior" /></div>
+            <div class="upload-field" style="grid-column:1/-1;"><label>Outras informações (uma por linha)</label>
+              <textarea id="mc_caracteristicas" rows="5" placeholder="Carteira de 10 imóveis em 6 estados&#10;93% da receita vem de inquilinos com rating AAA"></textarea>
             </div>
           </div>
+          <div class="msg-hint" id="mc_faltando" style="color:var(--gold-text);"></div>
           <div class="msg-actions">
             <button class="btn-download-ext" onclick="mcSalvarAtivo()">Salvar ativo</button>
             <button class="btn-download-ext" id="mc_btn_excluir" onclick="mcExcluirAtivo()" style="display:none;">Excluir ativo salvo</button>
@@ -4932,6 +4946,13 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   let msgLib = { ativos: [], fundos: [], contas: {} };
   let msgClientes = [];
   let moRowSeq = 0;
+  // Campos fixos do resumo do ativo; os marcados com * no formulário são os que não podem faltar.
+  const MC_CAMPOS_ATIVO = ['mc_c_retorno','mc_c_ir','mc_c_prazo','mc_c_pagamento','mc_c_liquidez','mc_c_risco'];
+  const MC_IR_TEXTO = {
+    isento:     'Isento de Imposto de Renda para pessoa física (conforme requisitos legais)',
+    regressiva: 'Tributado pelo Imposto de Renda na tabela regressiva (de 22,5% a 15%, conforme o prazo)',
+    comecotas:  'Tributado pelo Imposto de Renda, com come-cotas semestral (maio e novembro)'
+  };
 
   function msgSwitchTab(tab, btn) {
     document.querySelectorAll('#view-mensagens .email-tab').forEach(t => t.classList.remove('active'));
@@ -4947,7 +4968,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       const h = new Date().getHours();
       gset('mc_saudacao', h < 12 ? 'bom dia' : h < 18 ? 'boa tarde' : 'boa noite');
       gset('mo_data', hojeISO());
-      ['mc_nome','mc_saudacao','mc_operacao','mc_canal','mc_instituicao','mc_limite','mc_tipo','mc_ativo','mc_caracteristicas']
+      ['mc_nome','mc_saudacao','mc_operacao','mc_canal','mc_instituicao','mc_limite','mc_tipo','mc_ativo','mc_caracteristicas',...MC_CAMPOS_ATIVO]
         .forEach(id => { const el = document.getElementById(id); el.addEventListener('input', mcGerar); el.addEventListener('change', mcGerar); });
       ['mo_nome','mo_conta','mo_tipo','mo_data','mo_f_fundo','mo_f_cnpj']
         .forEach(id => { const el = document.getElementById(id); el.addEventListener('input', moRender); el.addEventListener('change', moRender); });
@@ -5041,7 +5062,18 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       ? `um email da ${inst}`
       : `uma notificação (push) no app da ${inst}`;
     const limite = gv('mc_limite').replace('%', '').trim();
-    const itens  = gv('mc_caracteristicas').split('\n').map(l => l.replace(/^\s*[-•*]\s*/, '').trim()).filter(Boolean);
+    const itens  = [
+      gv('mc_c_retorno')   && `Rendimento alvo: ${gv('mc_c_retorno')}`,
+      MC_IR_TEXTO[gv('mc_c_ir')],
+      gv('mc_c_pagamento') && `Pagamento de rendimentos: ${gv('mc_c_pagamento')}`,
+      gv('mc_c_prazo')     && `Prazo: ${gv('mc_c_prazo')}`,
+      gv('mc_c_liquidez')  && `Liquidez: ${gv('mc_c_liquidez')}`,
+      gv('mc_c_risco'),
+      ...gv('mc_caracteristicas').split('\n').map(l => l.replace(/^\s*[-•*]\s*/, '').trim())
+    ].filter(Boolean);
+    const faltando = [['mc_c_retorno', 'rendimento'], ['mc_c_ir', 'Imposto de Renda'], ['mc_c_prazo', 'prazo']]
+      .filter(([id]) => !gv(id)).map(([, n]) => n);
+    document.getElementById('mc_faltando').textContent = faltando.length ? 'Falta informar: ' + faltando.join(', ') + '.' : '';
 
     let txt = `Olá, ${nome}, ${gv('mc_saudacao')}! Tudo bem?\n\n`;
     txt += `Você vai receber ${via} para aprovar a operação de ${op} ${artigo} ${ativo}. Pode aprovar.`;
@@ -5067,12 +5099,14 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.getElementById('mc_btn_excluir').style.display = a ? '' : 'none';
     if (!a) return;
     gset('mc_tipo', a.tipo || ''); gset('mc_ativo', a.nome); gset('mc_caracteristicas', a.caracteristicas || '');
+    MC_CAMPOS_ATIVO.forEach(id => gset(id, (a.campos || {})[id] || ''));
     if (a.limite) gset('mc_limite', a.limite);
     mcGerar();
   }
 
   async function mcSalvarAtivo() {
-    const ativo = { tipo: gv('mc_tipo'), nome: gv('mc_ativo'), caracteristicas: gv('mc_caracteristicas'), limite: gv('mc_limite') };
+    const ativo = { tipo: gv('mc_tipo'), nome: gv('mc_ativo'), caracteristicas: gv('mc_caracteristicas'), limite: gv('mc_limite'),
+      campos: Object.fromEntries(MC_CAMPOS_ATIVO.map(id => [id, gv(id)])) };
     if (!ativo.nome) { showFb2('mcAtivoFb', 'Informe o nome do ativo.', 'error'); return; }
     const chave = a => ((a.tipo || '') + '|' + a.nome).toLowerCase();
     const i = msgLib.ativos.findIndex(a => chave(a) === chave(ativo));
