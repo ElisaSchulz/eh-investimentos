@@ -1720,6 +1720,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           <div class="ord-preview-wrap"><div id="mo_preview"></div></div>
           <div class="msg-actions">
             <button class="btn-upload" onclick="moCopiar()">Copiar tabela</button>
+            <button class="btn-download-ext" onclick="moCopiarImagem()">Copiar imagem</button>
             <button class="btn-download-ext" onclick="moBaixarPng()">Baixar imagem</button>
             <button class="btn-download-ext" onclick="moBaixarExcel()">Baixar Excel</button>
           </div>
@@ -5461,19 +5462,47 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     return `Ordem ${gv('mo_tipo') === 'resgate' ? 'Resgate' : 'Compra'} - ${quem.replace(/[\\/:*?"<>|]/g, '')} - ${o.data.replace(/\//g, '-')}.${ext}`;
   }
 
-  async function moBaixarPng() {
-    const o = moDados();
-    if (!moValidar(o)) return;
+  async function moCanvas(o) {
     const box = document.createElement('div');
     box.style.cssText = 'position:fixed;left:-10000px;top:0;background:#fff;padding:16px;display:inline-block;';
     box.innerHTML = moTabelaHtml(o);
     document.body.appendChild(box);
+    try { return await html2canvas(box, { backgroundColor: '#ffffff', scale: 2 }); }
+    finally { box.remove(); }
+  }
+
+  async function moBaixarPng() {
+    const o = moDados();
+    if (!moValidar(o)) return;
     try {
-      const canvas = await html2canvas(box, { backgroundColor: '#ffffff', scale: 2 });
+      const canvas = await moCanvas(o);
       const a = document.createElement('a');
       a.href = canvas.toDataURL('image/png'); a.download = moNomeArquivo('png'); a.click();
     } catch (e) { showFb2('moFb', 'Erro ao gerar imagem: ' + e.message, 'error'); }
-    box.remove();
+    moLembrar(o);
+  }
+
+  // Copia a tabela como imagem PNG. O ClipboardItem é criado já no clique, com a imagem
+  // como Promise: o Safari (iPhone) só libera a área de transferência dentro do gesto.
+  // Sem suporte, cai no menu de compartilhar do celular (que tem "Copiar").
+  async function moCopiarImagem() {
+    const o = moDados();
+    if (!moValidar(o)) return;
+    const blobPromise = moCanvas(o).then(c => new Promise((ok, erro) =>
+      c.toBlob(b => b ? ok(b) : erro(new Error('falha ao gerar a imagem')), 'image/png')));
+    try {
+      if (!window.ClipboardItem || !navigator.clipboard?.write) throw new Error('sem suporte');
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobPromise })]);
+      showFb2('moFb', '✓ Imagem copiada! Cole no WhatsApp ou no email.', 'success');
+    } catch (e) {
+      try {
+        const arquivo = new File([await blobPromise], moNomeArquivo('png'), { type: 'image/png' });
+        if (navigator.canShare?.({ files: [arquivo] })) await navigator.share({ files: [arquivo] });
+        else showFb2('moFb', 'Este navegador não permite copiar imagens. Use "Baixar imagem".', 'error');
+      } catch (e2) {
+        if (e2.name !== 'AbortError') showFb2('moFb', 'Não foi possível copiar a imagem: ' + e2.message, 'error');
+      }
+    }
     moLembrar(o);
   }
 
