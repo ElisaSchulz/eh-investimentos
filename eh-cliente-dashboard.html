@@ -1620,8 +1620,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
               <select id="mc_canal"><option value="push">Notificação (push) no app</option><option value="email">Email da instituição</option></select>
             </div>
             <div class="upload-field"><label>Instituição</label>
-              <input type="text" id="mc_instituicao" list="mc_instituicoes" value="XP" />
-              <datalist id="mc_instituicoes"><option value="XP"><option value="BTG Pactual"><option value="EQI"><option value="Itaú"><option value="Safra"><option value="Warren"></datalist>
+              <select id="mc_instituicao" onchange="document.getElementById('mc_inst_outra').style.display = this.value === 'outra' ? '' : 'none'">
+                <option value="XP">XP</option><option value="EQI">EQI</option><option value="outra">Outra…</option>
+              </select>
+              <input type="text" id="mc_inst_outra" placeholder="Nome da instituição" style="display:none;margin-top:0.5rem;" />
             </div>
             <div class="upload-field"><label>Limite da carteira (%)</label><input type="text" id="mc_limite" placeholder="5 (opcional)" /></div>
           </div>
@@ -5003,7 +5005,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       const h = new Date().getHours();
       gset('mc_saudacao', h < 12 ? 'bom dia' : h < 18 ? 'boa tarde' : 'boa noite');
       gset('mo_data', hojeISO());
-      ['mc_nome','mc_saudacao','mc_operacao','mc_canal','mc_instituicao','mc_limite']
+      ['mc_nome','mc_saudacao','mc_operacao','mc_canal','mc_instituicao','mc_inst_outra','mc_limite']
         .forEach(id => { const el = document.getElementById(id); el.addEventListener('input', mcGerar); el.addEventListener('change', mcGerar); });
       ['mc_tipo','mc_ativo','mc_caracteristicas',...MC_CAMPOS_ATIVO]
         .forEach(id => { const el = document.getElementById(id); el.addEventListener('input', mcEditorMudou); el.addEventListener('change', mcEditorMudou); });
@@ -5138,7 +5140,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
   function mcGerar() {
     const nome   = gv('mc_nome') || '[Nome]';
-    const inst   = gv('mc_instituicao') || 'corretora';
+    const inst   = (gv('mc_instituicao') === 'outra' ? gv('mc_inst_outra') : gv('mc_instituicao')) || 'corretora';
     const op     = gv('mc_operacao');
     const via    = gv('mc_canal') === 'email'
       ? `um email da ${inst}`
