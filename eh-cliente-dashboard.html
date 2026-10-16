@@ -1702,7 +1702,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           <datalist id="mo_clientes_list"></datalist>
           <div class="ord-total">Total <strong id="mo_total">R$ 0,00</strong></div>
           <div class="msg-actions">
-            <button class="btn-download-ext" onclick="moAddRow()">+ Adicionar linha</button>
+            <button class="btn-download-ext" onclick="moModo() === 'fundo' ? moAddRowFundo() : moAddRow()">+ Adicionar linha</button>
             <button class="btn-download-ext" onclick="moTogglePaste()">Colar do Excel</button>
             <button class="btn-download-ext" onclick="moLimpar()">Limpar</button>
           </div>
