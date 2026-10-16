@@ -717,6 +717,15 @@
     .msg-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 1.2rem; align-items: center; }
     .msg-actions .btn-download-ext { margin-top: 0; }
     .msg-hint { font-size: 0.78rem; color: var(--gray); line-height: 1.6; margin-top: 0.4rem; }
+    .mc-ordem { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 0.8rem 0; border-bottom: 1px solid var(--rule-soft); }
+    .mc-ordem-info { flex: 1; min-width: 220px; font-size: 13px; color: var(--cream); line-height: 1.5; }
+    .mc-ordem-info small { display: block; color: var(--gray); font-size: 12px; text-transform: none; letter-spacing: normal; font-weight: 400; }
+    .mc-ordem .btn-download-ext { margin-top: 0; padding: 0.55rem 1rem; }
+    .mc-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.2rem; }
+    .mc-chip { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.8rem; border: 1px solid var(--rule-strong); background: transparent; color: var(--cream-soft); font-size: 12px; cursor: pointer; }
+    .mc-chip.ativo { border-color: var(--gold); color: var(--gold-text); font-weight: 600; }
+    .mc-chip .x { color: var(--gray); font-size: 14px; line-height: 1; }
+    .mc-chip .x:hover { color: #e05555; }
     .msg-preview { width: 100%; min-height: 340px; background: var(--navy-3); border: 1px solid var(--rule-strong); color: var(--cream); font-family: 'Manrope', sans-serif; font-size: 13px; line-height: 1.65; padding: 1rem 1.1rem; resize: vertical; outline: none; }
     .msg-preview:focus { border-color: var(--gold); }
     .ord-rows { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
@@ -1589,6 +1598,12 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       <!-- ABA: APROVAÇÃO DO CLIENTE -->
       <div class="msg-tab-content active" id="msgtab-cliente">
         <div class="upload-panel">
+          <h3>Ordens enviadas ao banco</h3>
+          <div id="mc_ordens"></div>
+          <div class="msg-hint">As ordens copiadas ou baixadas em "Ordem ao Banco" aparecem aqui. Clique em "Montar mensagem" quando o banco executar a ordem.</div>
+        </div>
+
+        <div class="upload-panel">
           <h3>Cliente e operação</h3>
           <div class="upload-form">
             <div class="upload-field"><label>Cliente</label>
@@ -1614,6 +1629,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
         <div class="upload-panel">
           <h3>Ativo</h3>
+          <div class="mc-chips" id="mc_chips"></div>
           <div class="upload-form">
             <div class="upload-field" style="grid-column:1/-1;"><label>Carregar ativo salvo</label>
               <select id="mc_ativo_salvo" onchange="mcCarregarAtivo(this.value)"><option value="">— Novo ativo —</option></select>
@@ -4958,9 +4974,13 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   // Ativos, fundos (CNPJ ↔ nome) e contas ficam numa linha JSON da tabela email_templates,
   // compartilhada entre os admins.
   const MSG_LIB_ID = 'msg_biblioteca';
-  let msgLib = { ativos: [], fundos: [], contas: {} };
+  let msgLib = { ativos: [], fundos: [], contas: {}, ordens: [] };
   let msgClientes = [];
   let moRowSeq = 0;
+  // Ativos da mensagem de aprovação: o formulário "Ativo" edita mcItens[mcSel].
+  let mcItens = [{ tipo: 'FII', nome: '', caracteristicas: '', campos: {} }];
+  let mcSel = 0;
+  let mcOrdemAtual = null; // id da ordem (msgLib.ordens) que originou a mensagem
   // Campos fixos do resumo do ativo; os marcados com * no formulário são os que não podem faltar.
   const MC_CAMPOS_ATIVO = ['mc_c_retorno','mc_c_ir','mc_c_prazo','mc_c_pagamento','mc_c_liquidez','mc_c_risco'];
   const MC_IR_TEXTO = {
@@ -4983,8 +5003,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       const h = new Date().getHours();
       gset('mc_saudacao', h < 12 ? 'bom dia' : h < 18 ? 'boa tarde' : 'boa noite');
       gset('mo_data', hojeISO());
-      ['mc_nome','mc_saudacao','mc_operacao','mc_canal','mc_instituicao','mc_limite','mc_tipo','mc_ativo','mc_caracteristicas',...MC_CAMPOS_ATIVO]
+      ['mc_nome','mc_saudacao','mc_operacao','mc_canal','mc_instituicao','mc_limite']
         .forEach(id => { const el = document.getElementById(id); el.addEventListener('input', mcGerar); el.addEventListener('change', mcGerar); });
+      ['mc_tipo','mc_ativo','mc_caracteristicas',...MC_CAMPOS_ATIVO]
+        .forEach(id => { const el = document.getElementById(id); el.addEventListener('input', mcEditorMudou); el.addEventListener('change', mcEditorMudou); });
       ['mo_nome','mo_conta','mo_tipo','mo_data','mo_f_fundo','mo_f_cnpj']
         .forEach(id => { const el = document.getElementById(id); el.addEventListener('input', moRender); el.addEventListener('change', moRender); });
       document.getElementById('mo_f_fundo').addEventListener('change', () => {
@@ -5000,6 +5022,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       });
       moAddRow();
       moAddRowFundo();
+      mcItemParaEditor();
       mcGerar();
     }
     await Promise.all([msgCarregarBiblioteca(), msgCarregarClientes()]);
@@ -5010,10 +5033,11 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       const { data } = await sb.from('email_templates').select('corpo').eq('id', MSG_LIB_ID).maybeSingle();
       if (data?.corpo) {
         const lib = JSON.parse(data.corpo);
-        msgLib = { ativos: lib.ativos || [], fundos: lib.fundos || [], contas: lib.contas || {} };
+        msgLib = { ativos: lib.ativos || [], fundos: lib.fundos || [], contas: lib.contas || {}, ordens: lib.ordens || [] };
       }
     } catch (e) { /* biblioteca vazia ou inválida: segue com a padrão */ }
     mcRenderAtivosSalvos();
+    mcRenderOrdens();
     moRenderFundosList();
   }
 
@@ -5060,43 +5084,178 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     mcGerar();
   }
 
-  function mcAtivoNome() {
-    const tipo = gv('mc_tipo'), nome = gv('mc_ativo');
-    if (!tipo) return nome;
-    return (tipo === 'Fundo' && /^fundo\b/i.test(nome)) ? nome : `${tipo} ${nome}`.trim();
+  function mcNomeItem(a) {
+    const tipo = a.tipo || '', nome = (a.nome || '').trim();
+    if (!tipo || !nome) return nome;
+    return (tipo === 'Fundo' && /^fundo\b/i.test(nome)) ? nome : `${tipo} ${nome}`;
+  }
+  function mcAtivoNome() { return mcItens.map(mcNomeItem).filter(Boolean).join(', '); }
+
+  // Formulário ⇄ ativo selecionado
+  function mcEditorParaItem() {
+    const a = mcItens[mcSel];
+    a.tipo = gv('mc_tipo'); a.nome = gv('mc_ativo'); a.caracteristicas = gv('mc_caracteristicas');
+    a.campos = Object.fromEntries(MC_CAMPOS_ATIVO.map(id => [id, gv(id)]));
+  }
+  function mcItemParaEditor() {
+    const a = mcItens[mcSel];
+    gset('mc_tipo', a.tipo || ''); gset('mc_ativo', a.nome || ''); gset('mc_caracteristicas', a.caracteristicas || '');
+    MC_CAMPOS_ATIVO.forEach(id => gset(id, (a.campos || {})[id] || ''));
+    gset('mc_ativo_salvo', '');
+    document.getElementById('mc_btn_excluir').style.display = 'none';
+    mcRenderChips();
+  }
+  function mcEditorMudou() { mcEditorParaItem(); mcRenderChips(); mcGerar(); }
+
+  function mcRenderChips() {
+    document.getElementById('mc_chips').innerHTML = mcItens.map((a, i) =>
+      `<span class="mc-chip ${i === mcSel ? 'ativo' : ''}" onclick="mcSelecionar(${i})">${escHtml(mcNomeItem(a) || 'Novo ativo')}` +
+      (mcItens.length > 1 ? `<span class="x" title="Tirar da mensagem" onclick="event.stopPropagation();mcRemoverItem(${i})">×</span>` : '') +
+      `</span>`).join('') +
+      `<button class="mc-chip" onclick="mcNovoItem()">+ Outro ativo</button>`;
+  }
+  function mcSelecionar(i) { mcSel = i; mcItemParaEditor(); }
+  function mcNovoItem() { mcItens.push({ tipo: '', nome: '', caracteristicas: '', campos: {} }); mcSel = mcItens.length - 1; mcItemParaEditor(); mcGerar(); }
+  function mcRemoverItem(i) {
+    mcItens.splice(i, 1);
+    mcSel = Math.min(mcSel > i ? mcSel - 1 : mcSel, mcItens.length - 1);
+    mcItemParaEditor(); mcGerar();
+  }
+
+  function mcBulletsItem(a) {
+    const c = a.campos || {};
+    return [
+      a.valor              && `Valor da aplicação: ${moFmtValor(a.valor)}`,
+      c.mc_c_retorno       && `Rendimento alvo: ${c.mc_c_retorno}`,
+      MC_IR_TEXTO[c.mc_c_ir],
+      c.mc_c_pagamento     && `Pagamento de rendimentos: ${c.mc_c_pagamento}`,
+      c.mc_c_prazo         && `Prazo: ${c.mc_c_prazo}`,
+      c.mc_c_liquidez      && `Liquidez: ${c.mc_c_liquidez}`,
+      c.mc_c_risco,
+      ...(a.caracteristicas || '').split('\n').map(l => l.replace(/^\s*[-•*]\s*/, '').trim())
+    ].filter(Boolean);
   }
 
   function mcGerar() {
     const nome   = gv('mc_nome') || '[Nome]';
     const inst   = gv('mc_instituicao') || 'corretora';
-    const tipo   = gv('mc_tipo');
-    const artigo = ['Debênture', 'LCA', 'LCI'].includes(tipo) ? 'da' : 'do';
-    const ativo  = mcAtivoNome() || '[ativo]';
     const op     = gv('mc_operacao');
     const via    = gv('mc_canal') === 'email'
       ? `um email da ${inst}`
       : `uma notificação (push) no app da ${inst}`;
     const limite = gv('mc_limite').replace('%', '').trim();
-    const itens  = [
-      gv('mc_c_retorno')   && `Rendimento alvo: ${gv('mc_c_retorno')}`,
-      MC_IR_TEXTO[gv('mc_c_ir')],
-      gv('mc_c_pagamento') && `Pagamento de rendimentos: ${gv('mc_c_pagamento')}`,
-      gv('mc_c_prazo')     && `Prazo: ${gv('mc_c_prazo')}`,
-      gv('mc_c_liquidez')  && `Liquidez: ${gv('mc_c_liquidez')}`,
-      gv('mc_c_risco'),
-      ...gv('mc_caracteristicas').split('\n').map(l => l.replace(/^\s*[-•*]\s*/, '').trim())
-    ].filter(Boolean);
-    const faltando = [['mc_c_retorno', 'rendimento'], ['mc_c_ir', 'Imposto de Renda'], ['mc_c_prazo', 'prazo']]
-      .filter(([id]) => !gv(id)).map(([, n]) => n);
-    document.getElementById('mc_faltando').textContent = faltando.length ? 'Falta informar: ' + faltando.join(', ') + '.' : '';
+    const itens  = mcItens.filter(a => mcNomeItem(a));
+    const varios = itens.length > 1;
+
+    const faltando = itens.flatMap(a => {
+      const c = a.campos || {};
+      const f = [['mc_c_retorno', 'rendimento'], ['mc_c_ir', 'Imposto de Renda'], ['mc_c_prazo', 'prazo']].filter(([id]) => !c[id]).map(([, n]) => n);
+      return f.length ? [(varios ? mcNomeItem(a) + ': ' : '') + f.join(', ')] : [];
+    });
+    document.getElementById('mc_faltando').textContent = faltando.length ? 'Falta informar: ' + faltando.join(' · ') + '.' : '';
 
     let txt = `Olá, ${nome}, ${gv('mc_saudacao')}! Tudo bem?\n\n`;
-    txt += `Você vai receber ${via} para aprovar a operação de ${op} ${artigo} ${ativo}. Pode aprovar.`;
-    if (limite) txt += `\n\nA operação não deverá exceder ${limite}% da carteira.`;
-    if (itens.length) {
-      txt += `${limite ? ' Segue' : '\n\nSegue'} um breve resumo:\n\n${ativo}\n` + itens.map(i => '- ' + i).join('\n');
+    if (varios) {
+      txt += `Você vai receber ${via} para aprovar as operações de ${op} abaixo. Pode aprovar.`;
+      if (limite) txt += `\n\nCada operação não deverá exceder ${limite}% da carteira.`;
+    } else {
+      const a = itens[0] || {};
+      const artigo = ['Debênture', 'LCA', 'LCI'].includes(a.tipo) ? 'da' : 'do';
+      txt += `Você vai receber ${via} para aprovar a operação de ${op} ${artigo} ${mcNomeItem(a) || '[ativo]'}. Pode aprovar.`;
+      if (limite) txt += `\n\nA operação não deverá exceder ${limite}% da carteira.`;
+    }
+    const blocos = itens.map(a => ({ a, b: mcBulletsItem(a) })).filter(x => varios || x.b.length);
+    if (blocos.length) {
+      txt += `${limite ? ' Segue' : '\n\nSegue'} um breve resumo:\n\n` +
+        blocos.map(({ a, b }) => mcNomeItem(a) + (b.length ? '\n' + b.map(i => '- ' + i).join('\n') : '')).join('\n\n');
     }
     document.getElementById('mc_preview').value = txt;
+  }
+
+  // ── Ordens enviadas ao banco → mensagem de aprovação ──
+  const msgNorm = s => (s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+
+  function mcRenderOrdens() {
+    const el = document.getElementById('mc_ordens');
+    const pend = msgLib.ordens.filter(o => o.status !== 'enviada');
+    if (!pend.length) { el.innerHTML = '<div class="msg-hint" style="margin:0;">Nenhuma ordem aguardando mensagem.</div>'; return; }
+    el.innerHTML = pend.slice().reverse().map(o => `
+      <div class="mc-ordem">
+        <div class="mc-ordem-info"><strong>${escHtml(o.cliente)}</strong> · ${o.operacao === 'resgate' ? 'Resgate' : 'Compra'} · ${escHtml(o.data)}
+          <small>${o.ativos.map(a => escHtml(a.nome) + (a.valor ? ' (' + moFmtValor(a.valor) + ')' : '')).join(' · ')}</small></div>
+        <button class="btn-upload" style="padding:0.55rem 1rem;" onclick="mcUsarOrdem('${o.id}')">Montar mensagem</button>
+        <button class="btn-download-ext" onclick="mcConcluirOrdem('${o.id}')">Concluir</button>
+      </div>`).join('');
+  }
+
+  function mcUsarOrdem(id) {
+    const o = msgLib.ordens.find(x => x.id === id);
+    if (!o) return;
+    mcOrdemAtual = id;
+    const sel = document.getElementById('mc_cliente');
+    sel.value = o.user_id && [...sel.options].some(op => op.value === o.user_id) ? o.user_id : '';
+    gset('mc_nome', msgPrimeiroNome(o.cliente));
+    gset('mc_operacao', o.operacao === 'resgate' ? 'resgate' : 'compra');
+    mcItens = o.ativos.map(a => {
+      const salvo = msgLib.ativos.find(x => msgNorm(x.nome) === msgNorm(a.nome) || msgNorm(mcNomeItem(x)) === msgNorm(a.nome));
+      return salvo
+        ? { ...JSON.parse(JSON.stringify(salvo)), valor: a.valor }
+        : { tipo: '', nome: a.nome, caracteristicas: '', campos: {}, valor: a.valor };
+    });
+    if (!mcItens.length) mcItens = [{ tipo: '', nome: '', caracteristicas: '', campos: {} }];
+    mcSel = 0;
+    mcItemParaEditor();
+    mcGerar();
+    showFb2('mcFb', `Mensagem montada a partir da ordem de ${o.data}. Complete as características que faltarem.`, 'success');
+    document.getElementById('mc_chips').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  async function mcConcluirOrdem(id, silencioso) {
+    const o = msgLib.ordens.find(x => x.id === id);
+    if (!o) return;
+    o.status = 'enviada';
+    o.enviada_em = new Date().toISOString();
+    if (mcOrdemAtual === id) mcOrdemAtual = null;
+    mcRenderOrdens();
+    try { await msgSalvarBiblioteca(); }
+    catch (e) { if (!silencioso) showFb2('mcFb', 'Erro ao salvar: ' + e.message, 'error'); }
+  }
+
+  // Quando a mensagem de uma ordem sai (copiar / WhatsApp / email), a ordem sai da lista.
+  function mcMensagemEnviada() { if (mcOrdemAtual) mcConcluirOrdem(mcOrdemAtual, true); }
+
+  // Registra a ordem ao banco como pendente de mensagem, uma por cliente e data.
+  // Repetir a cópia da mesma ordem só atualiza os valores.
+  function moRegistrarOrdem(o) {
+    const op = gv('mo_tipo') === 'resgate' ? 'resgate' : 'compra';
+    const porCliente = o.modo === 'fundo'
+      ? o.linhas.filter(l => l.nome && l.valor).map(l => ({
+          cliente: l.nome, user_id: msgClientes.find(c => msgNorm(c.nome) === msgNorm(l.nome))?.user_id || '',
+          ativos: [{ nome: gv('mo_f_fundo'), cnpj: moFmtCnpj(gv('mo_f_cnpj')), valor: l.valor }] }))
+      : [{ cliente: msgClientes.find(c => c.user_id === gv('mo_cliente'))?.nome || gv('mo_nome'),
+           user_id: gv('mo_cliente'),
+           ativos: o.linhas.filter(l => l.fundo).map(l => ({ nome: l.fundo, cnpj: l.cnpj, valor: l.valor })) }];
+    let mudou = false;
+    porCliente.forEach(p => {
+      if (!p.cliente || !p.ativos.length) return;
+      let ord = msgLib.ordens.find(x => x.status !== 'enviada' && x.data === o.data && x.operacao === op &&
+        (p.user_id ? x.user_id === p.user_id : msgNorm(x.cliente) === msgNorm(p.cliente)));
+      if (!ord) {
+        ord = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), data: o.data, operacao: op,
+                cliente: p.cliente, user_id: p.user_id, ativos: [], status: 'pendente', criada_em: new Date().toISOString() };
+        msgLib.ordens.push(ord);
+      }
+      p.ativos.forEach(a => {
+        const ex = ord.ativos.find(x => msgNorm(x.nome) === msgNorm(a.nome));
+        if (ex) Object.assign(ex, a); else ord.ativos.push(a);
+      });
+      mudou = true;
+    });
+    // Mantém só as pendentes e as concluídas dos últimos 30 dias
+    const limite = Date.now() - 30 * 864e5;
+    msgLib.ordens = msgLib.ordens.filter(x => x.status !== 'enviada' || new Date(x.enviada_em || 0).getTime() > limite);
+    if (mudou) mcRenderOrdens();
+    return mudou;
   }
 
   function mcRenderAtivosSalvos() {
@@ -5116,6 +5275,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     gset('mc_tipo', a.tipo || ''); gset('mc_ativo', a.nome); gset('mc_caracteristicas', a.caracteristicas || '');
     MC_CAMPOS_ATIVO.forEach(id => gset(id, (a.campos || {})[id] || ''));
     if (a.limite) gset('mc_limite', a.limite);
+    mcEditorParaItem();
+    mcRenderChips();
     mcGerar();
   }
 
@@ -5152,9 +5313,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     catch (e) { showFb2(fbId, 'Não foi possível copiar automaticamente. Selecione o texto e copie.', 'error'); }
   }
 
-  function mcCopiar() { msgCopiarTexto(document.getElementById('mc_preview').value, 'mcFb'); }
-  function mcWhatsApp() { window.open('https://wa.me/?text=' + encodeURIComponent(document.getElementById('mc_preview').value), '_blank'); }
+  function mcCopiar() { msgCopiarTexto(document.getElementById('mc_preview').value, 'mcFb'); mcMensagemEnviada(); }
+  function mcWhatsApp() { window.open('https://wa.me/?text=' + encodeURIComponent(document.getElementById('mc_preview').value), '_blank'); mcMensagemEnviada(); }
   function mcEmail() {
+    mcMensagemEnviada();
     const c = msgClientes.find(x => x.user_id === gv('mc_cliente'));
     const assunto = `Aprovação de ${gv('mc_operacao')} — ${mcAtivoNome()}`;
     window.location.href = `mailto:${encodeURIComponent(c?.email || '')}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(document.getElementById('mc_preview').value)}`;
@@ -5431,6 +5593,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     });
     const uid = gv('mo_cliente'), conta = gv('mo_conta');
     if (o.modo === 'cliente' && uid && conta && msgLib.contas[uid] !== conta) { msgLib.contas[uid] = conta; mudou = true; }
+    if (moRegistrarOrdem(o)) mudou = true;
     if (!mudou) return;
     msgLib.fundos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
     try { await msgSalvarBiblioteca(); moRenderFundosList(); } catch (e) { /* não bloqueia a cópia */ }
@@ -5449,7 +5612,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       } else {
         await navigator.clipboard.writeText(texto);
       }
-      showFb2('moFb', '✓ Tabela copiada! Cole no email ou no Excel.', 'success');
+      showFb2('moFb', '✓ Tabela copiada! Cole no email ou no Excel. A ordem ficou em "Aprovação do Cliente" para a mensagem.', 'success');
     } catch (e) {
       showFb2('moFb', 'Não foi possível copiar automaticamente: ' + e.message, 'error');
     }
