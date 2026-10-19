@@ -15,6 +15,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="eh-documentos.js"></script>
   <script src="eh-senha.js"></script>
+  <script src="eh-ativos-catalogo.js"></script>
   <style>
     :root {
       /* Navy & accent palette — aligned to index.html */
@@ -1730,7 +1731,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
             </div>
             <div class="msg-actions"><button class="btn-upload" onclick="moImportarColado()">Importar linhas</button></div>
           </div>
-          <div class="msg-hint" id="mo_rows_hint">Ao digitar um CNPJ ou nome já usado antes, o outro campo é preenchido automaticamente.</div>
+          <div class="msg-hint" id="mo_rows_hint">Ao digitar um CNPJ ou código cadastrado, o nome é preenchido automaticamente (e vice-versa).</div>
         </div>
 
         <div class="upload-panel">
@@ -5012,13 +5013,13 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       ['mo_nome','mo_conta','mo_tipo','mo_data','mo_f_fundo','mo_f_cnpj']
         .forEach(id => { const el = document.getElementById(id); el.addEventListener('input', moRender); el.addEventListener('change', moRender); });
       document.getElementById('mo_f_fundo').addEventListener('change', () => {
-        const f = msgLib.fundos.find(x => x.nome.toLowerCase() === gv('mo_f_fundo').toLowerCase());
+        const f = msgAtivoPorNome(gv('mo_f_fundo'));
         if (f && !gv('mo_f_cnpj')) gset('mo_f_cnpj', f.cnpj);
         moRender();
       });
       document.getElementById('mo_f_cnpj').addEventListener('change', () => {
         gset('mo_f_cnpj', moFmtCnpj(gv('mo_f_cnpj')));
-        const f = msgLib.fundos.find(x => moSoDigitos(x.cnpj) === moSoDigitos(gv('mo_f_cnpj')));
+        const f = msgAtivoPorCodigo(gv('mo_f_cnpj'));
         if (f && !gv('mo_f_fundo')) gset('mo_f_fundo', f.nome);
         moRender();
       });
@@ -5326,6 +5327,32 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
   // ── Ordem ao banco ──
   const moSoDigitos = s => (s || '').replace(/\D/g, '');
+  // Chave de um ativo: CNPJ só com dígitos, ou o código (CRA…, DEB. …, ISIN) em maiúsculas.
+  function msgChaveAtivo(c) {
+    const d = moSoDigitos(c);
+    return d.length === 14 ? d : (c || '').toUpperCase().replace(/\s+/g, ' ').trim();
+  }
+  // Ativos cadastrados pelo site (Supabase) primeiro, depois o catálogo fixo (eh-ativos-catalogo.js).
+  function msgTodosAtivos() {
+    const vistos = new Set(), todos = [];
+    [...msgLib.fundos, ...(window.EH_ATIVOS_CATALOGO || []).map(([cnpj, nome]) => ({ cnpj, nome }))].forEach(f => {
+      const k = msgChaveAtivo(f.cnpj);
+      if (k && !vistos.has(k)) { vistos.add(k); todos.push(f); }
+    });
+    return todos;
+  }
+  function msgAtivoPorCodigo(c) {
+    const semDeb = x => x.replace(/^DEB\.?\s*/, ''); // aceita "BRKMA6" ou "DEB. BRKMA6"
+    const k = msgChaveAtivo(c);
+    return k ? msgTodosAtivos().find(f => semDeb(msgChaveAtivo(f.cnpj)) === semDeb(k)) : null;
+  }
+  // Pelo nome só devolve quando há um único código com esse nome (vários CRAs têm o mesmo nome).
+  function msgAtivoPorNome(n) {
+    const alvo = (n || '').trim().toLowerCase();
+    const achados = alvo ? msgTodosAtivos().filter(f => f.nome.toLowerCase() === alvo) : [];
+    return achados.length === 1 ? achados[0] : null;
+  }
+
   function moFmtCnpj(s) {
     const d = moSoDigitos(s);
     return d.length === 14 ? d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5') : (s || '').trim();
@@ -5348,8 +5375,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   function moRenderFundosList() {
-    document.getElementById('mo_fundos_list').innerHTML = msgLib.fundos
-      .map(f => `<option value="${escHtml(f.nome)}">${escHtml(f.cnpj)}</option>`).join('');
+    const nomes = [...new Set(msgTodosAtivos().map(f => f.nome))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    document.getElementById('mo_fundos_list').innerHTML = nomes.map(n => `<option value="${escHtml(n)}">`).join('');
   }
 
   function moAddRow(d = {}) {
@@ -5367,12 +5394,12 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     valor.addEventListener('input', moRender);
     cnpj.addEventListener('change', () => {
       cnpj.value = moFmtCnpj(cnpj.value);
-      const f = msgLib.fundos.find(x => moSoDigitos(x.cnpj) === moSoDigitos(cnpj.value));
+      const f = msgAtivoPorCodigo(cnpj.value);
       if (f && !fundo.value.trim()) fundo.value = f.nome;
       moRender();
     });
     fundo.addEventListener('change', () => {
-      const f = msgLib.fundos.find(x => x.nome.toLowerCase() === fundo.value.trim().toLowerCase());
+      const f = msgAtivoPorNome(fundo.value);
       if (f && !cnpj.value.trim()) cnpj.value = f.cnpj;
       moRender();
     });
@@ -5395,7 +5422,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.getElementById('mo_paste').placeholder = fundo ? 'Daniel Souza\t12345\tR$ 24.000,00' : '38.226.673/0001-37\tMENESTYS I FIC FIDC RL\tR$ 24.000,00';
     document.getElementById('mo_rows_hint').textContent = fundo
       ? 'Ao digitar o nome de um cliente, a conta já usada antes é preenchida automaticamente.'
-      : 'Ao digitar um CNPJ ou nome já usado antes, o outro campo é preenchido automaticamente.';
+      : 'Ao digitar um CNPJ ou código cadastrado, o nome é preenchido automaticamente (e vice-versa).';
     moRender();
   }
 
@@ -5576,10 +5603,12 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   async function moLembrar(o) {
     let mudou = false;
     const lembrarFundo = (cnpj, nome) => {
-      if (!nome || moSoDigitos(cnpj).length !== 14) return;
-      const f = msgLib.fundos.find(x => moSoDigitos(x.cnpj) === moSoDigitos(cnpj));
-      if (!f) { msgLib.fundos.push({ cnpj, nome }); mudou = true; }
-      else if (f.nome !== nome) { f.nome = nome; mudou = true; }
+      const k = msgChaveAtivo(cnpj);
+      if (!nome || !k) return;
+      const f = msgLib.fundos.find(x => msgChaveAtivo(x.cnpj) === k);
+      if (f) { if (f.nome !== nome) { f.nome = nome; mudou = true; } return; }
+      if (msgAtivoPorCodigo(cnpj)?.nome === nome) return; // já está no catálogo
+      msgLib.fundos.push({ cnpj, nome }); mudou = true;
     };
     if (o.modo === 'fundo') {
       lembrarFundo(moFmtCnpj(gv('mo_f_cnpj')), gv('mo_f_fundo'));
@@ -5587,12 +5616,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         const k = moChaveConta(l.nome);
         if (k && l.conta && msgLib.contas[k] !== l.conta) { msgLib.contas[k] = l.conta; mudou = true; }
       });
-    } else o.linhas.forEach(l => {
-      if (!l.fundo || moSoDigitos(l.cnpj).length !== 14) return;
-      const f = msgLib.fundos.find(x => moSoDigitos(x.cnpj) === moSoDigitos(l.cnpj));
-      if (!f) { msgLib.fundos.push({ cnpj: l.cnpj, nome: l.fundo }); mudou = true; }
-      else if (f.nome !== l.fundo) { f.nome = l.fundo; mudou = true; }
-    });
+    } else o.linhas.forEach(l => lembrarFundo(l.cnpj, l.fundo));
     const uid = gv('mo_cliente'), conta = gv('mo_conta');
     if (o.modo === 'cliente' && uid && conta && msgLib.contas[uid] !== conta) { msgLib.contas[uid] = conta; mudou = true; }
     if (moRegistrarOrdem(o)) mudou = true;
