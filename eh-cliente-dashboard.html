@@ -16,6 +16,7 @@
   <script src="eh-documentos.js"></script>
   <script src="eh-senha.js"></script>
   <script src="eh-ativos-catalogo.js"></script>
+  <script src="eh-clientes-contas.js"></script>
   <style>
     :root {
       /* Navy & accent palette — aligned to index.html */
@@ -1622,7 +1623,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
             </div>
             <div class="upload-field"><label>Instituição</label>
               <select id="mc_instituicao" onchange="document.getElementById('mc_inst_outra').style.display = this.value === 'outra' ? '' : 'none'">
-                <option value="XP">XP</option><option value="EQI">EQI</option><option value="outra">Outra…</option>
+                <option value="XP">XP</option><option value="EQI">EQI</option><option value="BTG">BTG</option><option value="outra">Outra…</option>
               </select>
               <input type="text" id="mc_inst_outra" placeholder="Nome da instituição" style="display:none;margin-top:0.5rem;" />
             </div>
@@ -1691,6 +1692,11 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
               <select id="mo_modo" onchange="moModoChange()">
                 <option value="cliente">Um cliente, vários fundos</option>
                 <option value="fundo">Um fundo, vários clientes</option>
+              </select>
+            </div>
+            <div class="upload-field"><label>Instituição</label>
+              <select id="mo_inst" onchange="moInstChange()">
+                <option value="XP">XP</option><option value="EQI">EQI</option><option value="BTG">BTG</option>
               </select>
             </div>
             <div class="upload-field mo-so-cliente"><label>Cliente</label>
@@ -4979,6 +4985,12 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   const MSG_LIB_ID = 'msg_biblioteca';
   let msgLib = { ativos: [], fundos: [], contas: {}, ordens: [] };
   let msgClientes = [];
+  const MSG_INSTITUICOES = ['XP', 'EQI', 'BTG'];
+  // Lista fixa de clientes (eh-clientes-contas.js): { 'cat:<nome>': { XP, EQI, BTG } }
+  const MSG_CONTAS_CATALOGO = {};
+  (window.EH_CLIENTES_CONTAS || []).forEach(([nome, ...contas]) => {
+    MSG_CONTAS_CATALOGO['cat:' + nome] = Object.fromEntries(MSG_INSTITUICOES.map((inst, i) => [inst, contas[i] || '']));
+  });
   let moRowSeq = 0;
   // Ativos da mensagem de aprovação: o formulário "Ativo" edita mcItens[mcSel].
   let mcItens = [{ tipo: 'FII', nome: '', caracteristicas: '', campos: {} }];
@@ -5065,8 +5077,14 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         .filter(c => !ADMIN_EMAILS.includes((c.email || '').toLowerCase()))
         .sort((a, b) => (a.nome || a.email || '').localeCompare(b.nome || b.email || '', 'pt-BR'));
     } catch (e) { msgClientes = []; }
+    const lista = (window.EH_CLIENTES_CONTAS || []).map(([nome]) => ({ user_id: 'cat:' + nome, nome, email: '' }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    const daPlataforma = msgClientes;
+    msgClientes = [...daPlataforma, ...lista];
+    const optsDe = l => l.map(c => `<option value="${c.user_id}">${escHtml(c.nome || c.email)}</option>`).join('');
     const opts = '<option value="">— Digitar manualmente —</option>' +
-      msgClientes.map(c => `<option value="${c.user_id}">${escHtml(c.nome || c.email)}</option>`).join('');
+      (lista.length ? `<optgroup label="Lista de contas">${optsDe(lista)}</optgroup>` : '') +
+      (daPlataforma.length ? `<optgroup label="Clientes da plataforma">${optsDe(daPlataforma)}</optgroup>` : '');
     ['mc_cliente', 'mo_cliente'].forEach(id => {
       const sel = document.getElementById(id); const atual = sel.value;
       sel.innerHTML = opts; sel.value = atual;
@@ -5076,7 +5094,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   const msgPrimeiroNome = n => {
-    const p = (n || '').trim().split(/\s+/)[0] || '';
+    let p = (n || '').trim().split(/\s+/)[0] || '';
+    const codigo = p.match(/^([A-ZÀ-Ý][a-zà-ÿ]+)[A-ZÀ-Ý]+$/);
+    if (codigo) p = codigo[1];
     return p ? p.charAt(0).toUpperCase() + p.slice(1).toLowerCase() : '';
   };
 
@@ -5185,7 +5205,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     el.innerHTML = pend.slice().reverse().map(o => `
       <div class="mc-ordem">
         <div class="mc-ordem-info"><strong>${escHtml(o.cliente)}</strong> · ${o.operacao === 'resgate' ? 'Resgate' : 'Compra'} · ${escHtml(o.data)}
-          <small>${o.ativos.map(a => escHtml(a.nome) + (a.valor ? ' (' + moFmtValor(a.valor) + ')' : '')).join(' · ')}</small></div>
+          <small>${o.instituicao ? escHtml(o.instituicao) + ' · ' : ''}${o.ativos.map(a => escHtml(a.nome) + (a.valor ? ' (' + moFmtValor(a.valor) + ')' : '')).join(' · ')}</small></div>
         <button class="btn-upload" style="padding:0.55rem 1rem;" onclick="mcUsarOrdem('${o.id}')">Montar mensagem</button>
         <button class="btn-download-ext" onclick="mcConcluirOrdem('${o.id}')">Concluir</button>
       </div>`).join('');
@@ -5199,6 +5219,12 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     sel.value = o.user_id && [...sel.options].some(op => op.value === o.user_id) ? o.user_id : '';
     gset('mc_nome', msgPrimeiroNome(o.cliente));
     gset('mc_operacao', o.operacao === 'resgate' ? 'resgate' : 'compra');
+    if (o.instituicao) {
+      const conhecida = [...document.getElementById('mc_instituicao').options].some(op => op.value === o.instituicao);
+      gset('mc_instituicao', conhecida ? o.instituicao : 'outra');
+      if (!conhecida) gset('mc_inst_outra', o.instituicao);
+      document.getElementById('mc_inst_outra').style.display = conhecida ? 'none' : '';
+    }
     mcItens = o.ativos.map(a => {
       const salvo = msgLib.ativos.find(x => msgNorm(x.nome) === msgNorm(a.nome) || msgNorm(mcNomeItem(x)) === msgNorm(a.nome));
       return salvo
@@ -5248,6 +5274,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
                 cliente: p.cliente, user_id: p.user_id, ativos: [], status: 'pendente', criada_em: new Date().toISOString() };
         msgLib.ordens.push(ord);
       }
+      ord.instituicao = moInst();
       p.ativos.forEach(a => {
         const ex = ord.ativos.find(x => msgNorm(x.nome) === msgNorm(a.nome));
         if (ex) Object.assign(ex, a); else ord.ativos.push(a);
@@ -5367,10 +5394,36 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
   const moFmtValor = n => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+  const moInst = () => gv('mo_inst') || 'XP';
+
+  // Conta do cliente na instituição: a última usada nas ordens, senão a da lista fixa.
+  // Contas antigas (salvas sem instituição) só valem para quem não está na lista fixa.
+  function moContaPara(chave, inst = moInst()) {
+    if (!chave) return '';
+    const cat = MSG_CONTAS_CATALOGO[chave];
+    return msgLib.contas[chave + '|' + inst] || (cat ? cat[inst] : msgLib.contas[chave]) || '';
+  }
+
+  // Preenche a conta sem apagar uma digitada à mão: só troca se estiver vazia ou se veio do preenchimento.
+  function moPreencherConta(input, conta) {
+    if (input.value.trim() && input.value !== input.dataset.auto) return;
+    input.value = conta;
+    input.dataset.auto = conta;
+  }
+
+  function moInstChange() {
+    moPreencherConta(document.getElementById('mo_conta'), moContaPara(gv('mo_cliente')));
+    document.querySelectorAll('#mo_rows_f tr').forEach(tr =>
+      moPreencherConta(tr.querySelector('.mo-conta'), moContaPara(moChaveConta(tr.querySelector('.mo-cli').value))));
+    moRender();
+  }
+
   function moClienteChange() {
     const c = msgClientes.find(x => x.user_id === gv('mo_cliente'));
     gset('mo_nome', c ? msgPrimeiroNome(c.nome || c.email).toUpperCase() : '');
-    gset('mo_conta', c ? (msgLib.contas[c.user_id] || '') : '');
+    const conta = document.getElementById('mo_conta');
+    conta.value = ''; // outro cliente: a conta anterior não vale mais
+    moPreencherConta(conta, c ? moContaPara(c.user_id) : '');
     moRender();
   }
 
@@ -5421,7 +5474,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       : 'Cole aqui as linhas (CNPJ, Fundo, Valor separados por tab)';
     document.getElementById('mo_paste').placeholder = fundo ? 'Daniel Souza\t12345\tR$ 24.000,00' : '38.226.673/0001-37\tMENESTYS I FIC FIDC RL\tR$ 24.000,00';
     document.getElementById('mo_rows_hint').textContent = fundo
-      ? 'Ao digitar o nome de um cliente, a conta já usada antes é preenchida automaticamente.'
+      ? 'Ao digitar o nome de um cliente, a conta dele na instituição escolhida é preenchida automaticamente.'
       : 'Ao digitar um CNPJ ou código cadastrado, o nome é preenchido automaticamente (e vice-versa).';
     moRender();
   }
@@ -5446,8 +5499,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const cli = tr.querySelector('.mo-cli'), conta = tr.querySelector('.mo-conta'), valor = tr.querySelector('.mo-quantia');
     [cli, conta, valor].forEach(el => el.addEventListener('input', moRender));
     cli.addEventListener('change', () => {
-      const salva = msgLib.contas[moChaveConta(cli.value)];
-      if (salva && !conta.value.trim()) conta.value = salva;
+      const salva = moContaPara(moChaveConta(cli.value));
+      if (salva || conta.value === conta.dataset.auto) moPreencherConta(conta, salva);
       moRender();
     });
     valor.addEventListener('change', () => { const n = moParseValor(valor.value); if (n) valor.value = n.toLocaleString('pt-BR', { minimumFractionDigits: 2 }); moRender(); });
@@ -5500,7 +5553,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         const ultima = document.querySelector('#mo_rows_f tr:last-child');
         if (ultima && [...ultima.querySelectorAll('input')].every(i => !i.value.trim())) ultima.remove();
         const nome = iNome >= 0 ? cols[iNome] : '';
-        moAddRowFundo({ nome, conta: iConta >= 0 ? cols[iConta] : (msgLib.contas[moChaveConta(nome)] || ''),
+        moAddRowFundo({ nome, conta: iConta >= 0 ? cols[iConta] : moContaPara(moChaveConta(nome)),
           valor: iValor >= 0 ? moParseValor(cols[iValor]).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '' });
         n++;
       });
@@ -5610,15 +5663,17 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       if (msgAtivoPorCodigo(cnpj)?.nome === nome) return; // já está no catálogo
       msgLib.fundos.push({ cnpj, nome }); mudou = true;
     };
+    const lembrarConta = (chave, conta) => {
+      if (!chave || !conta || moContaPara(chave) === conta) return;
+      msgLib.contas[chave + '|' + moInst()] = conta; mudou = true;
+    };
     if (o.modo === 'fundo') {
       lembrarFundo(moFmtCnpj(gv('mo_f_cnpj')), gv('mo_f_fundo'));
-      o.linhas.forEach(l => {
-        const k = moChaveConta(l.nome);
-        if (k && l.conta && msgLib.contas[k] !== l.conta) { msgLib.contas[k] = l.conta; mudou = true; }
-      });
-    } else o.linhas.forEach(l => lembrarFundo(l.cnpj, l.fundo));
-    const uid = gv('mo_cliente'), conta = gv('mo_conta');
-    if (o.modo === 'cliente' && uid && conta && msgLib.contas[uid] !== conta) { msgLib.contas[uid] = conta; mudou = true; }
+      o.linhas.forEach(l => lembrarConta(moChaveConta(l.nome), l.conta));
+    } else {
+      o.linhas.forEach(l => lembrarFundo(l.cnpj, l.fundo));
+      lembrarConta(gv('mo_cliente'), gv('mo_conta'));
+    }
     if (moRegistrarOrdem(o)) mudou = true;
     if (!mudou) return;
     msgLib.fundos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
