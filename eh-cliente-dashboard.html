@@ -5695,6 +5695,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const largura = o.grupos.length > 1 ? 'width:660px;table-layout:fixed;' : 'min-width:600px;';
     const tabelas = o.grupos.map(g => {
       const col = o.colunasGrupo(g);
+      // Na ordem de resgate e compra, a tabela de aplicação sai em verde-azulado
+      const [cor, corClara] = g.rotulo && g.op === 'compra' ? ['#1B6F6F', '#d3e7e7'] : ['#203864', '#d9e1f2'];
       const linhas = g.linhas.map((l, i) => {
         const bg = i % 2 ? '#f2f2f2' : '#ffffff';
         const [a, b] = o.cels(l);
@@ -5702,16 +5704,16 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           `<td style="${td}text-align:${o.alinhar[1]};color:#000;">${escHtml(b)}</td>` +
           `<td style="${td}text-align:right;color:#0000ff;">${moValorTxt(l)}</td></tr>`;
       }).join('');
-      return (g.rotulo ? `<div style="${f}font-size:12pt;font-weight:bold;color:#203864;margin:14px 0 4px;">${g.rotulo}</div>` : '') +
+      return (g.rotulo ? `<div style="${f}font-size:12pt;font-weight:bold;color:${cor};margin:14px 0 4px;">${g.rotulo}</div>` : '') +
         `<table style="border-collapse:collapse;${f}${largura}">` +
-        `<thead><tr style="background:#203864;">` +
+        `<thead><tr style="background:${cor};">` +
         `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:center;width:28%;">${escHtml(col[0])}</th>` +
         `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:center;width:40%;">${escHtml(col[1])}</th>` +
         `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:right;width:32%;">${escHtml(col[2])}</th></tr></thead>` +
         `<tbody>${linhas}` +
-        `<tr style="background:#d9e1f2;"><td style="${f}font-weight:bold;padding:4px 10px;border-top:2px solid #203864;color:#000;">TOTAL</td>` +
-        `<td style="${f}border-top:2px solid #203864;"></td>` +
-        `<td style="${f}font-weight:bold;padding:4px 10px;text-align:right;border-top:2px solid #203864;color:#000;">${moTotalTxt(g.linhas)}</td></tr>` +
+        `<tr style="background:${corClara};"><td style="${f}font-weight:bold;padding:4px 10px;border-top:2px solid ${cor};color:#000;">TOTAL</td>` +
+        `<td style="${f}border-top:2px solid ${cor};"></td>` +
+        `<td style="${f}font-weight:bold;padding:4px 10px;text-align:right;border-top:2px solid ${cor};color:#000;">${moTotalTxt(g.linhas)}</td></tr>` +
         `</tbody></table>`;
     }).join('');
     return `<div style="${f}color:#000;">` +
