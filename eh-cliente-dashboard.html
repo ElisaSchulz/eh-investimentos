@@ -738,6 +738,11 @@
     .ord-rows td.ord-del { width: 32px; text-align: center; }
     .ord-rows td.ord-del button { background: none; border: none; color: var(--gray); cursor: pointer; font-size: 16px; line-height: 1; }
     .ord-rows td.ord-del button:hover { color: #e05555; }
+    .ord-rows select { width: 100%; background: transparent; border: none; color: var(--cream); font-family: 'Manrope', sans-serif; font-size: 13px; padding: 0.5rem 0; outline: none; }
+    .ord-rows select option { color: #000; }
+    .ord-rows .mo-total-lbl { display: flex; align-items: center; gap: 0.35rem; font-size: 11px; color: var(--cream-soft); cursor: pointer; white-space: nowrap; }
+    .ord-rows .mo-total-lbl input { width: auto; margin: 0; }
+    .ord-rows input:disabled { opacity: 0.55; }
     .ord-total { text-align: right; font-size: 13px; color: var(--cream-soft); margin-top: 0.8rem; }
     .ord-total strong { color: var(--gold-text); font-size: 15px; margin-left: 0.5rem; }
     .ord-preview-wrap { background: #fff; padding: 1.2rem; overflow-x: auto; }
@@ -1616,7 +1621,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
               <select id="mc_saudacao"><option>bom dia</option><option>boa tarde</option><option>boa noite</option></select>
             </div>
             <div class="upload-field"><label>Operação</label>
-              <select id="mc_operacao"><option value="compra">Compra</option><option value="venda">Venda</option><option value="resgate">Resgate</option></select>
+              <select id="mc_operacao"><option value="compra">Compra</option><option value="venda">Venda</option><option value="resgate">Resgate</option><option value="resgate e compra">Resgate e compra</option></select>
             </div>
             <div class="upload-field"><label>Aprovação via</label>
               <select id="mc_canal"><option value="push">Notificação (push) no app</option><option value="email">Email da instituição</option></select>
@@ -1707,7 +1712,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
             <div class="upload-field mo-so-fundo" style="grid-column:span 2;display:none;"><label>Fundo / ativo</label><input type="text" id="mo_f_fundo" list="mo_fundos_list" placeholder="Nome do fundo, CRI, CRA, debênture…" /></div>
             <div class="upload-field mo-so-fundo" style="display:none;"><label>CNPJ / código</label><input type="text" id="mo_f_cnpj" placeholder="opcional" /></div>
             <div class="upload-field"><label>Tipo de ordem</label>
-              <select id="mo_tipo"><option value="compra">Compra (aplicação)</option><option value="resgate">Resgate</option></select>
+              <select id="mo_tipo"><option value="compra">Compra (aplicação)</option><option value="resgate">Resgate</option><option value="misto">Resgate e compra</option></select>
             </div>
             <div class="upload-field"><label>Data da ordem</label><input type="date" id="mo_data" /></div>
           </div>
@@ -1716,11 +1721,11 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         <div class="upload-panel">
           <h3 id="mo_rows_titulo">Fundos / ativos</h3>
           <table class="ord-rows mo-so-cliente">
-            <thead><tr><th style="width:24%;">CNPJ</th><th>Fundo</th><th style="width:20%;">Valor (R$)</th><th></th></tr></thead>
+            <thead><tr><th style="width:24%;">CNPJ</th><th>Fundo</th><th style="width:20%;">Valor (R$)</th><th class="mo-so-misto" style="width:13%;display:none;">Operação</th><th></th></tr></thead>
             <tbody id="mo_rows"></tbody>
           </table>
           <table class="ord-rows mo-so-fundo" style="display:none;">
-            <thead><tr><th>Nome</th><th style="width:24%;">Conta</th><th style="width:20%;">Valor (R$)</th><th></th></tr></thead>
+            <thead><tr><th>Nome</th><th style="width:24%;">Conta</th><th style="width:20%;">Valor (R$)</th><th class="mo-so-misto" style="width:13%;display:none;">Operação</th><th></th></tr></thead>
             <tbody id="mo_rows_f"></tbody>
           </table>
           <datalist id="mo_fundos_list"></datalist>
@@ -5035,6 +5040,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         if (f && !gv('mo_f_fundo')) gset('mo_f_fundo', f.nome);
         moRender();
       });
+      document.getElementById('mo_tipo').addEventListener('change', moAtualizarLinhas);
       moAddRow();
       moAddRowFundo();
       mcItemParaEditor();
@@ -5145,10 +5151,15 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     mcItemParaEditor(); mcGerar();
   }
 
+  // Operação do ativo: a da linha da ordem (na ordem de resgate e compra) ou a da mensagem.
+  const mcOpItem = a => a.operacao || (gv('mc_operacao') === 'resgate e compra' ? 'compra' : gv('mc_operacao'));
+
   function mcBulletsItem(a) {
     const c = a.campos || {};
+    const op = mcOpItem(a);
     return [
-      a.valor              && `Valor da aplicação: ${moFmtValor(a.valor)}`,
+      a.total ? 'Resgate total'
+        : a.valor && `${{ resgate: 'Valor do resgate', venda: 'Valor da venda' }[op] || 'Valor da aplicação'}: ${moFmtValor(a.valor)}`,
       c.mc_c_retorno       && `Rendimento alvo: ${c.mc_c_retorno}`,
       MC_IR_TEXTO[c.mc_c_ir],
       c.mc_c_pagamento     && `Pagamento de rendimentos: ${c.mc_c_pagamento}`,
@@ -5170,7 +5181,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const itens  = mcItens.filter(a => mcNomeItem(a));
     const varios = itens.length > 1;
 
-    const faltando = itens.flatMap(a => {
+    const faltando = itens.filter(a => mcOpItem(a) === 'compra').flatMap(a => {
       const c = a.campos || {};
       const f = [['mc_c_retorno', 'rendimento'], ['mc_c_ir', 'Imposto de Renda'], ['mc_c_prazo', 'prazo']].filter(([id]) => !c[id]).map(([, n]) => n);
       return f.length ? [(varios ? mcNomeItem(a) + ': ' : '') + f.join(', ')] : [];
@@ -5184,13 +5195,13 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     } else {
       const a = itens[0] || {};
       const artigo = ['Debênture', 'LCA', 'LCI'].includes(a.tipo) ? 'da' : 'do';
-      txt += `Você vai receber ${via} para aprovar a operação de ${op} ${artigo} ${mcNomeItem(a) || '[ativo]'}. Pode aprovar.`;
+      txt += `Você vai receber ${via} para aprovar a operação de ${a.operacao || op} ${artigo} ${mcNomeItem(a) || '[ativo]'}. Pode aprovar.`;
       if (limite) txt += `\n\nA operação não deverá exceder ${limite}% da carteira.`;
     }
     const blocos = itens.map(a => ({ a, b: mcBulletsItem(a) })).filter(x => varios || x.b.length);
     if (blocos.length) {
       txt += `${limite ? ' Segue' : '\n\nSegue'} um breve resumo:\n\n` +
-        blocos.map(({ a, b }) => mcNomeItem(a) + (b.length ? '\n' + b.map(i => '- ' + i).join('\n') : '')).join('\n\n');
+        blocos.map(({ a, b }) => (op === 'resgate e compra' ? (mcOpItem(a) === 'resgate' ? 'Resgate: ' : 'Compra: ') : '') + mcNomeItem(a) + (b.length ? '\n' + b.map(i => '- ' + i).join('\n') : '')).join('\n\n');
     }
     document.getElementById('mc_preview').value = txt;
   }
@@ -5204,8 +5215,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     if (!pend.length) { el.innerHTML = '<div class="msg-hint" style="margin:0;">Nenhuma ordem aguardando mensagem.</div>'; return; }
     el.innerHTML = pend.slice().reverse().map(o => `
       <div class="mc-ordem">
-        <div class="mc-ordem-info"><strong>${escHtml(o.cliente)}</strong> · ${o.operacao === 'resgate' ? 'Resgate' : 'Compra'} · ${escHtml(o.data)}
-          <small>${o.instituicao ? escHtml(o.instituicao) + ' · ' : ''}${o.ativos.map(a => escHtml(a.nome) + (a.valor ? ' (' + moFmtValor(a.valor) + ')' : '')).join(' · ')}</small></div>
+        <div class="mc-ordem-info"><strong>${escHtml(o.cliente)}</strong> · ${MO_TIPO_NOME[o.operacao] || 'Compra'} · ${escHtml(o.data)}
+          <small>${o.instituicao ? escHtml(o.instituicao) + ' · ' : ''}${o.ativos.map(a =>
+            (o.operacao === 'misto' ? (a.operacao === 'resgate' ? 'Resgate ' : 'Compra ') : '') + escHtml(a.nome) +
+            (a.total ? ' (resgate total)' : a.valor ? ' (' + moFmtValor(a.valor) + ')' : '')).join(' · ')}</small></div>
         <button class="btn-upload" style="padding:0.55rem 1rem;" onclick="mcUsarOrdem('${o.id}')">Montar mensagem</button>
         <button class="btn-download-ext" onclick="mcConcluirOrdem('${o.id}')">Concluir</button>
       </div>`).join('');
@@ -5218,7 +5231,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const sel = document.getElementById('mc_cliente');
     sel.value = o.user_id && [...sel.options].some(op => op.value === o.user_id) ? o.user_id : '';
     gset('mc_nome', msgPrimeiroNome(o.cliente));
-    gset('mc_operacao', o.operacao === 'resgate' ? 'resgate' : 'compra');
+    gset('mc_operacao', { resgate: 'resgate', misto: 'resgate e compra' }[o.operacao] || 'compra');
     if (o.instituicao) {
       const conhecida = [...document.getElementById('mc_instituicao').options].some(op => op.value === o.instituicao);
       gset('mc_instituicao', conhecida ? o.instituicao : 'outra');
@@ -5228,8 +5241,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     mcItens = o.ativos.map(a => {
       const salvo = msgLib.ativos.find(x => msgNorm(x.nome) === msgNorm(a.nome) || msgNorm(mcNomeItem(x)) === msgNorm(a.nome));
       return salvo
-        ? { ...JSON.parse(JSON.stringify(salvo)), valor: a.valor }
-        : { tipo: '', nome: a.nome, caracteristicas: '', campos: {}, valor: a.valor };
+        ? { ...JSON.parse(JSON.stringify(salvo)), valor: a.valor, total: a.total, operacao: a.operacao }
+        : { tipo: '', nome: a.nome, caracteristicas: '', campos: {}, valor: a.valor, total: a.total, operacao: a.operacao };
     });
     if (!mcItens.length) mcItens = [{ tipo: '', nome: '', caracteristicas: '', campos: {} }];
     mcSel = 0;
@@ -5256,14 +5269,15 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   // Registra a ordem ao banco como pendente de mensagem, uma por cliente e data.
   // Repetir a cópia da mesma ordem só atualiza os valores.
   function moRegistrarOrdem(o) {
-    const op = gv('mo_tipo') === 'resgate' ? 'resgate' : 'compra';
+    const op = o.tipo;
+    const ativo = (nome, cnpj, l) => ({ nome, cnpj, valor: l.valor, total: l.total, operacao: l.op });
     const porCliente = o.modo === 'fundo'
-      ? o.linhas.filter(l => l.nome && l.valor).map(l => ({
+      ? o.linhas.filter(l => l.nome && (l.valor || l.total)).map(l => ({
           cliente: l.nome, user_id: msgClientes.find(c => msgNorm(c.nome) === msgNorm(l.nome))?.user_id || '',
-          ativos: [{ nome: gv('mo_f_fundo'), cnpj: moFmtCnpj(gv('mo_f_cnpj')), valor: l.valor }] }))
+          ativos: [ativo(gv('mo_f_fundo'), moFmtCnpj(gv('mo_f_cnpj')), l)] }))
       : [{ cliente: msgClientes.find(c => c.user_id === gv('mo_cliente'))?.nome || gv('mo_nome'),
            user_id: gv('mo_cliente'),
-           ativos: o.linhas.filter(l => l.fundo).map(l => ({ nome: l.fundo, cnpj: l.cnpj, valor: l.valor })) }];
+           ativos: o.linhas.filter(l => l.fundo).map(l => ativo(l.fundo, l.cnpj, l)) }];
     let mudou = false;
     porCliente.forEach(p => {
       if (!p.cliente || !p.ativos.length) return;
@@ -5276,7 +5290,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       }
       ord.instituicao = moInst();
       p.ativos.forEach(a => {
-        const ex = ord.ativos.find(x => msgNorm(x.nome) === msgNorm(a.nome));
+        const ex = ord.ativos.find(x => msgNorm(x.nome) === msgNorm(a.nome) && (x.operacao || op) === a.operacao);
         if (ex) Object.assign(ex, a); else ord.ativos.push(a);
       });
       mudou = true;
@@ -5432,19 +5446,63 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.getElementById('mo_fundos_list').innerHTML = nomes.map(n => `<option value="${escHtml(n)}">`).join('');
   }
 
+  const moTipo = () => gv('mo_tipo') || 'compra';
+  const MO_TIPO_NOME = { compra: 'Compra', resgate: 'Resgate', misto: 'Resgate e compra' };
+
+  // Células comuns às duas tabelas: valor com a opção "Resgate total" e a operação
+  // (resgate ou compra), que só aparece na ordem de resgate e compra.
+  function moCelulasValor(d, id) {
+    return `
+      <td><input type="text" class="mo-quantia" inputmode="decimal" placeholder="24.000,00" value="${escHtml(d.valor || '')}" />
+        <label class="mo-total-lbl"><input type="checkbox" class="mo-total" ${d.total ? 'checked' : ''} /> Resgate total</label></td>
+      <td class="mo-so-misto"><select class="mo-op"><option value="resgate">Resgate</option><option value="compra">Compra</option></select></td>
+      <td class="ord-del"><button title="Remover linha" onclick="document.getElementById('mo-row-${id}').remove();moRender()">×</button></td>`;
+  }
+
+  function moLigarValor(tr, d, tbody) {
+    const valor = tr.querySelector('.mo-quantia'), op = tr.querySelector('.mo-op');
+    // Linha nova repete a operação da anterior (resgates primeiro, depois as compras)
+    op.value = d.op || document.querySelector(`#${tbody} tr:last-child .mo-op`)?.value || 'resgate';
+    valor.addEventListener('input', moRender);
+    valor.addEventListener('change', () => { const n = moParseValor(valor.value); if (n) valor.value = n.toLocaleString('pt-BR', { minimumFractionDigits: 2 }); moRender(); });
+    tr.querySelector('.mo-total').addEventListener('change', moAtualizarLinhas);
+    op.addEventListener('change', moAtualizarLinhas);
+  }
+
+  // Mostra a coluna Operação só na ordem de resgate e compra, e "Resgate total" só nas linhas de resgate.
+  function moAtualizarLinhas() {
+    const misto = moTipo() === 'misto';
+    document.querySelectorAll('#msgtab-banco .mo-so-misto').forEach(el => el.style.display = misto ? '' : 'none');
+    document.querySelectorAll('#mo_rows tr, #mo_rows_f tr').forEach(tr => {
+      const total = tr.querySelector('.mo-total'), valor = tr.querySelector('.mo-quantia');
+      const resgate = (misto ? tr.querySelector('.mo-op').value : moTipo()) === 'resgate';
+      if (!resgate) total.checked = false;
+      total.closest('label').style.display = resgate ? '' : 'none';
+      if (total.checked) valor.value = '';
+      valor.disabled = total.checked;
+      valor.placeholder = total.checked ? 'Resgate total' : '24.000,00';
+    });
+    moRender();
+  }
+
+  // Operação e valor de uma linha (valor 0 quando é resgate total).
+  function moLinhaBase(tr) {
+    const total = tr.querySelector('.mo-total').checked;
+    return { op: moTipo() === 'misto' ? tr.querySelector('.mo-op').value : moTipo(), total,
+             valor: total ? 0 : moParseValor(tr.querySelector('.mo-quantia').value) };
+  }
+
   function moAddRow(d = {}) {
     const id = ++moRowSeq;
     const tr = document.createElement('tr');
     tr.id = 'mo-row-' + id;
     tr.innerHTML = `
       <td><input type="text" class="mo-cnpj" placeholder="00.000.000/0000-00" value="${escHtml(d.cnpj || '')}" /></td>
-      <td><input type="text" class="mo-fundo" list="mo_fundos_list" placeholder="Nome do fundo" value="${escHtml(d.fundo || '')}" /></td>
-      <td><input type="text" class="mo-quantia" inputmode="decimal" placeholder="24.000,00" value="${escHtml(d.valor || '')}" /></td>
-      <td class="ord-del"><button title="Remover linha" onclick="document.getElementById('mo-row-${id}').remove();moRender()">×</button></td>`;
-    const cnpj = tr.querySelector('.mo-cnpj'), fundo = tr.querySelector('.mo-fundo'), valor = tr.querySelector('.mo-quantia');
+      <td><input type="text" class="mo-fundo" list="mo_fundos_list" placeholder="Nome do fundo" value="${escHtml(d.fundo || '')}" /></td>` +
+      moCelulasValor(d, id);
+    const cnpj = tr.querySelector('.mo-cnpj'), fundo = tr.querySelector('.mo-fundo');
     cnpj.addEventListener('input', moRender);
     fundo.addEventListener('input', moRender);
-    valor.addEventListener('input', moRender);
     cnpj.addEventListener('change', () => {
       cnpj.value = moFmtCnpj(cnpj.value);
       const f = msgAtivoPorCodigo(cnpj.value);
@@ -5456,9 +5514,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       if (f && !cnpj.value.trim()) cnpj.value = f.cnpj;
       moRender();
     });
-    valor.addEventListener('change', () => { const n = moParseValor(valor.value); if (n) valor.value = n.toLocaleString('pt-BR', { minimumFractionDigits: 2 }); moRender(); });
+    moLigarValor(tr, d, 'mo_rows');
     document.getElementById('mo_rows').appendChild(tr);
-    moRender();
+    moAtualizarLinhas();
     return tr;
   }
 
@@ -5493,36 +5551,35 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     tr.id = 'mo-row-' + id;
     tr.innerHTML = `
       <td><input type="text" class="mo-cli" list="mo_clientes_list" placeholder="Nome do cliente" value="${escHtml(d.nome || '')}" /></td>
-      <td><input type="text" class="mo-conta" placeholder="Conta" value="${escHtml(d.conta || '')}" /></td>
-      <td><input type="text" class="mo-quantia" inputmode="decimal" placeholder="24.000,00" value="${escHtml(d.valor || '')}" /></td>
-      <td class="ord-del"><button title="Remover linha" onclick="document.getElementById('mo-row-${id}').remove();moRender()">×</button></td>`;
-    const cli = tr.querySelector('.mo-cli'), conta = tr.querySelector('.mo-conta'), valor = tr.querySelector('.mo-quantia');
-    [cli, conta, valor].forEach(el => el.addEventListener('input', moRender));
+      <td><input type="text" class="mo-conta" placeholder="Conta" value="${escHtml(d.conta || '')}" /></td>` +
+      moCelulasValor(d, id);
+    const cli = tr.querySelector('.mo-cli'), conta = tr.querySelector('.mo-conta');
+    [cli, conta].forEach(el => el.addEventListener('input', moRender));
     cli.addEventListener('change', () => {
       const salva = moContaPara(moChaveConta(cli.value));
       if (salva || conta.value === conta.dataset.auto) moPreencherConta(conta, salva);
       moRender();
     });
-    valor.addEventListener('change', () => { const n = moParseValor(valor.value); if (n) valor.value = n.toLocaleString('pt-BR', { minimumFractionDigits: 2 }); moRender(); });
+    moLigarValor(tr, d, 'mo_rows_f');
     document.getElementById('mo_rows_f').appendChild(tr);
-    moRender();
+    moAtualizarLinhas();
     return tr;
   }
 
   function moLinhasFundo() {
     return [...document.querySelectorAll('#mo_rows_f tr')].map(tr => ({
+      ...moLinhaBase(tr),
       nome: tr.querySelector('.mo-cli').value.trim(),
-      conta: tr.querySelector('.mo-conta').value.trim(),
-      valor: moParseValor(tr.querySelector('.mo-quantia').value)
-    })).filter(l => l.nome || l.conta || l.valor);
+      conta: tr.querySelector('.mo-conta').value.trim()
+    })).filter(l => l.nome || l.conta || l.valor || l.total);
   }
 
   function moLinhas() {
     return [...document.querySelectorAll('#mo_rows tr')].map(tr => ({
+      ...moLinhaBase(tr),
       cnpj: moFmtCnpj(tr.querySelector('.mo-cnpj').value),
-      fundo: tr.querySelector('.mo-fundo').value.trim(),
-      valor: moParseValor(tr.querySelector('.mo-quantia').value)
-    })).filter(l => l.cnpj || l.fundo || l.valor);
+      fundo: tr.querySelector('.mo-fundo').value.trim()
+    })).filter(l => l.cnpj || l.fundo || l.valor || l.total);
   }
 
   function moLimpar() {
@@ -5539,34 +5596,46 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   function moImportarColado() {
-    const linhas = gv('mo_paste').split(/\r?\n/).map(l => l.split('\t').map(c => c.trim()).filter(Boolean)).filter(c => c.length);
+    const brutas = gv('mo_paste').split(/\r?\n/).map(l => l.split('\t').map(c => c.trim()).filter(Boolean)).filter(c => c.length);
+    // Tira das colunas a operação e o "resgate total", que viram campos da linha
+    const extras = [];
+    const linhas = brutas.map(cols => {
+      const e = {};
+      const resto = cols.filter((c, i) => {
+        if (i > 0 && /^(resgate\s+)?total$/i.test(c)) { e.total = true; e.op = 'resgate'; return false; }
+        if (/^(resgate|compra|aplica[çc][ãa]o)$/i.test(c)) { e.op = /^resgate$/i.test(c) ? 'resgate' : 'compra'; return false; }
+        return true;
+      });
+      extras.push(e);
+      return resto;
+    });
     let n = 0;
     if (moModo() === 'fundo') {
-      linhas.forEach(cols => {
-        if (/^(total|nome)$/i.test(cols[0])) return;
+      linhas.forEach((cols, li) => {
+        if (!cols.length || /^(total|nome)$/i.test(cols[0])) return;
         const ehNum = c => /^(R\$\s*)?[\d.,\-\/]+$/.test(c);
         const iNome = cols.findIndex(c => !ehNum(c));
         let iValor = -1;
         for (let i = cols.length - 1; i >= 0; i--) if (i !== iNome && ehNum(cols[i])) { iValor = i; break; }
         const iConta = cols.findIndex((c, i) => i !== iNome && i !== iValor);
-        if (iNome < 0 && iValor < 0) return;
+        if (iNome < 0 && iValor < 0 && !extras[li].total) return;
         const ultima = document.querySelector('#mo_rows_f tr:last-child');
         if (ultima && [...ultima.querySelectorAll('input')].every(i => !i.value.trim())) ultima.remove();
         const nome = iNome >= 0 ? cols[iNome] : '';
         moAddRowFundo({ nome, conta: iConta >= 0 ? cols[iConta] : moContaPara(moChaveConta(nome)),
-          valor: iValor >= 0 ? moParseValor(cols[iValor]).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '' });
+          valor: iValor >= 0 ? moParseValor(cols[iValor]).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '', ...extras[li] });
         n++;
       });
-    } else linhas.forEach(cols => {
-      if (/^total$/i.test(cols[0]) || /^cnpj$/i.test(cols[0])) return;
+    } else linhas.forEach((cols, li) => {
+      if (!cols.length || /^total$/i.test(cols[0]) || /^cnpj$/i.test(cols[0])) return;
       const iCnpj = cols.findIndex(c => moSoDigitos(c).length === 14);
       const iValor = cols.findIndex((c, i) => i !== iCnpj && /^(R\$\s*)?[\d.,]+$/.test(c));
       const fundo = cols.find((c, i) => i !== iCnpj && i !== iValor) || '';
-      if (iCnpj < 0 && iValor < 0) return;
+      if (iCnpj < 0 && iValor < 0 && !extras[li].total) return;
       // Reaproveita a última linha se ela estiver vazia
       const ultima = document.querySelector('#mo_rows tr:last-child');
       const vazia = ultima && [...ultima.querySelectorAll('input')].every(i => !i.value.trim());
-      const d = { cnpj: iCnpj >= 0 ? moFmtCnpj(cols[iCnpj]) : '', fundo, valor: iValor >= 0 ? moParseValor(cols[iValor]).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '' };
+      const d = { cnpj: iCnpj >= 0 ? moFmtCnpj(cols[iCnpj]) : '', fundo, valor: iValor >= 0 ? moParseValor(cols[iValor]).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '', ...extras[li] };
       if (vazia) ultima.remove();
       moAddRow(d);
       n++;
@@ -5575,34 +5644,46 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     else showFb2('moFb', moModo() === 'fundo' ? 'Nenhuma linha reconhecida. Use colunas Nome, Conta e Valor.' : 'Nenhuma linha reconhecida. Use colunas CNPJ, Fundo e Valor.', 'error');
   }
 
-  // Estrutura comum às duas tabelas: infos do topo, 3 colunas (a última é o valor) e linhas.
+  const moValorTxt = l => l.total ? 'Resgate total' : moFmtValor(l.valor);
+  // Total de um grupo; com resgate total o valor final só o banco sabe.
+  function moTotalTxt(ls) {
+    const soma = moFmtValor(ls.reduce((s, l) => s + l.valor, 0));
+    const totais = ls.filter(l => l.total).length;
+    return !totais ? soma : totais === ls.length ? 'Resgate total' : soma + ' + resgate total';
+  }
+
+  // Estrutura comum às duas tabelas: infos do topo, grupos de linhas e as 3 colunas de cada grupo (a última é o valor).
+  // Na ordem de resgate e compra há dois grupos (duas tabelas), resgates primeiro, cada um com o seu total.
   function moDados() {
-    const resgate = gv('mo_tipo') === 'resgate';
+    const tipo = moTipo();
     const d = isoParaData(gv('mo_data'));
-    const ordem = `ORDEM DE ${resgate ? 'RESGATE' : 'COMPRA'}`;
+    const ordem = { compra: 'ORDEM DE COMPRA', resgate: 'ORDEM DE RESGATE', misto: 'ORDEM DE RESGATE E COMPRA' }[tipo];
     const data = d ? d.toLocaleDateString('pt-BR') : '';
-    if (moModo() === 'fundo') {
-      const linhas = moLinhasFundo();
+    const fundoModo = moModo() === 'fundo';
+    const linhas = fundoModo ? moLinhasFundo() : moLinhas();
+    const grupos = tipo === 'misto'
+      ? [['resgate', 'RESGATE'], ['compra', 'APLICAÇÃO']]
+          .map(([op, rotulo]) => ({ rotulo, op, linhas: linhas.filter(l => l.op === op) })).filter(g => g.linhas.length)
+      : [{ rotulo: '', op: tipo, linhas }];
+    const base = { tipo, data, linhas, grupos };
+    if (fundoModo) {
       const fundo = gv('mo_f_fundo') || '[ATIVO]';
       return {
-        modo: 'fundo', data,
+        ...base, modo: 'fundo',
         titulo: `${ordem} – ${fundo.toUpperCase()}`,
         infos: [['Data da ordem:', data], ...(gv('mo_f_cnpj') ? [[moSoDigitos(gv('mo_f_cnpj')).length === 14 ? 'CNPJ:' : 'Código:', moFmtCnpj(gv('mo_f_cnpj'))]] : [])],
-        colunas: ['Nome', 'Conta', `${fundo} (R$)`],
+        colunasGrupo: () => ['Nome', 'Conta', `${fundo} (R$)`],
         alinhar: ['left', 'center'],
-        linhas, cels: l => [l.nome, l.conta],
-        total: linhas.reduce((s, l) => s + l.valor, 0)
+        cels: l => [l.nome, l.conta]
       };
     }
-    const linhas = moLinhas();
     return {
-      modo: 'cliente', data,
+      ...base, modo: 'cliente',
       titulo: `${ordem} – CLIENTE ${(gv('mo_nome') || '[NOME]').toUpperCase()}`,
       infos: [['Data da ordem:', data], ...(gv('mo_conta') ? [['Conta:', gv('mo_conta')]] : [])],
-      colunas: ['CNPJ', 'Fundo', resgate ? 'Valor do Resgate (R$)' : 'Valor da Aplicação (R$)'],
+      colunasGrupo: g => ['CNPJ', 'Fundo', g.op === 'resgate' ? 'Valor do Resgate (R$)' : 'Valor da Aplicação (R$)'],
       alinhar: ['right', 'left'],
-      linhas, cels: l => [l.cnpj, l.fundo],
-      total: linhas.reduce((s, l) => s + l.valor, 0)
+      cels: l => [l.cnpj, l.fundo]
     };
   }
 
@@ -5610,40 +5691,51 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   function moTabelaHtml(o) {
     const f = "font-family:Calibri,Arial,sans-serif;font-size:11pt;";
     const td = f + 'padding:3px 10px;border-bottom:1px solid #d9d9d9;';
-    const linhas = o.linhas.map((l, i) => {
-      const bg = i % 2 ? '#f2f2f2' : '#ffffff';
-      const [a, b] = o.cels(l);
-      return `<tr style="background:${bg};"><td style="${td}text-align:${o.alinhar[0]};color:#000;">${escHtml(a)}</td>` +
-        `<td style="${td}text-align:${o.alinhar[1]};color:#000;">${escHtml(b)}</td>` +
-        `<td style="${td}text-align:right;color:#0000ff;">${moFmtValor(l.valor)}</td></tr>`;
+    // Com duas tabelas (resgate e compra), largura fixa para as colunas ficarem alinhadas
+    const largura = o.grupos.length > 1 ? 'width:660px;table-layout:fixed;' : 'min-width:600px;';
+    const tabelas = o.grupos.map(g => {
+      const col = o.colunasGrupo(g);
+      // Na ordem de resgate e compra, a tabela de aplicação sai em verde-azulado
+      const [cor, corClara] = g.rotulo && g.op === 'compra' ? ['#1B6F6F', '#d3e7e7'] : ['#203864', '#d9e1f2'];
+      const linhas = g.linhas.map((l, i) => {
+        const bg = i % 2 ? '#f2f2f2' : '#ffffff';
+        const [a, b] = o.cels(l);
+        return `<tr style="background:${bg};"><td style="${td}text-align:${o.alinhar[0]};color:#000;">${escHtml(a)}</td>` +
+          `<td style="${td}text-align:${o.alinhar[1]};color:#000;">${escHtml(b)}</td>` +
+          `<td style="${td}text-align:right;color:#0000ff;">${moValorTxt(l)}</td></tr>`;
+      }).join('');
+      return (g.rotulo ? `<div style="${f}font-size:12pt;font-weight:bold;color:${cor};margin:14px 0 4px;">${g.rotulo}</div>` : '') +
+        `<table style="border-collapse:collapse;${f}${largura}">` +
+        `<thead><tr style="background:${cor};">` +
+        `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:center;width:28%;">${escHtml(col[0])}</th>` +
+        `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:center;width:40%;">${escHtml(col[1])}</th>` +
+        `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:right;width:32%;">${escHtml(col[2])}</th></tr></thead>` +
+        `<tbody>${linhas}` +
+        `<tr style="background:${corClara};"><td style="${f}font-weight:bold;padding:4px 10px;border-top:2px solid ${cor};color:#000;">TOTAL</td>` +
+        `<td style="${f}border-top:2px solid ${cor};"></td>` +
+        `<td style="${f}font-weight:bold;padding:4px 10px;text-align:right;border-top:2px solid ${cor};color:#000;">${moTotalTxt(g.linhas)}</td></tr>` +
+        `</tbody></table>`;
     }).join('');
     return `<div style="${f}color:#000;">` +
       `<div style="${f}font-size:14pt;font-weight:bold;color:#203864;margin-bottom:2px;">${escHtml(o.titulo)}</div>` +
       `<table style="border-collapse:collapse;${f}margin-bottom:10px;">` +
       o.infos.map(([k, v]) => `<tr><td style="${f}font-weight:bold;padding:1px 40px 1px 0;color:#000;">${k}</td><td style="${f}color:#0000ff;">${escHtml(v)}</td></tr>`).join('') +
-      `</table>` +
-      `<table style="border-collapse:collapse;${f}min-width:560px;">` +
-      `<thead><tr style="background:#203864;">` +
-      `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:center;">${escHtml(o.colunas[0])}</th>` +
-      `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:center;">${escHtml(o.colunas[1])}</th>` +
-      `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:right;">${escHtml(o.colunas[2])}</th></tr></thead>` +
-      `<tbody>${linhas}` +
-      `<tr style="background:#d9e1f2;"><td style="${f}font-weight:bold;padding:4px 10px;border-top:2px solid #203864;color:#000;">TOTAL</td>` +
-      `<td style="${f}border-top:2px solid #203864;"></td>` +
-      `<td style="${f}font-weight:bold;padding:4px 10px;text-align:right;border-top:2px solid #203864;color:#000;">${moFmtValor(o.total)}</td></tr>` +
-      `</tbody></table></div>`;
+      `</table>${tabelas}</div>`;
   }
 
   function moTabelaTexto(o) {
-    return [o.titulo, ...o.infos.map(([k, v]) => `${k}\t${v}`), '',
-      o.colunas.join('\t'),
-      ...o.linhas.map(l => [...o.cels(l), moFmtValor(l.valor)].join('\t')),
-      `TOTAL\t\t${moFmtValor(o.total)}`].join('\n');
+    return [o.titulo, ...o.infos.map(([k, v]) => `${k}\t${v}`),
+      ...o.grupos.flatMap(g => ['', ...(g.rotulo ? [g.rotulo] : []),
+        o.colunasGrupo(g).join('\t'),
+        ...g.linhas.map(l => [...o.cels(l), moValorTxt(l)].join('\t')),
+        `TOTAL\t\t${moTotalTxt(g.linhas)}`])].join('\n');
   }
 
   function moRender() {
     const o = moDados();
-    document.getElementById('mo_total').textContent = moFmtValor(o.total);
+    document.getElementById('mo_total').textContent = o.tipo === 'misto'
+      ? (o.grupos.map(g => (g.rotulo === 'RESGATE' ? 'Resgate ' : 'Compra ') + moTotalTxt(g.linhas)).join(' · ') || moFmtValor(0))
+      : moTotalTxt(o.linhas);
     document.getElementById('mo_preview').innerHTML = moTabelaHtml(o);
   }
 
@@ -5703,7 +5795,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   function moNomeArquivo(ext) {
     const o = moDados();
     const quem = o.modo === 'fundo' ? (gv('mo_f_fundo') || 'Fundo') : (gv('mo_nome') || 'Cliente');
-    return `Ordem ${gv('mo_tipo') === 'resgate' ? 'Resgate' : 'Compra'} - ${quem.replace(/[\\/:*?"<>|]/g, '')} - ${o.data.replace(/\//g, '-')}.${ext}`;
+    return `Ordem ${MO_TIPO_NOME[o.tipo]} - ${quem.replace(/[\\/:*?"<>|]/g, '')} - ${o.data.replace(/\//g, '-')}.${ext}`;
   }
 
   async function moCanvas(o) {
@@ -5753,12 +5845,14 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   function moBaixarExcel() {
     const o = moDados();
     if (!moValidar(o)) return;
-    const aoa = [[o.titulo], ...o.infos, [],
-      o.colunas,
-      ...o.linhas.map(l => [...o.cels(l), l.valor]),
-      ['TOTAL', '', o.total]];
+    const totalCel = ls => ls.some(l => l.total) ? moTotalTxt(ls) : ls.reduce((s, l) => s + l.valor, 0);
+    const aoa = [[o.titulo], ...o.infos,
+      ...o.grupos.flatMap(g => [[], ...(g.rotulo ? [[g.rotulo]] : []),
+        o.colunasGrupo(g),
+        ...g.linhas.map(l => [...o.cels(l), l.total ? 'Resgate total' : l.valor]),
+        ['TOTAL', '', totalCel(g.linhas)]])];
     const ws = XLSX.utils.aoa_to_sheet(aoa);
-    const ini = aoa.length - o.linhas.length - 1;
+    const ini = o.infos.length + 1;
     for (let r = ini; r < aoa.length; r++) {
       const cell = ws[XLSX.utils.encode_cell({ r, c: 2 })];
       if (cell && typeof cell.v === 'number') cell.z = '"R$" #,##0.00';
