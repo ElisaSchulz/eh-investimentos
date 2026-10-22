@@ -5645,6 +5645,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     else showFb2('moFb', moModo() === 'fundo' ? 'Nenhuma linha reconhecida. Use colunas Nome, Conta e Valor.' : 'Nenhuma linha reconhecida. Use colunas CNPJ, Fundo e Valor.', 'error');
   }
 
+  // Pedido que fecha todas as versões da ordem (tabela, imagem, texto e WhatsApp)
+  const MO_CONFIRMACAO = 'Favor confirmar o recebimento desta mensagem.';
   const moValorTxt = l => l.total ? 'Resgate total' : moFmtValor(l.valor);
   // Total de um grupo; com resgate total o valor final só o banco sabe.
   function moTotalTxt(ls) {
@@ -5721,7 +5723,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       `<div style="${f}font-size:14pt;font-weight:bold;color:#203864;margin-bottom:2px;">${escHtml(o.titulo)}</div>` +
       `<table style="border-collapse:collapse;${f}margin-bottom:10px;">` +
       o.infos.map(([k, v]) => `<tr><td style="${f}font-weight:bold;padding:1px 40px 1px 0;color:#000;">${k}</td><td style="${f}color:#0000ff;">${escHtml(v)}</td></tr>`).join('') +
-      `</table>${tabelas}</div>`;
+      `</table>${tabelas}` +
+      `<div style="${f}color:#000;margin-top:14px;">${MO_CONFIRMACAO}</div></div>`;
   }
 
   function moTabelaTexto(o) {
@@ -5729,7 +5732,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       ...o.grupos.flatMap(g => ['', ...(g.rotulo ? [g.rotulo] : []),
         o.colunasGrupo(g).join('\t'),
         ...g.linhas.map(l => [...o.cels(l), moValorTxt(l)].join('\t')),
-        `TOTAL\t\t${moTotalTxt(g.linhas)}`])].join('\n');
+        `TOTAL\t\t${moTotalTxt(g.linhas)}`]), '', MO_CONFIRMACAO].join('\n');
   }
 
   // Versão em texto para o WhatsApp: *negrito* nos títulos e uma linha por ativo/cliente.
@@ -5740,7 +5743,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     return [`*${o.titulo}*`, ...o.infos.map(([k, v]) => `${k} ${v}`),
       ...o.grupos.flatMap(g => ['', ...(g.rotulo ? [`*${g.rotulo}*`] : []),
         ...g.linhas.map(linha),
-        `*Total: ${moTotalTxt(g.linhas)}*`])].join('\n');
+        `*Total: ${moTotalTxt(g.linhas)}*`]), '', MO_CONFIRMACAO].join('\n');
   }
 
   function moRender() {
