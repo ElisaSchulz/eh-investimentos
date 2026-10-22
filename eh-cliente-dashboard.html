@@ -749,6 +749,35 @@
     @media (max-width: 768px) {
       .ord-rows th:nth-child(1), .ord-rows td:nth-child(1) { width: 34%; }
     }
+
+    /* ── VÍDEOS ── */
+    .video-cat { margin-bottom: 2.2rem; }
+    .video-cat-title { font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-text); margin-bottom: 1rem; }
+    .video-card { cursor: pointer; text-align: left; font: inherit; color: inherit; }
+    .video-thumb { position: relative; aspect-ratio: 16 / 9; margin: -1.6rem -1.5rem 0; background: #000 center / cover no-repeat; overflow: hidden; }
+    .main .video-thumb { border-radius: 8px 8px 0 0; }
+    .video-thumb::after { content: ''; position: absolute; inset: 0; background: rgba(0,24,72,0.18); transition: background 0.2s; }
+    .video-card:hover .video-thumb::after { background: rgba(0,24,72,0.05); }
+    .video-play { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.92); color: #002060; display: flex; align-items: center; justify-content: center; z-index: 1; box-shadow: 0 6px 18px rgba(0,0,0,0.25); }
+    .video-desc { font-family: 'Manrope', sans-serif; font-size: 13px; line-height: 1.55; color: var(--cream-soft); white-space: pre-line; }
+    .btn-video-help { display: inline-flex; align-items: center; gap: 0.45rem; font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: var(--gold-text); background: none; border: none; padding: 0; cursor: pointer; }
+    .btn-video-help:hover { text-decoration: underline; }
+    .main .btn-video-help { font-family: 'Manrope', sans-serif !important; }
+    .report-actions { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; flex-wrap: wrap; padding-top: 0.9rem; border-top: 1px solid var(--rule); margin-top: auto; }
+    .report-actions .report-download { padding-top: 0; border-top: none; margin-top: 0; }
+    .inicio-feature-actions { display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; }
+    .video-modal-box { width: 100%; max-width: 960px; position: relative; }
+    .video-modal-frame { position: relative; aspect-ratio: 16 / 9; background: #000; }
+    .video-modal-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    .video-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 0.8rem; color: #fff; font-family: 'Manrope', sans-serif; }
+    .video-modal-title { font-size: 1.05rem; font-weight: 600; }
+    .video-modal-close { background: none; border: 1px solid rgba(255,255,255,0.4); color: #fff; font-size: 13px; padding: 0.4rem 0.8rem; cursor: pointer; font-family: 'Manrope', sans-serif; white-space: nowrap; }
+    .video-modal-close:hover { border-color: #fff; }
+    .video-modal-desc { color: rgba(255,255,255,0.8); font-family: 'Manrope', sans-serif; font-size: 13px; line-height: 1.55; margin-top: 0.9rem; white-space: pre-line; }
+    .video-admin-actions { display: flex; gap: 0.8rem; padding-top: 0.8rem; border-top: 1px solid var(--border-dim); margin-top: auto; }
+    .video-admin-actions button { font-size: 0.7rem; background: none; border: none; cursor: pointer; font-family: 'Manrope', sans-serif; padding: 0; color: var(--gold-text); }
+    .video-admin-actions button.danger { color: var(--err-text); }
+    @media (max-width: 640px) { .modal-overlay.video-overlay { padding: 1rem; } }
   </style>
   <link rel="stylesheet" href="eh-tema.css" />
 </head>
@@ -801,6 +830,10 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
     Meus Documentos
   </button>
+  <button class="mobile-drawer-link" onclick="showView('videos',this);closeDrawer()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10 9 15 12 10 15 10 9"/></svg>
+    Vídeos
+  </button>
   <button class="mobile-drawer-link" onclick="showView('perfil',this);closeDrawer()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
     Meu Perfil
@@ -834,6 +867,10 @@
   <button class="mobile-drawer-link" id="mobileMensagensBtn" style="display:none;" onclick="showView('mensagens',this);closeDrawer()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
     Mensagens Padrão
+  </button>
+  <button class="mobile-drawer-link" id="mobileVideosAdminBtn" style="display:none;" onclick="showView('videosadmin',this);closeDrawer()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10 9 15 12 10 15 10 9"/></svg>
+    Gerenciar Vídeos
   </button>
   <div class="mobile-drawer-divider"></div>
   <div style="padding:0.8rem;">
@@ -869,6 +906,10 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
       Meus Documentos
     </button>
+    <button class="sidebar-link" onclick="showView('videos',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10 9 15 12 10 15 10 9"/></svg>
+      Vídeos
+    </button>
     <button class="sidebar-link" onclick="showView('perfil',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
       Meu Perfil
@@ -903,6 +944,10 @@
     <button class="sidebar-link" onclick="showView('mensagens',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
       Mensagens Padrão
+    </button>
+    <button class="sidebar-link" onclick="showView('videosadmin',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10 9 15 12 10 15 10 9"/></svg>
+      Gerenciar Vídeos
     </button>
   </div>
   <div class="sidebar-bottom">
@@ -1760,8 +1805,58 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       </div>
     </div>
 
+    <!-- VÍDEOS (clientes) -->
+    <div class="view" id="view-videos">
+      <div class="welcome-banner"><h2>Vídeos <em>Explicativos</em></h2><p>Vídeos curtos da EH Investimentos explicando seus relatórios e o acompanhamento da sua carteira.</p></div>
+      <div id="videosList"><div class="reports-grid"><div class="loading-state"><div class="spinner"></div> Carregando...</div></div></div>
+    </div>
+
+    <!-- GERENCIAR VÍDEOS (admin only) -->
+    <div class="view" id="view-videosadmin">
+      <div class="upload-panel">
+        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10 9 15 12 10 15 10 9"/></svg> <span id="vaFormTitle">Adicionar vídeo</span></h3>
+        <p class="msg-hint" style="margin-bottom:1.2rem;">Suba o vídeo no YouTube como <strong>Não listado</strong> e cole o link aqui. Ele só aparece para clientes logados no portal.</p>
+        <div class="upload-form">
+          <div class="upload-field" style="grid-column:1/-1;"><label>Link do YouTube</label><input type="text" id="vaUrl" placeholder="Ex: https://youtu.be/abc123XYZ_0" /></div>
+          <div class="upload-field" style="grid-column:span 2;"><label>Título</label><input type="text" id="vaTitle" placeholder="Ex: Como ler o relatório mensal" /></div>
+          <div class="upload-field"><label>Ordem</label><input type="number" id="vaOrder" value="0" step="1" /></div>
+          <div class="upload-field" style="grid-column:1/-1;"><label>Descrição (opcional)</label><textarea id="vaDesc" rows="3" placeholder="Um resumo do que o vídeo explica"></textarea></div>
+          <div class="upload-field"><label>Categoria</label><input type="text" id="vaCategory" list="vaCategoryList" placeholder="Ex: Relatório mensal" /><datalist id="vaCategoryList"></datalist></div>
+          <div class="upload-field" style="grid-column:span 2;"><label>Botão "Como ler" nos documentos do tipo</label>
+            <select id="vaReportType">
+              <option value="">Nenhum (só na aba Vídeos)</option>
+              <option value="Relatório Mensal">Relatório Mensal</option>
+              <option value="Relatório Trimestral">Relatório Trimestral</option>
+              <option value="Relatório Anual">Relatório Anual</option>
+              <option value="Especial">Especial</option>
+              <option value="Carta Mensal">Carta Mensal</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:1.2rem;display:flex;gap:0.8rem;flex-wrap:wrap;">
+          <button class="btn-upload" id="vaSaveBtn" onclick="vaSalvar()">Salvar vídeo</button>
+          <button class="btn-download-ext" id="vaCancelBtn" style="display:none;margin-top:0;" onclick="vaLimpar()">Cancelar edição</button>
+        </div>
+        <div class="upload-feedback" id="vaFb"></div>
+      </div>
+      <div class="section-header"><div class="section-title">Vídeos Publicados</div></div>
+      <div class="reports-grid" id="vaGrid"><div class="loading-state"><div class="spinner"></div> Carregando...</div></div>
+    </div>
+
   </div>
 </main>
+
+<!-- PLAYER DE VÍDEO -->
+<div class="modal-overlay video-overlay" id="videoModal" style="display:none;" onclick="if (event.target === this) closeVideo()">
+  <div class="video-modal-box">
+    <div class="video-modal-head">
+      <div class="video-modal-title" id="videoModalTitle"></div>
+      <button class="video-modal-close" onclick="closeVideo()">✕ Fechar</button>
+    </div>
+    <div class="video-modal-frame" id="videoModalFrame"></div>
+    <div class="video-modal-desc" id="videoModalDesc"></div>
+  </div>
+</div>
 
 <script>
   const SUPABASE_URL   = 'https://migyqowqjfhvdcrtryms.supabase.co';
@@ -1846,9 +1941,11 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       document.getElementById('mobileEmailsBtn').style.display = 'flex';
       document.getElementById('mobileGeradorBtn').style.display = 'flex';
       document.getElementById('mobileMensagensBtn').style.display = 'flex';
+      document.getElementById('mobileVideosAdminBtn').style.display = 'flex';
     }
     restoreViewFromHash();
-    loadReports();
+    // vídeos primeiro: os cards de relatório mostram "Como ler este relatório" quando há vídeo para o tipo
+    loadVideos().then(loadReports);
     checkOnboarding();
     try { await sb.from('profiles').upsert({ id: currentUser.id, email, full_name: name, updated_at: new Date().toISOString() }, { onConflict: 'id' }); } catch(e) {}
   }
@@ -1900,7 +1997,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.querySelectorAll('.mobile-drawer-link').forEach(l => l.classList.remove('active'));
     document.getElementById('view-' + viewId).classList.add('active');
     if (btn) btn.classList.add('active');
-    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Documentos', documentos:'Meus Documentos', extratos:'Extratos → Excel', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos', mensagens:'Mensagens Padrão' };
+    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Documentos', documentos:'Meus Documentos', extratos:'Extratos → Excel', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos', mensagens:'Mensagens Padrão', videos:'Vídeos', videosadmin:'Gerenciar Vídeos' };
     const topbar = document.getElementById('topbarTitle');
     if (topbar) topbar.textContent = titles[viewId] || viewId;
     // keep the active tab in the URL so a refresh returns to it
@@ -1911,6 +2008,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     if (viewId === 'clientes') loadClientesView();
     if (viewId === 'gerador') geradorCarregarClientes();
     if (viewId === 'mensagens') msgInit();
+    if (viewId === 'videos') renderVideos();
+    if (viewId === 'videosadmin') vaRenderGrid();
     if (viewId === 'perfil') populatePerfil();
   }
 
@@ -2418,10 +2517,13 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       <div class="inicio-feature-chapter">${chapterLabel}</div>
       <div class="inicio-feature-name">${item.name || 'Documento'}</div>
       <div class="inicio-feature-meta">${item.period || fmtDate(item.created_at)}</div>
-      <a class="inicio-feature-cta" href="${item.file_url || '#'}" target="_blank">
-        <span>Abrir ${ext}</span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      </a>
+      <div class="inicio-feature-actions">
+        <a class="inicio-feature-cta" href="${item.file_url || '#'}" target="_blank">
+          <span>Abrir ${ext}</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </a>
+        ${videoHelpButton(item.type)}
+      </div>
     `;
   }
 
@@ -2433,7 +2535,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   // reopen the tab saved in the URL hash (e.g. #mensagens) after a refresh
-  const ADMIN_VIEWS = ['upload','extratos','cotas','emails','clientes','gerador','mensagens'];
+  const ADMIN_VIEWS = ['upload','extratos','cotas','emails','clientes','gerador','mensagens','videosadmin'];
   function restoreViewFromHash() {
     const viewId = decodeURIComponent(window.location.hash.substring(1));
     if (!viewId || viewId === 'inicio' || !/^[a-z]+$/.test(viewId) || !document.getElementById('view-' + viewId)) return;
@@ -2461,10 +2563,13 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           <div class="report-name">${r.name || 'Documento'}</div>
           <div class="report-meta" style="margin-top:0.3rem;">${r.period || fmtDate(r.created_at)}</div>
         </div>
-        <a class="report-download" href="${r.file_url || '#'}" target="_blank">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Baixar ${ext}
-        </a>
+        <div class="report-actions">
+          <a class="report-download" href="${r.file_url || '#'}" target="_blank">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Baixar ${ext}
+          </a>
+          ${videoHelpButton(r.type)}
+        </div>
       </div>`;
     }).join('');
   }
@@ -3435,6 +3540,196 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   const pz = document.getElementById('pasteZone');
   pz.addEventListener('focus', () => pz.style.borderColor = 'var(--gold)');
   pz.addEventListener('blur',  () => pz.style.borderColor = '');
+
+  // ── VÍDEOS ──
+  // Vídeos do YouTube (não listados) cadastrados pelos admins na tabela "videos" do Supabase.
+  let allVideos = [];
+  let vaEditId  = null;
+  const YT_ID_RE = /^[A-Za-z0-9_-]{11}$/;
+
+  // aceita youtu.be/ID, youtube.com/watch?v=ID, /shorts/ID, /embed/ID, /live/ID ou o próprio ID
+  function parseYoutubeId(input) {
+    const s = (input || '').trim();
+    if (YT_ID_RE.test(s)) return s;
+    let u;
+    try { u = new URL(s.startsWith('http') ? s : 'https://' + s); } catch (e) { return null; }
+    const host = u.hostname.replace(/^(www\.|m\.)/, '');
+    let id = null;
+    if (host === 'youtu.be') id = u.pathname.split('/')[1];
+    else if (host === 'youtube.com' || host === 'youtube-nocookie.com') {
+      id = u.searchParams.get('v');
+      const m = u.pathname.match(/^\/(?:shorts|embed|live|v)\/([^/?#]+)/);
+      if (!id && m) id = m[1];
+    }
+    return id && YT_ID_RE.test(id) ? id : null;
+  }
+
+  async function loadVideos() {
+    try {
+      const { data, error } = await sb.from('videos').select('*')
+        .order('sort_order', { ascending: true }).order('created_at', { ascending: true });
+      if (error) throw error;
+      allVideos = (data || []).filter(v => YT_ID_RE.test(v.youtube_id || ''));
+    } catch (e) {
+      console.warn('Vídeos indisponíveis:', e.message);
+      allVideos = [];
+    }
+    renderVideos();
+    if (isAdmin) vaRenderGrid();
+  }
+
+  function videoThumb(v) { return `https://i.ytimg.com/vi/${v.youtube_id}/hqdefault.jpg`; }
+
+  function videoCard(v) {
+    return `<button type="button" class="report-card video-card" onclick="openVideo('${v.id}')">
+      <div class="video-thumb" style="background-image:url('${videoThumb(v)}')">
+        <span class="video-play"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="7 4 20 12 7 20 7 4"/></svg></span>
+      </div>
+      <div class="report-name">${escHtml(v.title)}</div>
+      ${v.description ? `<div class="video-desc">${escHtml(v.description)}</div>` : ''}
+    </button>`;
+  }
+
+  function renderVideos() {
+    const el = document.getElementById('videosList');
+    if (!el) return;
+    if (!allVideos.length) {
+      el.innerHTML = `<div class="reports-grid"><div class="empty-state"><p>Nenhum vídeo disponível ainda.</p></div></div>`;
+      return;
+    }
+    const cats = [...new Set(allVideos.map(v => v.category || 'Geral'))];
+    el.innerHTML = cats.map(c => `
+      <section class="video-cat">
+        ${cats.length > 1 ? `<div class="video-cat-title">${escHtml(c)}</div>` : ''}
+        <div class="reports-grid">${allVideos.filter(v => (v.category || 'Geral') === c).map(videoCard).join('')}</div>
+      </section>`).join('');
+  }
+
+  // botão "Como ler este relatório" nos cards de documentos que têm vídeo para o tipo
+  function videoHelpButton(type) {
+    const v = type && allVideos.find(x => x.report_type === type);
+    if (!v) return '';
+    const label = type === 'Carta Mensal' ? 'Como ler esta carta' : 'Como ler este relatório';
+    return `<button type="button" class="btn-video-help" onclick="openVideo('${v.id}')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="7 4 20 12 7 20 7 4"/></svg>
+      ${label}
+    </button>`;
+  }
+
+  function openVideo(id) {
+    const v = allVideos.find(x => x.id === id);
+    if (!v) return;
+    document.getElementById('videoModalTitle').textContent = v.title || '';
+    document.getElementById('videoModalDesc').textContent  = v.description || '';
+    document.getElementById('videoModalFrame').innerHTML =
+      `<iframe src="https://www.youtube-nocookie.com/embed/${v.youtube_id}?autoplay=1&rel=0&modestbranding=1&playsinline=1" title="${escHtml(v.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+    document.getElementById('videoModal').style.display = 'flex';
+  }
+
+  function closeVideo() {
+    document.getElementById('videoModal').style.display = 'none';
+    document.getElementById('videoModalFrame').innerHTML = ''; // para o vídeo
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.getElementById('videoModal').style.display === 'flex') closeVideo();
+  });
+
+  // ── GERENCIAR VÍDEOS (admin) ──
+  function vaRenderGrid() {
+    const grid = document.getElementById('vaGrid');
+    if (!grid) return;
+    const cats = [...new Set(allVideos.map(v => v.category).filter(Boolean))];
+    document.getElementById('vaCategoryList').innerHTML = cats.map(c => `<option value="${escHtml(c)}">`).join('');
+    if (!allVideos.length) { grid.innerHTML = `<div class="empty-state"><p>Nenhum vídeo cadastrado ainda.</p></div>`; return; }
+    grid.innerHTML = allVideos.map(v => `
+      <div class="report-card">
+        <div class="video-thumb" style="background-image:url('${videoThumb(v)}');cursor:pointer;" onclick="openVideo('${v.id}')">
+          <span class="video-play"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="7 4 20 12 7 20 7 4"/></svg></span>
+        </div>
+        <div>
+          <div class="report-name">${escHtml(v.title)}</div>
+          <div class="report-meta" style="margin-top:0.3rem;">${escHtml(v.category || 'Geral')} · ordem ${v.sort_order ?? 0}</div>
+          ${v.report_type ? `<div style="margin-top:0.2rem;font-size:0.65rem;color:var(--gold-text);">Botão em: ${escHtml(v.report_type)}</div>` : ''}
+        </div>
+        <div class="video-admin-actions">
+          <button onclick="vaEditar('${v.id}')">✎ Editar</button>
+          <button class="danger" onclick="vaRemover('${v.id}')">✕ Remover</button>
+        </div>
+      </div>`).join('');
+  }
+
+  function vaLimpar() {
+    vaEditId = null;
+    ['vaUrl','vaTitle','vaDesc','vaCategory'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('vaOrder').value = '0';
+    document.getElementById('vaReportType').value = '';
+    document.getElementById('vaFormTitle').textContent = 'Adicionar vídeo';
+    document.getElementById('vaSaveBtn').textContent = 'Salvar vídeo';
+    document.getElementById('vaCancelBtn').style.display = 'none';
+  }
+
+  function vaEditar(id) {
+    const v = allVideos.find(x => x.id === id);
+    if (!v) return;
+    vaEditId = id;
+    document.getElementById('vaUrl').value = 'https://youtu.be/' + v.youtube_id;
+    document.getElementById('vaTitle').value = v.title || '';
+    document.getElementById('vaDesc').value = v.description || '';
+    document.getElementById('vaCategory').value = v.category || '';
+    document.getElementById('vaOrder').value = v.sort_order ?? 0;
+    document.getElementById('vaReportType').value = v.report_type || '';
+    document.getElementById('vaFormTitle').textContent = 'Editar vídeo';
+    document.getElementById('vaSaveBtn').textContent = 'Salvar alterações';
+    document.getElementById('vaCancelBtn').style.display = 'inline-flex';
+    document.getElementById('view-videosadmin').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  async function vaSalvar() {
+    const youtube_id = parseYoutubeId(document.getElementById('vaUrl').value);
+    const title = document.getElementById('vaTitle').value.trim();
+    if (!youtube_id) { showFb('vaFb', 'Link do YouTube inválido. Cole o link do vídeo (ex.: https://youtu.be/...).', 'error'); return; }
+    if (!title) { showFb('vaFb', 'Informe o título do vídeo.', 'error'); return; }
+    const report_type = document.getElementById('vaReportType').value || null;
+    const row = {
+      youtube_id, title,
+      description: document.getElementById('vaDesc').value.trim() || null,
+      category: document.getElementById('vaCategory').value.trim() || 'Geral',
+      sort_order: parseInt(document.getElementById('vaOrder').value, 10) || 0,
+      report_type,
+      updated_at: new Date().toISOString()
+    };
+    const outro = report_type && allVideos.find(v => v.report_type === report_type && v.id !== vaEditId);
+    if (outro && !confirm(`O vídeo "${outro.title}" já é o botão "Como ler" de ${report_type}. Usar este no lugar?`)) return;
+    const btn = document.getElementById('vaSaveBtn');
+    btn.disabled = true;
+    try {
+      if (outro) {
+        const { error } = await sb.from('videos').update({ report_type: null }).eq('id', outro.id);
+        if (error) throw error;
+      }
+      const { error } = vaEditId
+        ? await sb.from('videos').update(row).eq('id', vaEditId)
+        : await sb.from('videos').insert(row);
+      if (error) throw error;
+      showFb('vaFb', vaEditId ? 'Vídeo atualizado.' : 'Vídeo publicado para os clientes.', 'success');
+      vaLimpar();
+      await loadVideos();
+      loadReports();
+    } catch (e) {
+      showFb('vaFb', 'Erro ao salvar: ' + e.message, 'error', true);
+    }
+    btn.disabled = false;
+  }
+
+  async function vaRemover(id) {
+    const v = allVideos.find(x => x.id === id);
+    if (!v || !confirm(`Remover o vídeo "${v.title}" do portal? (O vídeo continua no YouTube.)`)) return;
+    const { error } = await sb.from('videos').delete().eq('id', id);
+    if (error) { showFb('vaFb', 'Erro ao remover: ' + error.message, 'error', true); return; }
+    if (vaEditId === id) vaLimpar();
+    await loadVideos();
+    loadReports();
+  }
 
   // ── HELPERS ──
   // fixo = true: a mensagem fica na tela até a próxima (não some após 5s)
