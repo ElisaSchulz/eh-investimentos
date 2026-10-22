@@ -5652,8 +5652,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     return !totais ? soma : totais === ls.length ? 'Resgate total' : soma + ' + resgate total';
   }
 
-  // Estrutura comum às duas tabelas: infos do topo, 3 colunas (a última é o valor) e grupos de linhas.
-  // Na ordem de resgate e compra há dois grupos, resgates primeiro, cada um com o seu total.
+  // Estrutura comum às duas tabelas: infos do topo, grupos de linhas e as 3 colunas de cada grupo (a última é o valor).
+  // Na ordem de resgate e compra há dois grupos (duas tabelas), resgates primeiro, cada um com o seu total.
   function moDados() {
     const tipo = moTipo();
     const d = isoParaData(gv('mo_data'));
@@ -5663,8 +5663,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const linhas = fundoModo ? moLinhasFundo() : moLinhas();
     const grupos = tipo === 'misto'
       ? [['resgate', 'RESGATE'], ['compra', 'APLICAÇÃO']]
-          .map(([op, rotulo]) => ({ rotulo, linhas: linhas.filter(l => l.op === op) })).filter(g => g.linhas.length)
-      : [{ rotulo: '', linhas }];
+          .map(([op, rotulo]) => ({ rotulo, op, linhas: linhas.filter(l => l.op === op) })).filter(g => g.linhas.length)
+      : [{ rotulo: '', op: tipo, linhas }];
     const base = { tipo, data, linhas, grupos };
     if (fundoModo) {
       const fundo = gv('mo_f_fundo') || '[ATIVO]';
@@ -5672,7 +5672,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         ...base, modo: 'fundo',
         titulo: `${ordem} – ${fundo.toUpperCase()}`,
         infos: [['Data da ordem:', data], ...(gv('mo_f_cnpj') ? [[moSoDigitos(gv('mo_f_cnpj')).length === 14 ? 'CNPJ:' : 'Código:', moFmtCnpj(gv('mo_f_cnpj'))]] : [])],
-        colunas: ['Nome', 'Conta', `${fundo} (R$)`],
+        colunasGrupo: () => ['Nome', 'Conta', `${fundo} (R$)`],
         alinhar: ['left', 'center'],
         cels: l => [l.nome, l.conta]
       };
@@ -5681,7 +5681,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       ...base, modo: 'cliente',
       titulo: `${ordem} – CLIENTE ${(gv('mo_nome') || '[NOME]').toUpperCase()}`,
       infos: [['Data da ordem:', data], ...(gv('mo_conta') ? [['Conta:', gv('mo_conta')]] : [])],
-      colunas: ['CNPJ', 'Fundo', { compra: 'Valor da Aplicação (R$)', resgate: 'Valor do Resgate (R$)', misto: 'Valor (R$)' }[tipo]],
+      colunasGrupo: g => ['CNPJ', 'Fundo', g.op === 'resgate' ? 'Valor do Resgate (R$)' : 'Valor da Aplicação (R$)'],
       alinhar: ['right', 'left'],
       cels: l => [l.cnpj, l.fundo]
     };
@@ -5691,9 +5691,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   function moTabelaHtml(o) {
     const f = "font-family:Calibri,Arial,sans-serif;font-size:11pt;";
     const td = f + 'padding:3px 10px;border-bottom:1px solid #d9d9d9;';
-    const grupos = o.grupos.map(g => {
-      const titulo = g.rotulo
-        ? `<tr style="background:#ffffff;"><td colspan="3" style="${f}font-weight:bold;padding:10px 10px 4px;color:#203864;">${g.rotulo}</td></tr>` : '';
+    // Com duas tabelas (resgate e compra), largura fixa para as colunas ficarem alinhadas
+    const largura = o.grupos.length > 1 ? 'width:660px;table-layout:fixed;' : 'min-width:600px;';
+    const tabelas = o.grupos.map(g => {
+      const col = o.colunasGrupo(g);
       const linhas = g.linhas.map((l, i) => {
         const bg = i % 2 ? '#f2f2f2' : '#ffffff';
         const [a, b] = o.cels(l);
@@ -5701,31 +5702,31 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           `<td style="${td}text-align:${o.alinhar[1]};color:#000;">${escHtml(b)}</td>` +
           `<td style="${td}text-align:right;color:#0000ff;">${moValorTxt(l)}</td></tr>`;
       }).join('');
-      return titulo + linhas +
-        `<tr style="background:#d9e1f2;"><td style="${f}font-weight:bold;padding:4px 10px;border-top:2px solid #203864;color:#000;">TOTAL${g.rotulo ? ' ' + g.rotulo : ''}</td>` +
+      return (g.rotulo ? `<div style="${f}font-size:12pt;font-weight:bold;color:#203864;margin:14px 0 4px;">${g.rotulo}</div>` : '') +
+        `<table style="border-collapse:collapse;${f}${largura}">` +
+        `<thead><tr style="background:#203864;">` +
+        `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:center;width:28%;">${escHtml(col[0])}</th>` +
+        `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:center;width:40%;">${escHtml(col[1])}</th>` +
+        `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:right;width:32%;">${escHtml(col[2])}</th></tr></thead>` +
+        `<tbody>${linhas}` +
+        `<tr style="background:#d9e1f2;"><td style="${f}font-weight:bold;padding:4px 10px;border-top:2px solid #203864;color:#000;">TOTAL</td>` +
         `<td style="${f}border-top:2px solid #203864;"></td>` +
-        `<td style="${f}font-weight:bold;padding:4px 10px;text-align:right;border-top:2px solid #203864;color:#000;">${moTotalTxt(g.linhas)}</td></tr>`;
+        `<td style="${f}font-weight:bold;padding:4px 10px;text-align:right;border-top:2px solid #203864;color:#000;">${moTotalTxt(g.linhas)}</td></tr>` +
+        `</tbody></table>`;
     }).join('');
     return `<div style="${f}color:#000;">` +
       `<div style="${f}font-size:14pt;font-weight:bold;color:#203864;margin-bottom:2px;">${escHtml(o.titulo)}</div>` +
       `<table style="border-collapse:collapse;${f}margin-bottom:10px;">` +
       o.infos.map(([k, v]) => `<tr><td style="${f}font-weight:bold;padding:1px 40px 1px 0;color:#000;">${k}</td><td style="${f}color:#0000ff;">${escHtml(v)}</td></tr>`).join('') +
-      `</table>` +
-      `<table style="border-collapse:collapse;${f}min-width:560px;">` +
-      `<thead><tr style="background:#203864;">` +
-      `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:center;">${escHtml(o.colunas[0])}</th>` +
-      `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:center;">${escHtml(o.colunas[1])}</th>` +
-      `<th style="${f}color:#fff;font-weight:bold;padding:10px 10px;text-align:right;">${escHtml(o.colunas[2])}</th></tr></thead>` +
-      `<tbody>${grupos}</tbody></table></div>`;
+      `</table>${tabelas}</div>`;
   }
 
   function moTabelaTexto(o) {
-    return [o.titulo, ...o.infos.map(([k, v]) => `${k}\t${v}`), '',
-      o.colunas.join('\t'),
-      ...o.grupos.flatMap((g, i) => [
-        ...(g.rotulo ? [...(i ? [''] : []), g.rotulo] : []),
+    return [o.titulo, ...o.infos.map(([k, v]) => `${k}\t${v}`),
+      ...o.grupos.flatMap(g => ['', ...(g.rotulo ? [g.rotulo] : []),
+        o.colunasGrupo(g).join('\t'),
         ...g.linhas.map(l => [...o.cels(l), moValorTxt(l)].join('\t')),
-        `TOTAL${g.rotulo ? ' ' + g.rotulo : ''}\t\t${moTotalTxt(g.linhas)}`])].join('\n');
+        `TOTAL\t\t${moTotalTxt(g.linhas)}`])].join('\n');
   }
 
   function moRender() {
@@ -5843,14 +5844,13 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const o = moDados();
     if (!moValidar(o)) return;
     const totalCel = ls => ls.some(l => l.total) ? moTotalTxt(ls) : ls.reduce((s, l) => s + l.valor, 0);
-    const aoa = [[o.titulo], ...o.infos, [],
-      o.colunas,
-      ...o.grupos.flatMap((g, i) => [
-        ...(g.rotulo ? [...(i ? [[]] : []), [g.rotulo]] : []),
+    const aoa = [[o.titulo], ...o.infos,
+      ...o.grupos.flatMap(g => [[], ...(g.rotulo ? [[g.rotulo]] : []),
+        o.colunasGrupo(g),
         ...g.linhas.map(l => [...o.cels(l), l.total ? 'Resgate total' : l.valor]),
-        [`TOTAL${g.rotulo ? ' ' + g.rotulo : ''}`, '', totalCel(g.linhas)]])];
+        ['TOTAL', '', totalCel(g.linhas)]])];
     const ws = XLSX.utils.aoa_to_sheet(aoa);
-    const ini = o.infos.length + 3;
+    const ini = o.infos.length + 1;
     for (let r = ini; r < aoa.length; r++) {
       const cell = ws[XLSX.utils.encode_cell({ r, c: 2 })];
       if (cell && typeof cell.v === 'number') cell.z = '"R$" #,##0.00';
