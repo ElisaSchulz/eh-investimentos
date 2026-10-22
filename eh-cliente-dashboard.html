@@ -1750,11 +1750,12 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           <div class="ord-preview-wrap"><div id="mo_preview"></div></div>
           <div class="msg-actions">
             <button class="btn-upload" onclick="moCopiar()">Copiar tabela</button>
+            <button class="btn-download-ext" onclick="moCopiarWhatsApp()">Copiar para WhatsApp</button>
             <button class="btn-download-ext" onclick="moCopiarImagem()">Copiar imagem</button>
             <button class="btn-download-ext" onclick="moBaixarPng()">Baixar imagem</button>
             <button class="btn-download-ext" onclick="moBaixarExcel()">Baixar Excel</button>
           </div>
-          <div class="msg-hint">"Copiar tabela" mantém a formatação ao colar no email e as colunas ao colar no Excel. Os fundos e a conta do cliente são salvos para as próximas ordens.</div>
+          <div class="msg-hint">"Copiar tabela" mantém a formatação ao colar no email e as colunas ao colar no Excel. "Copiar para WhatsApp" copia a ordem em texto, com negrito, pronta para colar na conversa. Os fundos e a conta do cliente são salvos para as próximas ordens.</div>
           <div class="upload-feedback" id="moFb"></div>
         </div>
       </div>
@@ -5731,6 +5732,17 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         `TOTAL\t\t${moTotalTxt(g.linhas)}`])].join('\n');
   }
 
+  // Versão em texto para o WhatsApp: *negrito* nos títulos e uma linha por ativo/cliente.
+  function moTextoWhatsApp(o) {
+    const linha = l => o.modo === 'fundo'
+      ? `• ${l.nome}${l.conta ? ` (conta ${l.conta})` : ''}: ${moValorTxt(l)}`
+      : `• ${l.fundo || l.cnpj}${l.fundo && l.cnpj ? ` (${l.cnpj})` : ''}: ${moValorTxt(l)}`;
+    return [`*${o.titulo}*`, ...o.infos.map(([k, v]) => `${k} ${v}`),
+      ...o.grupos.flatMap(g => ['', ...(g.rotulo ? [`*${g.rotulo}*`] : []),
+        ...g.linhas.map(linha),
+        `*Total: ${moTotalTxt(g.linhas)}*`])].join('\n');
+  }
+
   function moRender() {
     const o = moDados();
     document.getElementById('mo_total').textContent = o.tipo === 'misto'
@@ -5786,6 +5798,18 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         await navigator.clipboard.writeText(texto);
       }
       showFb2('moFb', '✓ Tabela copiada! Cole no email ou no Excel. A ordem ficou em "Aprovação do Cliente" para a mensagem.', 'success');
+    } catch (e) {
+      showFb2('moFb', 'Não foi possível copiar automaticamente: ' + e.message, 'error');
+    }
+    moLembrar(o);
+  }
+
+  async function moCopiarWhatsApp() {
+    const o = moDados();
+    if (!moValidar(o)) return;
+    try {
+      await navigator.clipboard.writeText(moTextoWhatsApp(o));
+      showFb2('moFb', '✓ Texto copiado! Cole na conversa do WhatsApp.', 'success');
     } catch (e) {
       showFb2('moFb', 'Não foi possível copiar automaticamente: ' + e.message, 'error');
     }
