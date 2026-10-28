@@ -238,7 +238,9 @@ def _f(bold=False, color=None, size=10):
 
 def construir_planilha(series, status, nomes_ms, start, end, check_date, caminho, ffill=True):
     isins = [f[1] for f in FUNDOS]
+    # Série vazia (fundo que falhou) vem com índice sem tipo; força datas para comparar
     df = pd.concat({isin: series[isin] for isin in isins}, axis=1)
+    df.index = pd.to_datetime(df.index)
     df = df.sort_index()
     df = df[(df.index >= pd.Timestamp(start)) & (df.index <= pd.Timestamp(end))]
 
@@ -427,6 +429,9 @@ def main(mes=MES):
 
     print(f"Baixando {len(FUNDOS)} fundos de {start} a {end}...\n")
     series, status, nomes_ms = baixar_todos(start, end, check)
+    if all(s.startswith("FALHOU") for s in status.values()):
+        erros = sorted({s for s in status.values()})
+        raise RuntimeError("Nenhum fundo foi baixado do Morningstar. " + " | ".join(erros)[:300])
     df = construir_planilha(series, status, nomes_ms, start, end, check, caminho,
                             ffill=REPETIR_NAV)
 

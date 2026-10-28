@@ -71,6 +71,16 @@ def main(mes=MES):
     mes_txt = f"{ano}-{m:02d}"
     tarefas = [t.strip() for t in (os.environ.get("TAREFAS") or ",".join(TAREFAS)).split(",") if t.strip()]
     resultados = [rodar(t, mes_txt) for t in tarefas]
+    caminho = os.path.join(pasta_saida(ano, m), "status.json")
+
+    # Rodando só algumas tarefas, mantém no status as outras da execução anterior
+    if os.path.exists(caminho):
+        with open(caminho, encoding="utf-8") as f:
+            anteriores = json.load(f).get("tarefas", [])
+        novos = {r["tarefa"]: r for r in resultados}
+        ordem = [t for t in TAREFAS if t in novos or any(a["tarefa"] == t for a in anteriores)]
+        resultados = [novos.get(t) or next(a for a in anteriores if a["tarefa"] == t) for t in ordem]
+        resultados += [r for r in novos.values() if r["tarefa"] not in ordem]
 
     status = {
         "mes": mes_txt,
@@ -81,7 +91,6 @@ def main(mes=MES):
                          if os.environ.get("GITHUB_RUN_ID") else None),
         "tarefas": resultados,
     }
-    caminho = os.path.join(pasta_saida(ano, m), "status.json")
     with open(caminho, "w", encoding="utf-8") as f:
         json.dump(status, f, ensure_ascii=False, indent=2)
 
@@ -95,4 +104,5 @@ def main(mes=MES):
 
 if __name__ == "__main__":
     status = main()
-    sys.exit(0 if all(r["ok"] for r in status["tarefas"]) else 1)
+    rodadas = {t.strip() for t in (os.environ.get("TAREFAS") or ",".join(TAREFAS)).split(",")}
+    sys.exit(0 if all(r["ok"] for r in status["tarefas"] if r["tarefa"] in rodadas) else 1)
