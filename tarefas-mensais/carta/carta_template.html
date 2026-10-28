@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carta Mensal EH</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<!--
+  Modelo da carta mensal da EH Investimentos (A4, uma página por folha).
+  O conteúdo vem do objeto DADOS no fim do arquivo, que o carta_mensal.py preenche
+  com os dados do mês (índices, gráficos) e os textos. A paginação é automática:
+  o texto que não cabe numa página continua na seguinte.
+-->
+<style>
+  :root{
+    --navy:#002060; --navy-mid:#0B2E7A; --navy-deep:#001848;
+    --amber:#EE9A1E; --amber-2:#F4AE45; --bronze:#92600D;
+    --cream:#F7F5EF; --cream-2:#EFEBE1; --white:#FFFFFF;
+    --ink:#2A3550; --ink-2:#42506E; --gray:#6C6D70; --gray-blue:#9AA6C6;
+    --rule:rgba(0,32,96,0.12); --rule-soft:rgba(0,32,96,0.06);
+    --pos:#1F7A4D; --neg:#B3261E;
+    --pageW:794px; --pageH:1123px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{background:#0E1A33;font-family:'Manrope',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;padding:30px 16px 80px;}
+  h1,h2,h3,h4,p{margin:0;}
+
+  .toolbar{max-width:var(--pageW);margin:0 auto 20px;display:flex;align-items:center;gap:14px;color:#BFC7DE;font-size:13px;}
+  .toolbar button{display:inline-flex;align-items:center;gap:9px;cursor:pointer;background:var(--amber);border:0;color:var(--navy);padding:10px 18px;border-radius:6px;font-weight:700;font-size:13px;font-family:inherit;letter-spacing:0.02em;}
+  .toolbar button:hover{background:var(--amber-2);}
+  .toolbar svg{width:15px;height:15px;}
+
+  #stage{width:100%;}
+  .page-wrap{position:relative;margin:0 auto 24px;}
+  .page{width:var(--pageW);height:var(--pageH);background:var(--cream);position:absolute;top:0;left:0;transform-origin:top left;box-shadow:0 24px 70px rgba(0,0,0,0.45);overflow:hidden;display:flex;flex-direction:column;}
+
+  /* ── cabeçalho e rodapé das páginas internas ── */
+  .phead{flex:0 0 auto;padding:34px 54px 0;}
+  .phead-row{display:flex;justify-content:space-between;align-items:center;}
+  .lockup{display:flex;align-items:center;gap:10px;}
+  .lockup img{height:24px;width:auto;display:block;}
+  .lockup .nm{font-weight:800;font-size:11.5px;letter-spacing:0.14em;color:var(--navy);}
+  .lockup .sub{font-weight:400;font-size:9.5px;letter-spacing:0.2em;color:var(--gray);}
+  .phead-right{display:flex;align-items:center;gap:10px;}
+  .pill{font-size:8.5px;letter-spacing:0.22em;font-weight:800;color:var(--navy);background:var(--amber);padding:5px 10px;border-radius:100px;white-space:nowrap;}
+  .period{font-size:9px;letter-spacing:0.22em;color:var(--gray);font-weight:600;white-space:nowrap;}
+  .phead-rule{height:1px;background:var(--rule);margin-top:13px;}
+  .pbody{flex:1 1 auto;min-height:0;padding:26px 54px 0;display:flex;flex-direction:column;overflow:hidden;}
+  .pfoot{flex:0 0 auto;margin:12px 54px 28px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--rule);padding-top:10px;font-size:8.5px;letter-spacing:0.16em;color:var(--gray);font-weight:600;}
+
+  /* ── títulos de seção ── */
+  .kicker{font-size:10px;letter-spacing:0.24em;color:var(--bronze);font-weight:700;text-transform:uppercase;}
+  .sec-title{font-family:'Fraunces',serif;font-weight:600;font-size:31px;color:var(--navy);letter-spacing:-0.01em;line-height:1.06;margin-top:8px;}
+  .sec-title .hl{color:var(--bronze);}
+  .sec-title .cont{font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:0.16em;color:var(--gray);font-weight:600;text-transform:uppercase;margin-left:10px;vertical-align:middle;}
+  .accent{width:60px;height:2px;background:var(--amber);margin:14px 0 4px;flex:0 0 auto;}
+  .sec-desc{font-size:13px;line-height:1.55;color:var(--ink-2);margin-top:12px;}
+
+  /* ── texto corrido ── */
+  .letter{margin-top:14px;font-size:13.6px;line-height:1.66;color:var(--ink);text-align:justify;hyphens:auto;}
+  .letter p{margin:0 0 11px;text-wrap:pretty;}
+  .letter strong{color:var(--navy);font-weight:700;}
+  .letter.drop p:first-child::first-letter{font-family:'Fraunces',serif;font-size:3.1em;font-weight:600;color:var(--amber);float:left;line-height:0.82;padding:5px 8px 0 0;}
+
+  /* ── gráficos ── */
+  .chart-block{margin-top:18px;flex:0 0 auto;background:var(--white);border:1px solid rgba(0,32,96,0.10);border-radius:8px;padding:16px 18px 12px;position:relative;overflow:hidden;}
+  .chart-block::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--amber);}
+  .chart-title{font-size:9.5px;letter-spacing:0.2em;color:var(--bronze);font-weight:700;text-transform:uppercase;margin-bottom:10px;}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:8px;}
+  .legend .item{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--ink-2);font-weight:600;white-space:nowrap;}
+  .legend .item b{font-weight:700;}
+  .legend .sw{width:18px;height:3px;border-radius:2px;}
+  svg.chart{width:100%;height:auto;display:block;}
+  .chart-note{font-size:9.5px;color:var(--gray);margin-top:6px;}
+
+  /* ── tabelas ── */
+  table.tab{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;margin-top:18px;}
+  table.tab thead th{background:var(--navy);color:#fff;font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;font-weight:700;text-align:right;padding:10px 12px;}
+  table.tab thead th:first-child{text-align:left;border-radius:4px 0 0 4px;}
+  table.tab thead th:last-child{border-radius:0 4px 4px 0;}
+  table.tab thead th.hl{color:var(--amber);}
+  table.tab tbody td{padding:11px 12px;border-bottom:1px solid var(--rule-soft);text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink);}
+  table.tab tbody td:first-child{text-align:left;}
+  table.tab .name{font-weight:700;color:var(--navy);font-size:13px;}
+  table.tab .sub{display:block;font-weight:500;font-size:9.5px;color:var(--gray);letter-spacing:0.03em;margin-top:2px;}
+  table.tab .valor{font-family:'Fraunces',serif;font-size:15px;color:var(--navy);font-weight:600;}
+  td.pos{color:var(--pos) !important;} td.neg{color:var(--neg) !important;} td.na{color:rgba(0,32,96,0.25) !important;}
+  .tab-note{font-size:9.5px;color:var(--gray);margin-top:10px;}
+
+  /* ── indicadores em destaque (borda âmbar) ── */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px;}
+  .kpi{border-left:2px solid var(--amber);padding:4px 0 4px 12px;}
+  .kpi .lab{font-size:8.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--bronze);font-weight:700;}
+  .kpi .val{font-family:'Fraunces',serif;font-size:23px;color:var(--navy);font-weight:600;margin-top:5px;}
+  .focus{margin-top:26px;}
+  .focus h4{font-size:9.5px;letter-spacing:0.2em;text-transform:uppercase;color:var(--bronze);font-weight:700;}
+
+  /* ── capa ── */
+  .cover{padding:0;position:relative;}
+  .cover .left{position:absolute;inset:0 42% 0 0;padding:44px 40px 44px 54px;display:flex;flex-direction:column;}
+  .cover .right{position:absolute;top:0;right:0;bottom:0;width:42%;background:var(--navy);color:#fff;padding:44px 40px;display:flex;flex-direction:column;overflow:hidden;}
+  .cover .right::before{content:"";position:absolute;top:0;left:0;right:0;height:8px;background:var(--amber);}
+  .cover .ring{position:absolute;border-radius:50%;pointer-events:none;}
+  .cover .ring.a{width:420px;height:420px;top:-170px;right:-170px;border:1px solid rgba(238,154,30,0.22);}
+  .cover .ring.b{width:300px;height:300px;top:-110px;right:-110px;border:1px solid rgba(255,255,255,0.07);}
+  .cover .wm{position:absolute;right:24px;top:300px;font-family:'Fraunces',serif;font-size:190px;font-weight:600;color:rgba(238,154,30,0.12);line-height:0.8;letter-spacing:-0.02em;}
+  .cover .lockup img{height:38px;}
+  .cover .lockup .nm{font-size:14px;}
+  .cover .lockup .sub{font-size:9px;letter-spacing:0.3em;margin-top:5px;}
+  .cover .lockup .txt{display:flex;flex-direction:column;line-height:1;}
+  .cover .mid{margin-top:auto;margin-bottom:auto;}
+  .cover .eyebrow{font-size:10.5px;letter-spacing:0.3em;color:var(--bronze);font-weight:700;margin-bottom:20px;text-transform:uppercase;}
+  .cover h1{font-family:'Fraunces',serif;font-weight:600;font-size:66px;line-height:0.98;letter-spacing:-0.015em;color:var(--navy);}
+  .cover h1 span{color:var(--bronze);}
+  .cover .line{width:70px;height:2px;background:var(--amber);margin:28px 0 20px;}
+  .cover .subtitle{font-size:13.5px;line-height:1.6;color:var(--ink-2);max-width:330px;}
+  .cover .bottom{font-size:9px;letter-spacing:0.22em;color:var(--gray);font-weight:700;}
+  .cover .ref-lab{font-size:9px;letter-spacing:0.24em;color:var(--amber);font-weight:700;position:relative;z-index:1;margin-top:40px;}
+  .cover .ref-val{font-family:'Fraunces',serif;font-size:30px;font-weight:600;margin-top:6px;position:relative;z-index:1;}
+  .cover .hl-list{margin-top:auto;position:relative;z-index:1;display:flex;flex-direction:column;gap:20px;}
+  .cover .hl-item{border-left:2px solid rgba(238,154,30,0.6);padding-left:14px;}
+  .cover .hl-lab{font-size:8.5px;letter-spacing:0.2em;color:#BFC7DE;font-weight:700;text-transform:uppercase;}
+  .cover .hl-val{font-family:'Fraunces',serif;font-size:25px;font-weight:600;margin-top:4px;color:#fff;}
+  .cover .hl-val.pos{color:#4CAF82;} .cover .hl-val.neg{color:#E05555;}
+
+  /* ── encerramento ── */
+  .disclaimer{margin-top:auto;padding-top:16px;font-size:9px;line-height:1.55;color:var(--gray);}
+
+  @page{size:A4 portrait;margin:0;}
+  @media print{
+    body{background:#fff;padding:0;}
+    .toolbar{display:none !important;}
+    #stage{width:auto;}
+    .page-wrap{width:auto !important;height:auto !important;margin:0 !important;position:static !important;}
+    .page{position:relative !important;transform:none !important;box-shadow:none !important;break-after:page;page-break-after:always;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .page-wrap:last-child .page{break-after:auto;page-break-after:auto;}
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button id="printBtn" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Salvar PDF
+  </button>
+  <span id="fname"></span>
+</div>
+
+<div id="stage"></div>
+
+<script>
+const DADOS = /*DADOS*/null;
+const LOGO = /*LOGO*/"Logo_EH.png";
+
+const CORES = ['#002060', '#EE9A1E', '#9AA6C6', '#0B2E7A', '#F4AE45'];
+const MENOS = '−';
+
+// ── formatação ─────────────────────────────────────────────────────────────
+function pct(v, casas = 2, sinal = true) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  const s = Math.abs(v).toFixed(casas).replace('.', ',');
+  return (sinal ? (v > 0 ? '+ ' : v < 0 ? MENOS + ' ' : '') : (v < 0 ? MENOS + ' ' : '')) + s + '%';
+}
+function numero(v, casas = 0) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  return v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
+}
+function esc(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+// **negrito** e quebras de parágrafo (linha em branco)
+function paragrafos(texto) {
+  return String(texto || '').split(/\n\s*\n/).map(p => p.trim()).filter(Boolean)
+    .map(p => esc(p).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, ' '));
+}
+function titulo(sec) {
+  return esc(sec.titulo) + (sec.destaque ? ' <span class="hl">' + esc(sec.destaque) + '</span>' : '');
+}
+
+// ── gráficos (SVG) ─────────────────────────────────────────────────────────
+function escala(min, max) {
+  const span = (max - min) || 1, bruto = span / 5;
+  const passos = [0.25, 0.5, 1, 2, 2.5, 5, 10, 20, 25, 50];
+  const st = passos.find(s => s >= bruto) || 50;
+  return { lo: Math.floor(min / st) * st, hi: Math.ceil(max / st) * st, st };
+}
+function graficoLinha(series, datas) {
+  const L = 62, R = 880, T = 14, B = 230, n = datas.length;
+  const vals = [];
+  series.forEach(s => s.d.forEach(v => { if (v !== null && v !== undefined) vals.push(v); }));
+  const sc = escala(Math.min(0, ...vals), Math.max(0, ...vals));
+  const y = v => B - ((v - sc.lo) / (sc.hi - sc.lo)) * (B - T);
+  const x = i => L + (n > 1 ? i / (n - 1) : 0) * (R - L);
+  let g = '';
+  for (let t = sc.lo; t <= sc.hi + 1e-9; t += sc.st) {
+    const yy = y(t), zero = Math.abs(t) < 1e-9;
+    g += `<line x1="${L}" y1="${yy.toFixed(1)}" x2="${R}" y2="${yy.toFixed(1)}" stroke="rgba(0,32,96,${zero ? 0.35 : 0.08})" stroke-width="${zero ? 1.3 : 1}"/>`;
+    g += `<text x="${L - 10}" y="${(yy + 4).toFixed(1)}" text-anchor="end" font-size="14" font-weight="600" fill="#6C6D70" font-family="Manrope">${pct(Math.round(t * 100) / 100, sc.st < 1 ? 2 : 0, false).replace(' ', '')}</text>`;
+  }
+  const marcas = n <= 6 ? [...Array(n).keys()] : [0, Math.round(n * 0.2), Math.round(n * 0.4), Math.round(n * 0.6), Math.round(n * 0.8), n - 1];
+  [...new Set(marcas)].forEach(i => {
+    g += `<text x="${x(i).toFixed(1)}" y="256" text-anchor="middle" font-size="13.5" font-weight="600" fill="#6C6D70" font-family="Manrope">${esc(datas[i])}</text>`;
+  });
+  series.forEach(s => {
+    let d = '', aberto = false;
+    s.d.forEach((v, i) => {
+      if (v === null || v === undefined) return;
+      d += (aberto ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1) + ' ';
+      aberto = true;
+    });
+    g += `<path d="${d}" fill="none" stroke="${s.c}" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>`;
+    const ult = s.d.map((v, i) => [v, i]).filter(p => p[0] !== null && p[0] !== undefined).pop();
+    if (ult) g += `<circle cx="${x(ult[1]).toFixed(1)}" cy="${y(ult[0]).toFixed(1)}" r="3.6" fill="${s.c}"/>`;
+  });
+  return `<svg class="chart" viewBox="0 0 900 262" role="img" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
+}
+function graficoBarras(itens, destaque) {
+  const L = 250, R = 850, T = 10, rowH = 40, H = T + itens.length * rowH + 34;
+  const m = Math.max(...itens.map(i => Math.abs(i.v))) * 1.25 || 1;
+  const x = v => L + ((v + m) / (2 * m)) * (R - L);
+  const st = escala(-m, m).st;
+  let g = '';
+  for (let t = -Math.floor(m / st) * st; t <= m + 1e-9; t += st) {
+    const xx = x(t), zero = Math.abs(t) < 1e-9;
+    g += `<line x1="${xx.toFixed(1)}" y1="${T}" x2="${xx.toFixed(1)}" y2="${T + itens.length * rowH}" stroke="rgba(0,32,96,${zero ? 0.35 : 0.08})" stroke-width="${zero ? 1.3 : 1}"/>`;
+    g += `<text x="${xx.toFixed(1)}" y="${T + itens.length * rowH + 24}" text-anchor="middle" font-size="13.5" font-weight="600" fill="#6C6D70" font-family="Manrope">${pct(t, st < 1 ? 1 : 0).replace(' ', '')}</text>`;
+  }
+  itens.forEach((it, i) => {
+    const cy = T + i * rowH + rowH / 2, x0 = x(0), x1 = x(it.v);
+    const cor = it.n === destaque ? '#EE9A1E' : '#002060';
+    g += `<text x="${L - 18}" y="${(cy + 4.5).toFixed(1)}" text-anchor="end" font-size="15.5" font-weight="${it.n === destaque ? 800 : 700}" fill="#002060" font-family="Manrope">${esc(it.n)}</text>`;
+    g += `<rect x="${Math.min(x0, x1).toFixed(1)}" y="${(cy - 12).toFixed(1)}" width="${Math.abs(x1 - x0).toFixed(1)}" height="24" rx="2" fill="${cor}"/>`;
+    const pos = it.v >= 0;
+    g += `<text x="${(pos ? x1 + 8 : x1 - 8).toFixed(1)}" y="${(cy + 5).toFixed(1)}" text-anchor="${pos ? 'start' : 'end'}" font-size="14.5" font-weight="700" fill="${pos ? '#1F7A4D' : '#B3261E'}" font-family="Manrope">${pct(it.v)}</text>`;
+  });
+  return `<svg class="chart" viewBox="0 0 900 ${H}" role="img" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
+}
+function blocoGrafico(gr) {
+  const indices = Object.fromEntries((DADOS.indices || []).map(i => [i.ticker, i]));
+  let corpo = '', legenda = '';
+  if (gr.tipo === 'barras') {
+    const itens = (DADOS.indices || []).filter(i => i.retorno !== null && i.retorno !== undefined)
+      .map(i => ({ n: i.nome, v: i.retorno })).sort((a, b) => b.v - a.v);
+    corpo = graficoBarras(itens, gr.destaque || 'Ibovespa');
+  } else {
+    const series = gr.series.filter(t => DADOS.series[t]).map((t, k) => ({ t, d: DADOS.series[t], c: CORES[k % CORES.length] }));
+    legenda = '<div class="legend">' + series.map(s => {
+      const i = indices[s.t] || { nome: s.t };
+      return `<div class="item"><span class="sw" style="background:${s.c}"></span>${esc(i.nome)}: <b>${pct(i.retorno)}</b></div>`;
+    }).join('') + '</div>';
+    corpo = graficoLinha(series, DADOS.datas);
+  }
+  const nota = gr.nota || `Retorno acumulado no mês (base ${DADOS.base_data} = 0%).`;
+  return `<div class="chart-block">${gr.titulo ? `<div class="chart-title">${esc(gr.titulo)}</div>` : ''}${legenda}${corpo}<div class="chart-note">${esc(nota)}</div></div>`;
+}
+
+// ── tabelas ────────────────────────────────────────────────────────────────
+function classe(v) { return v === null || v === undefined || v === '' ? 'na' : (typeof v === 'number' ? (v > 0 ? 'pos' : v < 0 ? 'neg' : '') : ''); }
+function tabelaIndices() {
+  const linhas = (DADOS.indices || []).map(i =>
+    `<tr><td><span class="name">${esc(i.nome)}</span></td><td>${esc(i.praca)}</td><td class="valor">${numero(i.fechamento)}</td><td class="${classe(i.retorno)}">${pct(i.retorno)}</td></tr>`).join('');
+  return `<table class="tab"><thead><tr><th>Índice</th><th>Praça</th><th>Fechamento</th><th class="hl">Mês</th></tr></thead><tbody>${linhas}</tbody></table>`;
+}
+function tabelaIndicadores(linhas) {
+  const cel = v => `<td class="${typeof v === 'string' && v.trim().startsWith(MENOS) || (typeof v === 'string' && v.trim().startsWith('-')) ? 'neg' : (v === '' || v === '—' || v === null || v === undefined ? 'na' : '')}">${esc(v || '—')}</td>`;
+  const corpo = linhas.map(l =>
+    `<tr><td><span class="name">${esc(l.nome)}</span>${l.sub ? `<span class="sub">${esc(l.sub)}</span>` : ''}</td><td class="valor">${esc(l.valor || '—')}</td>${cel(l.mes)}${cel(l.ano)}${cel(l.m12)}</tr>`).join('');
+  return `<table class="tab"><thead><tr><th>Indicador</th><th>Fechamento</th><th class="hl">Mês</th><th>Ano</th><th>12 meses</th></tr></thead><tbody>${corpo}</tbody></table>`;
+}
+
+// ── páginas ────────────────────────────────────────────────────────────────
+const stage = document.getElementById('stage');
+const paginas = [];
+
+function novaPagina(cls = '') {
+  const wrap = document.createElement('div');
+  wrap.className = 'page-wrap';
+  const pg = document.createElement('div');
+  pg.className = 'page ' + cls;
+  wrap.appendChild(pg);
+  stage.appendChild(wrap);
+  paginas.push(pg);
+  return pg;
+}
+function paginaInterna() {
+  const pg = novaPagina();
+  pg.innerHTML = `
+    <div class="phead"><div class="phead-row">
+      <div class="lockup"><img src="${LOGO}" alt="EH"><span class="nm">EH INVESTIMENTOS</span><span class="sub">· GESTÃO FINANCEIRA</span></div>
+      <div class="phead-right"><span class="pill">CARTA MENSAL</span><span class="period">${esc(DADOS.mes_nome.toUpperCase())} ${DADOS.ano}</span></div>
+    </div><div class="phead-rule"></div></div>
+    <div class="pbody"></div>
+    <div class="pfoot"><span>EH INVESTIMENTOS · CARTA MENSAL</span><span class="pg"></span></div>`;
+  return pg.querySelector('.pbody');
+}
+function cabe(body) { return body.scrollHeight <= body.clientHeight + 1; }
+function cabecalhoSecao(body, sec, n, cont) {
+  body.insertAdjacentHTML('beforeend',
+    `<div class="kicker">${String(n).padStart(2, '0')} · ${esc(sec.kicker || '')}</div>` +
+    `<h2 class="sec-title">${titulo(sec)}${cont ? '<span class="cont">continuação</span>' : ''}</h2><div class="accent"></div>` +
+    (sec.descricao && !cont ? `<div class="sec-desc">${esc(sec.descricao)}</div>` : ''));
+}
+
+function renderCapa() {
+  const pg = novaPagina('cover');
+  const hl = (DADOS.destaques || []).map(d =>
+    `<div class="hl-item"><div class="hl-lab">${esc(d.rotulo)}</div><div class="hl-val ${d.classe || ''}">${esc(d.valor)}</div></div>`).join('');
+  pg.innerHTML = `
+    <div class="left">
+      <div class="lockup"><img src="${LOGO}" alt="EH"><div class="txt"><span class="nm">EH INVESTIMENTOS</span><span class="sub">GESTÃO FINANCEIRA</span></div></div>
+      <div class="mid">
+        <div class="eyebrow">Carta mensal · ${esc(DADOS.mes_nome)} de ${DADOS.ano}</div>
+        <h1>Carta<br><span>Mensal</span></h1>
+        <div class="line"></div>
+        <div class="subtitle">${esc(DADOS.subtitulo || 'Panorama macroeconômico e de mercados: cenário global e doméstico do mês.')}</div>
+      </div>
+      <div class="bottom">BELO HORIZONTE · MG</div>
+    </div>
+    <div class="right">
+      <div class="ring a"></div><div class="ring b"></div><div class="wm">EH</div>
+      <div class="ref-lab">MÊS DE REFERÊNCIA</div>
+      <div class="ref-val">${esc(DADOS.mes_nome)} ${DADOS.ano}</div>
+      <div class="hl-list">${hl}</div>
+    </div>`;
+}
+
+// Coloca blocos na página; texto que não cabe passa para uma página de continuação,
+// quebrando entre parágrafos e, se preciso, entre frases.
+function renderSecao(sec, n) {
+  let body = paginaInterna();
+  cabecalhoSecao(body, sec, n, false);
+  let letter = null, primeira = true;
+  const continuar = () => { body = paginaInterna(); cabecalhoSecao(body, sec, n, true); letter = null; };
+  const novoLetter = () => {
+    letter = document.createElement('div');
+    letter.className = 'letter' + (primeira && sec.capitular ? ' drop' : '');
+    body.appendChild(letter);
+  };
+
+  for (const p of paragrafos(sec.texto)) {
+    if (!letter) novoLetter();
+    const el = document.createElement('p');
+    el.innerHTML = p;
+    letter.appendChild(el);
+    if (cabe(body)) { primeira = false; continue; }
+    // não coube inteiro: tenta frase a frase
+    letter.removeChild(el);
+    const frases = p.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [p];
+    let resto = frases.slice();
+    const parte = document.createElement('p');
+    letter.appendChild(parte);
+    let usadas = 0;
+    while (usadas < resto.length) {
+      parte.innerHTML = resto.slice(0, usadas + 1).join('');
+      if (!cabe(body)) break;
+      usadas++;
+    }
+    if (usadas === 0) letter.removeChild(parte); else parte.innerHTML = resto.slice(0, usadas).join('');
+    if (!letter.children.length) body.removeChild(letter);
+    continuar();
+    novoLetter();
+    primeira = false;
+    const final = document.createElement('p');
+    final.innerHTML = resto.slice(usadas).join('');
+    letter.appendChild(final);
+  }
+
+  const blocos = [];
+  (sec.graficos || []).forEach(gr => blocos.push(blocoGrafico(gr)));
+  if (sec.tabela === 'indices') blocos.push(tabelaIndices() + (sec.nota_tabela ? `<div class="tab-note">${esc(sec.nota_tabela)}</div>` : ''));
+  if (sec.tabela === 'indicadores' && (DADOS.indicadores || []).length)
+    blocos.push(tabelaIndicadores(DADOS.indicadores) + `<div class="tab-note">Valores de referência no fechamento do mês. Variações não divulgadas para o período aparecem como “—”.</div>`);
+  if (sec.focus && (DADOS.focus || []).length)
+    blocos.push(`<div class="focus"><h4>${esc(DADOS.focus_titulo || 'Boletim Focus · projeções para o fim do ano')}</h4><div class="kpis">` +
+      DADOS.focus.map(f => `<div class="kpi"><div class="lab">${esc(f.rotulo)}</div><div class="val">${esc(f.valor)}</div></div>`).join('') + '</div></div>');
+
+  for (const html of blocos) {
+    const holder = document.createElement('div');
+    holder.innerHTML = html;
+    const bloco = holder.firstElementChild;
+    const extras = [...holder.children];
+    extras.forEach(e => body.appendChild(e));
+    if (!cabe(body)) {
+      extras.forEach(e => body.removeChild(e));
+      continuar();
+      extras.forEach(e => body.appendChild(e));
+    }
+  }
+}
+
+function renderEncerramento(body) {
+  body.insertAdjacentHTML('beforeend', `<div class="disclaimer">${esc(DADOS.aviso ||
+    'Este material tem caráter exclusivamente informativo e não constitui recomendação de investimento. As informações foram obtidas de fontes consideradas confiáveis, mas não há garantia de exatidão. Rentabilidade passada não é garantia de rentabilidade futura. EH Investimentos · Consultoria de valores mobiliários registrada na CVM.')}</div>`);
+  if (!cabe(body)) {
+    const d = body.lastElementChild; body.removeChild(d);
+    const novo = paginaInterna(); novo.appendChild(d);
+  }
+}
+
+function render() {
+  document.title = `Carta Mensal EH · ${DADOS.mes_nome} ${DADOS.ano}`;
+  document.getElementById('fname').textContent = `Carta Mensal · ${DADOS.mes_nome} ${DADOS.ano} · A4`;
+  renderCapa();
+  (DADOS.secoes || []).forEach((s, i) => renderSecao(s, i + 1));
+  const ultimo = paginas[paginas.length - 1].querySelector('.pbody');
+  if (ultimo) renderEncerramento(ultimo);
+  const total = paginas.length;
+  paginas.forEach((pg, i) => {
+    const el = pg.querySelector('.pg');
+    if (el) el.textContent = `${DADOS.mes_nome.toUpperCase()} ${DADOS.ano} · ${String(i + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
+  });
+  ajustar();
+}
+
+function ajustar() {
+  const escalaPg = Math.min(1, stage.clientWidth / 794);
+  document.querySelectorAll('.page-wrap').forEach(w => {
+    w.style.width = (794 * escalaPg) + 'px';
+    w.style.height = (1123 * escalaPg) + 'px';
+    w.querySelector('.page').style.transform = 'scale(' + escalaPg + ')';
+  });
+}
+window.addEventListener('resize', ajustar);
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+// Espera as fontes para medir o texto com a fonte certa antes de paginar
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(render);
+</script>
+</body>
+</html>

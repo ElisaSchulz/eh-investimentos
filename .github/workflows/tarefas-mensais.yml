@@ -1,0 +1,85 @@
+name: Tarefas mensais
+
+# Roda as tarefas mensais (dados da carta, indicadores, cotas e ETFs) e guarda os arquivos
+# no bucket privado "tarefas-mensais" do Supabase, onde a aba Tarefas Mensais do
+# admin mostra para baixar. Nada gerado fica no GitHub: o repositório é público.
+on:
+  schedule:
+    - cron: "0 10 2 * *"   # dia 2 de cada mês, 7h de Brasília
+  workflow_dispatch:
+    inputs:
+      mes:
+        description: "Mês de referência (AAAA-MM). Vazio = mês anterior"
+        required: false
+        default: ""
+      tarefas:
+        description: "Tarefas separadas por vírgula. Vazio = todas (carta_mensal, indicadores_americanos, cotas_fundos, cotas_b3, etfs)"
+        required: false
+        default: ""
+      data_inicio:
+        description: "Só cotas B3: data inicial própria (AAAA-MM-DD)"
+        required: false
+        default: ""
+      data_fim:
+        description: "Só cotas B3: data final própria (AAAA-MM-DD)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tarefas-mensais
+  cancel-in-progress: false
+
+jobs:
+  rodar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: tarefas-mensais
+    env:
+      SUPABASE_URL: https://migyqowqjfhvdcrtryms.supabase.co
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+      MES_REFERENCIA: ${{ inputs.mes }}
+      TAREFAS: ${{ inputs.tarefas }}
+      DATA_INICIO: ${{ inputs.data_inicio }}
+      DATA_FIM: ${{ inputs.data_fim }}
+      TZ: America/Sao_Paulo
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tarefas-mensais/requirements.txt
+
+      - name: Instalar dependências
+        run: pip install -q -r requirements.txt
+
+      - name: Mês de referência
+        run: |
+          if [ -z "$MES_REFERENCIA" ]; then
+            MES_REFERENCIA=$(date -d "$(date +%Y-%m-01) -1 day" +%Y-%m)
+          fi
+          echo "MES_REFERENCIA=$MES_REFERENCIA" >> "$GITHUB_ENV"
+          echo "PASTA_SAIDA=$RUNNER_TEMP/saida" >> "$GITHUB_ENV"
+          echo "Mês de referência: $MES_REFERENCIA"
+
+      - name: Rodar tarefas
+        id: rodar
+        continue-on-error: true
+        run: python rodar_todas.py
+
+      - name: Enviar arquivos para o Supabase
+        if: always()
+        run: python supabase_storage.py enviar "$PASTA_SAIDA" "$MES_REFERENCIA"
+
+      - name: Falhar se alguma tarefa falhou
+        if: steps.rodar.outcome == 'failure'
+        run: |
+          echo "Alguma tarefa falhou. Veja o passo 'Rodar tarefas' e o status.json no admin."
+          exit 1

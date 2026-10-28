@@ -1,0 +1,4 @@
+# Chave da FRED e arquivos gerados nunca vão para o GitHub (o repositório é público)
+chave_fred.txt
+saidas/
+__pycache__/
