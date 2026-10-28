@@ -48,17 +48,23 @@ jobs:
       DATA_INICIO: ${{ inputs.data_inicio }}
       DATA_FIM: ${{ inputs.data_fim }}
       TZ: America/Sao_Paulo
+      # O mstarpy abre o Chrome para pegar os cookies do Morningstar. O runner não tem
+      # tela, então ele roda numa tela virtual (xvfb-run) com estas opções.
+      SELENIUM_CHROME_FLAGS: "--no-sandbox --disable-dev-shm-usage --disable-gpu"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: tarefas-mensais/requirements.txt
 
       - name: Instalar dependências
-        run: pip install -q -r requirements.txt
+        run: |
+          pip install -q -r requirements.txt
+          command -v xvfb-run || (sudo apt-get update -q && sudo apt-get install -y -q xvfb)
+          google-chrome --version
 
       - name: Mês de referência
         run: |
@@ -69,10 +75,14 @@ jobs:
           echo "PASTA_SAIDA=$RUNNER_TEMP/saida" >> "$GITHUB_ENV"
           echo "Mês de referência: $MES_REFERENCIA"
 
+      - name: Status anterior do mês
+        if: env.TAREFAS != ''
+        run: python supabase_storage.py status "$PASTA_SAIDA" "$MES_REFERENCIA"
+
       - name: Rodar tarefas
         id: rodar
         continue-on-error: true
-        run: python rodar_todas.py
+        run: xvfb-run -a python rodar_todas.py
 
       - name: Enviar arquivos para o Supabase
         if: always()
