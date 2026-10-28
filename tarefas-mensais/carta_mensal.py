@@ -57,6 +57,15 @@ INDICES = {
 }
 EUA = ["^GSPC", "^IXIC", "^DJI"]
 
+# Nome curto e praça de cada índice na carta em HTML (modelo carta/carta_template.html)
+NOMES_CURTOS = {
+    "^BVSP": ("Ibovespa", "Brasil"), "^GSPC": ("S&P 500", "Estados Unidos"),
+    "^IXIC": ("Nasdaq", "Estados Unidos"), "^DJI": ("Dow Jones", "Estados Unidos"),
+    "^STOXX50E": ("Euro Stoxx 50", "Zona do Euro"), "^GDAXI": ("DAX", "Alemanha"),
+    "^FTSE": ("FTSE 100", "Reino Unido"), "000001.SS": ("Xangai (SSE)", "China"),
+    "^HSCE": ("Hang Seng China Ent.", "Hong Kong"), "^N225": ("Nikkei 225", "Japão"),
+}
+
 plt.rcParams["font.family"] = ["Arial", "Liberation Sans", "DejaVu Sans"]
 
 
@@ -84,7 +93,12 @@ def baixar_indices(inicio, fim):
         if d.empty:
             print(f"Aviso: sem dados de {t} ({INDICES[t]}) no mês.")
         dados[t] = d
-    df = pd.concat(dados, axis=1).sort_index()
+    return pd.concat(dados, axis=1).sort_index()
+
+
+def com_datas_texto(df):
+    """Mesmo DataFrame com as datas em texto (eixo dos gráficos sem buracos de fim de semana)."""
+    df = df.copy()
     df.index = df.index.strftime("%d/%m/%Y")
     return df
 
@@ -97,6 +111,65 @@ def limpar_eixos(ax, lados=("right", "left", "top", "bottom")):
     for lado in lados:
         ax.spines[lado].set_visible(False)
     ax.tick_params(axis="both", which="both", length=0)
+
+
+def _numero_ou_nada(v, casas=2):
+    return None if pd.isna(v) else round(float(v), casas)
+
+
+def _pct_texto(v):
+    sinal = "+ " if v > 0 else ("\u2212 " if v < 0 else "")
+    return f"{sinal}{abs(v):.2f}%".replace(".", ",")
+
+
+def selic_meta():
+    """Meta Selic mais recente (série 432 do SGS do Banco Central), ou None."""
+    import json
+    import urllib.request
+
+    url = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados/ultimos/1?formato=json"
+    try:
+        with urllib.request.urlopen(url, timeout=30) as resp:
+            return float(json.loads(resp.read())[0]["valor"])
+    except Exception as e:  # noqa: BLE001 (a carta sai sem a Selic na capa)
+        print(f"Aviso: não consegui buscar a Selic no Banco Central ({e}).")
+        return None
+
+
+def dados_carta(df, inicio, fim, mes_nome, ano):
+    """Dados do mês para o modelo HTML da carta: séries dos gráficos, tabela de índices
+    e destaques da capa. Os textos de cada seção entram depois, no editor."""
+    datas = df.index
+    series, indices = {}, []
+    for t, (nome, praca) in NOMES_CURTOS.items():
+        cum = df[(t, "Cumulative Return")]
+        series[t] = [_numero_ou_nada(v * 100) for v in cum]
+        ok = cum.dropna()
+        close = df[(t, "Close")].dropna()
+        indices.append({
+            "ticker": t, "nome": nome, "praca": praca,
+            "fechamento": _numero_ou_nada(close.iloc[-1], 0) if not close.empty else None,
+            "retorno": _numero_ou_nada(ok.iloc[-1] * 100) if not ok.empty else None,
+            "ultima_data": f"{ok.index[-1]:%d/%m/%Y}" if not ok.empty else None,
+        })
+    retorno = {i["ticker"]: i["retorno"] for i in indices}
+    destaques = []
+    for t, rotulo in (("^BVSP", "Ibovespa no mês"), ("^GSPC", "S&P 500 no mês")):
+        if retorno.get(t) is not None:
+            destaques.append({"rotulo": rotulo, "valor": _pct_texto(retorno[t]),
+                              "classe": "pos" if retorno[t] >= 0 else "neg"})
+    dolar = fechamentos_yahoo("BRL=X", inicio - timedelta(days=10), fim + timedelta(days=1)).dropna()
+    if not dolar.empty:
+        destaques.append({"rotulo": "Dólar (fechamento)", "valor": f"R$ {dolar.iloc[-1]:.2f}".replace(".", ",")})
+    selic = selic_meta()
+    if selic is not None:
+        destaques.append({"rotulo": "Selic", "valor": f"{selic:.2f}%".replace(".", ",")})
+    return {
+        "mes": f"{ano}-{inicio.month:02d}", "mes_nome": mes_nome, "ano": ano,
+        "base_data": f"{datas[0]:%d/%m/%Y}",
+        "datas": [f"{d:%d/%m}" for d in datas],
+        "series": series, "indices": indices, "destaques": destaques,
+    }
 
 
 # ------------------------------------------------------------------ gráficos
@@ -220,8 +293,16 @@ def main(mes=MES):
     saida = pasta_saida(ano, m)
     print(f"Carta mensal de {mes_nome}/{ano} ({inicio:%d/%m} a {fim:%d/%m})")
 
-    df = baixar_indices(inicio, fim)
+    df_datas = baixar_indices(inicio, fim)
+    df = com_datas_texto(df_datas)
     gerados = []
+
+    import json
+    dados = os.path.join(saida, "carta_dados.json")
+    with open(dados, "w", encoding="utf-8") as f:
+        json.dump(dados_carta(df_datas, inicio, fim, mes_nome, ano), f, ensure_ascii=False, indent=1)
+    gerados.append(dados)
+
     for marca, cfg in MARCAS.items():
         modelo = os.path.join(PASTA_MODELOS, cfg["modelo"])
         if not os.path.exists(modelo):
@@ -239,7 +320,7 @@ def main(mes=MES):
         montar_word(modelo, graficos, mes_nome, ano, docx)
         gerados.append(docx)
         print(f"Pronto: {docx}")
-    if not gerados:
+    if len(gerados) == 1:
         raise RuntimeError(f"Nenhum modelo de carta encontrado em {PASTA_MODELOS}.")
     return gerados
 
