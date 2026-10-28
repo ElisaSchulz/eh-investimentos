@@ -831,6 +831,10 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
     Gerador de Documentos
   </button>
+  <button class="mobile-drawer-link" id="mobileTarefasBtn" style="display:none;" onclick="showView('tarefas',this);closeDrawer()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 15l2 2 4-4"/></svg>
+    Tarefas Mensais
+  </button>
   <button class="mobile-drawer-link" id="mobileMensagensBtn" style="display:none;" onclick="showView('mensagens',this);closeDrawer()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
     Mensagens Padrão
@@ -899,6 +903,10 @@
     <button class="sidebar-link" onclick="showView('gerador',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
       Gerador de Documentos
+    </button>
+    <button class="sidebar-link" onclick="showView('tarefas',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 15l2 2 4-4"/></svg>
+      Tarefas Mensais
     </button>
     <button class="sidebar-link" onclick="showView('mensagens',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
@@ -1584,6 +1592,48 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     </div>
 
 
+    <!-- TAREFAS MENSAIS (admin only) -->
+    <div class="view" id="view-tarefas">
+      <div class="welcome-banner">
+        <h2>Tarefas <em>Mensais</em></h2>
+        <p>Carta mensal, indicadores americanos, cotas dos fundos UCITS, cotas da B3 e fechamentos de ETFs. As tarefas rodam sozinhas no GitHub todo dia 2, sempre para o mês anterior, e os arquivos ficam aqui para baixar.</p>
+      </div>
+
+      <div class="upload-panel">
+        <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 15l2 2 4-4"/></svg> Arquivos do mês</h3>
+        <div class="upload-form">
+          <div class="upload-field"><label>Mês de referência</label>
+            <select id="tmMes" onchange="tmCarregarMes(this.value)"><option value="">Carregando…</option></select>
+          </div>
+        </div>
+        <div class="ext-chips" id="tmResumo"></div>
+        <div class="ext-preview-wrap" style="max-height:none;">
+          <table class="ext-preview-table" id="tmTabela"></table>
+        </div>
+        <div class="msg-actions" style="display:flex;gap:0.8rem;flex-wrap:wrap;align-items:center;">
+          <a class="btn-download-ext" id="tmRodarLink" href="https://github.com/ElisaSchulz/eh-investimentos/actions/workflows/tarefas-mensais.yml" target="_blank" rel="noopener" style="text-decoration:none;">Rodar agora no GitHub ↗</a>
+          <span style="font-size:12px;color:var(--cream-faint);">No GitHub: <strong>Run workflow</strong>. Dá para escolher o mês, só algumas tarefas e, para a B3, um intervalo de datas. Leva uns 10 minutos.</span>
+        </div>
+      </div>
+
+      <div class="upload-panel">
+        <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 15l2 2 4-4"/></svg> Modelos da carta mensal</h3>
+        <p style="margin-bottom:1rem;">O Word de cada marca, com os marcadores {{MONTH}}, {{YEAR}}, {{PLOT1}}, {{PLOT2}} e {{PLOT3}}. A carta só é gerada para as marcas que têm modelo aqui. Enviar um modelo novo substitui o anterior.</p>
+        <div class="ext-preview-wrap" style="max-height:none;margin-bottom:1rem;">
+          <table class="ext-preview-table" id="tmModelos"></table>
+        </div>
+        <div class="upload-form">
+          <div class="upload-field"><label>Marca</label>
+            <select id="tmMarca"><option value="EH">EH</option><option value="HZ">HZ</option></select>
+          </div>
+          <div class="upload-field"><label>Arquivo .docx</label><input type="file" id="tmModeloArquivo" accept=".docx" /></div>
+        </div>
+        <button class="btn-download-ext" onclick="tmEnviarModelo()">Enviar modelo</button>
+        <div class="ext-status-box" id="tmModeloStatus"></div>
+      </div>
+    </div>
+
+
     <!-- MENSAGENS PADRÃO (admin only) -->
     <div class="view" id="view-mensagens">
       <div class="welcome-banner">
@@ -1847,6 +1897,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       document.getElementById('mobileEmailsBtn').style.display = 'flex';
       document.getElementById('mobileGeradorBtn').style.display = 'flex';
       document.getElementById('mobileMensagensBtn').style.display = 'flex';
+      document.getElementById('mobileTarefasBtn').style.display = 'flex';
     }
     restoreViewFromHash();
     loadReports();
@@ -1901,7 +1952,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.querySelectorAll('.mobile-drawer-link').forEach(l => l.classList.remove('active'));
     document.getElementById('view-' + viewId).classList.add('active');
     if (btn) btn.classList.add('active');
-    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Documentos', documentos:'Meus Documentos', extratos:'Extratos → Excel', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos', mensagens:'Mensagens Padrão' };
+    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Documentos', documentos:'Meus Documentos', extratos:'Extratos → Excel', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos', mensagens:'Mensagens Padrão', tarefas:'Tarefas Mensais' };
     const topbar = document.getElementById('topbarTitle');
     if (topbar) topbar.textContent = titles[viewId] || viewId;
     // keep the active tab in the URL so a refresh returns to it
@@ -1912,6 +1963,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     if (viewId === 'clientes') loadClientesView();
     if (viewId === 'gerador') geradorCarregarClientes();
     if (viewId === 'mensagens') msgInit();
+    if (viewId === 'tarefas') tmInit();
     if (viewId === 'perfil') populatePerfil();
   }
 
@@ -2434,7 +2486,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   // reopen the tab saved in the URL hash (e.g. #mensagens) after a refresh
-  const ADMIN_VIEWS = ['upload','extratos','cotas','emails','clientes','gerador','mensagens'];
+  const ADMIN_VIEWS = ['upload','extratos','cotas','emails','clientes','gerador','mensagens','tarefas'];
   function restoreViewFromHash() {
     const viewId = decodeURIComponent(window.location.hash.substring(1));
     if (!viewId || viewId === 'inicio' || !/^[a-z]+$/.test(viewId) || !document.getElementById('view-' + viewId)) return;
@@ -5048,6 +5100,118 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.querySelectorAll('#view-mensagens .msg-tab-content').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('msgtab-' + tab).classList.add('active');
+  }
+
+  // ══════════ TAREFAS MENSAIS (admin) ══════════
+  // Arquivos gerados pelo workflow "Tarefas mensais" do GitHub no bucket privado
+  // tarefas-mensais do Supabase: AAAA-MM/arquivos + AAAA-MM/status.json, e modelos/ da carta.
+  const TM_BUCKET = 'tarefas-mensais';
+  const TM_MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+  function tmNomeMes(mes) {
+    const [a, m] = mes.split('-');
+    return `${TM_MESES_PT[parseInt(m, 10) - 1]} ${a}`;
+  }
+
+  async function tmInit() {
+    const sel = document.getElementById('tmMes');
+    const { data, error } = await sb.storage.from(TM_BUCKET).list('', { limit: 200, sortBy: { column: 'name', order: 'desc' } });
+    if (error) {
+      sel.innerHTML = '<option value="">Erro ao carregar</option>';
+      document.getElementById('tmTabela').innerHTML = `<tr><td class="td-neg">Não consegui ler o bucket ${TM_BUCKET}: ${escHtml(error.message)}. Rodou o SQL supabase/2026-10-28_tarefas_mensais.sql?</td></tr>`;
+      return;
+    }
+    const meses = (data || []).map(i => i.name).filter(n => /^\d{4}-\d{2}$/.test(n)).sort().reverse();
+    const atual = sel.value;
+    sel.innerHTML = meses.length
+      ? meses.map(m => `<option value="${m}">${tmNomeMes(m)}</option>`).join('')
+      : '<option value="">Nenhuma execução ainda</option>';
+    if (meses.length) {
+      sel.value = meses.includes(atual) ? atual : meses[0];
+      tmCarregarMes(sel.value);
+    } else {
+      document.getElementById('tmResumo').innerHTML = '';
+      document.getElementById('tmTabela').innerHTML = '<tr><td class="td-na">As tarefas ainda não rodaram. Use "Rodar agora no GitHub" ou espere o dia 2.</td></tr>';
+    }
+    tmCarregarModelos();
+  }
+
+  async function tmCarregarMes(mes) {
+    const tabela = document.getElementById('tmTabela');
+    const resumo = document.getElementById('tmResumo');
+    if (!mes) return;
+    tabela.innerHTML = '<tr><td class="td-na">Carregando…</td></tr>';
+    const { data: arquivos, error } = await sb.storage.from(TM_BUCKET).list(mes, { limit: 500, sortBy: { column: 'name', order: 'asc' } });
+    if (error) { tabela.innerHTML = `<tr><td class="td-neg">${escHtml(error.message)}</td></tr>`; return; }
+    const nomes = (arquivos || []).filter(a => a.id).map(a => a.name);
+
+    let status = null;
+    if (nomes.includes('status.json')) {
+      const { data: blob } = await sb.storage.from(TM_BUCKET).download(`${mes}/status.json`);
+      try { status = blob ? JSON.parse(await blob.text()) : null; } catch (e) { status = null; }
+    }
+
+    const usados = new Set(['status.json']);
+    const linhas = [];
+    (status ? status.tarefas : []).forEach(t => {
+      t.arquivos.forEach(a => usados.add(a));
+      // gráficos da carta entram junto com a carta
+      if (t.tarefa === 'carta_mensal') nomes.filter(n => n.startsWith('carta-')).forEach(n => { usados.add(n); t.arquivos.push(n); });
+      linhas.push(t);
+    });
+    const outros = nomes.filter(n => !usados.has(n));
+    if (outros.length) linhas.push({ nome: 'Outros arquivos', ok: null, arquivos: outros, avisos: [], erro: null });
+
+    const ok = status ? status.tarefas.filter(t => t.ok).length : 0;
+    const total = status ? status.tarefas.length : 0;
+    const quando = status ? new Date(status.executado_em).toLocaleString('pt-BR') : '—';
+    resumo.innerHTML =
+      `<div class="ext-chip">Tarefas OK<span>${ok}/${total}</span></div>` +
+      `<div class="ext-chip">Rodou em<span>${escHtml(quando)}</span></div>` +
+      (status && status.execucao_url ? `<a class="ext-chip" style="text-decoration:none;" href="${escHtml(status.execucao_url)}" target="_blank" rel="noopener">Log no GitHub<span>↗</span></a>` : '');
+
+    if (!linhas.length) { tabela.innerHTML = '<tr><td class="td-na">Nenhum arquivo neste mês.</td></tr>'; return; }
+    tabela.innerHTML = '<tr><th>Tarefa</th><th>Status</th><th>Arquivos</th><th>Avisos</th></tr>' + linhas.map(t => {
+      const st = t.ok === null ? '<span class="td-na">—</span>' : t.ok ? '<span class="td-pos">OK</span>' : `<span class="td-neg">FALHOU</span><div class="td-na" style="white-space:normal;max-width:320px;">${escHtml(t.erro || '')}</div>`;
+      const arqs = t.arquivos.map(a =>
+        `<div><a href="#" onclick="tmBaixar('${mes}', decodeURIComponent('${encodeURIComponent(a)}'));return false;" style="color:var(--gold-text);">${escHtml(a)}</a></div>`).join('') || '<span class="td-na">—</span>';
+      const avisos = (t.avisos || []).map(a => `<div>${escHtml(a)}</div>`).join('') || '<span class="td-na">—</span>';
+      return `<tr><td style="vertical-align:top;font-weight:600;">${escHtml(t.nome)}</td><td style="vertical-align:top;">${st}</td><td style="vertical-align:top;">${arqs}</td><td style="vertical-align:top;white-space:normal;font-size:11px;color:var(--gold-text-2);">${avisos}</td></tr>`;
+    }).join('');
+  }
+
+  async function tmBaixar(pasta, nome) {
+    const { data, error } = await sb.storage.from(TM_BUCKET).createSignedUrl(`${pasta}/${nome}`, 120, { download: nome });
+    if (error) { alert('Não consegui baixar: ' + error.message); return; }
+    window.location.href = data.signedUrl;
+  }
+
+  async function tmCarregarModelos() {
+    const tabela = document.getElementById('tmModelos');
+    const { data, error } = await sb.storage.from(TM_BUCKET).list('modelos', { limit: 50 });
+    if (error) { tabela.innerHTML = `<tr><td class="td-neg">${escHtml(error.message)}</td></tr>`; return; }
+    const modelos = (data || []).filter(a => a.id);
+    tabela.innerHTML = modelos.length
+      ? '<tr><th>Modelo</th><th>Atualizado em</th></tr>' + modelos.map(m =>
+          `<tr><td><a href="#" onclick="tmBaixar('modelos', decodeURIComponent('${encodeURIComponent(m.name)}'));return false;" style="color:var(--gold-text);">${escHtml(m.name)}</a></td>` +
+          `<td>${m.updated_at ? new Date(m.updated_at).toLocaleString('pt-BR') : '—'}</td></tr>`).join('')
+      : '<tr><td class="td-na">Nenhum modelo enviado. Sem modelo, a carta mensal é pulada.</td></tr>';
+  }
+
+  async function tmEnviarModelo() {
+    const box = document.getElementById('tmModeloStatus');
+    const arquivo = document.getElementById('tmModeloArquivo').files[0];
+    const marca = document.getElementById('tmMarca').value;
+    box.classList.add('visible');
+    if (!arquivo) { box.innerHTML = '<span class="ext-log-err">Escolha o arquivo .docx do modelo.</span>'; return; }
+    if (!/\.docx$/i.test(arquivo.name)) { box.innerHTML = '<span class="ext-log-err">O modelo precisa ser um arquivo .docx.</span>'; return; }
+    box.innerHTML = 'Enviando…';
+    const { error } = await sb.storage.from(TM_BUCKET).upload(`modelos/Carta_Mensal_Template_${marca}.docx`, arquivo, {
+      upsert: true, contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    if (error) { box.innerHTML = `<span class="ext-log-err">Erro: ${escHtml(error.message)}</span>`; return; }
+    box.innerHTML = `<span class="ext-log-ok">Modelo ${marca} enviado. A próxima execução já usa este arquivo.</span>`;
+    document.getElementById('tmModeloArquivo').value = '';
+    tmCarregarModelos();
   }
 
   async function msgInit() {
