@@ -6,7 +6,7 @@ na aba **Tarefas Mensais** do admin do site.
 
 | Script | O que gera | Substitui |
 |---|---|---|
-| `carta_mensal.py` | Word da carta (EH e HZ) + os 3 gráficos | `template_carta_mensal.py` |
+| `carta_mensal.py` | `carta_dados.json`: gráficos, índices e destaques da capa da carta | `template_carta_mensal.py` |
 | `indicadores_americanos.py` | `USA_Indicators.xlsx` (CPI + índices) | `pyscript-indicadores-americanos.py` |
 | `cotas_fundos.py` | `cotacoes_fundos_<mês>_<ano>.xlsx` (NAV dos UCITS) | `baixar_cotas_fundos.py` |
 | `cotas_b3.py` | `cotas_b3_<mês>_<ano>.xlsx` (todos os pregões do mês) | `cotas_b3_datas.py` |
@@ -31,8 +31,14 @@ na aba **Tarefas Mensais** do admin do site.
    - `SUPABASE_SERVICE_ROLE_KEY`: Supabase → Project Settings → API → `service_role`.
    - `FRED_API_KEY`: a chave da FRED. Como a antiga ficou escrita no script, vale gerar
      uma nova em https://fred.stlouisfed.org/docs/api/api_key.html.
-3. **Modelos da carta:** na aba Tarefas Mensais do admin, enviar
-   `Carta_Mensal_Template_EH.docx` (e o da HZ, se quiser as duas).
+
+## Carta mensal
+
+A carta é montada no admin, na tela **Editor da Carta**: os dados do mês vêm do
+`carta_dados.json`, os textos de cada seção, os indicadores e o Focus são escritos ali
+(o rascunho fica salvo em `AAAA-MM/carta_textos.json` no Supabase) e a prévia em A4
+usa o modelo `carta/carta_template.html`. **Salvar PDF** imprime a carta;
+**Guardar carta final no site** grava o HTML junto dos arquivos do mês.
 
 ## Rodar fora do dia 2
 
@@ -45,6 +51,5 @@ data inicial e final.
 1. Copiar esta pasta para o computador e instalar: `pip install -r requirements.txt`
    (as cotas dos fundos pedem Python 3.11 ou mais novo).
 2. Criar `chave_fred.txt` nesta pasta com a chave da FRED (uma linha só).
-3. Para a carta, colocar os modelos `.docx` numa subpasta `modelos/`.
-4. Abrir o script e apertar **Run**. Para outro mês, preencher `MES = "2026-09"` no topo.
+3. Abrir o script e apertar **Run**. Para outro mês, preencher `MES = "2026-09"` no topo.
    Os arquivos vão para `saidas/AAAA-MM/`.

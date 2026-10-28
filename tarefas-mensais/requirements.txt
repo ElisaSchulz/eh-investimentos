@@ -1,8 +1,6 @@
 yfinance>=0.2.54
 pandas>=2.2
 numpy
-matplotlib
 openpyxl
-python-docx
 fredapi
 mstarpy

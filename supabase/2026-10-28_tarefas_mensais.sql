@@ -4,12 +4,14 @@
 -- do workflow "Tarefas mensais" no GitHub.
 --
 -- Estrutura do bucket:
---   modelos/Carta_Mensal_Template_EH.docx   (e _HZ.docx) — enviados pela aba do admin
---   AAAA-MM/...                             — arquivos gerados pelo GitHub Actions
---   AAAA-MM/status.json                     — resultado de cada tarefa
+--   AAAA-MM/...                  — arquivos gerados pelo GitHub Actions
+--   AAAA-MM/status.json          — resultado de cada tarefa
+--   AAAA-MM/carta_dados.json     — dados do mês para a carta (gerado pelo GitHub)
+--   AAAA-MM/carta_textos.json    — textos da carta, salvos pelo Editor da Carta
+--   AAAA-MM/Carta Mensal EH ...  — carta final em HTML, salva pelo Editor da Carta
 --
 -- O GitHub Actions grava com a service role key (ignora as políticas abaixo).
--- No site, só os e-mails de admin conseguem listar, baixar e enviar modelos.
+-- No site, só os e-mails de admin conseguem listar, baixar e gravar arquivos.
 
 insert into storage.buckets (id, name, public)
 values ('tarefas-mensais', 'tarefas-mensais', false)

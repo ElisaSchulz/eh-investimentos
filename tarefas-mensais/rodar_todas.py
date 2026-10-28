@@ -22,7 +22,7 @@ MES = None
 TAREFAS = ["carta_mensal", "indicadores_americanos", "cotas_fundos", "cotas_b3", "etfs"]
 
 NOMES = {
-    "carta_mensal": "Carta mensal",
+    "carta_mensal": "Dados da carta mensal",
     "indicadores_americanos": "Indicadores americanos",
     "cotas_fundos": "Cotas dos fundos UCITS",
     "cotas_b3": "Cotas B3",

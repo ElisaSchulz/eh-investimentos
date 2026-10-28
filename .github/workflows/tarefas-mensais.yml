@@ -1,6 +1,6 @@
 name: Tarefas mensais
 
-# Roda as tarefas mensais (carta, indicadores, cotas e ETFs) e guarda os arquivos
+# Roda as tarefas mensais (dados da carta, indicadores, cotas e ETFs) e guarda os arquivos
 # no bucket privado "tarefas-mensais" do Supabase, onde a aba Tarefas Mensais do
 # admin mostra para baixar. Nada gerado fica no GitHub: o repositório é público.
 on:
@@ -57,9 +57,6 @@ jobs:
           cache: pip
           cache-dependency-path: tarefas-mensais/requirements.txt
 
-      - name: Fontes (Liberation Sans no lugar da Arial)
-        run: sudo apt-get install -y -q fonts-liberation >/dev/null
-
       - name: Instalar dependências
         run: pip install -q -r requirements.txt
 
@@ -71,9 +68,6 @@ jobs:
           echo "MES_REFERENCIA=$MES_REFERENCIA" >> "$GITHUB_ENV"
           echo "PASTA_SAIDA=$RUNNER_TEMP/saida" >> "$GITHUB_ENV"
           echo "Mês de referência: $MES_REFERENCIA"
-
-      - name: Baixar modelos da carta
-        run: python supabase_storage.py baixar-modelos modelos
 
       - name: Rodar tarefas
         id: rodar

@@ -749,6 +749,28 @@
     @media (max-width: 768px) {
       .ord-rows th:nth-child(1), .ord-rows td:nth-child(1) { width: 34%; }
     }
+    /* ── EDITOR DA CARTA (admin) ── */
+    .ec-layout { display:grid; grid-template-columns: minmax(340px, 440px) 1fr; gap:1.5rem; align-items:start; }
+    .ec-form { display:flex; flex-direction:column; gap:1.2rem; }
+    .ec-form .upload-panel { margin-bottom:0; padding:1.5rem; }
+    .ec-form .upload-panel h3 { font-size:1.1rem; margin-bottom:1rem; }
+    .ec-sec { margin-bottom:1.3rem; }
+    .ec-sec:last-child { margin-bottom:0; }
+    .ec-sec textarea { min-height:150px; font-size:13px; }
+    .ec-hint { font-size:11.5px; color:var(--cream-faint); line-height:1.5; margin-top:0.35rem; }
+    .ec-grid { width:100%; border-collapse:collapse; font-size:12px; }
+    .ec-grid th { font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:var(--cream-faint); font-weight:600; text-align:left; padding:0 4px 6px; }
+    .ec-grid td { padding:2px 3px; }
+    .ec-grid input { width:100%; background:transparent; border:none; border-bottom:1px solid var(--rule-strong); color:var(--cream); font-family:'Manrope',sans-serif; font-size:12px; padding:5px 2px; outline:none; }
+    .ec-grid input:focus { border-bottom-color:var(--gold); }
+    .ec-grid button { background:none; border:none; color:var(--err-text); cursor:pointer; font-size:15px; line-height:1; padding:0 4px; }
+    .ec-link { background:none; border:none; color:var(--gold-text); font-family:'Manrope',sans-serif; font-weight:700; font-size:12px; cursor:pointer; padding:0.5rem 0 0; }
+    .ec-preview { position:sticky; top:1rem; background:#0E1A33; border:1px solid var(--rule-strong); height:calc(100vh - 140px); min-height:520px; }
+    .ec-preview iframe { width:100%; height:100%; border:0; display:block; }
+    .ec-acoes { display:flex; flex-wrap:wrap; gap:0.7rem; align-items:center; margin-bottom:1rem; }
+    .ec-acoes .btn-download-ext { margin-top:0; }
+    .ec-salvo { font-size:11.5px; color:var(--cream-faint); }
+    @media (max-width: 1100px) { .ec-layout { grid-template-columns: 1fr; } .ec-preview { position:relative; top:0; height:80vh; } }
   </style>
   <link rel="stylesheet" href="eh-tema.css" />
 </head>
@@ -835,6 +857,10 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 15l2 2 4-4"/></svg>
     Tarefas Mensais
   </button>
+  <button class="mobile-drawer-link" id="mobileEditorCartaBtn" style="display:none;" onclick="showView('editorcarta',this);closeDrawer()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+    Editor da Carta
+  </button>
   <button class="mobile-drawer-link" id="mobileMensagensBtn" style="display:none;" onclick="showView('mensagens',this);closeDrawer()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
     Mensagens Padrão
@@ -907,6 +933,10 @@
     <button class="sidebar-link" onclick="showView('tarefas',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 15l2 2 4-4"/></svg>
       Tarefas Mensais
+    </button>
+    <button class="sidebar-link" onclick="showView('editorcarta',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+      Editor da Carta
     </button>
     <button class="sidebar-link" onclick="showView('mensagens',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
@@ -1596,7 +1626,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     <div class="view" id="view-tarefas">
       <div class="welcome-banner">
         <h2>Tarefas <em>Mensais</em></h2>
-        <p>Carta mensal, indicadores americanos, cotas dos fundos UCITS, cotas da B3 e fechamentos de ETFs. As tarefas rodam sozinhas no GitHub todo dia 2, sempre para o mês anterior, e os arquivos ficam aqui para baixar.</p>
+        <p>Dados da carta mensal, indicadores americanos, cotas dos fundos UCITS, cotas da B3 e fechamentos de ETFs. As tarefas rodam sozinhas no GitHub todo dia 2, sempre para o mês anterior, e os arquivos ficam aqui para baixar. A carta é escrita no Editor da Carta.</p>
       </div>
 
       <div class="upload-panel">
@@ -1615,21 +1645,26 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           <span style="font-size:12px;color:var(--cream-faint);">No GitHub: <strong>Run workflow</strong>. Dá para escolher o mês, só algumas tarefas e, para a B3, um intervalo de datas. Leva uns 10 minutos.</span>
         </div>
       </div>
+    </div>
 
-      <div class="upload-panel">
-        <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 15l2 2 4-4"/></svg> Modelos da carta mensal</h3>
-        <p style="margin-bottom:1rem;">O Word de cada marca, com os marcadores {{MONTH}}, {{YEAR}}, {{PLOT1}}, {{PLOT2}} e {{PLOT3}}. A carta só é gerada para as marcas que têm modelo aqui. Enviar um modelo novo substitui o anterior.</p>
-        <div class="ext-preview-wrap" style="max-height:none;margin-bottom:1rem;">
-          <table class="ext-preview-table" id="tmModelos"></table>
+
+    <!-- EDITOR DA CARTA (admin only) -->
+    <div class="view" id="view-editorcarta">
+      <div class="welcome-banner">
+        <h2>Editor da <em>Carta</em></h2>
+        <p>Os gráficos, os índices e os destaques da capa vêm dos dados do mês, gerados no dia 2. Escreva o texto de cada seção e confira a carta em A4 ao lado. O rascunho é salvo sozinho.</p>
+      </div>
+      <div class="ec-acoes">
+        <div class="upload-field" style="min-width:200px;"><label>Mês da carta</label>
+          <select id="ecMes" onchange="ecCarregar(this.value)"><option value="">Carregando…</option></select>
         </div>
-        <div class="upload-form">
-          <div class="upload-field"><label>Marca</label>
-            <select id="tmMarca"><option value="EH">EH</option><option value="HZ">HZ</option></select>
-          </div>
-          <div class="upload-field"><label>Arquivo .docx</label><input type="file" id="tmModeloArquivo" accept=".docx" /></div>
-        </div>
-        <button class="btn-download-ext" onclick="tmEnviarModelo()">Enviar modelo</button>
-        <div class="ext-status-box" id="tmModeloStatus"></div>
+        <button class="btn-download-ext" onclick="ecImprimir()">Salvar PDF</button>
+        <button class="btn-download-ext" onclick="ecPublicar()">Guardar carta final no site</button>
+        <span class="ec-salvo" id="ecSalvo"></span>
+      </div>
+      <div class="ec-layout">
+        <div class="ec-form" id="ecForm"><div class="upload-panel"><p>Carregando…</p></div></div>
+        <div class="ec-preview"><iframe id="ecPreview" title="Prévia da carta mensal"></iframe></div>
       </div>
     </div>
 
@@ -1898,6 +1933,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       document.getElementById('mobileGeradorBtn').style.display = 'flex';
       document.getElementById('mobileMensagensBtn').style.display = 'flex';
       document.getElementById('mobileTarefasBtn').style.display = 'flex';
+      document.getElementById('mobileEditorCartaBtn').style.display = 'flex';
     }
     restoreViewFromHash();
     loadReports();
@@ -1952,7 +1988,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.querySelectorAll('.mobile-drawer-link').forEach(l => l.classList.remove('active'));
     document.getElementById('view-' + viewId).classList.add('active');
     if (btn) btn.classList.add('active');
-    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Documentos', documentos:'Meus Documentos', extratos:'Extratos → Excel', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos', mensagens:'Mensagens Padrão', tarefas:'Tarefas Mensais' };
+    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Documentos', documentos:'Meus Documentos', extratos:'Extratos → Excel', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos', mensagens:'Mensagens Padrão', tarefas:'Tarefas Mensais', editorcarta:'Editor da Carta' };
     const topbar = document.getElementById('topbarTitle');
     if (topbar) topbar.textContent = titles[viewId] || viewId;
     // keep the active tab in the URL so a refresh returns to it
@@ -1964,6 +2000,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     if (viewId === 'gerador') geradorCarregarClientes();
     if (viewId === 'mensagens') msgInit();
     if (viewId === 'tarefas') tmInit();
+    if (viewId === 'editorcarta') ecInit();
     if (viewId === 'perfil') populatePerfil();
   }
 
@@ -2486,7 +2523,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   // reopen the tab saved in the URL hash (e.g. #mensagens) after a refresh
-  const ADMIN_VIEWS = ['upload','extratos','cotas','emails','clientes','gerador','mensagens','tarefas'];
+  const ADMIN_VIEWS = ['upload','extratos','cotas','emails','clientes','gerador','mensagens','tarefas','editorcarta'];
   function restoreViewFromHash() {
     const viewId = decodeURIComponent(window.location.hash.substring(1));
     if (!viewId || viewId === 'inicio' || !/^[a-z]+$/.test(viewId) || !document.getElementById('view-' + viewId)) return;
@@ -5133,7 +5170,6 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       document.getElementById('tmResumo').innerHTML = '';
       document.getElementById('tmTabela').innerHTML = '<tr><td class="td-na">As tarefas ainda não rodaram. Use "Rodar agora no GitHub" ou espere o dia 2.</td></tr>';
     }
-    tmCarregarModelos();
   }
 
   async function tmCarregarMes(mes) {
@@ -5156,7 +5192,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     (status ? status.tarefas : []).forEach(t => {
       t.arquivos.forEach(a => usados.add(a));
       // gráficos da carta entram junto com a carta
-      if (t.tarefa === 'carta_mensal') nomes.filter(n => n.startsWith('carta-')).forEach(n => { usados.add(n); t.arquivos.push(n); });
+      if (t.tarefa === 'carta_mensal') {
+        nomes.filter(n => n.startsWith('carta_textos') || n.startsWith('Carta Mensal')).forEach(n => { usados.add(n); t.arquivos.push(n); });
+        t.editor = true;
+      }
       linhas.push(t);
     });
     const outros = nomes.filter(n => !usados.has(n));
@@ -5176,7 +5215,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       const arqs = t.arquivos.map(a =>
         `<div><a href="#" onclick="tmBaixar('${mes}', decodeURIComponent('${encodeURIComponent(a)}'));return false;" style="color:var(--gold-text);">${escHtml(a)}</a></div>`).join('') || '<span class="td-na">—</span>';
       const avisos = (t.avisos || []).map(a => `<div>${escHtml(a)}</div>`).join('') || '<span class="td-na">—</span>';
-      return `<tr><td style="vertical-align:top;font-weight:600;">${escHtml(t.nome)}</td><td style="vertical-align:top;">${st}</td><td style="vertical-align:top;">${arqs}</td><td style="vertical-align:top;white-space:normal;font-size:11px;color:var(--gold-text-2);">${avisos}</td></tr>`;
+      const editor = t.editor && t.ok ? `<div style="margin-top:0.4rem;"><a href="#" onclick="ecAbrir('${mes}');return false;" style="color:var(--gold-text);font-weight:700;">Escrever a carta no editor →</a></div>` : '';
+      return `<tr><td style="vertical-align:top;font-weight:600;">${escHtml(t.nome)}</td><td style="vertical-align:top;">${st}</td><td style="vertical-align:top;">${arqs}${editor}</td><td style="vertical-align:top;white-space:normal;font-size:11px;color:var(--gold-text-2);">${avisos}</td></tr>`;
     }).join('');
   }
 
@@ -5186,32 +5226,252 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     window.location.href = data.signedUrl;
   }
 
-  async function tmCarregarModelos() {
-    const tabela = document.getElementById('tmModelos');
-    const { data, error } = await sb.storage.from(TM_BUCKET).list('modelos', { limit: 50 });
-    if (error) { tabela.innerHTML = `<tr><td class="td-neg">${escHtml(error.message)}</td></tr>`; return; }
-    const modelos = (data || []).filter(a => a.id);
-    tabela.innerHTML = modelos.length
-      ? '<tr><th>Modelo</th><th>Atualizado em</th></tr>' + modelos.map(m =>
-          `<tr><td><a href="#" onclick="tmBaixar('modelos', decodeURIComponent('${encodeURIComponent(m.name)}'));return false;" style="color:var(--gold-text);">${escHtml(m.name)}</a></td>` +
-          `<td>${m.updated_at ? new Date(m.updated_at).toLocaleString('pt-BR') : '—'}</td></tr>`).join('')
-      : '<tr><td class="td-na">Nenhum modelo enviado. Sem modelo, a carta mensal é pulada.</td></tr>';
+  // ══════════ EDITOR DA CARTA (admin) ══════════
+  // Junta AAAA-MM/carta_dados.json (gerado pelo GitHub) com os textos escritos aqui,
+  // salvos em AAAA-MM/carta_textos.json, e mostra a carta pronta usando o modelo
+  // tarefas-mensais/carta/carta_template.html.
+  const EC_SECOES = [
+    { id: 'visao', kicker: 'Mercado', titulo: 'Visão', destaque: 'geral', capitular: true },
+    { id: 'eua', kicker: 'Global', titulo: 'Estados', destaque: 'Unidos',
+      graficos: [{ tipo: 'linha', titulo: 'Índices americanos · retorno acumulado no mês', series: ['^GSPC', '^IXIC', '^DJI'] }] },
+    { id: 'europa', kicker: 'Global', titulo: 'Europa',
+      graficos: [{ tipo: 'linha', titulo: 'Índices europeus · retorno acumulado no mês', series: ['^STOXX50E', '^FTSE', '^GDAXI'] }] },
+    { id: 'china', kicker: 'Global', titulo: 'China',
+      graficos: [{ tipo: 'linha', titulo: 'China · retorno acumulado no mês', series: ['000001.SS', '^HSCE'] }] },
+    { id: 'japao', kicker: 'Global', titulo: 'Japão',
+      graficos: [{ tipo: 'linha', titulo: 'Japão · retorno acumulado no mês', series: ['^N225'] }] },
+    { id: 'resumo', kicker: 'Global', titulo: 'Resumo dos', destaque: 'mercados', semTexto: true,
+      descricao: 'Retorno acumulado no mês, por índice, nas praças cobertas nesta carta.',
+      graficos: [{ tipo: 'barras', titulo: 'Retorno acumulado no mês' }] },
+    { id: 'brasil', kicker: 'Doméstico', titulo: 'Brasil',
+      graficos: [{ tipo: 'linha', titulo: 'Ibovespa · retorno acumulado no mês', series: ['^BVSP'] }] },
+    { id: 'indicadores', kicker: 'Doméstico', titulo: 'Indicadores', semTexto: true, tabela: 'indicadores', focus: true },
+    { id: 'indices', kicker: 'Mercado', titulo: 'Índices', destaque: 'no mês', semTexto: true, tabela: 'indices' },
+  ];
+  const EC_INDICADORES_PADRAO = [
+    { nome: 'Selic', sub: 'Meta · Copom' }, { nome: 'IPCA', sub: 'Referência do mês anterior' },
+    { nome: 'IPCA-15', sub: 'Prévia do mês' }, { nome: 'IGP-M', sub: '' },
+    { nome: 'R$/USD', sub: 'Fechamento do mês' }, { nome: 'Brent', sub: 'US$ por barril' },
+    { nome: 'Dívida Bruta', sub: '% do PIB' },
+  ].map(l => ({ ...l, valor: '', mes: '', ano: '', m12: '' }));
+  const EC_FOCUS_PADRAO = ['Selic', 'IPCA', 'PIB', 'Dólar'].map(r => ({ rotulo: r, valor: '' }));
+
+  let ecTemplate = null, ecLogo = null, ecDados = null, ecTextos = null, ecMesAtual = '';
+  let ecTimerPrevia = null, ecTimerSalvar = null, ecPendente = false, ecIniciado = false;
+
+  async function ecInit() {
+    if (!ecIniciado) {
+      ecIniciado = true;
+      window.addEventListener('beforeunload', e => { if (ecPendente) { e.preventDefault(); e.returnValue = ''; } });
+    }
+    const sel = document.getElementById('ecMes');
+    const { data, error } = await sb.storage.from(TM_BUCKET).list('', { limit: 200, sortBy: { column: 'name', order: 'desc' } });
+    if (error) { ecErro(`Não consegui ler o bucket ${TM_BUCKET}: ${error.message}`); return; }
+    const meses = [];
+    for (const m of (data || []).map(i => i.name).filter(n => /^\d{4}-\d{2}$/.test(n)).sort().reverse()) {
+      const { data: arqs } = await sb.storage.from(TM_BUCKET).list(m, { limit: 500 });
+      if ((arqs || []).some(a => a.name === 'carta_dados.json')) meses.push(m);
+    }
+    if (!meses.length) {
+      sel.innerHTML = '<option value="">Nenhum mês com dados</option>';
+      ecErro('Ainda não há dados de nenhum mês. Eles chegam no dia 2, ou rode a tarefa carta_mensal no GitHub (aba Tarefas Mensais).');
+      return;
+    }
+    const pedido = ecMesAtual && meses.includes(ecMesAtual) ? ecMesAtual : meses[0];
+    sel.innerHTML = meses.map(m => `<option value="${m}">${tmNomeMes(m)}</option>`).join('');
+    sel.value = pedido;
+    sel.dataset.meses = meses.join(',');
+    ecCarregar(pedido);
   }
 
-  async function tmEnviarModelo() {
-    const box = document.getElementById('tmModeloStatus');
-    const arquivo = document.getElementById('tmModeloArquivo').files[0];
-    const marca = document.getElementById('tmMarca').value;
-    box.classList.add('visible');
-    if (!arquivo) { box.innerHTML = '<span class="ext-log-err">Escolha o arquivo .docx do modelo.</span>'; return; }
-    if (!/\.docx$/i.test(arquivo.name)) { box.innerHTML = '<span class="ext-log-err">O modelo precisa ser um arquivo .docx.</span>'; return; }
-    box.innerHTML = 'Enviando…';
-    const { error } = await sb.storage.from(TM_BUCKET).upload(`modelos/Carta_Mensal_Template_${marca}.docx`, arquivo, {
-      upsert: true, contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-    if (error) { box.innerHTML = `<span class="ext-log-err">Erro: ${escHtml(error.message)}</span>`; return; }
-    box.innerHTML = `<span class="ext-log-ok">Modelo ${marca} enviado. A próxima execução já usa este arquivo.</span>`;
-    document.getElementById('tmModeloArquivo').value = '';
-    tmCarregarModelos();
+  // chamado pelo link na aba Tarefas Mensais
+  function ecAbrir(mes) {
+    ecMesAtual = mes;
+    const btn = [...document.querySelectorAll('.sidebar-link')].find(b => (b.getAttribute('onclick') || '').includes("'editorcarta'"));
+    showView('editorcarta', btn || null);
+  }
+
+  function ecErro(msg) {
+    document.getElementById('ecForm').innerHTML = `<div class="upload-panel"><p class="td-neg">${escHtml(msg)}</p></div>`;
+  }
+
+  async function ecBaixarJson(caminho) {
+    const { data, error } = await sb.storage.from(TM_BUCKET).download(caminho);
+    if (error || !data) return null;
+    try { return JSON.parse(await data.text()); } catch (e) { return null; }
+  }
+
+  async function ecCarregar(mes) {
+    if (!mes) return;
+    if (ecPendente) await ecSalvarAgora();
+    ecMesAtual = mes;
+    document.getElementById('ecSalvo').textContent = 'Carregando…';
+    if (!ecTemplate) {
+      const r = await fetch('tarefas-mensais/carta/carta_template.html', { cache: 'no-cache' });
+      if (!r.ok) { ecErro('Não encontrei o modelo da carta (tarefas-mensais/carta/carta_template.html).'); return; }
+      ecTemplate = await r.text();
+    }
+    if (!ecLogo) {
+      try {
+        const blob = await (await fetch('Logo_EH.png')).blob();
+        ecLogo = await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(blob); });
+      } catch (e) { ecLogo = new URL('Logo_EH.png', location.href).href; }
+    }
+    ecDados = await ecBaixarJson(`${mes}/carta_dados.json`);
+    if (!ecDados) { ecErro(`Não consegui ler ${mes}/carta_dados.json.`); return; }
+    ecTextos = await ecBaixarJson(`${mes}/carta_textos.json`);
+    if (!ecTextos) {
+      // mês novo: aproveita os nomes dos indicadores e o título do Focus do mês anterior
+      const meses = (document.getElementById('ecMes').dataset.meses || '').split(',');
+      const anterior = meses[meses.indexOf(mes) + 1];
+      const velho = anterior ? await ecBaixarJson(`${anterior}/carta_textos.json`) : null;
+      ecTextos = {
+        subtitulo: '', textos: {},
+        indicadores: (velho && velho.indicadores ? velho.indicadores : EC_INDICADORES_PADRAO)
+          .map(l => ({ nome: l.nome, sub: l.sub, valor: '', mes: '', ano: '', m12: '' })),
+        focus_titulo: `Boletim Focus · projeções para o fim de ${ecDados.ano}`,
+        focus: (velho && velho.focus ? velho.focus : EC_FOCUS_PADRAO).map(f => ({ rotulo: f.rotulo, valor: '' })),
+      };
+    }
+    ecMontarFormulario();
+    ecPrevia(true);
+    document.getElementById('ecSalvo').textContent = ecTextos.salvo_em
+      ? 'Rascunho salvo em ' + new Date(ecTextos.salvo_em).toLocaleString('pt-BR') : 'Rascunho ainda não salvo';
+  }
+
+  function ecMontarFormulario() {
+    const T = ecTextos;
+    const secs = EC_SECOES.filter(s => !s.semTexto).map((s, i) => `
+      <div class="upload-field ec-sec"><label>${String(EC_SECOES.indexOf(s) + 1).padStart(2, '0')} · ${escHtml(s.kicker)} · ${escHtml(s.titulo + (s.destaque ? ' ' + s.destaque : ''))}</label>
+        <textarea data-sec="${s.id}" placeholder="Um parágrafo por bloco, separados por uma linha em branco. **negrito** funciona."></textarea></div>`).join('');
+    const linhas = T.indicadores.map((l, i) => `<tr>
+        <td><input data-ind="${i}" data-campo="nome"></td><td><input data-ind="${i}" data-campo="sub"></td>
+        <td><input data-ind="${i}" data-campo="valor"></td><td><input data-ind="${i}" data-campo="mes"></td>
+        <td><input data-ind="${i}" data-campo="ano"></td><td><input data-ind="${i}" data-campo="m12"></td>
+        <td><button title="Remover" onclick="ecRemoverIndicador(${i})">×</button></td></tr>`).join('');
+    const focus = T.focus.map((f, i) => `<tr><td><input data-focus="${i}" data-campo="rotulo"></td><td><input data-focus="${i}" data-campo="valor"></td></tr>`).join('');
+    document.getElementById('ecForm').innerHTML = `
+      <div class="upload-panel">
+        <h3>Capa</h3>
+        <div class="upload-field"><label>Subtítulo (opcional)</label><input id="ecSubtitulo" placeholder="Panorama macroeconômico e de mercados: cenário global e doméstico do mês."></div>
+        <div class="ec-hint">Os destaques da capa (Ibovespa, S&amp;P 500, dólar e Selic) vêm dos dados do mês.</div>
+      </div>
+      <div class="upload-panel"><h3>Textos</h3>${secs}</div>
+      <div class="upload-panel">
+        <h3>Indicadores</h3>
+        <table class="ec-grid"><thead><tr><th>Indicador</th><th>Detalhe</th><th>Fech.</th><th>Mês</th><th>Ano</th><th>12m</th><th></th></tr></thead><tbody>${linhas}</tbody></table>
+        <button class="ec-link" onclick="ecAdicionarIndicador()">+ Adicionar indicador</button>
+        <div class="ec-hint">Valores como você quer que apareçam (ex.: 14,00%, − 0,25 p.p.). Vazio vira “—”. Valores com sinal de menos ficam em vermelho.</div>
+        <div class="upload-field" style="margin-top:1.2rem;"><label>Título do Focus</label><input id="ecFocusTitulo"></div>
+        <table class="ec-grid" style="margin-top:0.6rem;"><thead><tr><th>Projeção</th><th>Valor</th></tr></thead><tbody>${focus}</tbody></table>
+      </div>`;
+    const form = document.getElementById('ecForm');
+    document.getElementById('ecSubtitulo').value = T.subtitulo || '';
+    document.getElementById('ecFocusTitulo').value = T.focus_titulo || '';
+    form.querySelectorAll('[data-sec]').forEach(el => { el.value = (T.textos || {})[el.dataset.sec] || ''; });
+    form.querySelectorAll('[data-ind]').forEach(el => { el.value = T.indicadores[+el.dataset.ind][el.dataset.campo] || ''; });
+    form.querySelectorAll('[data-focus]').forEach(el => { el.value = T.focus[+el.dataset.focus][el.dataset.campo] || ''; });
+    form.querySelectorAll('input, textarea').forEach(el => el.addEventListener('input', ecMudou));
+  }
+
+  function ecLerFormulario() {
+    const T = ecTextos, form = document.getElementById('ecForm');
+    T.subtitulo = document.getElementById('ecSubtitulo').value;
+    T.focus_titulo = document.getElementById('ecFocusTitulo').value;
+    T.textos = T.textos || {};
+    form.querySelectorAll('[data-sec]').forEach(el => { T.textos[el.dataset.sec] = el.value; });
+    form.querySelectorAll('[data-ind]').forEach(el => { T.indicadores[+el.dataset.ind][el.dataset.campo] = el.value; });
+    form.querySelectorAll('[data-focus]').forEach(el => { T.focus[+el.dataset.focus][el.dataset.campo] = el.value; });
+  }
+
+  function ecAdicionarIndicador() {
+    ecLerFormulario();
+    ecTextos.indicadores.push({ nome: '', sub: '', valor: '', mes: '', ano: '', m12: '' });
+    ecMontarFormulario(); ecMudou();
+  }
+  function ecRemoverIndicador(i) {
+    ecLerFormulario();
+    ecTextos.indicadores.splice(i, 1);
+    ecMontarFormulario(); ecMudou();
+  }
+
+  function ecMudou() {
+    ecPendente = true;
+    document.getElementById('ecSalvo').textContent = 'Alterações não salvas…';
+    clearTimeout(ecTimerPrevia); ecTimerPrevia = setTimeout(() => ecPrevia(false), 700);
+    clearTimeout(ecTimerSalvar); ecTimerSalvar = setTimeout(ecSalvarAgora, 2500);
+  }
+
+  async function ecSalvarAgora() {
+    clearTimeout(ecTimerSalvar);
+    if (!ecTextos || !ecMesAtual) return;
+    ecLerFormulario();
+    ecTextos.salvo_em = new Date().toISOString();
+    const corpo = new Blob([JSON.stringify(ecTextos, null, 1)], { type: 'application/json' });
+    const { error } = await sb.storage.from(TM_BUCKET).upload(`${ecMesAtual}/carta_textos.json`, corpo, { upsert: true, contentType: 'application/json' });
+    const el = document.getElementById('ecSalvo');
+    if (error) { el.textContent = 'Erro ao salvar o rascunho: ' + error.message; return; }
+    ecPendente = false;
+    el.textContent = 'Rascunho salvo às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  // Monta o objeto DADOS que o modelo da carta espera
+  function ecMontarDados() {
+    ecLerFormulario();
+    const D = ecDados, T = ecTextos;
+    const ultimas = (D.indices || []).map(i => i.ultima_data).filter(Boolean);
+    const ultima = ultimas.sort((a, b) => a.split('/').reverse().join('').localeCompare(b.split('/').reverse().join(''))).pop();
+    const atrasados = (D.indices || []).filter(i => i.ultima_data && i.ultima_data !== ultima)
+      .map(i => `${i.nome}: fechamento de ${i.ultima_data}, último pregão com dado disponível no período.`);
+    const [dd, mm, aa] = (ultima || '').split('/');
+    const secoes = EC_SECOES.map(s => {
+      const sec = { ...s, texto: s.semTexto ? '' : ((T.textos || {})[s.id] || '') };
+      if (s.id === 'indicadores') sec.descricao = `Principais referências domésticas no fechamento de ${D.mes_nome.toLowerCase()}.`;
+      if (s.id === 'indices') {
+        sec.descricao = ultima ? `Fechamento de ${+dd} de ${TM_MESES_PT[+mm - 1].toLowerCase()} de ${aa} e variação acumulada no mês.` : '';
+        sec.nota_tabela = atrasados.join(' ');
+      }
+      return sec;
+    });
+    const temValor = l => ['valor', 'mes', 'ano', 'm12'].some(k => (l[k] || '').trim());
+    return {
+      ...D, subtitulo: T.subtitulo, secoes,
+      indicadores: T.indicadores.filter(l => (l.nome || '').trim() && temValor(l)),
+      focus_titulo: T.focus_titulo, focus: T.focus.filter(f => (f.valor || '').trim()),
+    };
+  }
+
+  function ecHtml() {
+    const json = JSON.stringify(ecMontarDados()).replace(/</g, '\\u003c');
+    return ecTemplate.replace('/*DADOS*/null', json).replace('/*LOGO*/"Logo_EH.png"', JSON.stringify(ecLogo));
+  }
+
+  function ecPrevia(inicio) {
+    if (!ecTemplate || !ecDados) return;
+    const fr = document.getElementById('ecPreview');
+    let rolagem = 0;
+    try { rolagem = inicio ? 0 : fr.contentWindow.scrollY; } catch (e) {}
+    fr.onload = () => { try { fr.contentWindow.scrollTo(0, rolagem); } catch (e) {} };
+    fr.srcdoc = ecHtml();
+  }
+
+  async function ecImprimir() {
+    if (!ecDados) return;
+    if (ecPendente) await ecSalvarAgora();
+    const fr = document.getElementById('ecPreview');
+    try { fr.contentWindow.focus(); fr.contentWindow.print(); }
+    catch (e) { alert('Não consegui abrir a impressão: ' + e.message); }
+  }
+
+  async function ecPublicar() {
+    if (!ecDados) return;
+    await ecSalvarAgora();
+    const nome = `Carta Mensal EH - ${ecDados.mes_nome} ${ecDados.ano}.html`;
+    const { error } = await sb.storage.from(TM_BUCKET).upload(`${ecMesAtual}/${nome}`, new Blob([ecHtml()], { type: 'text/html' }),
+      { upsert: true, contentType: 'text/html' });
+    document.getElementById('ecSalvo').textContent = error
+      ? 'Erro ao guardar a carta: ' + error.message
+      : `Carta guardada em Tarefas Mensais (${nome}).`;
   }
 
   async function msgInit() {
