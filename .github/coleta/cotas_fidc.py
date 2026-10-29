@@ -48,7 +48,7 @@ def ler_diario(b):
 def ler_mensal(b, ref):
     z = zipfile.ZipFile(io.BytesIO(b))
     for n in z.namelist():
-        if "tab_x" not in n.lower() and "tab_iv" not in n.lower():
+        if "tab_x" not in n.lower():
             continue
         rd = csv.reader(io.StringIO(z.read(n).decode("latin-1")), delimiter=";")
         cab = next(rd)
@@ -57,14 +57,18 @@ def ler_mensal(b, ref):
                 mensal.append((n, cab, r))
 
 hoje = dt.date.today()
-for ano in range(2019, hoje.year + 1):
+for ano in range(2020, hoje.year + 1):
     for mes in range(1, 13):
         if (ano, mes) > (hoje.year, hoje.month):
             break
         b = get(f"{BASE}/DOC/INF_DIARIO/DADOS/inf_diario_fi_{ano}{mes:02d}.zip")
         if b:
             ler_diario(b)
-        m = get(f"{BASE}/DOC/INF_MENSAL/DADOS/inf_mensal_fidc_{ano}{mes:02d}.zip")
+        elif mes == 1:
+            h = get(f"{BASE}/DOC/INF_DIARIO/DADOS/HIST/inf_diario_fi_{ano}.zip")
+            if h:
+                ler_diario(h)
+        m = get(f"https://dados.cvm.gov.br/dados/FIDC/DOC/INF_MENSAL/DADOS/inf_mensal_fidc_{ano}{mes:02d}.zip")
         if m:
             ler_mensal(m, f"{ano}{mes:02d}")
 
