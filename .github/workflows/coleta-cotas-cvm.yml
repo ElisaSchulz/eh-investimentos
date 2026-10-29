@@ -1,0 +1,19 @@
+name: Coleta pontual de cotas CVM
+on:
+  push:
+    branches: [claude/project-thread-p7bmcm]
+    paths: [".github/coleta/**", ".github/workflows/coleta-cotas-cvm.yml"]
+  workflow_dispatch:
+jobs:
+  coletar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python .github/coleta/cotas_cvm.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cotas-cvm
+          path: cotas_cvm.csv
