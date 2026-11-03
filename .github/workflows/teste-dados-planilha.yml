@@ -14,7 +14,7 @@ jobs:
         working-directory: tarefas-mensais
     env:
       FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
-      PASTA_SAIDA: ${{ runner.temp }}/saida
+      PASTA_SAIDA: /tmp/saida
       TZ: America/Sao_Paulo
     steps:
       - uses: actions/checkout@v5
