@@ -2,7 +2,7 @@
 import glob, os, sys
 import pandas as pd
 os.environ.update(PASTA_SAIDA="/tmp/saida", BLOCOS_DADOS="cotas_cvm,cotas_fidc")
-sys.path.insert(0, "tarefas-mensais")
+sys.path.insert(0, os.path.abspath("tarefas-mensais"))
 os.chdir("tarefas-mensais")
 import dados_planilha as d
 d.main("2026-09")

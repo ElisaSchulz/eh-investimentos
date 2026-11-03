@@ -28,6 +28,10 @@ O arquivo `atualizacao_dados_...xlsx` entra na planilha base pela macro `excel/I
 que cola cada valor no lugar certo sem mudar a estrutura e lista os conflitos. Instalação e regras
 em `excel/COMO-USAR.md`. Fundo novo na aba Cotas: incluir o CNPJ em `fundos_brasil.csv`.
 
+FIDCs e fundos que não estão no informe diário da CVM saem do informe mensal de FIDC (cota de
+fim de mês). Esse informe é publicado até uns 15 dias depois do fim do mês, então no dia 2 ainda
+vem a cota do mês anterior; rodando a tarefa de novo depois do dia 15, vem a do mês de referência.
+
 > O repositório é público: tudo nesta pasta fica visível na internet. A chave da
 > FRED e os arquivos gerados nunca entram aqui (estão no `.gitignore`).
 

@@ -10,7 +10,7 @@ sem mudar a estrutura dela.
 | Aba | Para que serve |
 |---|---|
 | Importar | Uma linha por valor. É o que a macro lê. |
-| Conferência | Fundo não encontrado na CVM, FIDC, dia útil sem cota, cota repetida, variação fora do normal. |
+| Conferência | Fundo não encontrado na CVM, FIDC só com cota de fim de mês, dia útil sem cota, cota repetida, variação fora do normal. |
 | Dados - ... / Cotas | Cada bloco já no layout da planilha, para copiar e colar à mão se preferir. |
 | Notas | Fontes e premissas. |
 

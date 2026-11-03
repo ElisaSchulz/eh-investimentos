@@ -19,6 +19,8 @@ O que coleta e para onde vai na planilha base:
       CPI EUA                                  AN:AO FRED (precisa da chave)
     Aba Cotas
       Fundos brasileiros (fundos_brasil.csv)   pelo CNPJ da linha 2   CVM, informe diário
+      FIDCs e fundos fora do informe diário    pelo CNPJ da linha 2   CVM, informe mensal de FIDC
+                                                                     (só a cota de fim de mês)
       Ações, FIIs e ETFs (ativos_b3.csv)       pelo ticker da linha 2 Yahoo
 
 Abas do arquivo gerado:
@@ -575,7 +577,11 @@ def main(mes=MES):
             "Banco Central (api.bcb.gov.br): IPCA 433, IGP-M 189, Poupança 196 (aniversário dia 1), "
             "CDI 4389 (% a.a., base 252), PTAX venda 1. Valores em decimal, como na planilha.",
             "CVM (dados.cvm.gov.br): informe diário de fundos. CNPJs com mais de uma subclasse "
-            "e FIDCs ficam de fora e aparecem na Conferência.",
+            "ficam de fora e aparecem na Conferência.",
+            "CVM, informe mensal de FIDC (tabelas X.2 e IV): cota de fim de mês da subclasse sênior "
+            "(ou da única subclasse com cota), lançada no último dia útil do mês. Na aba Cotas, os "
+            "dias seguintes repetem essa cota em cinza, como na planilha; a aba Importar leva só a de "
+            "fim de mês. O informe sai até uns 15 dias depois do fim do mês.",
             "Yahoo Finance: Ibovespa (pontos inteiros; a macro aceita até 1 ponto de diferença), S&P 500, indicadores globais (AGG ajustado; BRL=X do último dia útil do mês = PTAX) e ativos da B3 (fechamento sem ajuste).",
             "FRED: CPI (CPIAUCSL).",
             "A macro ImportarDadosEH lê a aba Importar: só preenche célula vazia ou fórmula; "
