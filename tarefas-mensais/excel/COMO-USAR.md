@@ -1,0 +1,49 @@
+# Atualizar a planilha Dados EH com a macro ImportarDadosEH
+
+A tarefa mensal **Dados da planilha base** (`dados_planilha.py`) coleta os dados e gera
+`atualizacao_dados_<mês>_<ano>.xlsx`, que aparece na aba **Tarefas Mensais** do admin.
+A macro lê esse arquivo e cola cada valor no lugar certo da `Dados_EH_Investimentos.xlsx`,
+sem mudar a estrutura dela.
+
+## O que vem no arquivo
+
+| Aba | Para que serve |
+|---|---|
+| Importar | Uma linha por valor. É o que a macro lê. |
+| Conferência | Fundo não encontrado na CVM, FIDC, dia útil sem cota, cota repetida, variação fora do normal. |
+| Dados - ... / Cotas | Cada bloco já no layout da planilha, para copiar e colar à mão se preferir. |
+| Notas | Fontes e premissas. |
+
+## Instalar (uma vez só)
+
+1. Abra um arquivo novo em branco no Excel e aperte **Alt + F11**.
+2. **Arquivo > Importar arquivo...** e escolha `ImportarDadosEH.bas`.
+3. Salve como **Pasta de Trabalho Habilitada para Macro (.xlsm)** numa pasta local, fora do
+   OneDrive (ex.: `Documentos\Importador Dados EH.xlsm`). Pode ser o mesmo arquivo do
+   gerador do relatório: é só importar mais este módulo nele.
+
+## Usar
+
+1. Baixe o `atualizacao_dados_...xlsx` do mês na aba Tarefas Mensais do admin.
+2. Abra o arquivo com a macro e depois a `Dados_EH_Investimentos.xlsx`. Deixe a planilha base na frente.
+3. **Alt + F8 > ImportarDadosEH > Executar** e escolha o arquivo baixado.
+4. A macro salva uma cópia de segurança da planilha base (na mesma pasta, ou em Documentos se
+   ela estiver aberta pela nuvem) e pergunta o que fazer quando um valor digitado for diferente
+   do coletado. O recomendado é **Não**: mantém o seu e mostra no relatório.
+5. No fim abre um relatório com o resumo, os conflitos e a Conferência. Confira e **salve a
+   planilha base você mesma** (a macro não salva).
+
+## Regras da macro
+
+- Célula vazia ou com erro recebe o valor.
+- Fórmula que repete a célula de cima (`=C2951`) ou puxa de outro arquivo (`=HLOOKUP([35]...)`)
+  é trocada pelo valor coletado quando ele é diferente. Quando é igual, a fórmula com vínculo
+  externo vira valor (congela o dado) e as outras ficam como estão (ex.: o CDI repetido).
+- Valor digitado ou conta digitada (`=29885.31/287`) nunca é trocado sem você pedir.
+- Data nova depois da última da coluna vira linha nova, em ordem.
+- CNPJ ou ticker que não está na linha 2 da aba Cotas aparece no relatório: crie a coluna e rode de novo.
+
+## Rodar fora do dia 2
+
+GitHub > Actions > **Tarefas mensais** > **Run workflow**, com tarefas = `dados_planilha` e, se
+quiser um pedaço do mês, data inicial e final (ex.: do dia 1 ao dia 20).

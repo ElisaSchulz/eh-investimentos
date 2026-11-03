@@ -13,15 +13,15 @@ on:
         required: false
         default: ""
       tarefas:
-        description: "Tarefas separadas por vírgula. Vazio = todas (carta_mensal, indicadores_americanos, cotas_fundos, cotas_b3, etfs)"
+        description: "Tarefas separadas por vírgula. Vazio = todas (carta_mensal, indicadores_americanos, cotas_fundos, cotas_b3, etfs, dados_planilha)"
         required: false
         default: ""
       data_inicio:
-        description: "Só cotas B3: data inicial própria (AAAA-MM-DD)"
+        description: "Só cotas B3 e dados da planilha: data inicial própria (AAAA-MM-DD)"
         required: false
         default: ""
       data_fim:
-        description: "Só cotas B3: data final própria (AAAA-MM-DD)"
+        description: "Só cotas B3 e dados da planilha: data final própria (AAAA-MM-DD)"
         required: false
         default: ""
 

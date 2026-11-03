@@ -1,0 +1,413 @@
+# -*- coding: utf-8 -*-
+"""
+Coleta os dados da planilha base (Dados_EH_Investimentos.xlsx) e gera um arquivo de
+atualização no mesmo layout dela, para a macro ImportarDadosEH colar sozinha.
+
+Rodar no Spyder: botão Run. Por padrão pega o mês anterior (as séries mensais
+pegam os últimos 6 meses, porque o IPCA sai só no meio do mês seguinte).
+Para outro mês, preencha MES. Para um intervalo próprio, DATA_INICIO e DATA_FIM.
+
+O que coleta e para onde vai na planilha base:
+
+    Aba Dados
+      IPCA, IGP-M, Poupança (variação mensal)  E:J  Banco Central (SGS 433, 189, 196)
+      CDI (taxa anual)                         M:N  Banco Central (SGS 4389)
+      PTAX venda                               Q:R  Banco Central (SGS 1)
+      Ibovespa                                 T:U  Yahoo (^BVSP, pontos inteiros)
+      S&P 500                                  W:X  Yahoo (^GSPC)
+      Indicadores globais                      Z:AL Yahoo (AGG ajustado; BRL=X do fim do mês = PTAX)
+      CPI EUA                                  AN:AO FRED (precisa da chave)
+    Aba Cotas
+      Fundos brasileiros (fundos_brasil.csv)   pelo CNPJ da linha 2   CVM, informe diário
+      Ações, FIIs e ETFs (ativos_b3.csv)       pelo ticker da linha 2 Yahoo
+
+Abas do arquivo gerado:
+    Importar      uma linha por valor (aba, coluna, data, valor). É o que a macro lê.
+    Conferência   o que faltou, cota repetida e variação fora do normal.
+    Dados - ...   cada bloco no layout da planilha, para copiar e colar à mão.
+    Cotas         datas nas linhas, CNPJs e tickers nas colunas.
+    Notas         fontes e premissas.
+"""
+import io
+import json
+import os
+import sys
+import time
+import urllib.request
+import zipfile
+from datetime import date, timedelta
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import pandas as pd
+from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.utils import get_column_letter
+
+from comum import fechamentos_yahoo, ler_csv, limites_do_mes, mes_referencia, nome_mes, pasta_saida
+
+# ------------------------------------------------------------------ parâmetros
+MES = None          # None = mês anterior. Ou "AAAA-MM".
+DATA_INICIO = os.environ.get("DATA_INICIO") or None   # "AAAA-MM-DD" para um intervalo próprio
+DATA_FIM = os.environ.get("DATA_FIM") or None
+MESES_SERIES_MENSAIS = 6   # quantos meses para trás buscar IPCA, IGP-M, Poupança e CPI
+BLOCOS = os.environ.get("BLOCOS_DADOS") or "todos"   # ou alguns de: bc,yahoo,cpi,cotas_cvm,cotas_b3
+
+# Bloco da aba Dados -> (coluna da data, coluna do valor, nome)
+DADOS = {
+    "ipca": ("E", "F", "IPCA"),
+    "igpm": ("E", "H", "IGP-M"),
+    "poupanca": ("E", "J", "Poupança"),
+    "cdi": ("M", "N", "CDI"),
+    "ptax": ("Q", "R", "PTAX venda"),
+    "ibov": ("T", "U", "Ibovespa"),
+    "sp500": ("W", "X", "S&P 500"),
+    "cpi": ("AN", "AO", "CPI"),
+}
+GLOBAIS = {  # ticker do Yahoo -> coluna na aba Dados (datas em Z)
+    "BRL=X": "AA", "DX-Y.NYB": "AB", "^TNX": "AC", "^GSPC": "AD", "^IXIC": "AE",
+    "^DJI": "AF", "^STOXX": "AG", "^FTSE": "AH", "^GDAXI": "AI", "000001.SS": "AJ",
+    "^HSI": "AK", "AGG": "AL",
+}
+AJUSTADOS = {"AGG"}
+SGS = {"ipca": 433, "igpm": 189, "poupanca": 196, "cdi": 4389, "ptax": 1}
+
+# Limites da conferência: variação de um dia para o outro que merece um olhar
+LIMITE_VARIACAO = {"fundo": 0.02, "b3": 0.10, "indice": 0.06, "cambio": 0.04, "taxa": 0.10}
+DIAS_REPETIDA = 3   # cota igual por este número de dias seguidos vira aviso
+
+CVM = "https://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS"
+UA = {"User-Agent": "Mozilla/5.0 (tarefas-mensais EH)"}
+
+
+# --------------------------------------------------------------------------
+# Fontes
+# --------------------------------------------------------------------------
+def baixar(url, tentativas=4, timeout=180):
+    for i in range(tentativas):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=timeout) as r:
+                return r.read()
+        except Exception as e:  # noqa: BLE001
+            if i == tentativas - 1:
+                print(f"Aviso: falhou {url}: {e}")
+                return None
+            time.sleep(2 ** (i + 1))
+
+
+def sgs(codigo, inicio, fim):
+    """Série do Banco Central (SGS) como pd.Series indexada por data. Valores em %."""
+    url = (f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.{codigo}/dados?formato=json"
+           f"&dataInicial={inicio:%d/%m/%Y}&dataFinal={fim:%d/%m/%Y}")
+    bruto = baixar(url)
+    if not bruto:
+        return pd.Series(dtype=float)
+    try:
+        dados = json.loads(bruto)
+    except ValueError:
+        print(f"Aviso: resposta inesperada do Banco Central para a série {codigo}.")
+        return pd.Series(dtype=float)
+    if not isinstance(dados, list) or not dados:
+        return pd.Series(dtype=float)
+    df = pd.DataFrame(dados)
+    df["data"] = pd.to_datetime(df["data"], format="%d/%m/%Y")
+    df["valor"] = pd.to_numeric(df["valor"], errors="coerce")
+    return df.set_index("data")["valor"].dropna().sort_index()
+
+
+def series_banco_central(inicio, fim, inicio_mensal):
+    """Devolve {bloco: Series} com os valores já no formato da planilha (decimal, não %)."""
+    out = {}
+    for bloco in ("ipca", "igpm"):
+        s = sgs(SGS[bloco], inicio_mensal, fim) / 100
+        out[bloco] = s.round(6)
+    # Poupança: a série 196 tem uma linha por dia de aniversário; a planilha usa o dia 1
+    pou = sgs(SGS["poupanca"], inicio_mensal, fim)
+    out["poupanca"] = (pou[pou.index.day == 1] / 100).round(6)
+    out["cdi"] = (sgs(SGS["cdi"], inicio, fim) / 100).round(6)
+    out["ptax"] = sgs(SGS["ptax"], inicio, fim).round(4)
+    return out
+
+
+def series_yahoo(inicio, fim):
+    fim_exclusivo = fim + timedelta(days=1)
+    out = {
+        # O Yahoo entrega o Ibovespa em pontos inteiros; a macro aceita diferença de até 1 ponto
+        "ibov": fechamentos_yahoo("^BVSP", inicio, fim_exclusivo).round(2),
+        "sp500": fechamentos_yahoo("^GSPC", inicio, fim_exclusivo).round(2),
+    }
+    # AGG entra ajustado por dividendos (Adj Close), como na planilha
+    globais = {t: fechamentos_yahoo(t, inicio - timedelta(days=10), fim_exclusivo,
+                                    coluna="Adj Close" if t in AJUSTADOS else "Close")
+               for t in GLOBAIS}
+    tabela = pd.concat(globais, axis=1).sort_index().ffill()
+    tabela = tabela[(tabela.index.date >= inicio) & (tabela.index.date <= fim)]
+    for t in GLOBAIS:
+        if globais[t].empty:
+            print(f"Aviso: Yahoo sem dados para {t}.")
+    return out, tabela
+
+
+def serie_cpi(inicio_mensal, fim):
+    chave = os.environ.get("FRED_API_KEY", "").strip()
+    arquivo = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chave_fred.txt")
+    if not chave and os.path.exists(arquivo):
+        chave = open(arquivo, encoding="utf-8").read().strip()
+    if not chave:
+        print("Aviso: sem chave da FRED, o CPI ficou de fora.")
+        return pd.Series(dtype=float)
+    from fredapi import Fred
+
+    return Fred(api_key=chave).get_series("CPIAUCSL", inicio_mensal, fim).dropna()
+
+
+def cotas_cvm(cnpjs, inicio, fim):
+    """Cotas do informe diário da CVM. Devolve (tabela data x CNPJ, avisos por CNPJ)."""
+    alvo = {"".join(ch for ch in c if ch.isdigit()): c for c in cnpjs}
+    linhas, subclasses = [], {}
+    meses = pd.period_range(inicio, fim, freq="M")
+    for p in meses:
+        bruto = baixar(f"{CVM}/inf_diario_fi_{p.year}{p.month:02d}.zip")
+        if not bruto:
+            continue
+        z = zipfile.ZipFile(io.BytesIO(bruto))
+        for nome in z.namelist():
+            df = pd.read_csv(z.open(nome), sep=";", dtype=str, encoding="latin-1")
+            col_cnpj = next(c for c in df.columns if c.startswith("CNPJ_FUNDO"))
+            df["cnpj"] = df[col_cnpj].str.replace(r"\D", "", regex=True)
+            df = df[df["cnpj"].isin(alvo)]
+            if "ID_SUBCLASSE" not in df.columns:
+                df["ID_SUBCLASSE"] = ""
+            df["ID_SUBCLASSE"] = df["ID_SUBCLASSE"].fillna("")
+            linhas.append(df[["cnpj", "ID_SUBCLASSE", "DT_COMPTC", "VL_QUOTA"]])
+    if not linhas:
+        return pd.DataFrame(), {}
+    df = pd.concat(linhas)
+    df["data"] = pd.to_datetime(df["DT_COMPTC"])
+    df["cota"] = pd.to_numeric(df["VL_QUOTA"], errors="coerce")
+    df = df[(df["data"].dt.date >= inicio) & (df["data"].dt.date <= fim) & (df["cota"] > 0)]
+
+    avisos = {}
+    escolhidos = []
+    for cnpj, g in df.groupby("cnpj"):
+        subs = sorted(set(g["ID_SUBCLASSE"]))
+        if len(subs) > 1:
+            # Mais de uma subclasse no mesmo CNPJ: não dá para saber qual é a da planilha
+            subclasses[alvo[cnpj]] = subs
+            avisos[alvo[cnpj]] = f"CNPJ com {len(subs)} subclasses na CVM ({', '.join(subs)[:80]}): conferir à mão"
+            continue
+        escolhidos.append(g)
+    if not escolhidos:
+        return pd.DataFrame(), avisos
+    df = pd.concat(escolhidos)
+    tabela = df.pivot_table(index="data", columns="cnpj", values="cota", aggfunc="last")
+    tabela.columns = [alvo[c] for c in tabela.columns]
+    return tabela.sort_index(), avisos
+
+
+def cotas_b3(tickers, inicio, fim):
+    from cotas_b3 import baixar as baixar_b3
+
+    return baixar_b3(tickers, inicio, fim).round(2)
+
+
+# --------------------------------------------------------------------------
+# Conferência
+# --------------------------------------------------------------------------
+def conferir(nome, serie, tipo, calendario=None):
+    """Lista problemas de uma série diária: faltando, repetida, variação grande."""
+    problemas = []
+    s = serie.dropna()
+    if s.empty:
+        return [(nome, "Sem dados no período", "")]
+    if calendario is not None:
+        faltam = [d for d in calendario if d not in s.index and d >= s.index.min() - pd.Timedelta(days=40)]
+        if faltam:
+            txt = ", ".join(f"{d:%d/%m}" for d in faltam[:8]) + (" ..." if len(faltam) > 8 else "")
+            problemas.append((nome, f"{len(faltam)} dia(s) útil(eis) sem valor", txt))
+    iguais = (s.diff() == 0).astype(int)
+    seq = iguais.groupby((iguais == 0).cumsum()).cumsum().max()
+    if tipo in ("fundo", "b3") and seq >= DIAS_REPETIDA:
+        problemas.append((nome, f"Valor repetido por {int(seq) + 1} dias seguidos", "cota pode estar parada"))
+    var = s.pct_change().abs()
+    limite = LIMITE_VARIACAO.get(tipo, 0.05)
+    grandes = var[var > limite]
+    for d, v in grandes.head(5).items():
+        problemas.append((nome, f"Variação de {v:.1%} em um dia", f"{d:%d/%m/%Y}"))
+    return problemas
+
+
+# --------------------------------------------------------------------------
+# Saída
+# --------------------------------------------------------------------------
+def linhas_importar(aba, col_data, linha_chave, chave, serie, fonte, tolerancia=None):
+    """Linhas da aba Importar. Tolerancia: diferença absoluta que a macro aceita como igual."""
+    return [{"Aba": aba, "ColunaData": col_data, "LinhaChave": linha_chave, "Chave": chave,
+             "Data": d.date() if hasattr(d, "date") else d, "Valor": float(v), "Fonte": fonte,
+             "Tolerancia": tolerancia}
+            for d, v in serie.dropna().items()]
+
+
+def escrever_bloco(writer, aba, cabecalho, tabela, formato="#,##0.00######"):
+    tabela = tabela.copy()
+    tabela.index = [d.date() for d in tabela.index]
+    tabela.to_excel(writer, sheet_name=aba, startrow=1, header=False)
+    ws = writer.sheets[aba]
+    for i, titulo in enumerate(cabecalho, start=1):
+        c = ws.cell(row=1, column=i, value=titulo)
+        c.font = Font(bold=True)
+        c.alignment = Alignment(wrap_text=True, horizontal="center", vertical="center")
+        ws.column_dimensions[get_column_letter(i)].width = 14 if i > 1 else 12
+    for linha in ws.iter_rows(min_row=2):
+        linha[0].number_format = "dd/mm/yyyy"
+        for c in linha[1:]:
+            c.number_format = formato
+    ws.freeze_panes = "B2"
+
+
+def main(mes=MES):
+    ano, m = mes_referencia(mes)
+    inicio, fim = limites_do_mes(ano, m)
+    if DATA_INICIO:
+        inicio = date.fromisoformat(DATA_INICIO)
+    if DATA_FIM:
+        fim = date.fromisoformat(DATA_FIM)
+    inicio_mensal = (pd.Timestamp(inicio) - pd.DateOffset(months=MESES_SERIES_MENSAIS)).date().replace(day=1)
+    blocos = None if BLOCOS == "todos" else {b.strip() for b in BLOCOS.split(",")}
+    quer = lambda b: blocos is None or b in blocos  # noqa: E731
+    print(f"Dados da planilha base de {inicio:%d/%m/%Y} a {fim:%d/%m/%Y} "
+          f"(séries mensais desde {inicio_mensal:%m/%Y})")
+
+    importar, conferencia, blocos_saida = [], [], {}
+
+    # ---- Banco Central
+    bc = series_banco_central(inicio, fim, inicio_mensal) if quer("bc") else {}
+    calendario = list(bc["cdi"].index) if "cdi" in bc and not bc["cdi"].empty else None
+    for bloco, s in bc.items():
+        col_data, col_valor, nome = DADOS[bloco]
+        importar += linhas_importar("Dados", col_data, "", col_valor, s, "Banco Central")
+        tipo = "taxa" if bloco in ("cdi",) else ("cambio" if bloco == "ptax" else "mensal")
+        if bloco in ("cdi", "ptax"):
+            conferencia += conferir(nome, s, tipo, calendario)
+        elif s.empty:
+            conferencia.append((nome, "Sem dados no período", ""))
+    if bc:
+        mensais = pd.concat({DADOS[b][2]: bc[b] for b in ("ipca", "igpm", "poupanca")}, axis=1)
+        blocos_saida["Dados - Mensais"] = (["Mês", "IPCA", "IGP-M", "Poupança"], mensais, "0.00%")
+        blocos_saida["Dados - CDI"] = (["Data", "CDI"], bc["cdi"].to_frame(), "0.00%")
+        blocos_saida["Dados - PTAX"] = (["Data", "PTAX Vda"], bc["ptax"].to_frame(), "0.0000")
+
+    # ---- Ibovespa e Yahoo
+    if quer("yahoo"):
+        yh, globais = series_yahoo(inicio, fim)
+        for bloco, s in yh.items():
+            col_data, col_valor, nome = DADOS[bloco]
+            importar += linhas_importar("Dados", col_data, "", col_valor, s, "Yahoo",
+                                        tolerancia=1.0 if bloco == "ibov" else None)
+            conferencia += conferir(nome, s, "indice", calendario if bloco == "ibov" else None)
+        # Na planilha, o BRL=X do último dia útil de cada mês é a PTAX venda
+        if "ptax" in bc and not bc["ptax"].empty:
+            ptax = bc["ptax"]
+            fins = ptax.groupby([ptax.index.year, ptax.index.month]).tail(1)
+            for d, v in fins.items():
+                if d in globais.index:
+                    globais.loc[d, "BRL=X"] = v
+        for t, col in GLOBAIS.items():
+            importar += linhas_importar("Dados", "Z", "", col, globais[t], "Yahoo")
+        blocos_saida["Dados - Ibovespa"] = (["Data", "Fechamento"], yh["ibov"].to_frame(), "#,##0.00")
+        blocos_saida["Dados - S&P 500"] = (["Data", "Fechamento"], yh["sp500"].to_frame(), "#,##0.00")
+        blocos_saida["Dados - Globais"] = (["Data"] + list(GLOBAIS), globais, "#,##0.0000")
+
+    # ---- CPI
+    if quer("cpi"):
+        cpi = serie_cpi(inicio_mensal, fim)
+        if not cpi.empty:
+            importar += linhas_importar("Dados", "AN", "", "AO", cpi, "FRED")
+            blocos_saida["Dados - CPI"] = (["Data", "CPI"], cpi.to_frame(), "0.000")
+
+    # ---- Cotas de fundos (CVM) e B3
+    cotas = []
+    if quer("cotas_cvm"):
+        fundos = ler_csv("fundos_brasil.csv")
+        tabela, avisos = cotas_cvm(list(fundos["cnpj"]), inicio, fim)
+        for _, f in fundos.iterrows():
+            c = f["cnpj"]
+            if c in avisos:
+                conferencia.append((f"{f['nome']} ({c})", avisos[c], ""))
+            elif tabela.empty or c not in tabela.columns:
+                motivo = "FIDC: a CVM só publica a cota de fim de mês" if f["tipo"] == "FIDC" \
+                    else "Não encontrado no informe diário da CVM"
+                conferencia.append((f"{f['nome']} ({c})", motivo, "continua pelo Eduardo-Scrapping ou extrato"))
+            else:
+                s = tabela[c]
+                importar += linhas_importar("Cotas", "B", 2, c, s, "CVM")
+                conferencia += conferir(f"{f['nome']} ({c})", s, "fundo", calendario)
+        if not tabela.empty:
+            cotas.append(tabela.round(8))
+    if quer("cotas_b3"):
+        tickers = list(ler_csv("ativos_b3.csv")["ticker"])
+        b3 = cotas_b3(tickers, inicio, fim)
+        for t in tickers:
+            if t in b3.columns:
+                importar += linhas_importar("Cotas", "B", 2, t, b3[t], "Yahoo")
+                conferencia += conferir(t, b3[t], "b3", calendario)
+        cotas.append(b3)
+    if cotas:
+        tab = pd.concat(cotas, axis=1).sort_index()
+        blocos_saida["Cotas"] = (["Data"] + list(tab.columns), tab, "#,##0.00######")
+
+    # ---- Arquivo
+    caminho = os.path.join(pasta_saida(ano, m), f"atualizacao_dados_{nome_mes(m).lower()}_{ano}.xlsx")
+    imp = pd.DataFrame(importar, columns=["Aba", "ColunaData", "LinhaChave", "Chave", "Data", "Valor",
+                                          "Fonte", "Tolerancia"])
+    conf = pd.DataFrame(conferencia, columns=["Série", "Ponto de atenção", "Detalhe"])
+    with pd.ExcelWriter(caminho, engine="openpyxl") as writer:
+        imp.to_excel(writer, sheet_name="Importar", index=False)
+        ws = writer.sheets["Importar"]
+        for c in ws["E"][1:]:
+            c.number_format = "dd/mm/yyyy"
+        for c in ws["F"][1:]:
+            c.number_format = "0.00########"
+        for col, larg in zip("ABCDEFGH", (8, 12, 11, 22, 12, 16, 14, 11)):
+            ws.column_dimensions[col].width = larg
+        ws.freeze_panes = "A2"
+
+        if conf.empty:
+            conf = pd.DataFrame([("Tudo certo", "Nenhum ponto de atenção", "")], columns=conf.columns)
+        conf.to_excel(writer, sheet_name="Conferência", index=False)
+        ws = writer.sheets["Conferência"]
+        for col, larg in zip("ABC", (60, 55, 45)):
+            ws.column_dimensions[col].width = larg
+        amarelo = PatternFill("solid", fgColor="FFF4CC")
+        for linha in ws.iter_rows(min_row=2):
+            if "Variação" in str(linha[1].value) or "repetido" in str(linha[1].value):
+                for c in linha:
+                    c.fill = amarelo
+
+        for aba, (cab, tabela, fmt) in blocos_saida.items():
+            escrever_bloco(writer, aba[:31], cab, tabela, fmt)
+
+        notas = writer.book.create_sheet("Notas")
+        for i, txt in enumerate([
+            f"Período: {inicio:%d/%m/%Y} a {fim:%d/%m/%Y}. Séries mensais desde {inicio_mensal:%m/%Y}.",
+            "Banco Central (api.bcb.gov.br): IPCA 433, IGP-M 189, Poupança 196 (aniversário dia 1), "
+            "CDI 4389 (% a.a., base 252), PTAX venda 1. Valores em decimal, como na planilha.",
+            "CVM (dados.cvm.gov.br): informe diário de fundos. CNPJs com mais de uma subclasse "
+            "e FIDCs ficam de fora e aparecem na Conferência.",
+            "Yahoo Finance: Ibovespa (pontos inteiros; a macro aceita até 1 ponto de diferença), S&P 500, indicadores globais (AGG ajustado; BRL=X do último dia útil do mês = PTAX) e ativos da B3 (fechamento sem ajuste).",
+            "FRED: CPI (CPIAUCSL).",
+            "A macro ImportarDadosEH lê a aba Importar: só preenche célula vazia ou fórmula; "
+            "valor digitado diferente vira conflito no relatório, sem sobrescrever.",
+        ], start=1):
+            notas.cell(row=i, column=1, value=txt)
+        notas.column_dimensions["A"].width = 120
+
+    print(f"{len(imp)} valores para importar, {len(conf)} pontos na conferência.")
+    for _, r in conf.head(30).iterrows():
+        if r["Série"] != "Tudo certo":
+            print(f"Aviso: {r['Série']}: {r['Ponto de atenção']} {r['Detalhe']}".strip())
+    print(f"Arquivo salvo: {caminho}")
+    return [caminho]
+
+
+if __name__ == "__main__":
+    main()

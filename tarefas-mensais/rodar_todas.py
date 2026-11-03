@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from comum import mes_referencia, nome_mes, pasta_saida
 
 MES = None
-TAREFAS = ["carta_mensal", "indicadores_americanos", "cotas_fundos", "cotas_b3", "etfs"]
+TAREFAS = ["carta_mensal", "indicadores_americanos", "cotas_fundos", "cotas_b3", "etfs", "dados_planilha"]
 
 NOMES = {
     "carta_mensal": "Dados da carta mensal",
@@ -27,6 +27,7 @@ NOMES = {
     "cotas_fundos": "Cotas dos fundos UCITS",
     "cotas_b3": "Cotas B3",
     "etfs": "Fechamentos de ETFs",
+    "dados_planilha": "Dados da planilha base",
 }
 
 
