@@ -307,7 +307,10 @@ def cotas_fidc_mensal(fundos, ate, meses=MESES_FIDC):
             cotas[cnpj] = s
             origem[cnpj] = "; ".join(sorted(notas))
             var = s.pct_change().abs()
-            if (var > 0.05).any():
+            if len(s) > 1 and s.iloc[-1] == s.iloc[-2]:
+                avisos[cnpj] = (f"Cota de {s.index[-1]:%m/%Y} igual à do mês anterior no informe mensal: "
+                                "o fundo pode ter repetido o dado")
+            elif (var > 0.05).any():
                 avisos[cnpj] = (f"Cota de fim de mês variou {var.max():.1%} de um mês para o outro: "
                                 "conferir se o informe trocou cota e quantidade")
     return cotas, origem, avisos, sem_informe
