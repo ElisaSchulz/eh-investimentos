@@ -11,6 +11,7 @@ na aba **Tarefas Mensais** do admin do site.
 | `cotas_fundos.py` | `cotacoes_fundos_<mês>_<ano>.xlsx` (NAV dos UCITS) | `baixar_cotas_fundos.py` |
 | `cotas_b3.py` | `cotas_b3_<mês>_<ano>.xlsx` (todos os pregões do mês) | `cotas_b3_datas.py` |
 | `etfs.py` | `fechamentos.csv` (Close) e `fechamentos_ajustados.csv` (Adj Close) | `cotacao_etfs.py` e `adj_cotacao_etfs.py` |
+| `dados_planilha.py` | `atualizacao_dados_<mês>_<ano>.xlsx`: índices do Banco Central, CDI, PTAX, Ibovespa, indicadores globais, CPI, cotas da CVM e da B3 no layout da planilha Dados EH, com aba de conferência | digitação na `Dados_EH_Investimentos.xlsx` |
 | `rodar_todas.py` | roda tudo e grava `status.json` | — |
 
 ## O que muda todo mês
@@ -18,7 +19,14 @@ na aba **Tarefas Mensais** do admin do site.
 - **Nada nos scripts.** As datas são calculadas a partir do mês de referência.
 - `fundos.csv`: atualizar `cota_referencia` (ponto como decimal) e `data_referencia`
   (AAAA-MM-DD) com as cotas do extrato. É a conferência da aba Controle.
-- Listas de ativos: `ativos_b3.csv` (B3), `fundos.csv` (UCITS) e `CONJUNTOS` no topo de `etfs.py`.
+- Listas de ativos: `ativos_b3.csv` (B3), `fundos.csv` (UCITS), `fundos_brasil.csv` (CNPJs da aba
+  Cotas da planilha Dados EH) e `CONJUNTOS` no topo de `etfs.py`.
+
+## Planilha Dados EH
+
+O arquivo `atualizacao_dados_...xlsx` entra na planilha base pela macro `excel/ImportarDadosEH.bas`,
+que cola cada valor no lugar certo sem mudar a estrutura e lista os conflitos. Instalação e regras
+em `excel/COMO-USAR.md`. Fundo novo na aba Cotas: incluir o CNPJ em `fundos_brasil.csv`.
 
 > O repositório é público: tudo nesta pasta fica visível na internet. A chave da
 > FRED e os arquivos gerados nunca entram aqui (estão no `.gitignore`).

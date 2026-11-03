@@ -13,7 +13,7 @@ O que coleta e para onde vai na planilha base:
       IPCA, IGP-M, Poupança (variação mensal)  E:J  Banco Central (SGS 433, 189, 196)
       CDI (taxa anual)                         M:N  Banco Central (SGS 4389)
       PTAX venda                               Q:R  Banco Central (SGS 1)
-      Ibovespa                                 T:U  Banco Central (SGS 7), Yahoo se falhar
+      Ibovespa                                 T:U  Yahoo (^BVSP, pontos inteiros)
       S&P 500                                  W:X  Yahoo (^GSPC)
       Indicadores globais                      Z:AL Yahoo (AGG ajustado; BRL=X do fim do mês = PTAX)
       CPI EUA                                  AN:AO FRED (precisa da chave)
@@ -128,19 +128,13 @@ def series_banco_central(inicio, fim, inicio_mensal):
     return out
 
 
-def ibovespa(inicio, fim):
-    """Ibovespa com duas casas: Banco Central (SGS 7). O Yahoo arredonda para pontos inteiros,
-    então só entra se o Banco Central falhar."""
-    s = sgs(7, inicio, fim)
-    if not s.empty:
-        return s.round(2), "Banco Central"
-    print("Aviso: Ibovespa do Banco Central indisponível; usando Yahoo (sem casas decimais).")
-    return fechamentos_yahoo("^BVSP", inicio, fim + timedelta(days=1)).round(2), "Yahoo"
-
-
 def series_yahoo(inicio, fim):
     fim_exclusivo = fim + timedelta(days=1)
-    out = {"sp500": fechamentos_yahoo("^GSPC", inicio, fim_exclusivo).round(2)}
+    out = {
+        # O Yahoo entrega o Ibovespa em pontos inteiros; a macro aceita diferença de até 1 ponto
+        "ibov": fechamentos_yahoo("^BVSP", inicio, fim_exclusivo).round(2),
+        "sp500": fechamentos_yahoo("^GSPC", inicio, fim_exclusivo).round(2),
+    }
     # AGG entra ajustado por dividendos (Adj Close), como na planilha
     globais = {t: fechamentos_yahoo(t, inicio - timedelta(days=10), fim_exclusivo,
                                     coluna="Adj Close" if t in AJUSTADOS else "Close")
@@ -245,9 +239,11 @@ def conferir(nome, serie, tipo, calendario=None):
 # --------------------------------------------------------------------------
 # Saída
 # --------------------------------------------------------------------------
-def linhas_importar(aba, col_data, linha_chave, chave, serie, fonte):
+def linhas_importar(aba, col_data, linha_chave, chave, serie, fonte, tolerancia=None):
+    """Linhas da aba Importar. Tolerancia: diferença absoluta que a macro aceita como igual."""
     return [{"Aba": aba, "ColunaData": col_data, "LinhaChave": linha_chave, "Chave": chave,
-             "Data": d.date() if hasattr(d, "date") else d, "Valor": float(v), "Fonte": fonte}
+             "Data": d.date() if hasattr(d, "date") else d, "Valor": float(v), "Fonte": fonte,
+             "Tolerancia": tolerancia}
             for d, v in serie.dropna().items()]
 
 
@@ -303,11 +299,10 @@ def main(mes=MES):
     # ---- Ibovespa e Yahoo
     if quer("yahoo"):
         yh, globais = series_yahoo(inicio, fim)
-        yh["ibov"], fonte_ibov = ibovespa(inicio, fim)
         for bloco, s in yh.items():
             col_data, col_valor, nome = DADOS[bloco]
-            fonte = fonte_ibov if bloco == "ibov" else "Yahoo"
-            importar += linhas_importar("Dados", col_data, "", col_valor, s, fonte)
+            importar += linhas_importar("Dados", col_data, "", col_valor, s, "Yahoo",
+                                        tolerancia=1.0 if bloco == "ibov" else None)
             conferencia += conferir(nome, s, "indice", calendario if bloco == "ibov" else None)
         # Na planilha, o BRL=X do último dia útil de cada mês é a PTAX venda
         if "ptax" in bc and not bc["ptax"].empty:
@@ -362,7 +357,8 @@ def main(mes=MES):
 
     # ---- Arquivo
     caminho = os.path.join(pasta_saida(ano, m), f"atualizacao_dados_{nome_mes(m).lower()}_{ano}.xlsx")
-    imp = pd.DataFrame(importar, columns=["Aba", "ColunaData", "LinhaChave", "Chave", "Data", "Valor", "Fonte"])
+    imp = pd.DataFrame(importar, columns=["Aba", "ColunaData", "LinhaChave", "Chave", "Data", "Valor",
+                                          "Fonte", "Tolerancia"])
     conf = pd.DataFrame(conferencia, columns=["Série", "Ponto de atenção", "Detalhe"])
     with pd.ExcelWriter(caminho, engine="openpyxl") as writer:
         imp.to_excel(writer, sheet_name="Importar", index=False)
@@ -371,7 +367,7 @@ def main(mes=MES):
             c.number_format = "dd/mm/yyyy"
         for c in ws["F"][1:]:
             c.number_format = "0.00########"
-        for col, larg in zip("ABCDEFG", (8, 12, 11, 22, 12, 16, 14)):
+        for col, larg in zip("ABCDEFGH", (8, 12, 11, 22, 12, 16, 14, 11)):
             ws.column_dimensions[col].width = larg
         ws.freeze_panes = "A2"
 
@@ -397,7 +393,7 @@ def main(mes=MES):
             "CDI 4389 (% a.a., base 252), PTAX venda 1. Valores em decimal, como na planilha.",
             "CVM (dados.cvm.gov.br): informe diário de fundos. CNPJs com mais de uma subclasse "
             "e FIDCs ficam de fora e aparecem na Conferência.",
-            "Banco Central: Ibovespa (SGS 7). Yahoo Finance: S&P 500, indicadores globais (AGG ajustado; BRL=X do último dia útil do mês = PTAX) e ativos da B3 (fechamento sem ajuste).",
+            "Yahoo Finance: Ibovespa (pontos inteiros; a macro aceita até 1 ponto de diferença), S&P 500, indicadores globais (AGG ajustado; BRL=X do último dia útil do mês = PTAX) e ativos da B3 (fechamento sem ajuste).",
             "FRED: CPI (CPIAUCSL).",
             "A macro ImportarDadosEH lê a aba Importar: só preenche célula vazia ou fórmula; "
             "valor digitado diferente vira conflito no relatório, sem sobrescrever.",

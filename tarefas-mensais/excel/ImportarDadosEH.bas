@@ -217,9 +217,14 @@ End Function
 Private Sub GravarLinha(dados As Variant, i As Long)
     Dim aba As String, colData As String, chave As String, d As Long, novo As Double
     Dim col As Long, lin As Long, cel As Range, antigo As Variant, f As String, bloco As String
+    Dim tol As Double
 
     aba = CStr(dados(i, 1)): colData = CStr(dados(i, 2)): chave = CStr(dados(i, 4))
     d = CLng(Int(dados(i, 5))): novo = CDbl(dados(i, 6))
+    tol = 0
+    If UBound(dados, 2) >= 8 Then
+        If VarType(dados(i, 8)) = vbDouble Then tol = CDbl(dados(i, 8))
+    End If
     bloco = aba & " " & chave
     If Not gPorBloco.Exists(bloco) Then gPorBloco.Add bloco, 0
 
@@ -240,7 +245,7 @@ Private Sub GravarLinha(dados As Variant, i As Long)
     If IsEmpty(antigo) Or IsError(antigo) Then
         Escrever cel, novo, lin, col: gNovos = gNovos + 1
     ElseIf f <> "" And Not FormulaDigitada(f) Then
-        If Igual(antigo, novo) Then
+        If Igual(antigo, novo, tol) Then
             If InStr(f, "[") > 0 Then
                 cel.Value = novo: gCongelados = gCongelados + 1
             Else
@@ -249,7 +254,7 @@ Private Sub GravarLinha(dados As Variant, i As Long)
         Else
             cel.Value = novo: gFormulas = gFormulas + 1
         End If
-    ElseIf Igual(antigo, novo) Then
+    ElseIf Igual(antigo, novo, tol) Then
         gIguais = gIguais + 1
     Else
         gConflitos.Add Array(aba, cel.Address(False, False), chave, Format(CDate(d), "dd/mm/yyyy"), _
@@ -267,9 +272,9 @@ Private Sub Escrever(cel As Range, valor As Double, lin As Long, col As Long)
     End If
 End Sub
 
-Private Function Igual(a As Variant, b As Double) As Boolean
+Private Function Igual(a As Variant, b As Double, Optional tol As Double = 0) As Boolean
     If VarType(a) <> vbDouble Then Exit Function
-    Igual = Abs(CDbl(a) - b) <= 0.0000000001 + 0.0000001 * Abs(b)
+    Igual = Abs(CDbl(a) - b) <= 0.0000000001 + 0.0000001 * Abs(b) + tol
 End Function
 
 ' Conta digitada (so numeros e operadores, ex.: =29885.31/287) conta como valor digitado
