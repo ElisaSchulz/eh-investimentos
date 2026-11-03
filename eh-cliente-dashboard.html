@@ -94,6 +94,11 @@
     .sidebar-logo-text span:first-child { display: block; font-family: 'Manrope', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.08em; color: var(--cream); }
     .sidebar-logo-text span:last-child { display: block; font-family: 'Manrope', monospace; font-weight: 400; font-size: 9px; letter-spacing: 0.22em; color: var(--cream-soft); text-transform: uppercase; margin-top: 3px; }
     .sidebar-section { padding: 0 0.9rem; margin-bottom: 0.5rem; }
+    .sidebar-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(238,154,30,0.25) transparent; padding-bottom: 0.5rem; }
+    .sidebar-scroll::-webkit-scrollbar { width: 6px; }
+    .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+    .sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(238,154,30,0.25); border-radius: 3px; }
+    .sidebar-scroll::-webkit-scrollbar-thumb:hover { background: rgba(238,154,30,0.45); }
     .sidebar-section-label { font-family: 'Manrope', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold-text); padding: 0 0.8rem; margin-bottom: 0.7rem; display: flex; align-items: center; gap: 0.5rem; }
     .sidebar-section-label::before { content: ''; display: block; width: 18px; height: 1px; background: var(--gold); }
     .sidebar-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.85rem; font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 400; letter-spacing: 0.01em; color: var(--cream-soft); text-decoration: none; transition: background 0.15s, color 0.15s, border-color 0.15s; cursor: pointer; background: none; border: 1px solid transparent; width: 100%; text-align: left; }
@@ -101,7 +106,7 @@
     .sidebar-link.active { background: rgba(238,154,30,0.08); color: var(--cream); border-color: var(--rule-strong); }
     .sidebar-link svg { flex-shrink: 0; color: var(--cream-faint); }
     .sidebar-link.active svg, .sidebar-link:hover svg { color: var(--gold-text); }
-    .sidebar-bottom { margin-top: auto; padding: 1.2rem 0.9rem 0; border-top: 1px solid var(--rule); }
+    .sidebar-bottom { flex-shrink: 0; margin-top: auto; padding: 1.2rem 0.9rem 0; border-top: 1px solid var(--rule); }
     .sidebar-user { display: flex; align-items: center; gap: 0.7rem; padding: 0 0.85rem; margin-bottom: 0.6rem; }
     .user-avatar { width: 34px; height: 34px; background: var(--gold); border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-size: 13px; font-weight: 600; color: var(--navy); flex-shrink: 0; }
     .user-name { font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 500; color: var(--cream); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -881,6 +886,7 @@
     <img src="Logo_EH.png" width="32" height="32" alt="EH" style="object-fit:contain;" />
     <div class="sidebar-logo-text"><span>EH INVESTIMENTOS</span><span>Portal do Cliente</span></div>
   </a>
+  <div class="sidebar-scroll">
   <div class="sidebar-section">
     <div class="sidebar-section-label">Menu</div>
     <button class="sidebar-link active" onclick="showView('inicio',this)">
@@ -942,6 +948,7 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
       Mensagens Padrão
     </button>
+  </div>
   </div>
   <div class="sidebar-bottom">
     <div class="sidebar-user">
