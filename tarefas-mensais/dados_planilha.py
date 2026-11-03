@@ -25,7 +25,8 @@ Abas do arquivo gerado:
     Importar      uma linha por valor (aba, coluna, data, valor). É o que a macro lê.
     Conferência   o que faltou, cota repetida e variação fora do normal.
     Dados - ...   cada bloco no layout da planilha, para copiar e colar à mão.
-    Cotas         datas nas linhas, CNPJs e tickers nas colunas.
+    Cotas         nome na linha 1, CNPJ/ticker na linha 2 e datas nas linhas, com todos os
+                  fundos da lista; os sem cota ficam vazios (cabeçalho amarelo) para colar à mão.
     Notas         fontes e premissas.
 """
 import io
@@ -264,6 +265,36 @@ def escrever_bloco(writer, aba, cabecalho, tabela, formato="#,##0.00######"):
     ws.freeze_panes = "B2"
 
 
+def escrever_cotas(writer, nomes, tabela):
+    """Aba Cotas como na planilha: nome na linha 1, CNPJ/ticker na linha 2, datas a partir da 3.
+    Colunas sem nenhuma cota ficam vazias e com o cabeçalho amarelo, para colar à mão."""
+    ws = writer.book.create_sheet("Cotas")
+    amarelo = PatternFill("solid", fgColor="FFF4CC")
+    ws.cell(row=1, column=1, value="Nome").font = Font(bold=True)
+    ws.cell(row=2, column=1, value="Data").font = Font(bold=True)
+    ws.column_dimensions["A"].width = 12
+    for i, d in enumerate(tabela.index, start=3):
+        c = ws.cell(row=i, column=1, value=d.date() if hasattr(d, "date") else d)
+        c.number_format = "dd/mm/yyyy"
+    for j, cod in enumerate(tabela.columns, start=2):
+        nome = ws.cell(row=1, column=j, value=nomes.get(cod, ""))
+        nome.font = Font(size=8)
+        nome.alignment = Alignment(wrap_text=True, horizontal="center", vertical="bottom")
+        codigo = ws.cell(row=2, column=j, value=cod)
+        codigo.font = Font(bold=True)
+        codigo.alignment = Alignment(horizontal="center")
+        ws.column_dimensions[get_column_letter(j)].width = 14
+        serie = tabela[cod]
+        if serie.isna().all():
+            nome.fill = codigo.fill = amarelo
+            continue
+        for i, v in enumerate(serie, start=3):
+            if pd.notna(v):
+                ws.cell(row=i, column=j, value=float(v)).number_format = "#,##0.00######"
+    ws.row_dimensions[1].height = 45
+    ws.freeze_panes = "B3"
+
+
 def main(mes=MES):
     ano, m = mes_referencia(mes)
     inicio, fim = limites_do_mes(ano, m)
@@ -325,9 +356,10 @@ def main(mes=MES):
             blocos_saida["Dados - CPI"] = (["Data", "CPI"], cpi.to_frame(), "0.000")
 
     # ---- Cotas de fundos (CVM) e B3
-    cotas = []
+    cotas, ordem = [], []
     if quer("cotas_cvm"):
         fundos = ler_csv("fundos_brasil.csv")
+        ordem += [(f["cnpj"], f["nome"]) for _, f in fundos.iterrows()]
         tabela, avisos = cotas_cvm(list(fundos["cnpj"]), inicio, fim)
         for _, f in fundos.iterrows():
             c = f["cnpj"]
@@ -344,16 +376,25 @@ def main(mes=MES):
         if not tabela.empty:
             cotas.append(tabela.round(8))
     if quer("cotas_b3"):
-        tickers = list(ler_csv("ativos_b3.csv")["ticker"])
+        ativos = ler_csv("ativos_b3.csv")
+        tickers = list(ativos["ticker"])
+        ordem += [(a["ticker"], a["nome"]) for _, a in ativos.iterrows()]
         b3 = cotas_b3(tickers, inicio, fim)
         for t in tickers:
             if t in b3.columns:
                 importar += linhas_importar("Cotas", "B", 2, t, b3[t], "Yahoo")
                 conferencia += conferir(t, b3[t], "b3", calendario)
         cotas.append(b3)
-    if cotas:
-        tab = pd.concat(cotas, axis=1).sort_index()
-        blocos_saida["Cotas"] = (["Data"] + list(tab.columns), tab, "#,##0.00######")
+    if ordem:
+        # Todas as colunas da planilha, mesmo sem cota, para colar à mão as que faltam.
+        tab = pd.concat(cotas, axis=1) if cotas else pd.DataFrame()
+        datas = sorted(set(tab.index) | set(calendario or []))
+        codigos = [c for c, _ in ordem]
+        tab = tab.reindex(index=datas, columns=codigos) if not tab.empty else pd.DataFrame(index=datas, columns=codigos)
+        tab = tab.loc[:, ~tab.columns.duplicated()]
+        cotas_saida = (dict(ordem), tab)
+    else:
+        cotas_saida = None
 
     # ---- Arquivo
     caminho = os.path.join(pasta_saida(ano, m), f"atualizacao_dados_{nome_mes(m).lower()}_{ano}.xlsx")
@@ -385,6 +426,9 @@ def main(mes=MES):
 
         for aba, (cab, tabela, fmt) in blocos_saida.items():
             escrever_bloco(writer, aba[:31], cab, tabela, fmt)
+
+        if cotas_saida:
+            escrever_cotas(writer, *cotas_saida)
 
         notas = writer.book.create_sheet("Notas")
         for i, txt in enumerate([
