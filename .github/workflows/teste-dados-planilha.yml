@@ -38,6 +38,6 @@ jobs:
           cv = imp[(imp.Fonte == "CVM") & (imp.Data.astype(str).str[:10].isin(["2026-09-15", "2026-09-30"]))]
           print(cv[["Chave", "Data", "Valor"]].to_csv(sep=";", index=False))
           print("=====DADOS")
-          d = imp[imp.Aba == "Dados"]
+          d = imp[(imp.Aba == "Dados") & imp.Chave.isin(["U", "AA", "AL"])]
           print(d[["ColunaData", "Chave", "Data", "Valor"]].to_csv(sep=";", index=False))
           PY

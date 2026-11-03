@@ -13,9 +13,9 @@ O que coleta e para onde vai na planilha base:
       IPCA, IGP-M, Poupança (variação mensal)  E:J  Banco Central (SGS 433, 189, 196)
       CDI (taxa anual)                         M:N  Banco Central (SGS 4389)
       PTAX venda                               Q:R  Banco Central (SGS 1)
-      Ibovespa                                 T:U  Yahoo (^BVSP)
+      Ibovespa                                 T:U  Banco Central (SGS 7), Yahoo se falhar
       S&P 500                                  W:X  Yahoo (^GSPC)
-      Indicadores globais                      Z:AL Yahoo
+      Indicadores globais                      Z:AL Yahoo (AGG ajustado; BRL=X do fim do mês = PTAX)
       CPI EUA                                  AN:AO FRED (precisa da chave)
     Aba Cotas
       Fundos brasileiros (fundos_brasil.csv)   pelo CNPJ da linha 2   CVM, informe diário
@@ -68,6 +68,7 @@ GLOBAIS = {  # ticker do Yahoo -> coluna na aba Dados (datas em Z)
     "^DJI": "AF", "^STOXX": "AG", "^FTSE": "AH", "^GDAXI": "AI", "000001.SS": "AJ",
     "^HSI": "AK", "AGG": "AL",
 }
+AJUSTADOS = {"AGG"}
 SGS = {"ipca": 433, "igpm": 189, "poupanca": 196, "cdi": 4389, "ptax": 1}
 
 # Limites da conferência: variação de um dia para o outro que merece um olhar
@@ -127,13 +128,23 @@ def series_banco_central(inicio, fim, inicio_mensal):
     return out
 
 
+def ibovespa(inicio, fim):
+    """Ibovespa com duas casas: Banco Central (SGS 7). O Yahoo arredonda para pontos inteiros,
+    então só entra se o Banco Central falhar."""
+    s = sgs(7, inicio, fim)
+    if not s.empty:
+        return s.round(2), "Banco Central"
+    print("Aviso: Ibovespa do Banco Central indisponível; usando Yahoo (sem casas decimais).")
+    return fechamentos_yahoo("^BVSP", inicio, fim + timedelta(days=1)).round(2), "Yahoo"
+
+
 def series_yahoo(inicio, fim):
     fim_exclusivo = fim + timedelta(days=1)
-    out = {
-        "ibov": fechamentos_yahoo("^BVSP", inicio, fim_exclusivo).round(2),
-        "sp500": fechamentos_yahoo("^GSPC", inicio, fim_exclusivo).round(2),
-    }
-    globais = {t: fechamentos_yahoo(t, inicio - timedelta(days=10), fim_exclusivo) for t in GLOBAIS}
+    out = {"sp500": fechamentos_yahoo("^GSPC", inicio, fim_exclusivo).round(2)}
+    # AGG entra ajustado por dividendos (Adj Close), como na planilha
+    globais = {t: fechamentos_yahoo(t, inicio - timedelta(days=10), fim_exclusivo,
+                                    coluna="Adj Close" if t in AJUSTADOS else "Close")
+               for t in GLOBAIS}
     tabela = pd.concat(globais, axis=1).sort_index().ffill()
     tabela = tabela[(tabela.index.date >= inicio) & (tabela.index.date <= fim)]
     for t in GLOBAIS:
@@ -289,13 +300,22 @@ def main(mes=MES):
         blocos_saida["Dados - CDI"] = (["Data", "CDI"], bc["cdi"].to_frame(), "0.00%")
         blocos_saida["Dados - PTAX"] = (["Data", "PTAX Vda"], bc["ptax"].to_frame(), "0.0000")
 
-    # ---- Yahoo
+    # ---- Ibovespa e Yahoo
     if quer("yahoo"):
         yh, globais = series_yahoo(inicio, fim)
+        yh["ibov"], fonte_ibov = ibovespa(inicio, fim)
         for bloco, s in yh.items():
             col_data, col_valor, nome = DADOS[bloco]
-            importar += linhas_importar("Dados", col_data, "", col_valor, s, "Yahoo")
+            fonte = fonte_ibov if bloco == "ibov" else "Yahoo"
+            importar += linhas_importar("Dados", col_data, "", col_valor, s, fonte)
             conferencia += conferir(nome, s, "indice", calendario if bloco == "ibov" else None)
+        # Na planilha, o BRL=X do último dia útil de cada mês é a PTAX venda
+        if "ptax" in bc and not bc["ptax"].empty:
+            ptax = bc["ptax"]
+            fins = ptax.groupby([ptax.index.year, ptax.index.month]).tail(1)
+            for d, v in fins.items():
+                if d in globais.index:
+                    globais.loc[d, "BRL=X"] = v
         for t, col in GLOBAIS.items():
             importar += linhas_importar("Dados", "Z", "", col, globais[t], "Yahoo")
         blocos_saida["Dados - Ibovespa"] = (["Data", "Fechamento"], yh["ibov"].to_frame(), "#,##0.00")
@@ -377,7 +397,7 @@ def main(mes=MES):
             "CDI 4389 (% a.a., base 252), PTAX venda 1. Valores em decimal, como na planilha.",
             "CVM (dados.cvm.gov.br): informe diário de fundos. CNPJs com mais de uma subclasse "
             "e FIDCs ficam de fora e aparecem na Conferência.",
-            "Yahoo Finance: Ibovespa, S&P 500, indicadores globais e ativos da B3 (fechamento sem ajuste).",
+            "Banco Central: Ibovespa (SGS 7). Yahoo Finance: S&P 500, indicadores globais (AGG ajustado; BRL=X do último dia útil do mês = PTAX) e ativos da B3 (fechamento sem ajuste).",
             "FRED: CPI (CPIAUCSL).",
             "A macro ImportarDadosEH lê a aba Importar: só preenche célula vazia ou fórmula; "
             "valor digitado diferente vira conflito no relatório, sem sobrescrever.",
