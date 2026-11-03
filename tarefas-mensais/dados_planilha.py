@@ -51,7 +51,7 @@ MES = None          # None = mês anterior. Ou "AAAA-MM".
 DATA_INICIO = os.environ.get("DATA_INICIO") or None   # "AAAA-MM-DD" para um intervalo próprio
 DATA_FIM = os.environ.get("DATA_FIM") or None
 MESES_SERIES_MENSAIS = 6   # quantos meses para trás buscar IPCA, IGP-M, Poupança e CPI
-BLOCOS = os.environ.get("BLOCOS_DADOS") or "todos"   # ou alguns de: bc,yahoo,cpi,cotas_cvm,cotas_b3
+BLOCOS = os.environ.get("BLOCOS_DADOS") or "todos"   # ou alguns de: bc,yahoo,cpi,cotas_cvm,cotas_fidc,cotas_b3
 
 # Bloco da aba Dados -> (coluna da data, coluna do valor, nome)
 DADOS = {
@@ -77,6 +77,8 @@ LIMITE_VARIACAO = {"fundo": 0.02, "b3": 0.10, "indice": 0.06, "cambio": 0.04, "t
 DIAS_REPETIDA = 3   # cota igual por este número de dias seguidos vira aviso
 
 CVM = "https://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS"
+CVM_FIDC = "https://dados.cvm.gov.br/dados/FIDC/DOC/INF_MENSAL/DADOS"
+MESES_FIDC = 3   # meses para trás no informe mensal de FIDC (ele sai até uns 15 dias depois do fim do mês)
 UA = {"User-Agent": "Mozilla/5.0 (tarefas-mensais EH)"}
 
 
@@ -205,6 +207,110 @@ def cotas_cvm(cnpjs, inicio, fim):
     return tabela.sort_index(), avisos
 
 
+def _num(x):
+    try:
+        return float(str(x).replace(",", "."))
+    except ValueError:
+        return 0.0
+
+
+def _serie_do_nome(nome):
+    """Número da série/subclasse sênior escrito no nome da planilha (SR2, SEN2...), ou None."""
+    import re
+    m = re.search(r"\b(?:SR|SEN|SÊNIOR|SENIOR)\s*(\d+)\b", nome.upper())
+    return int(m.group(1)) if m else None
+
+
+def _ultimo_dia_util(d):
+    d = pd.Timestamp(d)
+    while d.weekday() >= 5:
+        d -= pd.Timedelta(days=1)
+    return d
+
+
+def cotas_fidc_mensal(fundos, ate, meses=MESES_FIDC):
+    """Cota de fim de mês do informe mensal de FIDC da CVM (tabelas X.2 e IV).
+
+    fundos: lista de (cnpj, nome). Usa a subclasse sênior; se a sênior está zerada e só uma
+    subclasse tem cota (FIC que só tem a subordinada como classe única), usa essa. Quando o
+    fundo informou a quantidade no campo da cota, calcula PL / quantidade.
+    Devolve (cotas {cnpj: Series}, origem {cnpj: texto}, avisos {cnpj: texto}, meses sem informe).
+    """
+    digitos = lambda c: "".join(ch for ch in c if ch.isdigit())
+    por_cnpj = {digitos(c): (c, n) for c, n in fundos}
+    por_raiz = {}
+    for d in por_cnpj:
+        por_raiz.setdefault(d[:8], []).append(d)
+    linhas, pls, sem_informe = [], {}, []
+    fim = pd.Period(ate, freq="M")
+    for p in pd.period_range(fim - meses, fim, freq="M"):
+        bruto = baixar(f"{CVM_FIDC}/inf_mensal_fidc_{p.year}{p.month:02d}.zip", tentativas=2)
+        if not bruto:
+            sem_informe.append(p)
+            continue
+        z = zipfile.ZipFile(io.BytesIO(bruto))
+        for nome in z.namelist():
+            if "tab_X_2_" not in nome and "tab_IV_" not in nome:
+                continue
+            df = pd.read_csv(z.open(nome), sep=";", dtype=str, encoding="latin-1")
+            df["cnpj"] = df["CNPJ_FUNDO_CLASSE"].str.replace(r"\D", "", regex=True)
+            df = df[df["cnpj"].str[:8].isin(por_raiz)]
+            if "tab_IV_" in nome:
+                col_pl = next((c for c in df.columns if c.endswith("_VL_PL")), None)
+                if col_pl:
+                    for _, r in df.iterrows():
+                        pls[(r["cnpj"], r["DT_COMPTC"])] = _num(r[col_pl])
+            else:
+                linhas.append(df)
+    cotas, origem, avisos = {}, {}, {}
+    if not linhas:
+        return cotas, origem, avisos, sem_informe
+    df = pd.concat(linhas).drop_duplicates(["cnpj", "DT_COMPTC", "TAB_X_CLASSE_SERIE"], keep="last")
+    df["qt"] = df["TAB_X_QT_COTA"].map(_num)
+    df["vl"] = df["TAB_X_VL_COTA"].map(_num)
+    df["classe"] = df["TAB_X_CLASSE_SERIE"].fillna("").str.upper()
+    for d, (cnpj, nome_planilha) in por_cnpj.items():
+        g = df[df["cnpj"] == d]
+        if g.empty:  # CNPJ "inventado" na planilha para outra série do mesmo fundo (ex.: SR3)
+            irmaos = [x for x in df["cnpj"].unique() if x[:8] == d[:8]]
+            if len(irmaos) == 1:
+                g = df[df["cnpj"] == irmaos[0]]
+        if g.empty:
+            continue
+        serie_nome = _serie_do_nome(nome_planilha)
+        valores, notas = {}, set()
+        for dt_comptc, m in g.groupby("DT_COMPTC"):
+            com_cota = m[(m["vl"] > 0) & (m["qt"] > 0)]
+            senior = com_cota[com_cota["classe"].str.contains("SENIOR|SÊNIOR")]
+            escolha = senior if not senior.empty else com_cota
+            if len(escolha) > 1 and serie_nome:
+                pela_serie = escolha[escolha["classe"].str.contains(rf"(?:SÉRIE|SERIE|SUBCLASSE)\s*{serie_nome}\b")]
+                if len(pela_serie) == 1:
+                    escolha = pela_serie
+            if len(escolha) != 1:
+                if len(escolha) > 1:
+                    avisos[cnpj] = (f"{len(escolha)} séries sênior no informe mensal "
+                                    f"({'; '.join(escolha['TAB_X_CLASSE_SERIE'].str.strip())[:90]}): conferir à mão")
+                continue
+            r = escolha.iloc[0]
+            cota = r["vl"]
+            pl = pls.get((r["cnpj"], dt_comptc))
+            if abs(r["vl"] - r["qt"]) <= 1e-9 * max(1.0, r["qt"]) and pl and len(com_cota) == 1:
+                cota = pl / r["qt"]
+                notas.add("PL ÷ quantidade (o fundo informou a quantidade no campo da cota)")
+            valores[_ultimo_dia_util(dt_comptc)] = round(cota, 8)
+            notas.add(r["TAB_X_CLASSE_SERIE"].strip())
+        if valores:
+            s = pd.Series(valores).sort_index()
+            cotas[cnpj] = s
+            origem[cnpj] = "; ".join(sorted(notas))
+            var = s.pct_change().abs()
+            if (var > 0.05).any():
+                avisos[cnpj] = (f"Cota de fim de mês variou {var.max():.1%} de um mês para o outro: "
+                                "conferir se o informe trocou cota e quantidade")
+    return cotas, origem, avisos, sem_informe
+
+
 def cotas_b3(tickers, inicio, fim):
     from cotas_b3 import baixar as baixar_b3
 
@@ -265,7 +371,7 @@ def escrever_bloco(writer, aba, cabecalho, tabela, formato="#,##0.00######"):
     ws.freeze_panes = "B2"
 
 
-def escrever_cotas(writer, nomes, tabela):
+def escrever_cotas(writer, nomes, tabela, repetidas=None):
     """Aba Cotas como na planilha: nome na linha 1, CNPJ/ticker na linha 2, datas a partir da 3.
     Colunas sem nenhuma cota ficam vazias e com o cabeçalho amarelo, para colar à mão."""
     ws = writer.book.create_sheet("Cotas")
@@ -288,9 +394,13 @@ def escrever_cotas(writer, nomes, tabela):
         if serie.isna().all():
             nome.fill = codigo.fill = amarelo
             continue
-        for i, v in enumerate(serie, start=3):
+        rep = (repetidas or {}).get(cod)
+        for i, (d, v) in enumerate(serie.items(), start=3):
             if pd.notna(v):
-                ws.cell(row=i, column=j, value=float(v)).number_format = "#,##0.00######"
+                c = ws.cell(row=i, column=j, value=float(v))
+                c.number_format = "#,##0.00######"
+                if rep is not None and rep.get(d, False):
+                    c.font = Font(italic=True, color="808080")
     ws.row_dimensions[1].height = 45
     ws.freeze_panes = "B3"
 
@@ -356,18 +466,39 @@ def main(mes=MES):
             blocos_saida["Dados - CPI"] = (["Data", "CPI"], cpi.to_frame(), "0.000")
 
     # ---- Cotas de fundos (CVM) e B3
-    cotas, ordem = [], []
+    cotas, ordem, cotas_mensais = [], [], {}
     if quer("cotas_cvm"):
         fundos = ler_csv("fundos_brasil.csv")
         ordem += [(f["cnpj"], f["nome"]) for _, f in fundos.iterrows()]
         tabela, avisos = cotas_cvm(list(fundos["cnpj"]), inicio, fim)
+        faltando = [(f["cnpj"], f["nome"]) for _, f in fundos.iterrows()
+                    if f["cnpj"] not in avisos and (tabela.empty or f["cnpj"] not in tabela.columns)]
+        fidc, fidc_origem, fidc_avisos, fidc_sem = ({}, {}, {}, [])
+        if faltando and quer("cotas_fidc"):
+            fidc, fidc_origem, fidc_avisos, fidc_sem = cotas_fidc_mensal(faltando, fim)
+            for p in fidc_sem:
+                conferencia.append(("Informe mensal de FIDC (CVM)", f"{p.month:02d}/{p.year} ainda não publicado",
+                                    "sai até uns 15 dias depois do fim do mês: rode a tarefa de novo depois"))
         for _, f in fundos.iterrows():
             c = f["cnpj"]
             if c in avisos:
                 conferencia.append((f"{f['nome']} ({c})", avisos[c], ""))
+            elif c in fidc:
+                s = fidc[c]
+                importar += linhas_importar("Cotas", "B", 2, c, s, "CVM informe mensal FIDC")
+                ult = s.index.max()
+                conferencia.append((f"{f['nome']} ({c})", f"Só cota de fim de mês (informe mensal de FIDC): "
+                                    f"última {ult:%d/%m/%Y} = {s[ult]:.8f}", fidc_origem.get(c, "")))
+                if c in fidc_avisos:
+                    conferencia.append((f"{f['nome']} ({c})", fidc_avisos[c], ""))
+                cotas_mensais[c] = s
             elif tabela.empty or c not in tabela.columns:
-                motivo = "FIDC: a CVM só publica a cota de fim de mês" if f["tipo"] == "FIDC" \
-                    else "Não encontrado no informe diário da CVM"
+                if c in fidc_avisos:
+                    motivo = fidc_avisos[c]
+                elif f["tipo"] == "FIDC":
+                    motivo = "FIDC sem cota no informe mensal da CVM"
+                else:
+                    motivo = "Não encontrado no informe diário nem no mensal de FIDC da CVM"
                 conferencia.append((f"{f['nome']} ({c})", motivo, "continua pelo Eduardo-Scrapping ou extrato"))
             else:
                 s = tabela[c]
@@ -392,7 +523,15 @@ def main(mes=MES):
         codigos = [c for c, _ in ordem]
         tab = tab.reindex(index=datas, columns=codigos) if not tab.empty else pd.DataFrame(index=datas, columns=codigos)
         tab = tab.loc[:, ~tab.columns.duplicated()]
-        cotas_saida = (dict(ordem), tab)
+        # Fundos só com cota de fim de mês: repete a última cota nos dias seguintes, como na planilha.
+        repetidas = {}
+        for c, s in cotas_mensais.items():
+            if c not in tab.columns or tab.empty:
+                continue
+            base = s.reindex(sorted(set(s.index) | set(tab.index))).ffill().reindex(tab.index)
+            repetidas[c] = base.notna() & ~base.index.isin(s.index)
+            tab[c] = base
+        cotas_saida = (dict(ordem), tab, repetidas)
     else:
         cotas_saida = None
 
