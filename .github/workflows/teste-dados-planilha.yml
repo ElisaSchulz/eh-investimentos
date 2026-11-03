@@ -33,6 +33,11 @@ jobs:
           x = pd.read_excel(p, sheet_name=None)
           for k, v in x.items():
               print("=====", k, v.shape)
-          print(x["Importar"].to_csv(sep=";", index=False))
+          imp = x["Importar"]
           print(x["Conferência"].to_csv(sep=";", index=False))
+          cv = imp[(imp.Fonte == "CVM") & (imp.Data.astype(str).str[:10].isin(["2026-09-15", "2026-09-30"]))]
+          print(cv[["Chave", "Data", "Valor"]].to_csv(sep=";", index=False))
+          print("=====DADOS")
+          d = imp[imp.Aba == "Dados"]
+          print(d[["ColunaData", "Chave", "Data", "Valor"]].to_csv(sep=";", index=False))
           PY
