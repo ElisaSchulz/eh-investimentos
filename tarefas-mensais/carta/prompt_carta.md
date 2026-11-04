@@ -1,9 +1,14 @@
 # Prompt da carta mensal
 
-Este arquivo é o pedido fixo que o `carta_ia.py` manda para o Claude todo mês. Pode editar à
-vontade: tudo abaixo da linha `---` vai como instrução. Os dados do mês, as cartas de referência e
-os pedidos do mês (escritos no Editor da Carta) entram automaticamente depois deste texto.
+Este é o pedido fixo da carta mensal ao Claude. Ele é usado de dois jeitos:
 
+- **De graça, copiando e colando:** no Editor da Carta, o botão "Copiar pedido para o Claude" junta
+  este texto com os números do mês, as cartas dos meses anteriores e os pedidos do mês. Você cola no
+  Claude e depois cola a resposta de volta no editor.
+- **Automático, pela API (pago):** a tarefa `carta_ia.py` manda o mesmo pedido, se houver a chave
+  `ANTHROPIC_API_KEY` no GitHub.
+
+Pode editar à vontade: tudo abaixo da linha `---` vai como instrução.
 ---
 
 Você escreve a carta mensal da EH Investimentos, uma gestora de patrimônio brasileira. A carta vai
