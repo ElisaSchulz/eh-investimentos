@@ -46,6 +46,7 @@ from datetime import date, timedelta
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import pandas as pd
+from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
@@ -463,9 +464,17 @@ def escrever_bloco(writer, aba, cabecalho, tabela, formato="#,##0.00######"):
     ws.freeze_panes = "B2"
 
 
-def escrever_cotas(writer, nomes, tabela, repetidas=None):
+MARCAS = {  # cor do cabeçalho na aba Cotas para fundos que não vêm completos da CVM
+    "manual": ("F8CBAD", "Coleta manual"),
+    "quadrimestral": ("DDEBF7", "CVM só a cada 4 meses (abril, agosto e dezembro)"),
+}
+
+
+def escrever_cotas(writer, nomes, tabela, repetidas=None, marcas=None):
     """Aba Cotas como na planilha: nome na linha 1, CNPJ/ticker na linha 2, datas a partir da 3.
-    Colunas sem nenhuma cota ficam vazias e com o cabeçalho amarelo, para colar à mão."""
+    Colunas sem nenhuma cota ficam vazias e com o cabeçalho amarelo, para colar à mão.
+    marcas {código: (tipo, motivo)}: fundos de coleta manual (laranja) ou só quadrimestral (azul),
+    com o motivo num comentário do cabeçalho."""
     ws = writer.book.create_sheet("Cotas")
     amarelo = PatternFill("solid", fgColor="FFF4CC")
     ws.cell(row=1, column=1, value="Nome").font = Font(bold=True)
@@ -483,8 +492,14 @@ def escrever_cotas(writer, nomes, tabela, repetidas=None):
         codigo.alignment = Alignment(horizontal="center")
         ws.column_dimensions[get_column_letter(j)].width = 14
         serie = tabela[cod]
+        marca = (marcas or {}).get(cod)
+        if marca:
+            cor, titulo = MARCAS[marca[0]]
+            nome.fill = codigo.fill = PatternFill("solid", fgColor=cor)
+            codigo.comment = Comment(f"{titulo}: {marca[1]}", "Tarefas mensais", width=260, height=90)
         if serie.isna().all():
-            nome.fill = codigo.fill = amarelo
+            if not marca:
+                nome.fill = codigo.fill = amarelo
             continue
         rep = (repetidas or {}).get(cod)
         for i, (d, v) in enumerate(serie.items(), start=3):
@@ -558,13 +573,20 @@ def main(mes=MES):
             blocos_saida["Dados - CPI"] = (["Data", "CPI"], cpi.to_frame(), "0.000")
 
     # ---- Cotas de fundos (CVM) e B3
-    cotas, ordem, cotas_mensais = [], [], {}
+    cotas, ordem, cotas_mensais, marcas = [], [], {}, {}
     if quer("cotas_cvm"):
         fundos = ler_csv("fundos_brasil.csv")
+        if "coleta" not in fundos.columns:
+            fundos["coleta"] = ""
         ordem += [(f["cnpj"], f["nome"]) for _, f in fundos.iterrows()]
+        # Coluna "coleta" da lista: "manual: motivo" para os fundos sem fonte pública que bata
+        manuais = {f["cnpj"]: f["coleta"].split(":", 1)[-1].strip() for _, f in fundos.iterrows()
+                   if f["coleta"].lower().startswith("manual")}
+        marcas.update({c: ("manual", m) for c, m in manuais.items()})
         tabela, avisos = cotas_cvm(list(fundos["cnpj"]), inicio, fim)
         faltando = [(f["cnpj"], f["nome"]) for _, f in fundos.iterrows()
-                    if f["cnpj"] not in avisos and (tabela.empty or f["cnpj"] not in tabela.columns)]
+                    if f["cnpj"] not in avisos and f["cnpj"] not in manuais
+                    and (tabela.empty or f["cnpj"] not in tabela.columns)]
         fidc, fidc_origem, fidc_avisos, fidc_sem = ({}, {}, {}, [])
         if faltando and quer("cotas_fidc"):
             fidc, fidc_origem, fidc_avisos, fidc_sem = cotas_fidc_mensal(faltando, fim)
@@ -590,6 +612,10 @@ def main(mes=MES):
                 if c in fidc_avisos:
                     conferencia.append((f"{f['nome']} ({c})", fidc_avisos[c], ""))
                 cotas_mensais[c] = s
+                if "FIP" in fonte_mensal[c]:
+                    marcas[c] = ("quadrimestral", "nos outros meses, usar o extrato")
+            elif c in manuais and (tabela.empty or c not in tabela.columns):
+                conferencia.append((f"{f['nome']} ({c})", "Coleta manual", manuais[c]))
             elif tabela.empty or c not in tabela.columns:
                 if c in fidc_avisos:
                     motivo = fidc_avisos[c]
@@ -629,7 +655,7 @@ def main(mes=MES):
             base = s.reindex(sorted(set(s.index) | set(tab.index))).ffill().reindex(tab.index)
             repetidas[c] = base.notna() & ~base.index.isin(s.index)
             tab[c] = base
-        cotas_saida = (dict(ordem), tab, repetidas)
+        cotas_saida = (dict(ordem), tab, repetidas, marcas)
     else:
         cotas_saida = None
 
@@ -656,10 +682,14 @@ def main(mes=MES):
         for col, larg in zip("ABC", (60, 55, 45)):
             ws.column_dimensions[col].width = larg
         amarelo = PatternFill("solid", fgColor="FFF4CC")
+        laranja = PatternFill("solid", fgColor=MARCAS["manual"][0])
         for linha in ws.iter_rows(min_row=2):
             if "Variação" in str(linha[1].value) or "repetido" in str(linha[1].value):
                 for c in linha:
                     c.fill = amarelo
+            elif linha[1].value == "Coleta manual":
+                for c in linha:
+                    c.fill = laranja
 
         for aba, (cab, tabela, fmt) in blocos_saida.items():
             escrever_bloco(writer, aba[:31], cab, tabela, fmt)
@@ -682,6 +712,9 @@ def main(mes=MES):
             "de FIP (quadrimestral: abril, agosto e dezembro). Entram só em célula vazia.",
             "Yahoo Finance: Ibovespa (pontos inteiros; a macro aceita até 1 ponto de diferença), S&P 500, indicadores globais (AGG ajustado; BRL=X do último dia útil do mês = PTAX) e ativos da B3 (fechamento sem ajuste).",
             "FRED: CPI (CPIAUCSL).",
+            "Aba Cotas: cabeçalho laranja = coleta manual (coluna 'coleta' de fundos_brasil.csv; o motivo "
+            "está no comentário do CNPJ); azul = FIP, que a CVM só publica em abril, agosto e dezembro; "
+            "amarelo = sem cota neste mês.",
             "A macro ImportarDadosEH lê a aba Importar: só preenche célula vazia ou fórmula; "
             "valor digitado diferente vira conflito no relatório, sem sobrescrever.",
         ], start=1):

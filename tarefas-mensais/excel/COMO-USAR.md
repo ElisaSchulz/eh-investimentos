@@ -11,7 +11,7 @@ sem mudar a estrutura dela.
 |---|---|
 | Importar | Uma linha por valor. É o que a macro lê. |
 | Conferência | Fundo não encontrado na CVM, FIDC só com cota de fim de mês, dia útil sem cota, cota repetida, variação fora do normal. |
-| Dados - ... / Cotas | Cada bloco já no layout da planilha, para copiar e colar à mão se preferir. |
+| Dados - ... / Cotas | Cada bloco já no layout da planilha, para copiar e colar à mão se preferir. Na aba Cotas, cabeçalho laranja = fundo de coleta manual (o motivo está no comentário do CNPJ), azul = FIP (CVM só em abril, agosto e dezembro), amarelo = sem cota no mês. |
 | Notas | Fontes e premissas. |
 
 ## Instalar (uma vez só)
