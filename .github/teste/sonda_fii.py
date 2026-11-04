@@ -12,26 +12,27 @@ def get(u):
         return urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0"}), timeout=120).read()
     except Exception as e:
         print("FALHOU", u, e); return None
-for d in ["FII/DOC/INF_MENSAL/DADOS/", "FII/DOC/INF_TRIMESTRAL/DADOS/", "FIP/DOC/INF_TRIMESTRAL/DADOS/", "FIP/DOC/INF_QUADRIMESTRAL/DADOS/",
-          "FIAGRO/DOC/INF_MENSAL/DADOS/", "FIAGRO/DOC/", "FI/CAD/DADOS/", "FIP/DOC/"]:
-    b = get("https://dados.cvm.gov.br/dados/" + d)
-    if b: print("DIR", d, re.findall(r'href="([^"?/][^"]*)"', b.decode("latin-1"))[-8:])
-def varre(u, maxlin=6):
+def linhas(u, nome_contem=None):
     b = get(u)
     if not b: return
-    z = zipfile.ZipFile(io.BytesIO(b))
-    for n in z.namelist():
-        txt = z.read(n).decode("latin-1")
+    arqs = []
+    if u.endswith(".zip"):
+        z = zipfile.ZipFile(io.BytesIO(b))
+        print("ZIP", u, z.namelist())
+        arqs = [(n, z.read(n).decode("latin-1")) for n in z.namelist() if not nome_contem or nome_contem in n]
+    else:
+        arqs = [(u, b.decode("latin-1"))]
+    for n, txt in arqs:
         rd = csv.reader(io.StringIO(txt), delimiter=";")
-        cab = next(rd); k = 0; achou = set()
+        cab = next(rd); print("CAB", n, cab)
         for r in rd:
-            hit = [v for v in r if re.sub(r"\D", "", v) in ALVO]
-            if hit:
-                achou.add(re.sub(r"\D", "", hit[0]))
-                if k < maxlin: print("ROW", n, r[:40])
-                k += 1
-        if k: print("CAB", n, cab[:40]); print("N", n, k, "cnpjs", len(achou), sorted(achou))
-varre("https://dados.cvm.gov.br/dados/FII/DOC/INF_MENSAL/DADOS/inf_mensal_fii_2026.zip")
-varre("https://dados.cvm.gov.br/dados/FIP/DOC/INF_TRIMESTRAL/DADOS/inf_trimestral_fip_2026.zip")
-varre("https://dados.cvm.gov.br/dados/FIAGRO/DOC/INF_MENSAL/DADOS/inf_mensal_fiagro_2026.zip")
-varre("https://dados.cvm.gov.br/dados/FI/CAD/DADOS/registro_fundo_classe.zip", maxlin=40)
+            if any(re.sub(r"\D", "", v) in ALVO for v in r):
+                print("ROW", n, r)
+linhas("https://dados.cvm.gov.br/dados/FIP/DOC/INF_QUADRIMESTRAL/DADOS/inf_quadrimestral_fip_2026.csv")
+linhas("https://dados.cvm.gov.br/dados/FIAGRO/DOC/INF_MENSAL/DADOS/inf_mensal_fiagro_202609.zip")
+b = get("https://dados.cvm.gov.br/dados/FII/DOC/INF_MENSAL/DADOS/inf_mensal_fii_2026.zip")
+z = zipfile.ZipFile(io.BytesIO(b))
+n = [x for x in z.namelist() if "complemento" in x][0]
+for r in csv.DictReader(io.StringIO(z.read(n).decode("latin-1")), delimiter=";"):
+    if re.sub(r"\D", "", r["CNPJ_Fundo_Classe"]) in ALVO and r["Data_Referencia"] >= "2026-08":
+        print("FII", r["CNPJ_Fundo_Classe"], r["Data_Referencia"], r["Versao"], r["Valor_Patrimonial_Cotas"], r["Patrimonio_Liquido"], r["Cotas_Emitidas"])
