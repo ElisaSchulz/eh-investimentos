@@ -5,7 +5,9 @@ name: Tarefas mensais
 # admin mostra para baixar. Nada gerado fica no GitHub: o repositório é público.
 on:
   schedule:
-    - cron: "0 10 2 * *"   # dia 2 de cada mês, 7h de Brasília
+    # O GitHub não sabe o que é dia útil: o workflow acorda nos dias 1 a 8, 7h de Brasília,
+    # e o job "quando" (dia_util.py) só deixa rodar no 3º dia útil do mês.
+    - cron: "0 10 1-8 * *"
   workflow_dispatch:
     inputs:
       mes:
@@ -33,7 +35,25 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  quando:
+    runs-on: ubuntu-latest
+    outputs:
+      rodar: ${{ steps.dia.outputs.rodar }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: dia
+        env:
+          TZ: America/Sao_Paulo
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            python tarefas-mensais/dia_util.py
+          else
+            echo "rodar=true" >> "$GITHUB_OUTPUT"
+          fi
+
   rodar:
+    needs: quando
+    if: needs.quando.outputs.rodar == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     defaults:

@@ -46,7 +46,7 @@ sem mudar a estrutura dela.
 - Data nova depois da última da coluna vira linha nova, em ordem.
 - CNPJ ou ticker que não está na linha 2 da aba Cotas aparece no relatório: crie a coluna e rode de novo.
 
-## Rodar fora do dia 2
+## Rodar fora do 3º dia útil
 
 GitHub > Actions > **Tarefas mensais** > **Run workflow**, com tarefas = `dados_planilha` e, se
 quiser um pedaço do mês, data inicial e final (ex.: do dia 1 ao dia 20).
