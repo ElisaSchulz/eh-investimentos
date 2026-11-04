@@ -7,6 +7,7 @@ GitHub Actions:
 
 Precisa das variáveis SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY (segredo do GitHub).
 """
+import json
 import mimetypes
 import os
 import sys
@@ -41,6 +42,28 @@ def enviar(pasta, mes):
             _requisicao("POST", _objeto(f"{mes}/{nome}"), f.read(),
                         {"Content-Type": tipo, "x-upsert": "true"})
         print(f"Enviado: {mes}/{nome}")
+
+
+def configurado():
+    return bool(os.environ.get("SUPABASE_URL") and os.environ.get("SUPABASE_SERVICE_ROLE_KEY"))
+
+
+def baixar(caminho):
+    """Conteúdo (bytes) de um arquivo do bucket, ou None se ele não existir."""
+    try:
+        return _requisicao("GET", f"object/authenticated/{BUCKET}/" + urllib.parse.quote(caminho))
+    except urllib.error.HTTPError as e:
+        if e.code in (400, 404):
+            return None
+        raise
+
+
+def listar(pasta=""):
+    """Nomes dos itens de uma pasta do bucket (arquivos e subpastas)."""
+    corpo = json.dumps({"prefix": pasta, "limit": 1000, "offset": 0,
+                        "sortBy": {"column": "name", "order": "asc"}}).encode()
+    resposta = _requisicao("POST", f"object/list/{BUCKET}", corpo, {"Content-Type": "application/json"})
+    return [item["name"] for item in json.loads(resposta)]
 
 
 def baixar_status(pasta, mes):

@@ -4,3 +4,4 @@ numpy
 openpyxl
 fredapi
 mstarpy
+anthropic>=2.4

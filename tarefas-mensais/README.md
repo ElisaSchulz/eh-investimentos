@@ -7,6 +7,7 @@ na aba **Tarefas Mensais** do admin do site.
 | Script | O que gera | Substitui |
 |---|---|---|
 | `carta_mensal.py` | `carta_dados.json`: gráficos, índices e destaques da capa da carta | `template_carta_mensal.py` |
+| `carta_ia.py` | `carta_rascunho_ia.json`: rascunho da carta escrito pelo Claude via API (opcional, só com a chave) | o prompt colado à mão no Claude |
 | `indicadores_americanos.py` | `USA_Indicators.xlsx` (CPI + índices) | `pyscript-indicadores-americanos.py` |
 | `cotas_fundos.py` | `cotacoes_fundos_<mês>_<ano>.xlsx` (NAV dos UCITS) | `baixar_cotas_fundos.py` |
 | `cotas_b3.py` | `cotas_b3_<mês>_<ano>.xlsx` (todos os pregões do mês) | `cotas_b3_datas.py` |
@@ -41,6 +42,7 @@ vem a cota do mês anterior; rodando a tarefa de novo depois do dia 15, vem a do
    Cria o bucket privado `tarefas-mensais`, que só os admins acessam.
 2. **GitHub → Settings → Secrets and variables → Actions → New repository secret:**
    - `SUPABASE_SERVICE_ROLE_KEY`: Supabase → Project Settings → API → `service_role`.
+   - `ANTHROPIC_API_KEY` (opcional, pago): a chave da API do Claude (veja "Rascunho da carta com o Claude").
    - `FRED_API_KEY`: a chave da FRED. Como a antiga ficou escrita no script, vale gerar
      uma nova em https://fred.stlouisfed.org/docs/api/api_key.html.
 
@@ -52,6 +54,26 @@ A carta é montada no admin, na tela **Editor da Carta**: os dados do mês vêm 
 usa o modelo `carta/carta_template.html`. **Salvar PDF** imprime a carta;
 **Guardar carta final no site** grava o HTML junto dos arquivos do mês.
 
+### Rascunho da carta com o Claude
+
+O pedido fixo ao Claude fica em `carta/prompt_carta.md` (estilo, roteiro de cada seção, formato).
+Pode editar à vontade. Há dois jeitos de usar:
+
+**De graça, copiando e colando (padrão).** No Editor da Carta, painel "Rascunho com o Claude":
+1. (opcional) escrever os pedidos do mês, por exemplo "dar mais espaço às eleições";
+2. **Copiar pedido para o Claude**: junta o prompt, os números do mês e as cartas dos meses
+   anteriores escritas no editor;
+3. colar numa conversa nova no Claude, com a busca na web ligada (dá para anexar PDFs de cartas
+   antigas junto);
+4. copiar a resposta inteira, colar no editor e clicar **Preencher a carta com a resposta**.
+   O painel mostra as fontes e os pontos que o Claude marcou para conferir.
+
+**Automático, pela API (opcional, pago).** `carta_ia.py` faz o mesmo sozinho no 3º dia útil e
+grava `carta_rascunho_ia.json`. Só funciona com o segredo `ANTHROPIC_API_KEY` (chave criada em
+https://platform.claude.com, cobrada à parte da assinatura do Claude, cerca de US$ 2 a 5 por carta).
+Sem a chave, a tarefa só avisa e nada é cobrado. Cartas antigas para a API vão na pasta
+`referencias-carta/` do bucket, pelo próprio editor.
+
 ## Rodar fora do 3º dia útil
 
 GitHub → Actions → **Tarefas mensais** → **Run workflow** (o admin tem um link direto).
@@ -62,6 +84,8 @@ data inicial e final.
 
 1. Copiar esta pasta para o computador e instalar: `pip install -r requirements.txt`
    (as cotas dos fundos pedem Python 3.11 ou mais novo).
-2. Criar `chave_fred.txt` nesta pasta com a chave da FRED (uma linha só).
+2. Criar `chave_fred.txt` nesta pasta com a chave da FRED (uma linha só) e, para o rascunho
+   da carta, `chave_anthropic.txt` com a chave da API do Claude. Cartas antigas de referência
+   podem ir em `carta/referencias/`. Nenhum desses arquivos vai para o GitHub.
 3. Abrir o script e apertar **Run**. Para outro mês, preencher `MES = "2026-09"` no topo.
    Os arquivos vão para `saidas/AAAA-MM/`.

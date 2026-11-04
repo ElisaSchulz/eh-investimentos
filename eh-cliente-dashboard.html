@@ -775,6 +775,13 @@
     .ec-acoes { display:flex; flex-wrap:wrap; gap:0.7rem; align-items:center; margin-bottom:1rem; }
     .ec-acoes .btn-download-ext { margin-top:0; }
     .ec-salvo { font-size:11.5px; color:var(--cream-faint); }
+    .ec-ia-info { font-size:12px; color:var(--cream); line-height:1.55; margin-bottom:0.8rem; }
+    .ec-ia-lista { font-size:11.5px; line-height:1.5; color:var(--cream-faint); margin:0.4rem 0 0; padding-left:1.1rem; }
+    .ec-ia-lista a { color:var(--gold-text); word-break:break-all; }
+    .ec-ia details { margin-top:0.7rem; }
+    .ec-ia summary { cursor:pointer; font-size:12px; font-weight:700; color:var(--gold-text); }
+    .ec-ia-botoes { display:flex; flex-wrap:wrap; gap:0.7rem; align-items:center; }
+    .ec-ia-botoes .btn-download-ext { margin-top:0; }
     @media (max-width: 1100px) { .ec-layout { grid-template-columns: 1fr; } .ec-preview { position:relative; top:0; height:80vh; } }
   </style>
   <link rel="stylesheet" href="eh-tema.css" />
@@ -1659,7 +1666,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     <div class="view" id="view-editorcarta">
       <div class="welcome-banner">
         <h2>Editor da <em>Carta</em></h2>
-        <p>Os gráficos, os índices e os destaques da capa vêm dos dados do mês, gerados no 3º dia útil do mês. Escreva o texto de cada seção e confira a carta em A4 ao lado. O rascunho é salvo sozinho.</p>
+        <p>Os gráficos, os índices e os destaques da capa vêm dos dados do mês, gerados no 3º dia útil do mês. O Claude pode escrever um rascunho dos textos, indicadores e Focus (painel abaixo); revise cada seção e confira a carta em A4 ao lado. O rascunho é salvo sozinho.</p>
       </div>
       <div class="ec-acoes">
         <div class="upload-field" style="min-width:200px;"><label>Mês da carta</label>
@@ -5325,6 +5332,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         nomes.filter(n => n.startsWith('carta_textos') || n.startsWith('Carta Mensal')).forEach(n => { usados.add(n); t.arquivos.push(n); });
         t.editor = true;
       }
+      if (t.tarefa === 'carta_ia') t.editor = true;
       linhas.push(t);
     });
     const outros = nomes.filter(n => !usados.has(n));
@@ -5385,7 +5393,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   ].map(l => ({ ...l, valor: '', mes: '', ano: '', m12: '' }));
   const EC_FOCUS_PADRAO = ['Selic', 'IPCA', 'PIB', 'Dólar'].map(r => ({ rotulo: r, valor: '' }));
 
-  let ecTemplate = null, ecLogo = null, ecDados = null, ecTextos = null, ecMesAtual = '';
+  let ecTemplate = null, ecLogo = null, ecDados = null, ecTextos = null, ecMesAtual = '', ecRascunhoIA = null, ecRefs = [];
+  const EC_REFS = 'referencias-carta';
+  const EC_WORKFLOW = 'https://github.com/ElisaSchulz/eh-investimentos/actions/workflows/tarefas-mensais.yml';
   let ecTimerPrevia = null, ecTimerSalvar = null, ecPendente = false, ecIniciado = false;
 
   async function ecInit() {
@@ -5449,13 +5459,15 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     ecDados = await ecBaixarJson(`${mes}/carta_dados.json`);
     if (!ecDados) { ecErro(`Não consegui ler ${mes}/carta_dados.json.`); return; }
     ecTextos = await ecBaixarJson(`${mes}/carta_textos.json`);
+    ecRascunhoIA = await ecBaixarJson(`${mes}/carta_rascunho_ia.json`);
+    await ecListarRefs();
     if (!ecTextos) {
       // mês novo: aproveita os nomes dos indicadores e o título do Focus do mês anterior
       const meses = (document.getElementById('ecMes').dataset.meses || '').split(',');
       const anterior = meses[meses.indexOf(mes) + 1];
       const velho = anterior ? await ecBaixarJson(`${anterior}/carta_textos.json`) : null;
       ecTextos = {
-        subtitulo: '', textos: {},
+        subtitulo: '', textos: {}, instrucoes_ia: '',
         indicadores: (velho && velho.indicadores ? velho.indicadores : EC_INDICADORES_PADRAO)
           .map(l => ({ nome: l.nome, sub: l.sub, valor: '', mes: '', ano: '', m12: '' })),
         focus_titulo: `Boletim Focus · projeções para o fim de ${ecDados.ano}`,
@@ -5480,6 +5492,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         <td><button title="Remover" onclick="ecRemoverIndicador(${i})">×</button></td></tr>`).join('');
     const focus = T.focus.map((f, i) => `<tr><td><input data-focus="${i}" data-campo="rotulo"></td><td><input data-focus="${i}" data-campo="valor"></td></tr>`).join('');
     document.getElementById('ecForm').innerHTML = `
+      ${ecPainelIA()}
       <div class="upload-panel">
         <h3>Capa</h3>
         <div class="upload-field"><label>Subtítulo (opcional)</label><input id="ecSubtitulo" placeholder="Panorama macroeconômico e de mercados: cenário global e doméstico do mês."></div>
@@ -5497,16 +5510,215 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const form = document.getElementById('ecForm');
     document.getElementById('ecSubtitulo').value = T.subtitulo || '';
     document.getElementById('ecFocusTitulo').value = T.focus_titulo || '';
+    document.getElementById('ecPedidosIA').value = T.instrucoes_ia || '';
     form.querySelectorAll('[data-sec]').forEach(el => { el.value = (T.textos || {})[el.dataset.sec] || ''; });
     form.querySelectorAll('[data-ind]').forEach(el => { el.value = T.indicadores[+el.dataset.ind][el.dataset.campo] || ''; });
     form.querySelectorAll('[data-focus]').forEach(el => { el.value = T.focus[+el.dataset.focus][el.dataset.campo] || ''; });
     form.querySelectorAll('input, textarea').forEach(el => el.addEventListener('input', ecMudou));
   }
 
+  // ── Rascunho escrito pelo Claude ──
+  // Caminho grátis: o editor monta o pedido completo (prompt fixo + números do mês + cartas
+  // anteriores + pedidos do mês), você cola no Claude e cola a resposta de volta aqui.
+  // Caminho automático (opcional, API paga): tarefa carta_ia no GitHub, com a chave ANTHROPIC_API_KEY.
+  const EC_PROMPT = 'tarefas-mensais/carta/prompt_carta.md';
+  const EC_SECOES_IA = { visao: 'Visão geral', eua: 'Estados Unidos', europa: 'Europa', china: 'China', japao: 'Japão', brasil: 'Brasil' };
+
+  function ecPainelIA() {
+    const R = ecRascunhoIA;
+    let status = '';
+    if (R) {
+      const uso = R.uso || {};
+      const origem = R.origem === 'colado' ? 'colado da conversa com o Claude'
+        : `gerado pela API, com ${(R.referencias || []).length} carta(s) de referência e ${uso.buscas || 0} buscas na web`
+          + (uso.custo_estimado_usd != null ? ` · custo estimado US$ ${Number(uso.custo_estimado_usd).toFixed(2).replace('.', ',')}` : '');
+      const fontes = (R.fontes || []).map(f => `<li>${f.url && /^https?:\/\//.test(f.url)
+        ? `<a href="${escHtml(f.url)}" target="_blank" rel="noopener">${escHtml(f.titulo || f.url)}</a>` : escHtml(f.titulo || '')}${f.uso ? ` · ${escHtml(f.uso)}` : ''}</li>`).join('');
+      const conferir = (R.pontos_a_conferir || []).map(p => `<li>${escHtml(p)}</li>`).join('');
+      status = `
+        <div class="ec-ia-info" style="margin-top:1rem;">Rascunho de ${escHtml(new Date(R.gerado_em).toLocaleString('pt-BR'))}, ${escHtml(origem)}.</div>
+        <div class="ec-ia-botoes"><button class="ec-link" style="padding:0;" onclick="ecUsarRascunho()">Preencher a carta com este rascunho</button></div>
+        ${conferir ? `<details open><summary>Pontos a conferir (${(R.pontos_a_conferir || []).length})</summary><ul class="ec-ia-lista">${conferir}</ul></details>` : ''}
+        ${fontes ? `<details><summary>Fontes consultadas (${(R.fontes || []).length})</summary><ul class="ec-ia-lista">${fontes}</ul></details>` : ''}`;
+    }
+    const refs = ecRefs.length
+      ? ecRefs.map(n => `<li>${escHtml(n)} <button class="ec-link" style="padding:0 0 0 6px;color:var(--err-text);" onclick="ecRemoverRef(decodeURIComponent('${encodeURIComponent(n)}'))">remover</button></li>`).join('')
+      : '<li>Nenhuma.</li>';
+    return `
+      <div class="upload-panel ec-ia">
+        <h3>Rascunho com o Claude</h3>
+        <div class="upload-field"><label>Pedidos para o Claude neste mês (opcional)</label>
+          <textarea id="ecPedidosIA" style="min-height:70px;font-size:13px;" placeholder="Ex.: dar mais espaço às eleições; comentar o resultado da Petrobras; não falar de cripto."></textarea></div>
+        <div class="ec-ia-info" style="margin-top:0.9rem;"><strong>1.</strong> Copie o pedido completo: instruções, números do mês e as cartas dos meses anteriores como referência de linguagem.</div>
+        <div class="ec-ia-botoes">
+          <button class="btn-download-ext" onclick="ecCopiarPedido()">Copiar pedido para o Claude</button>
+          <a class="btn-download-ext" style="text-decoration:none;" href="https://claude.ai/new" target="_blank" rel="noopener">Abrir o Claude ↗</a>
+          <span class="ec-salvo" id="ecCopiado"></span>
+        </div>
+        <div class="ec-hint">No Claude, cole numa conversa nova com a busca na web ligada e envie. Se quiser, anexe junto PDFs de cartas antigas.</div>
+        <div class="ec-ia-info" style="margin-top:0.9rem;"><strong>2.</strong> Quando o Claude terminar, copie a resposta inteira (botão de copiar embaixo dela) e cole aqui.</div>
+        <div class="upload-field"><textarea id="ecRespostaIA" style="min-height:70px;font-size:12px;" placeholder="Cole aqui a resposta do Claude"></textarea></div>
+        <div class="ec-ia-botoes" style="margin-top:0.5rem;">
+          <button class="btn-download-ext" onclick="ecColarResposta()">Preencher a carta com a resposta</button>
+        </div>
+        <div class="ec-hint">Preenche capa, textos, indicadores e Focus. Revise tudo antes de publicar: o Claude pode errar números e datas.</div>
+        ${status}
+        <details style="margin-top:1rem;"><summary>Rascunho automático pela API (opcional, pago)</summary>
+          <div class="ec-hint">Com a chave da API do Claude salva no GitHub (segredo ANTHROPIC_API_KEY), o rascunho é escrito sozinho no 3º dia útil, sem copiar e colar. Custa cerca de US$ 2 a 5 por carta. Sem a chave, nada é cobrado e esta parte fica parada.</div>
+          <div class="ec-ia-botoes" style="margin-top:0.6rem;">
+            <a class="btn-download-ext" style="text-decoration:none;" href="${EC_WORKFLOW}" target="_blank" rel="noopener">Gerar pela API no GitHub ↗</a>
+          </div>
+          <div class="ec-hint">Run workflow, mês <strong>${escHtml(ecMesAtual)}</strong>, tarefas <strong>carta_ia</strong>.</div>
+          <div class="ec-ia-info" style="margin-top:0.8rem;">Cartas antigas de referência para a API (${ecRefs.length})</div>
+          <ul class="ec-ia-lista">${refs}</ul>
+          <label class="ec-link" style="display:inline-block;">+ Enviar carta antiga (PDF ou .txt)
+            <input type="file" accept=".pdf,.txt,.md" multiple style="display:none;" onchange="ecEnviarRefs(event)"></label>
+        </details>
+      </div>`;
+  }
+
+  function ecCartaEmTexto(mes, t) {
+    const partes = [`Carta de ${tmNomeMes(mes)}`];
+    if (t.subtitulo) partes.push(`Subtítulo: ${t.subtitulo}`);
+    Object.entries(EC_SECOES_IA).forEach(([k, titulo]) => {
+      const txt = ((t.textos || {})[k] || '').trim();
+      if (txt) partes.push(`## ${titulo}\n\n${txt}`);
+    });
+    const linhas = (t.indicadores || []).filter(l => l.nome).map(l => `- ${l.nome} (${l.sub || ''}): valor ${l.valor || ''}; mês ${l.mes || ''}; ano ${l.ano || ''}; 12m ${l.m12 || ''}`);
+    if (linhas.length) partes.push('## Indicadores\n\n' + linhas.join('\n'));
+    if ((t.focus || []).length) partes.push(`## ${t.focus_titulo || 'Focus'}\n\n` + t.focus.map(f => `- ${f.rotulo}: ${f.valor}`).join('\n'));
+    return partes.join('\n\n');
+  }
+
+  async function ecMontarPedido() {
+    ecLerFormulario();
+    const r = await fetch(EC_PROMPT, { cache: 'no-cache' });
+    if (!r.ok) throw new Error('não encontrei o prompt da carta (' + EC_PROMPT + ')');
+    let prompt = await r.text();
+    if (prompt.includes('\n---\n')) prompt = prompt.split('\n---\n').slice(1).join('\n---\n');
+    // cartas dos meses anteriores escritas no editor (até 4)
+    const meses = (document.getElementById('ecMes').dataset.meses || '').split(',').filter(m => m && m < ecMesAtual).sort().reverse();
+    const refs = [];
+    for (const m of meses) {
+      if (refs.length >= 4) break;
+      const t = await ecBaixarJson(`${m}/carta_textos.json`);
+      if (t && Object.values(t.textos || {}).some(v => (v || '').trim())) refs.push(ecCartaEmTexto(m, t));
+    }
+    const D = ecDados, T = ecTextos;
+    const [ano, mm] = ecMesAtual.split('-').map(Number);
+    const fim = new Date(ano, mm, 0).getDate();
+    const num = v => v == null ? '—' : Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+    const indices = (D.indices || []).filter(i => i.retorno != null)
+      .map(i => `- ${i.nome} (${i.praca}): fechamento ${num(Math.round(i.fechamento))}, retorno no mês ${num(i.retorno)}% (último pregão ${i.ultima_data})`);
+    const destaques = (D.destaques || []).map(d => `- ${d.rotulo}: ${d.valor}`);
+    const pedidos = (T.instrucoes_ia || '').trim();
+    return [
+      prompt.trim(),
+      '## Como responder nesta conversa\n\nEscreva o JSON da resposta dentro de um único bloco de código (```json). Não crie artefato nem arquivo e não escreva nada depois do bloco.',
+      refs.length ? refs.map(x => `<carta_referencia>\n${x}\n</carta_referencia>`).join('\n\n') : '(Ainda não há cartas anteriores escritas no editor; siga o estilo descrito acima e as cartas anexadas, se houver.)',
+      `Hoje é ${new Date().toLocaleDateString('pt-BR')}. Escreva a carta de ${D.mes_nome} de ${D.ano} (de 01/${String(mm).padStart(2, '0')}/${ano} a ${fim}/${String(mm).padStart(2, '0')}/${ano}).`,
+      '<dados_do_mes>\nÍndices de bolsa (fonte oficial da carta, use estes números):\n' + indices.join('\n') + '\n\nDestaques da capa:\n' + destaques.join('\n') + '\n</dados_do_mes>',
+      'Linhas da tabela de indicadores, nesta ordem (nome · detalhe do mês anterior):\n' + (T.indicadores || []).filter(l => l.nome).map(l => `- ${l.nome} · ${l.sub || ''}`).join('\n'),
+      'Projeções do Focus, nesta ordem: ' + (T.focus || []).map(f => f.rotulo).join(', '),
+      pedidos ? `<pedidos_do_mes>\n${pedidos}\n</pedidos_do_mes>` : '',
+      'As cartas de referência acima mostram a linguagem e o tipo de informação esperados. Pesquise os acontecimentos do mês e responda no formato pedido.',
+    ].filter(Boolean).join('\n\n');
+  }
+
+  async function ecCopiarPedido() {
+    const el = document.getElementById('ecCopiado');
+    el.textContent = 'Montando o pedido…';
+    try {
+      const texto = await ecMontarPedido();
+      if (ecPendente) ecSalvarAgora();
+      await navigator.clipboard.writeText(texto);
+      el.textContent = `✓ Pedido copiado (${Math.round(texto.length / 1000)} mil caracteres). Agora cole no Claude.`;
+    } catch (e) {
+      el.textContent = 'Não consegui copiar: ' + e.message;
+    }
+  }
+
+  function ecLerRespostaIA(texto) {
+    const tags = [...texto.matchAll(/<carta_json>\s*([\s\S]*?)\s*<\/carta_json>/g)];
+    const blocos = [...texto.matchAll(/```(?:json)?\s*([\s\S]*?)```/g)];
+    let bruto = tags.length ? tags[tags.length - 1][1] : blocos.length ? blocos[blocos.length - 1][1] : texto;
+    bruto = bruto.replace(/<\/?carta_json>/g, '').trim();
+    const ini = bruto.indexOf('{'), fimJ = bruto.lastIndexOf('}');
+    if (ini < 0 || fimJ < ini) throw new Error('não achei o JSON na resposta');
+    const r = JSON.parse(bruto.slice(ini, fimJ + 1));
+    const s = v => (v == null ? '' : String(v));
+    const textos = {};
+    Object.keys(EC_SECOES_IA).forEach(k => { textos[k] = s((r.textos || {})[k]).trim(); });
+    return {
+      subtitulo: s(r.subtitulo).trim(), textos,
+      indicadores: (r.indicadores || []).filter(l => l && typeof l === 'object')
+        .map(l => ({ nome: s(l.nome), sub: s(l.sub), valor: s(l.valor), mes: s(l.mes), ano: s(l.ano), m12: s(l.m12) })),
+      focus: (r.focus || []).filter(f => f && typeof f === 'object').map(f => ({ rotulo: s(f.rotulo), valor: s(f.valor) })),
+      fontes: (r.fontes || []).filter(f => f && typeof f === 'object').map(f => ({ titulo: s(f.titulo || f.url), url: s(f.url), uso: s(f.uso) })),
+      pontos_a_conferir: (r.pontos_a_conferir || []).map(s),
+    };
+  }
+
+  async function ecColarResposta() {
+    const texto = document.getElementById('ecRespostaIA').value;
+    if (!texto.trim()) { alert('Cole primeiro a resposta do Claude.'); return; }
+    let lido;
+    try { lido = ecLerRespostaIA(texto); }
+    catch (e) { alert('Não consegui ler a resposta (' + e.message + '). Confira se copiou a resposta inteira, com o bloco de código.'); return; }
+    const anterior = ecRascunhoIA;
+    ecRascunhoIA = { mes: ecMesAtual, gerado_em: new Date().toISOString(), origem: 'colado', ...lido };
+    if (!ecUsarRascunho()) { ecRascunhoIA = anterior; return; }
+    const corpo = new Blob([JSON.stringify(ecRascunhoIA, null, 1)], { type: 'application/json' });
+    await sb.storage.from(TM_BUCKET).upload(`${ecMesAtual}/carta_rascunho_ia.json`, corpo, { upsert: true, contentType: 'application/json' });
+  }
+
+  function ecUsarRascunho() {
+    const R = ecRascunhoIA;
+    if (!R) return false;
+    ecLerFormulario();
+    const T = ecTextos;
+    const temTexto = Object.values(T.textos || {}).some(v => (v || '').trim());
+    if (temTexto && !confirm('Substituir os textos, indicadores e Focus já preenchidos pelo rascunho do Claude?')) return false;
+    T.subtitulo = R.subtitulo || T.subtitulo || '';
+    T.textos = { ...(T.textos || {}), ...(R.textos || {}) };
+    if ((R.indicadores || []).length) T.indicadores = R.indicadores.map(l => ({ nome: l.nome || '', sub: l.sub || '', valor: l.valor || '', mes: l.mes || '', ano: l.ano || '', m12: l.m12 || '' }));
+    if ((R.focus || []).length) T.focus = R.focus.map(f => ({ rotulo: f.rotulo || '', valor: f.valor || '' }));
+    ecMontarFormulario();
+    ecMudou();
+    return true;
+  }
+
+  async function ecListarRefs() {
+    const { data } = await sb.storage.from(TM_BUCKET).list(EC_REFS, { limit: 200, sortBy: { column: 'name', order: 'desc' } });
+    ecRefs = (data || []).filter(a => a.id && !a.name.startsWith('.')).map(a => a.name);
+  }
+
+  async function ecEnviarRefs(ev) {
+    const arquivos = [...(ev.target.files || [])];
+    for (const f of arquivos) {
+      const nome = f.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w.\- ]+/g, '_');
+      const { error } = await sb.storage.from(TM_BUCKET).upload(`${EC_REFS}/${nome}`, f, { upsert: true, contentType: f.type || undefined });
+      if (error) alert(`Não consegui enviar ${f.name}: ${error.message}`);
+    }
+    ecLerFormulario();
+    await ecListarRefs();
+    ecMontarFormulario();
+  }
+
+  async function ecRemoverRef(nome) {
+    if (!confirm(`Remover ${nome} das cartas de referência?`)) return;
+    const { error } = await sb.storage.from(TM_BUCKET).remove([`${EC_REFS}/${nome}`]);
+    if (error) { alert('Não consegui remover: ' + error.message); return; }
+    ecLerFormulario();
+    await ecListarRefs();
+    ecMontarFormulario();
+  }
+
   function ecLerFormulario() {
     const T = ecTextos, form = document.getElementById('ecForm');
     T.subtitulo = document.getElementById('ecSubtitulo').value;
     T.focus_titulo = document.getElementById('ecFocusTitulo').value;
+    T.instrucoes_ia = document.getElementById('ecPedidosIA').value;
     T.textos = T.textos || {};
     form.querySelectorAll('[data-sec]').forEach(el => { T.textos[el.dataset.sec] = el.value; });
     form.querySelectorAll('[data-ind]').forEach(el => { T.indicadores[+el.dataset.ind][el.dataset.campo] = el.value; });
