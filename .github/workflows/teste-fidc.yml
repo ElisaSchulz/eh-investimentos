@@ -7,4 +7,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - run: python .github/teste/sonda_fii.py
+      - run: pip install -q -r tarefas-mensais/requirements.txt && python .github/teste/teste_outros.py 2>&1 | grep -E "^(VAL|CONF|Traceback|  File|[A-Za-z]*Error)"

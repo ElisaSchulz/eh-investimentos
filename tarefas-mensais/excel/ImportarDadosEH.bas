@@ -244,8 +244,8 @@ Private Sub GravarLinha(dados As Variant, i As Long)
 
     If IsEmpty(antigo) Or IsError(antigo) Then
         Escrever cel, novo, lin, col: gNovos = gNovos + 1
-    ElseIf f <> "" And Not FormulaDigitada(f) And InStr(LCase(CStr(dados(i, 7))), "mensal") = 0 Then
-        ' Fonte "mensal" (cota de fim de mes do FIDC) nunca troca valor que ja existe: vira conflito
+    ElseIf f <> "" And Not FormulaDigitada(f) And InStr(LCase(CStr(dados(i, 7))), "informe") = 0 Then
+        ' Fonte "CVM informe mensal/quadrimestral" (FIDC, FII, FIP, FIAGRO) nunca troca valor que ja existe: vira conflito
         If Igual(antigo, novo, tol) Then
             If InStr(f, "[") > 0 Then
                 cel.Value = novo: gCongelados = gCongelados + 1

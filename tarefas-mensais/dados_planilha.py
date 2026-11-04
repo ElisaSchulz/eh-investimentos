@@ -21,6 +21,8 @@ O que coleta e para onde vai na planilha base:
       Fundos brasileiros (fundos_brasil.csv)   pelo CNPJ da linha 2   CVM, informe diário
       FIDCs e fundos fora do informe diário    pelo CNPJ da linha 2   CVM, informe mensal de FIDC
                                                                      (só a cota de fim de mês)
+      FIIs e FIAGROs                           pelo CNPJ da linha 2   CVM, informe mensal (cota patrimonial)
+      FIPs                                     pelo CNPJ da linha 2   CVM, informe quadrimestral
       Ações, FIIs e ETFs (ativos_b3.csv)       pelo ticker da linha 2 Yahoo
 
 Abas do arquivo gerado:
@@ -33,6 +35,7 @@ Abas do arquivo gerado:
 """
 import io
 import json
+import re
 import os
 import sys
 import time
@@ -80,6 +83,9 @@ DIAS_REPETIDA = 3   # cota igual por este número de dias seguidos vira aviso
 
 CVM = "https://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS"
 CVM_FIDC = "https://dados.cvm.gov.br/dados/FIDC/DOC/INF_MENSAL/DADOS"
+CVM_FII = "https://dados.cvm.gov.br/dados/FII/DOC/INF_MENSAL/DADOS"
+CVM_FIAGRO = "https://dados.cvm.gov.br/dados/FIAGRO/DOC/INF_MENSAL/DADOS"
+CVM_FIP = "https://dados.cvm.gov.br/dados/FIP/DOC/INF_QUADRIMESTRAL/DADOS"
 MESES_FIDC = 3   # meses para trás no informe mensal de FIDC (ele sai até uns 15 dias depois do fim do mês)
 UA = {"User-Agent": "Mozilla/5.0 (tarefas-mensais EH)"}
 
@@ -316,6 +322,87 @@ def cotas_fidc_mensal(fundos, ate, meses=MESES_FIDC):
     return cotas, origem, avisos, sem_informe
 
 
+def _ler_csvs(bruto, contem=None):
+    """Lê os CSVs de um zip (ou um CSV solto) da CVM como DataFrames de texto."""
+    if bruto[:2] == b"PK":
+        z = zipfile.ZipFile(io.BytesIO(bruto))
+        return [pd.read_csv(z.open(n), sep=";", dtype=str, encoding="latin-1")
+                for n in z.namelist() if not contem or contem in n]
+    return [pd.read_csv(io.BytesIO(bruto), sep=";", dtype=str, encoding="latin-1")]
+
+
+def cotas_outros_cvm(fundos, ate, meses=MESES_FIDC):
+    """Cota patrimonial de FII (informe mensal), FIAGRO (informe mensal, por subclasse) e
+    FIP (informe quadrimestral, por classe) nos dados abertos da CVM.
+
+    Devolve (cotas {cnpj: Series}, origem {cnpj: texto}, avisos {cnpj: texto}, fonte {cnpj: texto}).
+    """
+    dig = lambda c: re.sub(r"\D", "", str(c))  # noqa: E731
+    alvo = {dig(c): c for c, _ in fundos}
+    fim = pd.Period(ate, freq="M")
+    periodo = pd.period_range(fim - meses, fim, freq="M")
+    cotas, origem, avisos, fonte = {}, {}, {}, {}
+
+    def guarda(cnpj, d, v, texto, nome_fonte):
+        cotas.setdefault(cnpj, {})[_ultimo_dia_util(d)] = round(v, 8)
+        origem[cnpj] = texto
+        fonte[cnpj] = nome_fonte
+
+    # FII: um zip por ano, aba "complemento" tem Valor_Patrimonial_Cotas (referência = 1º dia do mês)
+    for ano in sorted({p.year for p in periodo}):
+        bruto = baixar(f"{CVM_FII}/inf_mensal_fii_{ano}.zip", tentativas=2)
+        for df in (_ler_csvs(bruto, "complemento") if bruto else []):
+            df = df[df["CNPJ_Fundo_Classe"].map(dig).isin(alvo)]
+            df = df.sort_values("Versao", key=lambda s: pd.to_numeric(s, errors="coerce"))
+            for _, r in df.iterrows():
+                ref = pd.Period(r["Data_Referencia"][:7], freq="M")
+                v = _num(r["Valor_Patrimonial_Cotas"])
+                if ref in periodo and v > 0:
+                    guarda(alvo[dig(r["CNPJ_Fundo_Classe"])], ref.end_time.normalize(), v,
+                           "valor patrimonial da cota (informe mensal de FII)", "CVM informe mensal FII")
+
+    # FIAGRO: um zip por mês, aba de subclasse
+    for p in periodo:
+        bruto = baixar(f"{CVM_FIAGRO}/inf_mensal_fiagro_{p.year}{p.month:02d}.zip", tentativas=2)
+        for df in (_ler_csvs(bruto, "subclasse") if bruto else []):
+            df = df[df["CNPJ_Classe"].map(dig).isin(alvo)]
+            for d, g in df.groupby(df["CNPJ_Classe"].map(dig)):
+                cnpj = alvo[d]
+                g = g[g["Valor_Patrimonial_Cota"].map(_num) > 0]
+                if len(g) == 1:
+                    guarda(cnpj, p.end_time.normalize(), _num(g.iloc[0]["Valor_Patrimonial_Cota"]),
+                           "valor patrimonial da cota (informe mensal de FIAGRO, 2 casas)", "CVM informe mensal FIAGRO")
+                elif len(g) > 1:
+                    avisos[cnpj] = (f"FIAGRO com {len(g)} subclasses no informe mensal "
+                                    f"({'; '.join(g['Nome_Subclasse'])[:80]}): conferir à mão")
+
+    # FIP: um CSV por ano, quadrimestral (abril, agosto e dezembro), cota por classe
+    for ano in sorted({p.year for p in periodo} | {fim.year - 1}):
+        bruto = baixar(f"{CVM_FIP}/inf_quadrimestral_fip_{ano}.csv", tentativas=2)
+        for df in (_ler_csvs(bruto) if bruto else []):
+            df = df[df["CNPJ_FUNDO_CLASSE"].map(dig).isin(alvo)]
+            df = df[df["DT_COMPTC"] >= str((fim - 8).start_time.date())]   # os dois últimos informes
+            for (d, dt_comptc), g in df.groupby([df["CNPJ_FUNDO_CLASSE"].map(dig), "DT_COMPTC"]):
+                cnpj = alvo[d]
+                g = g[g["VL_QUOTA_CLASSE"].map(_num) > 0]
+                valores = sorted({round(_num(x), 6) for x in g["VL_QUOTA_CLASSE"]})
+                if len(valores) == 1:
+                    guarda(cnpj, dt_comptc, valores[0], "cota da classe (informe quadrimestral de FIP)",
+                           "CVM informe quadrimestral FIP")
+                elif len(valores) > 1:
+                    um = g[g["CLASSE_COTA"].str.strip() == "1"]
+                    if len(um):
+                        guarda(cnpj, dt_comptc, _num(um.iloc[0]["VL_QUOTA_CLASSE"]),
+                               "cota da classe 1 (informe quadrimestral de FIP)", "CVM informe quadrimestral FIP")
+                    avisos[cnpj] = (f"FIP com classes de cota diferentes ({', '.join(map(str, valores))[:80]}): "
+                                    "usada a classe 1, conferir")
+    cotas = {c: pd.Series(v).sort_index() for c, v in cotas.items()}
+    for c, s in cotas.items():
+        if c not in avisos and len(s) > 1 and (s.pct_change().abs() > 0.05).any():
+            avisos[c] = (f"Cota variou {s.pct_change().abs().max():.1%} entre dois informes: conferir")
+    return cotas, origem, avisos, fonte
+
+
 def cotas_b3(tickers, inicio, fim):
     from cotas_b3 import baixar as baixar_b3
 
@@ -484,15 +571,21 @@ def main(mes=MES):
             for p in fidc_sem:
                 conferencia.append(("Informe mensal de FIDC (CVM)", f"{p.month:02d}/{p.year} ainda não publicado",
                                     "sai até uns 15 dias depois do fim do mês: rode a tarefa de novo depois"))
+        fonte_mensal = {c: "CVM informe mensal FIDC" for c in fidc}
+        resto = [(c, n) for c, n in faltando if c not in fidc]
+        if resto and quer("cotas_fidc"):
+            outros, outros_origem, outros_avisos, outros_fonte = cotas_outros_cvm(resto, fim)
+            fidc.update(outros); fidc_origem.update(outros_origem)
+            fidc_avisos.update(outros_avisos); fonte_mensal.update(outros_fonte)
         for _, f in fundos.iterrows():
             c = f["cnpj"]
             if c in avisos:
                 conferencia.append((f"{f['nome']} ({c})", avisos[c], ""))
             elif c in fidc:
                 s = fidc[c]
-                importar += linhas_importar("Cotas", "B", 2, c, s, "CVM informe mensal FIDC")
+                importar += linhas_importar("Cotas", "B", 2, c, s, fonte_mensal[c])
                 ult = s.index.max()
-                conferencia.append((f"{f['nome']} ({c})", f"Só cota de fim de mês (informe mensal de FIDC): "
+                conferencia.append((f"{f['nome']} ({c})", f"Sem cota diária: {fonte_mensal[c]}, "
                                     f"última {ult:%d/%m/%Y} = {s[ult]:.8f}", fidc_origem.get(c, "")))
                 if c in fidc_avisos:
                     conferencia.append((f"{f['nome']} ({c})", fidc_avisos[c], ""))
@@ -503,7 +596,7 @@ def main(mes=MES):
                 elif f["tipo"] == "FIDC":
                     motivo = "FIDC sem cota no informe mensal da CVM"
                 else:
-                    motivo = "Não encontrado no informe diário nem no mensal de FIDC da CVM"
+                    motivo = "Não encontrado nos informes da CVM (diário, FIDC, FII, FIAGRO e FIP)"
                 conferencia.append((f"{f['nome']} ({c})", motivo, "continua pelo Eduardo-Scrapping ou extrato"))
             else:
                 s = tabela[c]
@@ -585,6 +678,8 @@ def main(mes=MES):
             "(ou da única subclasse com cota), lançada no último dia útil do mês. Na aba Cotas, os "
             "dias seguintes repetem essa cota em cinza, como na planilha; a aba Importar leva só a de "
             "fim de mês. O informe sai até uns 15 dias depois do fim do mês.",
+            "CVM, informes de FII e FIAGRO (mensais, valor patrimonial da cota; FIAGRO com 2 casas) e "
+            "de FIP (quadrimestral: abril, agosto e dezembro). Entram só em célula vazia.",
             "Yahoo Finance: Ibovespa (pontos inteiros; a macro aceita até 1 ponto de diferença), S&P 500, indicadores globais (AGG ajustado; BRL=X do último dia útil do mês = PTAX) e ativos da B3 (fechamento sem ajuste).",
             "FRED: CPI (CPIAUCSL).",
             "A macro ImportarDadosEH lê a aba Importar: só preenche célula vazia ou fórmula; "
