@@ -19,6 +19,10 @@ O que coleta e para onde vai na planilha base:
       CPI EUA                                  AN:AO FRED (precisa da chave)
     Aba Cotas
       Fundos brasileiros (fundos_brasil.csv)   pelo CNPJ da linha 2   CVM, informe diário
+      FIDCs e fundos fora do informe diário    pelo CNPJ da linha 2   CVM, informe mensal de FIDC
+                                                                     (só a cota de fim de mês)
+      FIIs e FIAGROs                           pelo CNPJ da linha 2   CVM, informe mensal (cota patrimonial)
+      FIPs                                     pelo CNPJ da linha 2   CVM, informe quadrimestral
       Ações, FIIs e ETFs (ativos_b3.csv)       pelo ticker da linha 2 Yahoo
 
 Abas do arquivo gerado:
@@ -31,6 +35,7 @@ Abas do arquivo gerado:
 """
 import io
 import json
+import re
 import os
 import sys
 import time
@@ -41,6 +46,7 @@ from datetime import date, timedelta
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import pandas as pd
+from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
@@ -51,7 +57,7 @@ MES = None          # None = mês anterior. Ou "AAAA-MM".
 DATA_INICIO = os.environ.get("DATA_INICIO") or None   # "AAAA-MM-DD" para um intervalo próprio
 DATA_FIM = os.environ.get("DATA_FIM") or None
 MESES_SERIES_MENSAIS = 6   # quantos meses para trás buscar IPCA, IGP-M, Poupança e CPI
-BLOCOS = os.environ.get("BLOCOS_DADOS") or "todos"   # ou alguns de: bc,yahoo,cpi,cotas_cvm,cotas_b3
+BLOCOS = os.environ.get("BLOCOS_DADOS") or "todos"   # ou alguns de: bc,yahoo,cpi,cotas_cvm,cotas_fidc,cotas_b3
 
 # Bloco da aba Dados -> (coluna da data, coluna do valor, nome)
 DADOS = {
@@ -77,6 +83,11 @@ LIMITE_VARIACAO = {"fundo": 0.02, "b3": 0.10, "indice": 0.06, "cambio": 0.04, "t
 DIAS_REPETIDA = 3   # cota igual por este número de dias seguidos vira aviso
 
 CVM = "https://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS"
+CVM_FIDC = "https://dados.cvm.gov.br/dados/FIDC/DOC/INF_MENSAL/DADOS"
+CVM_FII = "https://dados.cvm.gov.br/dados/FII/DOC/INF_MENSAL/DADOS"
+CVM_FIAGRO = "https://dados.cvm.gov.br/dados/FIAGRO/DOC/INF_MENSAL/DADOS"
+CVM_FIP = "https://dados.cvm.gov.br/dados/FIP/DOC/INF_QUADRIMESTRAL/DADOS"
+MESES_FIDC = 3   # meses para trás no informe mensal de FIDC (ele sai até uns 15 dias depois do fim do mês)
 UA = {"User-Agent": "Mozilla/5.0 (tarefas-mensais EH)"}
 
 
@@ -205,6 +216,194 @@ def cotas_cvm(cnpjs, inicio, fim):
     return tabela.sort_index(), avisos
 
 
+def _num(x):
+    try:
+        return float(str(x).replace(",", "."))
+    except ValueError:
+        return 0.0
+
+
+def _serie_do_nome(nome):
+    """Número da série/subclasse sênior escrito no nome da planilha (SR2, SEN2...), ou None."""
+    import re
+    m = re.search(r"\b(?:SR|SEN|SÊNIOR|SENIOR)\s*(\d+)\b", nome.upper())
+    return int(m.group(1)) if m else None
+
+
+def _ultimo_dia_util(d):
+    d = pd.Timestamp(d)
+    while d.weekday() >= 5:
+        d -= pd.Timedelta(days=1)
+    return d
+
+
+def cotas_fidc_mensal(fundos, ate, meses=MESES_FIDC):
+    """Cota de fim de mês do informe mensal de FIDC da CVM (tabelas X.2 e IV).
+
+    fundos: lista de (cnpj, nome). Usa a subclasse sênior; se a sênior está zerada e só uma
+    subclasse tem cota (FIC que só tem a subordinada como classe única), usa essa. Quando o
+    fundo informou a quantidade no campo da cota, calcula PL / quantidade.
+    Devolve (cotas {cnpj: Series}, origem {cnpj: texto}, avisos {cnpj: texto}, meses sem informe).
+    """
+    digitos = lambda c: "".join(ch for ch in c if ch.isdigit())
+    por_cnpj = {digitos(c): (c, n) for c, n in fundos}
+    por_raiz = {}
+    for d in por_cnpj:
+        por_raiz.setdefault(d[:8], []).append(d)
+    linhas, pls, sem_informe = [], {}, []
+    fim = pd.Period(ate, freq="M")
+    for p in pd.period_range(fim - meses, fim, freq="M"):
+        bruto = baixar(f"{CVM_FIDC}/inf_mensal_fidc_{p.year}{p.month:02d}.zip", tentativas=2)
+        if not bruto:
+            sem_informe.append(p)
+            continue
+        z = zipfile.ZipFile(io.BytesIO(bruto))
+        for nome in z.namelist():
+            if "tab_X_2_" not in nome and "tab_IV_" not in nome:
+                continue
+            df = pd.read_csv(z.open(nome), sep=";", dtype=str, encoding="latin-1")
+            df["cnpj"] = df["CNPJ_FUNDO_CLASSE"].str.replace(r"\D", "", regex=True)
+            df = df[df["cnpj"].str[:8].isin(por_raiz)]
+            if "tab_IV_" in nome:
+                col_pl = next((c for c in df.columns if c.endswith("_VL_PL")), None)
+                if col_pl:
+                    for _, r in df.iterrows():
+                        pls[(r["cnpj"], r["DT_COMPTC"])] = _num(r[col_pl])
+            else:
+                linhas.append(df)
+    cotas, origem, avisos = {}, {}, {}
+    if not linhas:
+        return cotas, origem, avisos, sem_informe
+    df = pd.concat(linhas).drop_duplicates(["cnpj", "DT_COMPTC", "TAB_X_CLASSE_SERIE"], keep="last")
+    df["qt"] = df["TAB_X_QT_COTA"].map(_num)
+    df["vl"] = df["TAB_X_VL_COTA"].map(_num)
+    df["classe"] = df["TAB_X_CLASSE_SERIE"].fillna("").str.upper()
+    for d, (cnpj, nome_planilha) in por_cnpj.items():
+        g = df[df["cnpj"] == d]
+        if g.empty:  # CNPJ "inventado" na planilha para outra série do mesmo fundo (ex.: SR3)
+            irmaos = [x for x in df["cnpj"].unique() if x[:8] == d[:8]]
+            if len(irmaos) == 1:
+                g = df[df["cnpj"] == irmaos[0]]
+        if g.empty:
+            continue
+        serie_nome = _serie_do_nome(nome_planilha)
+        valores, notas = {}, set()
+        for dt_comptc, m in g.groupby("DT_COMPTC"):
+            com_cota = m[(m["vl"] > 0) & (m["qt"] > 0)]
+            senior = com_cota[com_cota["classe"].str.contains("SENIOR|SÊNIOR")]
+            escolha = senior if not senior.empty else com_cota
+            if len(escolha) > 1 and serie_nome:
+                pela_serie = escolha[escolha["classe"].str.contains(rf"(?:SÉRIE|SERIE|SUBCLASSE)\s*{serie_nome}\b")]
+                if len(pela_serie) == 1:
+                    escolha = pela_serie
+            if len(escolha) != 1:
+                if len(escolha) > 1:
+                    avisos[cnpj] = (f"{len(escolha)} séries sênior no informe mensal "
+                                    f"({'; '.join(escolha['TAB_X_CLASSE_SERIE'].str.strip())[:90]}): conferir à mão")
+                continue
+            r = escolha.iloc[0]
+            cota = r["vl"]
+            pl = pls.get((r["cnpj"], dt_comptc))
+            if abs(r["vl"] - r["qt"]) <= 1e-9 * max(1.0, r["qt"]) and pl and len(com_cota) == 1:
+                cota = pl / r["qt"]
+                notas.add("PL ÷ quantidade (o fundo informou a quantidade no campo da cota)")
+            valores[_ultimo_dia_util(dt_comptc)] = round(cota, 8)
+            notas.add(r["TAB_X_CLASSE_SERIE"].strip())
+        if valores:
+            s = pd.Series(valores).sort_index()
+            cotas[cnpj] = s
+            origem[cnpj] = "; ".join(sorted(notas))
+            var = s.pct_change().abs()
+            if len(s) > 1 and s.iloc[-1] == s.iloc[-2]:
+                avisos[cnpj] = (f"Cota de {s.index[-1]:%m/%Y} igual à do mês anterior no informe mensal: "
+                                "o fundo pode ter repetido o dado")
+            elif (var > 0.05).any():
+                avisos[cnpj] = (f"Cota de fim de mês variou {var.max():.1%} de um mês para o outro: "
+                                "conferir se o informe trocou cota e quantidade")
+    return cotas, origem, avisos, sem_informe
+
+
+def _ler_csvs(bruto, contem=None):
+    """Lê os CSVs de um zip (ou um CSV solto) da CVM como DataFrames de texto."""
+    if bruto[:2] == b"PK":
+        z = zipfile.ZipFile(io.BytesIO(bruto))
+        return [pd.read_csv(z.open(n), sep=";", dtype=str, encoding="latin-1")
+                for n in z.namelist() if not contem or contem in n]
+    return [pd.read_csv(io.BytesIO(bruto), sep=";", dtype=str, encoding="latin-1")]
+
+
+def cotas_outros_cvm(fundos, ate, meses=MESES_FIDC):
+    """Cota patrimonial de FII (informe mensal), FIAGRO (informe mensal, por subclasse) e
+    FIP (informe quadrimestral, por classe) nos dados abertos da CVM.
+
+    Devolve (cotas {cnpj: Series}, origem {cnpj: texto}, avisos {cnpj: texto}, fonte {cnpj: texto}).
+    """
+    dig = lambda c: re.sub(r"\D", "", str(c))  # noqa: E731
+    alvo = {dig(c): c for c, _ in fundos}
+    fim = pd.Period(ate, freq="M")
+    periodo = pd.period_range(fim - meses, fim, freq="M")
+    cotas, origem, avisos, fonte = {}, {}, {}, {}
+
+    def guarda(cnpj, d, v, texto, nome_fonte):
+        cotas.setdefault(cnpj, {})[_ultimo_dia_util(d)] = round(v, 8)
+        origem[cnpj] = texto
+        fonte[cnpj] = nome_fonte
+
+    # FII: um zip por ano, aba "complemento" tem Valor_Patrimonial_Cotas (referência = 1º dia do mês)
+    for ano in sorted({p.year for p in periodo}):
+        bruto = baixar(f"{CVM_FII}/inf_mensal_fii_{ano}.zip", tentativas=2)
+        for df in (_ler_csvs(bruto, "complemento") if bruto else []):
+            df = df[df["CNPJ_Fundo_Classe"].map(dig).isin(alvo)]
+            df = df.sort_values("Versao", key=lambda s: pd.to_numeric(s, errors="coerce"))
+            for _, r in df.iterrows():
+                ref = pd.Period(r["Data_Referencia"][:7], freq="M")
+                v = _num(r["Valor_Patrimonial_Cotas"])
+                if ref in periodo and v > 0:
+                    guarda(alvo[dig(r["CNPJ_Fundo_Classe"])], ref.end_time.normalize(), v,
+                           "valor patrimonial da cota (informe mensal de FII)", "CVM informe mensal FII")
+
+    # FIAGRO: um zip por mês, aba de subclasse
+    for p in periodo:
+        bruto = baixar(f"{CVM_FIAGRO}/inf_mensal_fiagro_{p.year}{p.month:02d}.zip", tentativas=2)
+        for df in (_ler_csvs(bruto, "subclasse") if bruto else []):
+            df = df[df["CNPJ_Classe"].map(dig).isin(alvo)]
+            for d, g in df.groupby(df["CNPJ_Classe"].map(dig)):
+                cnpj = alvo[d]
+                g = g[g["Valor_Patrimonial_Cota"].map(_num) > 0]
+                if len(g) == 1:
+                    guarda(cnpj, p.end_time.normalize(), _num(g.iloc[0]["Valor_Patrimonial_Cota"]),
+                           "valor patrimonial da cota (informe mensal de FIAGRO, 2 casas)", "CVM informe mensal FIAGRO")
+                elif len(g) > 1:
+                    avisos[cnpj] = (f"FIAGRO com {len(g)} subclasses no informe mensal "
+                                    f"({'; '.join(g['Nome_Subclasse'])[:80]}): conferir à mão")
+
+    # FIP: um CSV por ano, quadrimestral (abril, agosto e dezembro), cota por classe
+    for ano in sorted({p.year for p in periodo} | {fim.year - 1}):
+        bruto = baixar(f"{CVM_FIP}/inf_quadrimestral_fip_{ano}.csv", tentativas=2)
+        for df in (_ler_csvs(bruto) if bruto else []):
+            df = df[df["CNPJ_FUNDO_CLASSE"].map(dig).isin(alvo)]
+            df = df[df["DT_COMPTC"] >= str((fim - 8).start_time.date())]   # os dois últimos informes
+            for (d, dt_comptc), g in df.groupby([df["CNPJ_FUNDO_CLASSE"].map(dig), "DT_COMPTC"]):
+                cnpj = alvo[d]
+                g = g[g["VL_QUOTA_CLASSE"].map(_num) > 0]
+                valores = sorted({round(_num(x), 6) for x in g["VL_QUOTA_CLASSE"]})
+                if len(valores) == 1:
+                    guarda(cnpj, dt_comptc, valores[0], "cota da classe (informe quadrimestral de FIP)",
+                           "CVM informe quadrimestral FIP")
+                elif len(valores) > 1:
+                    um = g[g["CLASSE_COTA"].str.strip() == "1"]
+                    if len(um):
+                        guarda(cnpj, dt_comptc, _num(um.iloc[0]["VL_QUOTA_CLASSE"]),
+                               "cota da classe 1 (informe quadrimestral de FIP)", "CVM informe quadrimestral FIP")
+                    avisos[cnpj] = (f"FIP com classes de cota diferentes ({', '.join(map(str, valores))[:80]}): "
+                                    "usada a classe 1, conferir")
+    cotas = {c: pd.Series(v).sort_index() for c, v in cotas.items()}
+    for c, s in cotas.items():
+        if c not in avisos and len(s) > 1 and (s.pct_change().abs() > 0.05).any():
+            avisos[c] = (f"Cota variou {s.pct_change().abs().max():.1%} entre dois informes: conferir")
+    return cotas, origem, avisos, fonte
+
+
 def cotas_b3(tickers, inicio, fim):
     from cotas_b3 import baixar as baixar_b3
 
@@ -265,9 +464,17 @@ def escrever_bloco(writer, aba, cabecalho, tabela, formato="#,##0.00######"):
     ws.freeze_panes = "B2"
 
 
-def escrever_cotas(writer, nomes, tabela):
+MARCAS = {  # cor do cabeçalho na aba Cotas para fundos que não vêm completos da CVM
+    "manual": ("F8CBAD", "Coleta manual"),
+    "quadrimestral": ("DDEBF7", "CVM só a cada 4 meses (abril, agosto e dezembro)"),
+}
+
+
+def escrever_cotas(writer, nomes, tabela, repetidas=None, marcas=None):
     """Aba Cotas como na planilha: nome na linha 1, CNPJ/ticker na linha 2, datas a partir da 3.
-    Colunas sem nenhuma cota ficam vazias e com o cabeçalho amarelo, para colar à mão."""
+    Colunas sem nenhuma cota ficam vazias e com o cabeçalho amarelo, para colar à mão.
+    marcas {código: (tipo, motivo)}: fundos de coleta manual (laranja) ou só quadrimestral (azul),
+    com o motivo num comentário do cabeçalho."""
     ws = writer.book.create_sheet("Cotas")
     amarelo = PatternFill("solid", fgColor="FFF4CC")
     ws.cell(row=1, column=1, value="Nome").font = Font(bold=True)
@@ -285,12 +492,22 @@ def escrever_cotas(writer, nomes, tabela):
         codigo.alignment = Alignment(horizontal="center")
         ws.column_dimensions[get_column_letter(j)].width = 14
         serie = tabela[cod]
+        marca = (marcas or {}).get(cod)
+        if marca:
+            cor, titulo = MARCAS[marca[0]]
+            nome.fill = codigo.fill = PatternFill("solid", fgColor=cor)
+            codigo.comment = Comment(f"{titulo}: {marca[1]}", "Tarefas mensais", width=260, height=90)
         if serie.isna().all():
-            nome.fill = codigo.fill = amarelo
+            if not marca:
+                nome.fill = codigo.fill = amarelo
             continue
-        for i, v in enumerate(serie, start=3):
+        rep = (repetidas or {}).get(cod)
+        for i, (d, v) in enumerate(serie.items(), start=3):
             if pd.notna(v):
-                ws.cell(row=i, column=j, value=float(v)).number_format = "#,##0.00######"
+                c = ws.cell(row=i, column=j, value=float(v))
+                c.number_format = "#,##0.00######"
+                if rep is not None and rep.get(d, False):
+                    c.font = Font(italic=True, color="808080")
     ws.row_dimensions[1].height = 45
     ws.freeze_panes = "B3"
 
@@ -356,18 +573,56 @@ def main(mes=MES):
             blocos_saida["Dados - CPI"] = (["Data", "CPI"], cpi.to_frame(), "0.000")
 
     # ---- Cotas de fundos (CVM) e B3
-    cotas, ordem = [], []
+    cotas, ordem, cotas_mensais, marcas = [], [], {}, {}
     if quer("cotas_cvm"):
         fundos = ler_csv("fundos_brasil.csv")
+        if "coleta" not in fundos.columns:
+            fundos["coleta"] = ""
         ordem += [(f["cnpj"], f["nome"]) for _, f in fundos.iterrows()]
+        # Coluna "coleta" da lista: "manual: motivo" para os fundos sem fonte pública que bata
+        manuais = {f["cnpj"]: f["coleta"].split(":", 1)[-1].strip() for _, f in fundos.iterrows()
+                   if f["coleta"].lower().startswith("manual")}
+        marcas.update({c: ("manual", m) for c, m in manuais.items()})
         tabela, avisos = cotas_cvm(list(fundos["cnpj"]), inicio, fim)
+        faltando = [(f["cnpj"], f["nome"]) for _, f in fundos.iterrows()
+                    if f["cnpj"] not in avisos and f["cnpj"] not in manuais
+                    and (tabela.empty or f["cnpj"] not in tabela.columns)]
+        fidc, fidc_origem, fidc_avisos, fidc_sem = ({}, {}, {}, [])
+        if faltando and quer("cotas_fidc"):
+            fidc, fidc_origem, fidc_avisos, fidc_sem = cotas_fidc_mensal(faltando, fim)
+            for p in fidc_sem:
+                conferencia.append(("Informe mensal de FIDC (CVM)", f"{p.month:02d}/{p.year} ainda não publicado",
+                                    "sai até uns 15 dias depois do fim do mês: rode a tarefa de novo depois"))
+        fonte_mensal = {c: "CVM informe mensal FIDC" for c in fidc}
+        resto = [(c, n) for c, n in faltando if c not in fidc]
+        if resto and quer("cotas_fidc"):
+            outros, outros_origem, outros_avisos, outros_fonte = cotas_outros_cvm(resto, fim)
+            fidc.update(outros); fidc_origem.update(outros_origem)
+            fidc_avisos.update(outros_avisos); fonte_mensal.update(outros_fonte)
         for _, f in fundos.iterrows():
             c = f["cnpj"]
             if c in avisos:
                 conferencia.append((f"{f['nome']} ({c})", avisos[c], ""))
+            elif c in fidc:
+                s = fidc[c]
+                importar += linhas_importar("Cotas", "B", 2, c, s, fonte_mensal[c])
+                ult = s.index.max()
+                conferencia.append((f"{f['nome']} ({c})", f"Sem cota diária: {fonte_mensal[c]}, "
+                                    f"última {ult:%d/%m/%Y} = {s[ult]:.8f}", fidc_origem.get(c, "")))
+                if c in fidc_avisos:
+                    conferencia.append((f"{f['nome']} ({c})", fidc_avisos[c], ""))
+                cotas_mensais[c] = s
+                if "FIP" in fonte_mensal[c]:
+                    marcas[c] = ("quadrimestral", "nos outros meses, usar o extrato")
+            elif c in manuais and (tabela.empty or c not in tabela.columns):
+                conferencia.append((f"{f['nome']} ({c})", "Coleta manual", manuais[c]))
             elif tabela.empty or c not in tabela.columns:
-                motivo = "FIDC: a CVM só publica a cota de fim de mês" if f["tipo"] == "FIDC" \
-                    else "Não encontrado no informe diário da CVM"
+                if c in fidc_avisos:
+                    motivo = fidc_avisos[c]
+                elif f["tipo"] == "FIDC":
+                    motivo = "FIDC sem cota no informe mensal da CVM"
+                else:
+                    motivo = "Não encontrado nos informes da CVM (diário, FIDC, FII, FIAGRO e FIP)"
                 conferencia.append((f"{f['nome']} ({c})", motivo, "continua pelo Eduardo-Scrapping ou extrato"))
             else:
                 s = tabela[c]
@@ -392,7 +647,15 @@ def main(mes=MES):
         codigos = [c for c, _ in ordem]
         tab = tab.reindex(index=datas, columns=codigos) if not tab.empty else pd.DataFrame(index=datas, columns=codigos)
         tab = tab.loc[:, ~tab.columns.duplicated()]
-        cotas_saida = (dict(ordem), tab)
+        # Fundos só com cota de fim de mês: repete a última cota nos dias seguintes, como na planilha.
+        repetidas = {}
+        for c, s in cotas_mensais.items():
+            if c not in tab.columns or tab.empty:
+                continue
+            base = s.reindex(sorted(set(s.index) | set(tab.index))).ffill().reindex(tab.index)
+            repetidas[c] = base.notna() & ~base.index.isin(s.index)
+            tab[c] = base
+        cotas_saida = (dict(ordem), tab, repetidas, marcas)
     else:
         cotas_saida = None
 
@@ -419,10 +682,14 @@ def main(mes=MES):
         for col, larg in zip("ABC", (60, 55, 45)):
             ws.column_dimensions[col].width = larg
         amarelo = PatternFill("solid", fgColor="FFF4CC")
+        laranja = PatternFill("solid", fgColor=MARCAS["manual"][0])
         for linha in ws.iter_rows(min_row=2):
             if "Variação" in str(linha[1].value) or "repetido" in str(linha[1].value):
                 for c in linha:
                     c.fill = amarelo
+            elif linha[1].value == "Coleta manual":
+                for c in linha:
+                    c.fill = laranja
 
         for aba, (cab, tabela, fmt) in blocos_saida.items():
             escrever_bloco(writer, aba[:31], cab, tabela, fmt)
@@ -436,9 +703,18 @@ def main(mes=MES):
             "Banco Central (api.bcb.gov.br): IPCA 433, IGP-M 189, Poupança 196 (aniversário dia 1), "
             "CDI 4389 (% a.a., base 252), PTAX venda 1. Valores em decimal, como na planilha.",
             "CVM (dados.cvm.gov.br): informe diário de fundos. CNPJs com mais de uma subclasse "
-            "e FIDCs ficam de fora e aparecem na Conferência.",
+            "ficam de fora e aparecem na Conferência.",
+            "CVM, informe mensal de FIDC (tabelas X.2 e IV): cota de fim de mês da subclasse sênior "
+            "(ou da única subclasse com cota), lançada no último dia útil do mês. Na aba Cotas, os "
+            "dias seguintes repetem essa cota em cinza, como na planilha; a aba Importar leva só a de "
+            "fim de mês. O informe sai até uns 15 dias depois do fim do mês.",
+            "CVM, informes de FII e FIAGRO (mensais, valor patrimonial da cota; FIAGRO com 2 casas) e "
+            "de FIP (quadrimestral: abril, agosto e dezembro). Entram só em célula vazia.",
             "Yahoo Finance: Ibovespa (pontos inteiros; a macro aceita até 1 ponto de diferença), S&P 500, indicadores globais (AGG ajustado; BRL=X do último dia útil do mês = PTAX) e ativos da B3 (fechamento sem ajuste).",
             "FRED: CPI (CPIAUCSL).",
+            "Aba Cotas: cabeçalho laranja = coleta manual (coluna 'coleta' de fundos_brasil.csv; o motivo "
+            "está no comentário do CNPJ); azul = FIP, que a CVM só publica em abril, agosto e dezembro; "
+            "amarelo = sem cota neste mês.",
             "A macro ImportarDadosEH lê a aba Importar: só preenche célula vazia ou fórmula; "
             "valor digitado diferente vira conflito no relatório, sem sobrescrever.",
         ], start=1):

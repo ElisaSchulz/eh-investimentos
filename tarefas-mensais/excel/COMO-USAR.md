@@ -10,8 +10,8 @@ sem mudar a estrutura dela.
 | Aba | Para que serve |
 |---|---|
 | Importar | Uma linha por valor. É o que a macro lê. |
-| Conferência | Fundo não encontrado na CVM, FIDC, dia útil sem cota, cota repetida, variação fora do normal. |
-| Dados - ... / Cotas | Cada bloco já no layout da planilha, para copiar e colar à mão se preferir. |
+| Conferência | Fundo não encontrado na CVM, FIDC só com cota de fim de mês, dia útil sem cota, cota repetida, variação fora do normal. |
+| Dados - ... / Cotas | Cada bloco já no layout da planilha, para copiar e colar à mão se preferir. Na aba Cotas, cabeçalho laranja = fundo de coleta manual (o motivo está no comentário do CNPJ), azul = FIP (CVM só em abril, agosto e dezembro), amarelo = sem cota no mês. |
 | Notas | Fontes e premissas. |
 
 ## Instalar (uma vez só)
@@ -40,6 +40,9 @@ sem mudar a estrutura dela.
   é trocada pelo valor coletado quando ele é diferente. Quando é igual, a fórmula com vínculo
   externo vira valor (congela o dado) e as outras ficam como estão (ex.: o CDI repetido).
 - Valor digitado ou conta digitada (`=29885.31/287`) nunca é trocado sem você pedir.
+- Cota dos informes mensais e quadrimestrais da CVM (FIDC, FII, FIP, FIAGRO; fonte "CVM informe ...")
+  só preenche célula vazia.
+  Se já houver um valor diferente, mesmo vindo de fórmula, ele vira conflito no relatório.
 - Data nova depois da última da coluna vira linha nova, em ordem.
 - CNPJ ou ticker que não está na linha 2 da aba Cotas aparece no relatório: crie a coluna e rode de novo.
 
