@@ -1,0 +1,10 @@
+name: Sonda Gama Oaktree (temporário)
+on:
+  push:
+    branches: [claude/project-thread-39qhdi]
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: python .github/teste/sonda_gama.py
