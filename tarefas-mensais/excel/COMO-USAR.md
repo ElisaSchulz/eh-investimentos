@@ -50,3 +50,19 @@ sem mudar a estrutura dela.
 
 GitHub > Actions > **Tarefas mensais** > **Run workflow**, com tarefas = `dados_planilha` e, se
 quiser um pedaço do mês, data inicial e final (ex.: do dia 1 ao dia 20).
+
+## Cotas de fim de mês pelos extratos (antes do relatório do dia 10)
+
+FIDCs, FIIs, FIPs e FIAGROs não têm cota diária na CVM, e o informe mensal dos FIDCs só sai
+uns 15 dias depois do fim do mês. Para o relatório, use os extratos:
+
+1. No site, **Cotas dos Fundos**: arraste os PDFs do fim do mês (XP e EQI/BTG) e baixe o Excel.
+   Tudo é lido no navegador; nenhum extrato sai do seu computador.
+2. Na planilha base, rode a macro **ImportarDadosEH** e escolha esse Excel. A aba **Importar**
+   dele traz uma linha por fundo da lista (fonte "Extrato XP" ou "Extrato EQI/BTG"), na data
+   da cota do extrato.
+3. As regras são as de cima: célula vazia ou fórmula recebe a cota do extrato; valor digitado
+   diferente vira conflito.
+
+Séries com CNPJ fictício (ex.: Exodus SR3) casam pelo nome dentro do mesmo fundo. Fundo que
+não aparece em nenhum extrato do lote fica de fora.
