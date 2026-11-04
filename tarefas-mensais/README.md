@@ -1,7 +1,7 @@
 # Tarefas mensais
 
 Scripts que rodavam à mão todo mês, agora num lugar só. Rodam sozinhos no GitHub
-todo **dia 2**, sempre para o **mês anterior**, e os arquivos aparecem para baixar
+todo **3º dia útil** do mês (feriados nacionais em `dia_util.py`), sempre para o **mês anterior**, e os arquivos aparecem para baixar
 na aba **Tarefas Mensais** do admin do site.
 
 | Script | O que gera | Substitui |
@@ -29,7 +29,7 @@ que cola cada valor no lugar certo sem mudar a estrutura e lista os conflitos. I
 em `excel/COMO-USAR.md`. Fundo novo na aba Cotas: incluir o CNPJ em `fundos_brasil.csv`. Fundo sem fonte pública que bata com a planilha: escrever `manual: motivo` na coluna `coleta`.
 
 FIDCs e fundos que não estão no informe diário da CVM saem do informe mensal de FIDC (cota de
-fim de mês). Esse informe é publicado até uns 15 dias depois do fim do mês, então no dia 2 ainda
+fim de mês). Esse informe é publicado até uns 15 dias depois do fim do mês, então no 3º dia útil ainda
 vem a cota do mês anterior; rodando a tarefa de novo depois do dia 15, vem a do mês de referência.
 
 > O repositório é público: tudo nesta pasta fica visível na internet. A chave da
@@ -52,7 +52,7 @@ A carta é montada no admin, na tela **Editor da Carta**: os dados do mês vêm 
 usa o modelo `carta/carta_template.html`. **Salvar PDF** imprime a carta;
 **Guardar carta final no site** grava o HTML junto dos arquivos do mês.
 
-## Rodar fora do dia 2
+## Rodar fora do 3º dia útil
 
 GitHub → Actions → **Tarefas mensais** → **Run workflow** (o admin tem um link direto).
 Campos opcionais: mês (`AAAA-MM`), tarefas (ex.: `cotas_b3,etfs`) e, só para a B3,

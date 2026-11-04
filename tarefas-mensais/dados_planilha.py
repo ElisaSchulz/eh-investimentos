@@ -110,16 +110,24 @@ def sgs(codigo, inicio, fim):
     """Série do Banco Central (SGS) como pd.Series indexada por data. Valores em %."""
     url = (f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.{codigo}/dados?formato=json"
            f"&dataInicial={inicio:%d/%m/%Y}&dataFinal={fim:%d/%m/%Y}")
-    bruto = baixar(url)
-    if not bruto:
-        return pd.Series(dtype=float)
-    try:
-        dados = json.loads(bruto)
-    except ValueError:
-        print(f"Aviso: resposta inesperada do Banco Central para a série {codigo}.")
-        return pd.Series(dtype=float)
+    vazia = pd.Series(dtype=float, index=pd.DatetimeIndex([], name="data"))
+    # A API do Banco Central às vezes devolve uma página de erro (HTML) em vez do JSON;
+    # costuma passar tentando de novo depois de alguns segundos.
+    for tentativa in range(4):
+        bruto = baixar(url)
+        if not bruto:
+            return vazia
+        try:
+            dados = json.loads(bruto)
+            break
+        except ValueError:
+            if tentativa == 3:
+                trecho = bruto[:120].decode("utf-8", "replace").replace("\n", " ")
+                print(f"Aviso: resposta inesperada do Banco Central para a série {codigo}: {trecho}")
+                return vazia
+            time.sleep(10 * (tentativa + 1))
     if not isinstance(dados, list) or not dados:
-        return pd.Series(dtype=float)
+        return vazia
     df = pd.DataFrame(dados)
     df["data"] = pd.to_datetime(df["data"], format="%d/%m/%Y")
     df["valor"] = pd.to_numeric(df["valor"], errors="coerce")
@@ -537,7 +545,8 @@ def main(mes=MES):
         if bloco in ("cdi", "ptax"):
             conferencia += conferir(nome, s, tipo, calendario)
         elif s.empty:
-            conferencia.append((nome, "Sem dados no período", ""))
+            conferencia.append((nome, "Sem dados no período",
+                                "o Banco Central não respondeu: rode só a tarefa dados_planilha de novo"))
     if bc:
         mensais = pd.concat({DADOS[b][2]: bc[b] for b in ("ipca", "igpm", "poupanca")}, axis=1)
         blocos_saida["Dados - Mensais"] = (["Mês", "IPCA", "IGP-M", "Poupança"], mensais, "0.00%")
