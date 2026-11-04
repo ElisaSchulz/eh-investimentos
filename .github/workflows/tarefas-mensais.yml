@@ -1,6 +1,6 @@
 name: Tarefas mensais
 
-# Roda as tarefas mensais (dados da carta, indicadores, cotas e ETFs) e guarda os arquivos
+# Roda as tarefas mensais (dados e rascunho da carta, indicadores, cotas e ETFs) e guarda os arquivos
 # no bucket privado "tarefas-mensais" do Supabase, onde a aba Tarefas Mensais do
 # admin mostra para baixar. Nada gerado fica no GitHub: o repositório é público.
 on:
@@ -15,7 +15,7 @@ on:
         required: false
         default: ""
       tarefas:
-        description: "Tarefas separadas por vírgula. Vazio = todas (carta_mensal, indicadores_americanos, cotas_fundos, cotas_b3, etfs, dados_planilha)"
+        description: "Tarefas separadas por vírgula. Vazio = todas (carta_mensal, carta_ia, indicadores_americanos, cotas_fundos, cotas_b3, etfs, dados_planilha)"
         required: false
         default: ""
       data_inicio:
@@ -63,6 +63,7 @@ jobs:
       SUPABASE_URL: https://migyqowqjfhvdcrtryms.supabase.co
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       MES_REFERENCIA: ${{ inputs.mes }}
       TAREFAS: ${{ inputs.tarefas }}
       DATA_INICIO: ${{ inputs.data_inicio }}

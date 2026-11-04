@@ -775,6 +775,13 @@
     .ec-acoes { display:flex; flex-wrap:wrap; gap:0.7rem; align-items:center; margin-bottom:1rem; }
     .ec-acoes .btn-download-ext { margin-top:0; }
     .ec-salvo { font-size:11.5px; color:var(--cream-faint); }
+    .ec-ia-info { font-size:12px; color:var(--cream); line-height:1.55; margin-bottom:0.8rem; }
+    .ec-ia-lista { font-size:11.5px; line-height:1.5; color:var(--cream-faint); margin:0.4rem 0 0; padding-left:1.1rem; }
+    .ec-ia-lista a { color:var(--gold-text); word-break:break-all; }
+    .ec-ia details { margin-top:0.7rem; }
+    .ec-ia summary { cursor:pointer; font-size:12px; font-weight:700; color:var(--gold-text); }
+    .ec-ia-botoes { display:flex; flex-wrap:wrap; gap:0.7rem; align-items:center; }
+    .ec-ia-botoes .btn-download-ext { margin-top:0; }
     @media (max-width: 1100px) { .ec-layout { grid-template-columns: 1fr; } .ec-preview { position:relative; top:0; height:80vh; } }
   </style>
   <link rel="stylesheet" href="eh-tema.css" />
@@ -1659,7 +1666,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     <div class="view" id="view-editorcarta">
       <div class="welcome-banner">
         <h2>Editor da <em>Carta</em></h2>
-        <p>Os gráficos, os índices e os destaques da capa vêm dos dados do mês, gerados no 3º dia útil do mês. Escreva o texto de cada seção e confira a carta em A4 ao lado. O rascunho é salvo sozinho.</p>
+        <p>Os gráficos, os índices e os destaques da capa vêm dos dados do mês, gerados no 3º dia útil do mês. O Claude escreve um rascunho dos textos, indicadores e Focus; revise cada seção e confira a carta em A4 ao lado. O rascunho é salvo sozinho.</p>
       </div>
       <div class="ec-acoes">
         <div class="upload-field" style="min-width:200px;"><label>Mês da carta</label>
@@ -5325,6 +5332,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         nomes.filter(n => n.startsWith('carta_textos') || n.startsWith('Carta Mensal')).forEach(n => { usados.add(n); t.arquivos.push(n); });
         t.editor = true;
       }
+      if (t.tarefa === 'carta_ia') t.editor = true;
       linhas.push(t);
     });
     const outros = nomes.filter(n => !usados.has(n));
@@ -5385,7 +5393,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   ].map(l => ({ ...l, valor: '', mes: '', ano: '', m12: '' }));
   const EC_FOCUS_PADRAO = ['Selic', 'IPCA', 'PIB', 'Dólar'].map(r => ({ rotulo: r, valor: '' }));
 
-  let ecTemplate = null, ecLogo = null, ecDados = null, ecTextos = null, ecMesAtual = '';
+  let ecTemplate = null, ecLogo = null, ecDados = null, ecTextos = null, ecMesAtual = '', ecRascunhoIA = null, ecRefs = [];
+  const EC_REFS = 'referencias-carta';
+  const EC_WORKFLOW = 'https://github.com/ElisaSchulz/eh-investimentos/actions/workflows/tarefas-mensais.yml';
   let ecTimerPrevia = null, ecTimerSalvar = null, ecPendente = false, ecIniciado = false;
 
   async function ecInit() {
@@ -5449,13 +5459,15 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     ecDados = await ecBaixarJson(`${mes}/carta_dados.json`);
     if (!ecDados) { ecErro(`Não consegui ler ${mes}/carta_dados.json.`); return; }
     ecTextos = await ecBaixarJson(`${mes}/carta_textos.json`);
+    ecRascunhoIA = await ecBaixarJson(`${mes}/carta_rascunho_ia.json`);
+    await ecListarRefs();
     if (!ecTextos) {
       // mês novo: aproveita os nomes dos indicadores e o título do Focus do mês anterior
       const meses = (document.getElementById('ecMes').dataset.meses || '').split(',');
       const anterior = meses[meses.indexOf(mes) + 1];
       const velho = anterior ? await ecBaixarJson(`${anterior}/carta_textos.json`) : null;
       ecTextos = {
-        subtitulo: '', textos: {},
+        subtitulo: '', textos: {}, instrucoes_ia: '',
         indicadores: (velho && velho.indicadores ? velho.indicadores : EC_INDICADORES_PADRAO)
           .map(l => ({ nome: l.nome, sub: l.sub, valor: '', mes: '', ano: '', m12: '' })),
         focus_titulo: `Boletim Focus · projeções para o fim de ${ecDados.ano}`,
@@ -5480,6 +5492,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         <td><button title="Remover" onclick="ecRemoverIndicador(${i})">×</button></td></tr>`).join('');
     const focus = T.focus.map((f, i) => `<tr><td><input data-focus="${i}" data-campo="rotulo"></td><td><input data-focus="${i}" data-campo="valor"></td></tr>`).join('');
     document.getElementById('ecForm').innerHTML = `
+      ${ecPainelIA()}
       <div class="upload-panel">
         <h3>Capa</h3>
         <div class="upload-field"><label>Subtítulo (opcional)</label><input id="ecSubtitulo" placeholder="Panorama macroeconômico e de mercados: cenário global e doméstico do mês."></div>
@@ -5497,16 +5510,100 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const form = document.getElementById('ecForm');
     document.getElementById('ecSubtitulo').value = T.subtitulo || '';
     document.getElementById('ecFocusTitulo').value = T.focus_titulo || '';
+    document.getElementById('ecPedidosIA').value = T.instrucoes_ia || '';
     form.querySelectorAll('[data-sec]').forEach(el => { el.value = (T.textos || {})[el.dataset.sec] || ''; });
     form.querySelectorAll('[data-ind]').forEach(el => { el.value = T.indicadores[+el.dataset.ind][el.dataset.campo] || ''; });
     form.querySelectorAll('[data-focus]').forEach(el => { el.value = T.focus[+el.dataset.focus][el.dataset.campo] || ''; });
     form.querySelectorAll('input, textarea').forEach(el => el.addEventListener('input', ecMudou));
   }
 
+  // ── Rascunho escrito pelo Claude (tarefa carta_ia no GitHub) ──
+  function ecPainelIA() {
+    const R = ecRascunhoIA;
+    let topo;
+    if (R) {
+      const uso = R.uso || {};
+      const custo = uso.custo_estimado_usd != null ? ` · custo estimado US$ ${Number(uso.custo_estimado_usd).toFixed(2).replace('.', ',')}` : '';
+      const fontes = (R.fontes || []).map(f => `<li>${f.url && /^https?:\/\//.test(f.url)
+        ? `<a href="${escHtml(f.url)}" target="_blank" rel="noopener">${escHtml(f.titulo || f.url)}</a>` : escHtml(f.titulo || '')}${f.uso ? ` · ${escHtml(f.uso)}` : ''}</li>`).join('');
+      const conferir = (R.pontos_a_conferir || []).map(p => `<li>${escHtml(p)}</li>`).join('');
+      topo = `
+        <div class="ec-ia-info">Rascunho gerado em ${escHtml(new Date(R.gerado_em).toLocaleString('pt-BR'))}, com ${(R.referencias || []).length} carta(s) de referência e ${uso.buscas || 0} buscas na web${custo}.</div>
+        <div class="ec-ia-botoes"><button class="btn-download-ext" onclick="ecUsarRascunho()">Preencher com o rascunho do Claude</button></div>
+        <div class="ec-hint">Preenche capa, textos, indicadores e Focus. Revise tudo antes de publicar: o Claude pode errar números e datas.</div>
+        ${conferir ? `<details open><summary>Pontos a conferir (${(R.pontos_a_conferir || []).length})</summary><ul class="ec-ia-lista">${conferir}</ul></details>` : ''}
+        ${fontes ? `<details><summary>Fontes consultadas (${(R.fontes || []).length})</summary><ul class="ec-ia-lista">${fontes}</ul></details>` : ''}`;
+    } else {
+      topo = `<div class="ec-ia-info">Ainda não há rascunho do Claude para este mês. Ele é escrito junto com os dados no 3º dia útil, ou quando você roda a tarefa <strong>carta_ia</strong> no GitHub.</div>`;
+    }
+    const refs = ecRefs.length
+      ? ecRefs.map(n => `<li>${escHtml(n)} <button class="ec-link" style="padding:0 0 0 6px;color:var(--err-text);" onclick="ecRemoverRef(decodeURIComponent('${encodeURIComponent(n)}'))">remover</button></li>`).join('')
+      : '<li>Nenhuma. Os textos dos meses anteriores escritos aqui já entram como referência.</li>';
+    return `
+      <div class="upload-panel ec-ia">
+        <h3>Rascunho do Claude</h3>
+        ${topo}
+        <div class="upload-field" style="margin-top:1.1rem;"><label>Pedidos para o Claude neste mês (opcional)</label>
+          <textarea id="ecPedidosIA" style="min-height:70px;font-size:13px;" placeholder="Ex.: dar mais espaço às eleições; comentar o resultado da Petrobras; não falar de cripto."></textarea></div>
+        <div class="ec-ia-botoes" style="margin-top:0.6rem;">
+          <a class="btn-download-ext" style="text-decoration:none;" href="${EC_WORKFLOW}" target="_blank" rel="noopener">Gerar rascunho de novo no GitHub ↗</a>
+        </div>
+        <div class="ec-hint">No GitHub: <strong>Run workflow</strong>, mês <strong>${escHtml(ecMesAtual)}</strong>, tarefas <strong>carta_ia</strong>. Leva uns 5 a 10 minutos; depois recarregue esta tela. Os pedidos acima são salvos com o rascunho e entram na próxima geração.</div>
+        <details style="margin-top:0.9rem;"><summary>Cartas de referência (${ecRefs.length})</summary>
+          <ul class="ec-ia-lista">${refs}</ul>
+          <label class="ec-link" style="display:inline-block;">+ Enviar carta antiga (PDF ou .txt)
+            <input type="file" accept=".pdf,.txt,.md" multiple style="display:none;" onchange="ecEnviarRefs(event)"></label>
+          <div class="ec-hint">Usadas para o Claude imitar a linguagem. Entram primeiro as cartas escritas aqui nos meses anteriores, depois estes arquivos (nome em ordem decrescente: comece o nome por AAAA-MM), até 4 no total.</div>
+        </details>
+      </div>`;
+  }
+
+  function ecUsarRascunho() {
+    const R = ecRascunhoIA;
+    if (!R) return;
+    ecLerFormulario();
+    const T = ecTextos;
+    const temTexto = Object.values(T.textos || {}).some(v => (v || '').trim());
+    if (temTexto && !confirm('Substituir os textos, indicadores e Focus já preenchidos pelo rascunho do Claude?')) return;
+    T.subtitulo = R.subtitulo || T.subtitulo || '';
+    T.textos = { ...(T.textos || {}), ...(R.textos || {}) };
+    if ((R.indicadores || []).length) T.indicadores = R.indicadores.map(l => ({ nome: l.nome || '', sub: l.sub || '', valor: l.valor || '', mes: l.mes || '', ano: l.ano || '', m12: l.m12 || '' }));
+    if ((R.focus || []).length) T.focus = R.focus.map(f => ({ rotulo: f.rotulo || '', valor: f.valor || '' }));
+    ecMontarFormulario();
+    ecMudou();
+  }
+
+  async function ecListarRefs() {
+    const { data } = await sb.storage.from(TM_BUCKET).list(EC_REFS, { limit: 200, sortBy: { column: 'name', order: 'desc' } });
+    ecRefs = (data || []).filter(a => a.id && !a.name.startsWith('.')).map(a => a.name);
+  }
+
+  async function ecEnviarRefs(ev) {
+    const arquivos = [...(ev.target.files || [])];
+    for (const f of arquivos) {
+      const nome = f.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w.\- ]+/g, '_');
+      const { error } = await sb.storage.from(TM_BUCKET).upload(`${EC_REFS}/${nome}`, f, { upsert: true, contentType: f.type || undefined });
+      if (error) alert(`Não consegui enviar ${f.name}: ${error.message}`);
+    }
+    ecLerFormulario();
+    await ecListarRefs();
+    ecMontarFormulario();
+  }
+
+  async function ecRemoverRef(nome) {
+    if (!confirm(`Remover ${nome} das cartas de referência?`)) return;
+    const { error } = await sb.storage.from(TM_BUCKET).remove([`${EC_REFS}/${nome}`]);
+    if (error) { alert('Não consegui remover: ' + error.message); return; }
+    ecLerFormulario();
+    await ecListarRefs();
+    ecMontarFormulario();
+  }
+
   function ecLerFormulario() {
     const T = ecTextos, form = document.getElementById('ecForm');
     T.subtitulo = document.getElementById('ecSubtitulo').value;
     T.focus_titulo = document.getElementById('ecFocusTitulo').value;
+    T.instrucoes_ia = document.getElementById('ecPedidosIA').value;
     T.textos = T.textos || {};
     form.querySelectorAll('[data-sec]').forEach(el => { T.textos[el.dataset.sec] = el.value; });
     form.querySelectorAll('[data-ind]').forEach(el => { T.indicadores[+el.dataset.ind][el.dataset.campo] = el.value; });
