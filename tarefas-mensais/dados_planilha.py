@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Coleta os dados da planilha base (Dados_EH_Investimentos.xlsx) e gera um arquivo de
+Coleta os dados da planilha base (abas Dados e Cotas da EH Base Unica.xlsx) e gera um arquivo de
 atualização no mesmo layout dela, para a macro ImportarDadosEH colar sozinha.
 
 Rodar no Spyder: botão Run. Por padrão pega o mês anterior (as séries mensais

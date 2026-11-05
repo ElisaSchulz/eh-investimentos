@@ -4,7 +4,7 @@ Option Explicit
 '==============================================================================
 ' IMPORTAR DADOS EH
 ' Le o arquivo atualizacao_dados_<mes>_<ano>.xlsx (gerado pela tarefa mensal
-' dados_planilha.py) e cola cada valor na planilha base Dados_EH_Investimentos,
+' dados_planilha.py) e cola cada valor na planilha base EH Base Unica,
 ' sem mudar a estrutura dela:
 '   - aba Dados: pela coluna fixa de cada bloco (CDI em N, PTAX em R, ...)
 '   - aba Cotas: pela coluna cujo CNPJ ou ticker esta na linha 2
@@ -23,7 +23,7 @@ Option Explicit
 ' Conferencia que veio no arquivo de atualizacao. A planilha base NAO e salva:
 ' confira e salve voce.
 '
-' Como usar: abra a Dados_EH_Investimentos, deixe ela ativa e rode a macro
+' Como usar: abra a EH Base Unica, deixe ela ativa e rode a macro
 ' ImportarDadosEH (Alt+F8). O codigo nao usa acentos de proposito.
 '==============================================================================
 
@@ -46,7 +46,7 @@ Public Sub ImportarDadosEH()
 
     Set gBase = ActiveWorkbook
     If Not TemAba(gBase, "Dados") Or Not TemAba(gBase, "Cotas") Then
-        MsgBox "Deixe a planilha Dados_EH_Investimentos ativa antes de rodar a macro " & _
+        MsgBox "Deixe a planilha EH Base Unica ativa antes de rodar a macro " & _
                "(ela precisa ter as abas Dados e Cotas).", vbExclamation, "Importar dados EH"
         Exit Sub
     End If

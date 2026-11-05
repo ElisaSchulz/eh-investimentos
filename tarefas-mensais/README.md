@@ -21,9 +21,9 @@ na aba **Tarefas Mensais** do admin do site.
 - `fundos.csv`: atualizar `cota_referencia` (ponto como decimal) e `data_referencia`
   (AAAA-MM-DD) com as cotas do extrato. É a conferência da aba Controle.
 - Listas de ativos: `ativos_b3.csv` (B3), `fundos.csv` (UCITS), `fundos_brasil.csv` (CNPJs da aba
-  Cotas da planilha Dados EH) e `CONJUNTOS` no topo de `etfs.py`.
+  Cotas da EH Base Unica) e `CONJUNTOS` no topo de `etfs.py`.
 
-## Planilha Dados EH
+## Planilha EH Base Unica (abas Dados e Cotas)
 
 O arquivo `atualizacao_dados_...xlsx` entra na planilha base pela macro `excel/ImportarDadosEH.bas`,
 que cola cada valor no lugar certo sem mudar a estrutura e lista os conflitos. Instalação e regras
