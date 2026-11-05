@@ -1,9 +1,9 @@
-# Atualizar a planilha Dados EH com a macro ImportarDadosEH
+# Atualizar a EH Base Unica com a macro ImportarDadosEH
 
 A tarefa mensal **Dados da planilha base** (`dados_planilha.py`) coleta os dados e gera
 `atualizacao_dados_<mês>_<ano>.xlsx`, que aparece na aba **Tarefas Mensais** do admin.
-A macro lê esse arquivo e cola cada valor no lugar certo da `Dados_EH_Investimentos.xlsx`,
-sem mudar a estrutura dela.
+A macro lê esse arquivo e cola cada valor no lugar certo das abas Dados e Cotas da `EH Base Unica.xlsx`,
+sem mudar a estrutura dela. As outras abas (extratos, Mapa...) não são tocadas.
 
 ## O que vem no arquivo
 
@@ -25,7 +25,7 @@ sem mudar a estrutura dela.
 ## Usar
 
 1. Baixe o `atualizacao_dados_...xlsx` do mês na aba Tarefas Mensais do admin.
-2. Abra o arquivo com a macro e depois a `Dados_EH_Investimentos.xlsx`. Deixe a planilha base na frente.
+2. Abra o arquivo com a macro e depois a `EH Base Unica.xlsx`. Deixe a planilha base na frente.
 3. **Alt + F8 > ImportarDadosEH > Executar** e escolha o arquivo baixado.
 4. A macro salva uma cópia de segurança da planilha base (na mesma pasta, ou em Documentos se
    ela estiver aberta pela nuvem) e pergunta o que fazer quando um valor digitado for diferente
