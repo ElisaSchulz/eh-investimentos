@@ -448,10 +448,11 @@ def conferir(nome, serie, tipo, calendario=None):
 # Saída
 # --------------------------------------------------------------------------
 def linhas_importar(aba, col_data, linha_chave, chave, serie, fonte, tolerancia=None):
-    """Linhas da aba Importar. Tolerancia: diferença absoluta que a macro aceita como igual."""
+    """Linhas da aba Importar. Tolerancia: diferença absoluta que a macro aceita como igual
+    (número, ou função do valor)."""
     return [{"Aba": aba, "ColunaData": col_data, "LinhaChave": linha_chave, "Chave": chave,
              "Data": d.date() if hasattr(d, "date") else d, "Valor": float(v), "Fonte": fonte,
-             "Tolerancia": tolerancia}
+             "Tolerancia": tolerancia(v) if callable(tolerancia) else tolerancia}
             for d, v in serie.dropna().items()]
 
 
@@ -614,7 +615,10 @@ def main(mes=MES):
                 conferencia.append((f"{f['nome']} ({c})", avisos[c], ""))
             elif c in fidc:
                 s = fidc[c]
-                importar += linhas_importar("Cotas", "B", 2, c, s, fonte_mensal[c])
+                # Planilha costuma ter essas cotas com 6 casas; diferença só de arredondamento
+                # (até 0,002%) conta como igual, para não virar conflito.
+                importar += linhas_importar("Cotas", "B", 2, c, s, fonte_mensal[c],
+                                            tolerancia=lambda v: round(abs(v) * 2e-5, 10))
                 ult = s.index.max()
                 conferencia.append((f"{f['nome']} ({c})", f"Sem cota diária: {fonte_mensal[c]}, "
                                     f"última {ult:%d/%m/%Y} = {s[ult]:.8f}", fidc_origem.get(c, "")))
