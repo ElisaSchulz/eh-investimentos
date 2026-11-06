@@ -1,6 +1,7 @@
 """
 Carta mensal: busca os dados do mês para a carta da EH e grava carta_dados.json
-(séries dos gráficos, fechamento e retorno de cada índice e os destaques da capa).
+(séries dos gráficos, fechamento e retorno de cada índice, destaques da capa e os
+indicadores das tabelas da carta, calculados em indicadores_carta.py).
 
 Os textos de cada seção são escritos no admin do site, na tela Editor da Carta,
 que junta estes dados ao modelo carta/carta_template.html e gera o PDF.
@@ -18,6 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import pandas as pd
 
 from comum import fechamentos_yahoo, limites_do_mes, mes_referencia, nome_mes, pasta_saida
+import indicadores_carta
 
 # ------------------------------------------------------------------ parâmetros
 MES = None            # None = mês anterior. Ou "AAAA-MM".
@@ -128,9 +130,17 @@ def main(mes=MES):
     df = baixar_indices(inicio, fim)
     if df.dropna(how="all").empty:
         raise RuntimeError("Yahoo Finance não devolveu nenhum índice no mês.")
+    dados = dados_carta(df, inicio, fim, mes_nome, ano)
+    print("Indicadores da carta (Banco Central e Yahoo):")
+    try:
+        extras = indicadores_carta.calcular(ano, m)
+        dados["indicadores_auto"] = extras["indicadores"]
+        dados["rentabilidade"] = extras["rentabilidade"]
+    except Exception as e:  # noqa: BLE001 (a carta sai sem eles; dá para preencher no editor)
+        print(f"Aviso: não consegui calcular os indicadores da carta: {e}")
     caminho = os.path.join(pasta_saida(ano, m), "carta_dados.json")
     with open(caminho, "w", encoding="utf-8") as f:
-        json.dump(dados_carta(df, inicio, fim, mes_nome, ano), f, ensure_ascii=False, indent=1)
+        json.dump(dados, f, ensure_ascii=False, indent=1)
     print(f"Arquivo salvo: {caminho}")
     print("Escreva os textos no admin do site, em Editor da Carta.")
     return [caminho]

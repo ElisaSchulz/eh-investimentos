@@ -172,6 +172,19 @@ def bloco_dados(dados, inicio, fim, indicadores, focus, pedidos):
               f"{str(i['retorno']).replace('.', ',')}% (último pregão {i['ultima_data']})"
               for i in dados.get("indices", []) if i.get("retorno") is not None]
     destaques = [f"- {d['rotulo']}: {d['valor']}" for d in dados.get("destaques", [])]
+
+    def _pct(v):
+        return "—" if v is None else f"{v:.2f}%".replace(".", ",")
+
+    calculados, rentab = [], []
+    for a in dados.get("indicadores_auto") or []:
+        detalhe = f" ({a['sub']})" if a.get("sub") else ""
+        calculados.append(f"- {a['nome']}{detalhe}: fechamento {a.get('valor') or '—'}; mês {a.get('mes') or '—'}; "
+                          f"ano {a.get('ano') or '—'}; 12 meses {a.get('m12') or '—'}")
+    for a in dados.get("rentabilidade") or []:
+        referencia = f" (referência {a['referencia']})" if a.get("referencia") else ""
+        rentab.append(f"- {a['nome']}{referencia}: {a.get('valor')}; mês {_pct(a.get('mes'))}; ano {_pct(a.get('ano'))}; "
+                      f"6m {_pct(a.get('m6'))}; 12m {_pct(a.get('m12'))}; 24m {_pct(a.get('m24'))}")
     texto = (
         f"Hoje é {date.today():%d/%m/%Y}. Escreva a carta de {dados['mes_nome']} de {dados['ano']} "
         f"(de {inicio:%d/%m/%Y} a {fim:%d/%m/%Y}).\n\n"
@@ -181,6 +194,13 @@ def bloco_dados(dados, inicio, fim, indicadores, focus, pedidos):
         + "\n".join(f"- {n} · {s}" for n, s in indicadores)
         + "\n\nProjeções do Focus, nesta ordem: " + ", ".join(focus) + "\n"
     )
+    if calculados:
+        texto += ("\n<indicadores_calculados>\nJá calculados a partir do Banco Central e do Yahoo (repita estes "
+                  "valores exatamente na tabela e use-os no texto; complete só o que faltar, como a data do Copom "
+                  "no detalhe da Selic):\n" + "\n".join(calculados) + "\n</indicadores_calculados>\n")
+    if rentab:
+        texto += ("\n<rentabilidade>\nVariações acumuladas, para usar no texto se ajudar:\n" + "\n".join(rentab)
+                  + "\n</rentabilidade>\n")
     if pedidos:
         texto += f"\n<pedidos_do_mes>\n{pedidos}\n</pedidos_do_mes>\n"
     texto += ("\nAs cartas de referência acima mostram a linguagem e o tipo de informação esperados. "

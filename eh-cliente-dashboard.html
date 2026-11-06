@@ -5762,6 +5762,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     { id: 'brasil', kicker: 'Doméstico', titulo: 'Brasil',
       graficos: [{ tipo: 'linha', titulo: 'Ibovespa · retorno acumulado no mês', series: ['^BVSP'] }] },
     { id: 'indicadores', kicker: 'Doméstico', titulo: 'Indicadores', semTexto: true, tabela: 'indicadores', focus: true },
+    { id: 'rentabilidade', kicker: 'Mercado', titulo: 'Rentabilidade', destaque: 'acumulada', semTexto: true, tabela: 'rentabilidade' },
     { id: 'indices', kicker: 'Mercado', titulo: 'Índices', destaque: 'no mês', semTexto: true, tabela: 'indices' },
   ];
   const EC_INDICADORES_PADRAO = [
@@ -5852,6 +5853,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         focus_titulo: `Boletim Focus · projeções para o fim de ${ecDados.ano}`,
         focus: (velho && velho.focus ? velho.focus : EC_FOCUS_PADRAO).map(f => ({ rotulo: f.rotulo, valor: '' })),
       };
+      ecAplicarAuto(ecTextos);
     }
     ecMontarFormulario();
     ecPrevia(true);
@@ -5882,7 +5884,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         <h3>Indicadores</h3>
         <table class="ec-grid"><thead><tr><th>Indicador</th><th>Detalhe</th><th>Fech.</th><th>Mês</th><th>Ano</th><th>12m</th><th></th></tr></thead><tbody>${linhas}</tbody></table>
         <button class="ec-link" onclick="ecAdicionarIndicador()">+ Adicionar indicador</button>
-        <div class="ec-hint">Valores como você quer que apareçam (ex.: 14,00%, − 0,25 p.p.). Vazio vira “—”. Valores com sinal de menos ficam em vermelho.</div>
+        ${(ecDados.indicadores_auto || []).length ? `<button class="ec-link" style="margin-left:1rem;" onclick="ecAtualizarAuto()">↻ Atualizar com os dados do mês</button>` : ''}
+        <div class="ec-hint">${(ecDados.indicadores_auto || []).length ? 'Selic, IPCA, IPCA-15, IGP-M, dólar, Brent e dívida bruta vêm sozinhos do Banco Central e do Yahoo; a data do Copom e o que faltar você completa. ' : ''}Valores como você quer que apareçam (ex.: 14,00%, − 0,25 p.p.). Vazio vira “—”. Valores com sinal de menos ficam em vermelho.</div>
         <div class="upload-field" style="margin-top:1.2rem;"><label>Título do Focus</label><input id="ecFocusTitulo"></div>
         <table class="ec-grid" style="margin-top:0.6rem;"><thead><tr><th>Projeção</th><th>Valor</th></tr></thead><tbody>${focus}</tbody></table>
       </div>`;
@@ -5998,6 +6001,11 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       `Hoje é ${new Date().toLocaleDateString('pt-BR')}. Escreva a carta de ${D.mes_nome} de ${D.ano} (de 01/${String(mm).padStart(2, '0')}/${ano} a ${fim}/${String(mm).padStart(2, '0')}/${ano}).`,
       '<dados_do_mes>\nÍndices de bolsa (fonte oficial da carta, use estes números):\n' + indices.join('\n') + '\n\nDestaques da capa:\n' + destaques.join('\n') + '\n</dados_do_mes>',
       'Linhas da tabela de indicadores, nesta ordem (nome · detalhe do mês anterior):\n' + (T.indicadores || []).filter(l => l.nome).map(l => `- ${l.nome} · ${l.sub || ''}`).join('\n'),
+      (D.indicadores_auto || []).length ? '<indicadores_calculados>\nJá calculados a partir do Banco Central e do Yahoo (repita estes valores exatamente na tabela e use-os no texto; complete só o que faltar, como a data do Copom no detalhe da Selic):\n'
+        + D.indicadores_auto.map(a => `- ${a.nome}${a.sub ? ` (${a.sub})` : ''}: fechamento ${a.valor || '—'}; mês ${a.mes || '—'}; ano ${a.ano || '—'}; 12 meses ${a.m12 || '—'}`).join('\n') + '\n</indicadores_calculados>' : '',
+      (D.rentabilidade || []).length ? '<rentabilidade>\nVariações acumuladas (mês, ano, 6, 12 e 24 meses), para usar no texto se ajudar:\n'
+        + D.rentabilidade.map(a => { const f = v => v == null ? '—' : Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+            return `- ${a.nome}${a.referencia ? ` (referência ${a.referencia})` : ''}: ${a.valor}; mês ${f(a.mes)}; ano ${f(a.ano)}; 6m ${f(a.m6)}; 12m ${f(a.m12)}; 24m ${f(a.m24)}`; }).join('\n') + '\n</rentabilidade>' : '',
       'Projeções do Focus, nesta ordem: ' + (T.focus || []).map(f => f.rotulo).join(', '),
       pedidos ? `<pedidos_do_mes>\n${pedidos}\n</pedidos_do_mes>` : '',
       'As cartas de referência acima mostram a linguagem e o tipo de informação esperados. Pesquise os acontecimentos do mês e responda no formato pedido.',
@@ -6061,6 +6069,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     T.subtitulo = R.subtitulo || T.subtitulo || '';
     T.textos = { ...(T.textos || {}), ...(R.textos || {}) };
     if ((R.indicadores || []).length) T.indicadores = R.indicadores.map(l => ({ nome: l.nome || '', sub: l.sub || '', valor: l.valor || '', mes: l.mes || '', ano: l.ano || '', m12: l.m12 || '' }));
+    ecAplicarAuto(T);
     if ((R.focus || []).length) T.focus = R.focus.map(f => ({ rotulo: f.rotulo || '', valor: f.valor || '' }));
     ecMontarFormulario();
     ecMudou();
@@ -6104,6 +6113,25 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     form.querySelectorAll('[data-focus]').forEach(el => { T.focus[+el.dataset.focus][el.dataset.campo] = el.value; });
   }
 
+  // Indicadores calculados pela tarefa carta_mensal (Banco Central e Yahoo) entram por cima do que
+  // estiver na tabela, casando pelo nome; o detalhe só muda quando o dado traz o mês de referência.
+  function ecChaveInd(n) { return (n || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9$]/g, ''); }
+  function ecAplicarAuto(T) {
+    const auto = (ecDados && ecDados.indicadores_auto) || [];
+    auto.forEach(a => {
+      let l = T.indicadores.find(x => ecChaveInd(x.nome) === ecChaveInd(a.nome));
+      if (!l) { l = { nome: a.nome, sub: '', valor: '', mes: '', ano: '', m12: '' }; T.indicadores.push(l); }
+      ['valor', 'mes', 'ano', 'm12'].forEach(k => { if (a[k]) l[k] = a[k]; });
+      if (a.sub) l.sub = a.sub;
+    });
+    return auto.length;
+  }
+  function ecAtualizarAuto() {
+    ecLerFormulario();
+    ecAplicarAuto(ecTextos);
+    ecMontarFormulario(); ecMudou();
+  }
+
   function ecAdicionarIndicador() {
     ecLerFormulario();
     ecTextos.indicadores.push({ nome: '', sub: '', valor: '', mes: '', ano: '', m12: '' });
@@ -6144,9 +6172,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const atrasados = (D.indices || []).filter(i => i.ultima_data && i.ultima_data !== ultima)
       .map(i => `${i.nome}: fechamento de ${i.ultima_data}, último pregão com dado disponível no período.`);
     const [dd, mm, aa] = (ultima || '').split('/');
-    const secoes = EC_SECOES.map(s => {
+    const secoes = EC_SECOES.filter(s => s.id !== 'rentabilidade' || (D.rentabilidade || []).length).map(s => {
       const sec = { ...s, texto: s.semTexto ? '' : ((T.textos || {})[s.id] || '') };
       if (s.id === 'indicadores') sec.descricao = `Principais referências domésticas no fechamento de ${D.mes_nome.toLowerCase()}.`;
+      if (s.id === 'rentabilidade') sec.descricao = `Variação no mês e acumulada em 6, 12 e 24 meses até o fechamento de ${D.mes_nome.toLowerCase()}.`;
       if (s.id === 'indices') {
         sec.descricao = ultima ? `Fechamento de ${+dd} de ${TM_MESES_PT[+mm - 1].toLowerCase()} de ${aa} e variação acumulada no mês.` : '';
         sec.nota_tabela = atrasados.join(' ');

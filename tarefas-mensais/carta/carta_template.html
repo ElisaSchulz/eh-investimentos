@@ -272,6 +272,16 @@ function tabelaIndicadores(linhas) {
   return `<table class="tab"><thead><tr><th>Indicador</th><th>Fechamento</th><th class="hl">Mês</th><th>Ano</th><th>12 meses</th></tr></thead><tbody>${corpo}</tbody></table>`;
 }
 
+function tabelaRentabilidade(linhas) {
+  const cel = v => `<td class="${v === null || v === undefined ? 'na' : v < 0 ? 'neg' : ''}">${pct(v, 2, false)}</td>`;
+  const corpo = linhas.map(l => {
+    const sub = [l.nota, l.referencia ? `referência ${l.referencia}` : ''].filter(Boolean).join(' · ');
+    return `<tr><td><span class="name">${esc(l.nome)}</span>${sub ? `<span class="sub">${esc(sub)}</span>` : ''}</td>` +
+      `<td class="valor">${esc(l.valor || '—')}</td>${cel(l.mes)}${cel(l.ano)}${cel(l.m6)}${cel(l.m12)}${cel(l.m24)}</tr>`;
+  }).join('');
+  return `<table class="tab"><thead><tr><th>Indicador</th><th>Valor</th><th class="hl">Mês</th><th>Ano</th><th>6 meses</th><th>12 meses</th><th>24 meses</th></tr></thead><tbody>${corpo}</tbody></table>`;
+}
+
 // ── páginas ────────────────────────────────────────────────────────────────
 const stage = document.getElementById('stage');
 const paginas = [];
@@ -374,6 +384,8 @@ function renderSecao(sec, n) {
   if (sec.tabela === 'indices') blocos.push(tabelaIndices() + (sec.nota_tabela ? `<div class="tab-note">${esc(sec.nota_tabela)}</div>` : ''));
   if (sec.tabela === 'indicadores' && (DADOS.indicadores || []).length)
     blocos.push(tabelaIndicadores(DADOS.indicadores) + `<div class="tab-note">Valores de referência no fechamento do mês. Variações não divulgadas para o período aparecem como “—”.</div>`);
+  if (sec.tabela === 'rentabilidade' && (DADOS.rentabilidade || []).length)
+    blocos.push(tabelaRentabilidade(DADOS.rentabilidade) + `<div class="tab-note">CDI, IPCA, IGP-M e poupança: variação composta de cada período; quando o dado do mês ainda não saiu, vale o último divulgado (referência indicada). R$/USD: PTAX de venda. Ibovespa e S&amp;P 500: pontos no fechamento. Fontes: Banco Central e Yahoo Finance.</div>`);
   if (sec.focus && (DADOS.focus || []).length)
     blocos.push(`<div class="focus"><h4>${esc(DADOS.focus_titulo || 'Boletim Focus · projeções para o fim do ano')}</h4><div class="kpis">` +
       DADOS.focus.map(f => `<div class="kpi"><div class="lab">${esc(f.rotulo)}</div><div class="val">${esc(f.valor)}</div></div>`).join('') + '</div></div>');
