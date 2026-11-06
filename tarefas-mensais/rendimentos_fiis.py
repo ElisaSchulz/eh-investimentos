@@ -55,7 +55,10 @@ def extrair(page, ticker):
     """Linhas da tabela do Funds Explorer para o ticker (cabeçalho normalizado)."""
     page.goto(BASE_URL.format(ticker=ticker), wait_until="networkidle", timeout=60000)
     seletor = f"table tbody tr[data-ticker='{ticker.lower()}']"
-    page.wait_for_selector(seletor, state="attached", timeout=20000)
+    try:
+        page.wait_for_selector(seletor, state="attached", timeout=20000)
+    except Exception:
+        raise ValueError("ticker não encontrado no Funds Explorer (ou a página não carregou)") from None
     res = page.evaluate("""(sel) => {
         const table = document.querySelector('table');
         const headers = [...table.querySelectorAll('thead th')].map(th => th.textContent.trim());
@@ -123,16 +126,17 @@ def main(mes=None):
     janela = tudo[(tudo["data_de_pagamento"] >= pd.Timestamp(d_ini)) &
                   (tudo["data_de_pagamento"] <= pd.Timestamp(d_fim))]
     colunas = [c for c in ("ticker", "data_de_pagamento", "data_base", "valor_por_cota") if c in janela.columns]
-    janela = janela[colunas].sort_values(["ticker", "data_de_pagamento"])
+    # o site repete as linhas (filtros escondidos de setor): tira as repetidas
+    janela = janela[colunas].drop_duplicates().sort_values(["ticker", "data_de_pagamento"])
 
-    st = pd.DataFrame(status)
+    st = pd.DataFrame(status, columns=["ticker", "status", "mensagem"])
     pagos = set(janela["ticker"])
     st.loc[(st["status"] == "OK") & ~st["ticker"].isin(pagos), "mensagem"] = "sem pagamento no período"
 
     rotulo = f"{d_ini:%Y-%m}" if (d_ini.day == 1 and d_fim == (pd.Timestamp(d_ini) + pd.offsets.MonthEnd(0)).date()) \
         else f"{d_ini:%Y-%m-%d} a {d_fim:%Y-%m-%d}"
     caminho = os.path.join(pasta_saida(ano, m), f"Rendimentos FIIs {rotulo}.xlsx")
-    historico = tudo[[c for c in ("ticker", "data_de_pagamento", "data_base", "valor_por_cota") if c in tudo.columns]]
+    historico = tudo[[c for c in ("ticker", "data_de_pagamento", "data_base", "valor_por_cota") if c in tudo.columns]].drop_duplicates()
     with pd.ExcelWriter(caminho, engine="openpyxl", datetime_format="DD/MM/YYYY") as xl:
         janela.to_excel(xl, sheet_name="Rendimentos", index=False)
         historico.sort_values(["ticker", "data_de_pagamento"]).to_excel(xl, sheet_name="Historico", index=False)
