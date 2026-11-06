@@ -54,13 +54,17 @@ A carta é montada no admin, na tela **Editor da Carta**: os dados do mês vêm 
 usa o modelo `carta/carta_template.html`. **Salvar PDF** imprime a carta;
 **Guardar carta final no site** grava o HTML junto dos arquivos do mês.
 
-Os números das tabelas vêm sozinhos (`indicadores_carta.py`, Banco Central e Yahoo):
+A tabela **Indicadores** vem sozinha (`indicadores_carta.py`, Banco Central e Yahoo), em grupos,
+com fechamento e variação no mês, no ano e em 6, 12 e 24 meses:
 
-- **Indicadores** (fechamento, mês, ano e 12 meses): Selic, IPCA, IPCA-15, IGP-M, R$/USD (PTAX),
-  Brent e Dívida Bruta. Entram no editor ao abrir um mês novo e no botão **Atualizar com os dados
-  do mês**. A data do Copom no detalhe da Selic continua à mão.
-- **Rentabilidade acumulada** (valor, mês, ano, 6, 12 e 24 meses): CDI, IPCA, IGP-M, Poupança,
-  R$/USD, Ibovespa e S&P 500, a tabela das cartas antigas. Vai direto para a carta.
+- **Juros:** Selic (variações em p.p.), CDI (taxa ao ano e rentabilidade acumulada) e Poupança.
+- **Inflação:** IPCA, IPCA-15 e IGP-M.
+- **Mercado:** R$/USD (PTAX), Brent, Ibovespa e S&P 500.
+- **Fiscal:** Dívida Bruta (% do PIB, variações em p.p.).
+
+Ela entra no editor ao abrir um mês novo e no botão **Atualizar com os dados do mês**. A data do
+Copom no detalhe da Selic continua à mão. Linha tirada da tabela não volta sozinha; linha nova
+que você criar fica no fim.
 
 IPCA e outros índices que saem depois do 3º dia útil usam o último mês divulgado, e a carta diz
 qual é. Rodando a tarefa `carta_mensal` de novo depois do dia 10, vem o IPCA do mês.

@@ -1,19 +1,18 @@
 """
 Indicadores da carta mensal calculados a partir das fontes públicas. Usado por carta_mensal.py,
-que grava o resultado em carta_dados.json.
+que grava o resultado em carta_dados.json (chave indicadores_auto).
 
-Duas tabelas:
+Uma tabela só, em grupos, com fechamento e variação no mês, no ano e em 6, 12 e 24 meses:
 
-  indicadores     a tabela "Indicadores" da carta (fechamento, mês, ano e 12 meses), já em texto:
-                  Selic (meta, SGS 432), IPCA (433), IPCA-15 (7478), IGP-M (189),
-                  R$/USD (PTAX venda, SGS 1), Brent (Yahoo BZ=F) e Dívida Bruta (% do PIB, 13762).
-  rentabilidade   a tabela das cartas antigas (valor, mês, ano, 6, 12 e 24 meses), em números:
-                  CDI (taxa anual 4389 e acumulado no mês 4391), IPCA, IGP-M, Poupança (196),
-                  R$/USD (PTAX), Ibovespa (^BVSP) e S&P 500 (^GSPC).
+  Juros     Selic (meta, SGS 432, variações em p.p.), CDI (taxa anual 4389 e rentabilidade
+            acumulada 4391), Poupança (196, linha do dia 1 como na planilha base)
+  Inflação  IPCA (433), IPCA-15 (7478), IGP-M (189), variação composta
+  Mercado   R$/USD (PTAX venda, SGS 1), Brent (Yahoo BZ=F), Ibovespa (^BVSP), S&P 500 (^GSPC)
+  Fiscal    Dívida Bruta (% do PIB, 13762, variações em p.p.)
 
-Índices de preço (IPCA, IGP-M, CDI, poupança) usam o último mês divulgado: no 3º dia útil o IPCA
-do mês de referência ainda não saiu, então a linha mostra o mês anterior e diz isso.
-Cada indicador que falhar fica vazio com um aviso, sem derrubar a carta.
+Índices de preço usam o último mês divulgado: no 3º dia útil o IPCA do mês de referência ainda
+não saiu, então a linha mostra o mês anterior e diz isso no detalhe.
+Cada indicador que falhar fica de fora com um aviso, sem derrubar a carta.
 """
 import os
 import sys
@@ -127,7 +126,8 @@ def taxa(serie, ref):
     dif = lambda b: None if b is None else ultimo - b
     data = s.index[-1].date()
     return {"data": data, "valor": ultimo, "mes": dif(base(_fim_mes(data, 1))),
-            "ano": dif(base(date(data.year - 1, 12, 31))), "m12": dif(base(_fim_mes(data, 12)))}
+            "ano": dif(base(date(data.year - 1, 12, 31))), "m6": dif(base(_fim_mes(data, 6))),
+            "m12": dif(base(_fim_mes(data, 12))), "m24": dif(base(_fim_mes(data, 24)))}
 
 
 # ------------------------------------------------------------------ principal
@@ -180,57 +180,47 @@ def calcular(ano, mes):
     def ref_txt(m):
         return f"{MESES_ABREV[m.month - 1]}/{m.year}" if m and (m.year, m.month) != (ano, mes) else ""
 
-    # ── tabela Indicadores (texto já formatado, como no editor) ──
+    # ── tabela Indicadores: uma linha por indicador, em grupos, tudo já em texto ──
     ind = []
-    if selic:
-        ind.append({"nome": "Selic", "sub": "", "valor": pct_txt(selic["valor"]), "mes": pp_txt(selic["mes"]),
-                    "ano": pp_txt(selic["ano"]), "m12": pp_txt(selic["m12"])})
-    for chave, rotulo, d, sub in (("ipca", "IPCA", ipca, "Referência {}"),
-                                  ("ipca15", "IPCA-15", ipca15, "Prévia de {}"),
-                                  ("igpm", "IGP-M", igpm, "{}")):
+    periodos = ("mes", "ano", "m6", "m12", "m24")
+
+    def linha(grupo, rotulo, sub, valor, d, fmt=pct_txt):
         if d:
-            texto = sub.format(nome(d["mes_ref"]))
-            ind.append({"nome": rotulo, "sub": texto[0].upper() + texto[1:], "valor": pct_txt(d["mes"]),
-                        "mes": pct_txt(d["mes"]), "ano": pct_txt(d["ano"]), "m12": pct_txt(d["m12"])})
-    if ptax:
-        ind.append({"nome": "R$/USD", "sub": f"PTAX · fechamento de {nome(ref)}", "valor": num_txt(ptax["valor"]),
-                    "mes": pct_txt(ptax["mes"]), "ano": pct_txt(ptax["ano"]), "m12": pct_txt(ptax["m12"])})
-    if brent:
-        ind.append({"nome": "Brent", "sub": f"US$ por barril · fechamento de {nome(ref)}",
-                    "valor": num_txt(brent["valor"]), "mes": pct_txt(brent["mes"]),
-                    "ano": pct_txt(brent["ano"]), "m12": pct_txt(brent["m12"])})
-    if divida:
-        ind.append({"nome": "Dívida Bruta", "sub": f"% do PIB · {nome(divida['data'])}",
-                    "valor": pct_txt(divida["valor"], 1), "mes": pp_txt(divida["mes"], 1),
-                    "ano": pp_txt(divida["ano"], 1), "m12": pp_txt(divida["m12"], 1)})
+            ind.append({"grupo": grupo, "nome": rotulo, "sub": sub, "valor": valor,
+                        **{k: fmt(d.get(k)) for k in periodos}})
 
-    # ── tabela Rentabilidade (números; o modelo da carta formata) ──
-    rent = []
+    def pp1(v):
+        return pp_txt(v, 1)
 
-    def linha(rotulo, valor_txt, d, referencia="", nota=""):
-        if not d:
-            return
-        rent.append({"nome": rotulo, "valor": valor_txt, "referencia": referencia, "nota": nota,
-                     **{k: _r(d.get(k)) for k in ("mes", "ano", "m6", "m12", "m24")}})
+    def ref_mes(d, modelo):
+        texto = modelo.format(nome(d["mes_ref"]))
+        return texto[0].upper() + texto[1:]
 
+    if selic:
+        linha("Juros", "Selic", "", pct_txt(selic["valor"]), selic, pp_txt)
     if cdi:
-        linha("CDI", pct_txt(cdi_anual["valor"]) if cdi_anual else "", cdi, ref_txt(cdi["mes_ref"]), "taxa ao ano")
-    if ipca:
-        linha("IPCA", pct_txt(ipca["mes"]), ipca, ref_txt(ipca["mes_ref"]))
-    if igpm:
-        linha("IGP-M", pct_txt(igpm["mes"]), igpm, ref_txt(igpm["mes_ref"]))
+        linha("Juros", "CDI", "Taxa ao ano · rentabilidade no período" + (f" · {ref_txt(cdi['mes_ref'])}" if ref_txt(cdi["mes_ref"]) else ""),
+              pct_txt(cdi_anual["valor"]) if cdi_anual else "", cdi)
     if pou:
-        linha("Poupança", pct_txt(pou["mes"]), pou, ref_txt(pou["mes_ref"]))
+        linha("Juros", "Poupança", ref_mes(pou, "Rendimento de {}"), pct_txt(pou["mes"]), pou)
+    if ipca:
+        linha("Inflação", "IPCA", ref_mes(ipca, "Referência {}"), pct_txt(ipca["mes"]), ipca)
+    if ipca15:
+        linha("Inflação", "IPCA-15", ref_mes(ipca15, "Prévia de {}"), pct_txt(ipca15["mes"]), ipca15)
+    if igpm:
+        linha("Inflação", "IGP-M", ref_mes(igpm, "{}"), pct_txt(igpm["mes"]), igpm)
     if ptax:
-        linha("R$/USD", num_txt(ptax["valor"], 4), ptax, nota="PTAX venda")
+        linha("Mercado", "R$/USD", f"PTAX · fechamento de {nome(ref)}", num_txt(ptax["valor"]), ptax)
+    if brent:
+        linha("Mercado", "Brent", f"US$ por barril · fechamento de {nome(ref)}", num_txt(brent["valor"]), brent)
     if ibov:
-        linha("Ibovespa", num_txt(ibov["valor"], 0), ibov, nota="pontos")
+        linha("Mercado", "Ibovespa", f"Pontos · fechamento de {nome(ref)}", num_txt(ibov["valor"], 0), ibov)
     if sp:
-        linha("S&P 500", num_txt(sp["valor"], 0), sp, nota="pontos")
+        linha("Mercado", "S&P 500", f"Pontos · fechamento de {nome(ref)}", num_txt(sp["valor"], 0), sp)
+    if divida:
+        linha("Fiscal", "Dívida Bruta", f"% do PIB · {nome(divida['data'])}", pct_txt(divida["valor"], 1), divida, pp1)
 
     for l in ind:
-        print(f"  {l['nome']:<12} {l['sub']:<40} {l['valor']:>10} | mês {l['mes']:>12} | ano {l['ano']:>12} | 12m {l['m12']:>12}")
-    for l in rent:
-        print(f"  {l['nome']:<12} {l['valor']:>10} {l['referencia']:<9} | mês {l['mes']} | ano {l['ano']} | "
-              f"6m {l['m6']} | 12m {l['m12']} | 24m {l['m24']}")
-    return {"indicadores": ind, "rentabilidade": rent}
+        print(f"  {l['grupo']:<9} {l['nome']:<12} {l['sub']:<42} {l['valor']:>10} | " +
+              " | ".join(f"{k} {l[k]:>11}" for k in periodos))
+    return {"indicadores": ind}

@@ -89,6 +89,10 @@
   table.tab .valor{font-family:'Fraunces',serif;font-size:15px;color:var(--navy);font-weight:600;}
   td.pos{color:var(--pos) !important;} td.neg{color:var(--neg) !important;} td.na{color:rgba(0,32,96,0.25) !important;}
   .tab-note{font-size:9.5px;color:var(--gray);margin-top:10px;}
+  table.tab tr.grupo td{padding:14px 12px 5px;font-size:8.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--bronze);font-weight:700;border-bottom:1px solid var(--rule-strong, var(--rule-soft));}
+  table.tab.compacta tbody td{padding:7px 10px;}
+  table.tab.compacta thead th{padding:9px 10px;}
+  table.tab.compacta .valor{font-size:14px;}
 
   /* ── indicadores em destaque (borda âmbar) ── */
   .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px;}
@@ -266,20 +270,20 @@ function tabelaIndices() {
   return `<table class="tab"><thead><tr><th>Índice</th><th>Praça</th><th>Fechamento</th><th class="hl">Mês</th></tr></thead><tbody>${linhas}</tbody></table>`;
 }
 function tabelaIndicadores(linhas) {
-  const cel = v => `<td class="${typeof v === 'string' && v.trim().startsWith(MENOS) || (typeof v === 'string' && v.trim().startsWith('-')) ? 'neg' : (v === '' || v === '—' || v === null || v === undefined ? 'na' : '')}">${esc(v || '—')}</td>`;
-  const corpo = linhas.map(l =>
-    `<tr><td><span class="name">${esc(l.nome)}</span>${l.sub ? `<span class="sub">${esc(l.sub)}</span>` : ''}</td><td class="valor">${esc(l.valor || '—')}</td>${cel(l.mes)}${cel(l.ano)}${cel(l.m12)}</tr>`).join('');
-  return `<table class="tab"><thead><tr><th>Indicador</th><th>Fechamento</th><th class="hl">Mês</th><th>Ano</th><th>12 meses</th></tr></thead><tbody>${corpo}</tbody></table>`;
-}
-
-function tabelaRentabilidade(linhas) {
-  const cel = v => `<td class="${v === null || v === undefined ? 'na' : v < 0 ? 'neg' : ''}">${pct(v, 2, false)}</td>`;
+  const vazio = v => v === '' || v === '—' || v === null || v === undefined;
+  const neg = v => typeof v === 'string' && (v.trim().startsWith(MENOS) || v.trim().startsWith('-'));
+  const cel = v => `<td class="${neg(v) ? 'neg' : vazio(v) ? 'na' : ''}">${esc(vazio(v) ? '—' : v)}</td>`;
+  // 6 e 24 meses só aparecem quando algum indicador tem esses períodos (cartas antigas não têm)
+  const tem = k => linhas.some(l => !vazio((l[k] || '').trim()));
+  const cols = [['mes', 'Mês'], ['ano', 'Ano'], ...(tem('m6') ? [['m6', '6 meses']] : []), ['m12', '12 meses'], ...(tem('m24') ? [['m24', '24 meses']] : [])];
+  const grupos = linhas.some(l => l.grupo);
+  let atual = null;
   const corpo = linhas.map(l => {
-    const sub = [l.nota, l.referencia ? `referência ${l.referencia}` : ''].filter(Boolean).join(' · ');
-    return `<tr><td><span class="name">${esc(l.nome)}</span>${sub ? `<span class="sub">${esc(sub)}</span>` : ''}</td>` +
-      `<td class="valor">${esc(l.valor || '—')}</td>${cel(l.mes)}${cel(l.ano)}${cel(l.m6)}${cel(l.m12)}${cel(l.m24)}</tr>`;
+    let cab = '';
+    if (grupos && l.grupo && l.grupo !== atual) { atual = l.grupo; cab = `<tr class="grupo"><td colspan="${cols.length + 2}">${esc(l.grupo)}</td></tr>`; }
+    return cab + `<tr><td><span class="name">${esc(l.nome)}</span>${l.sub ? `<span class="sub">${esc(l.sub)}</span>` : ''}</td><td class="valor">${esc(l.valor || '—')}</td>${cols.map(([k]) => cel(l[k])).join('')}</tr>`;
   }).join('');
-  return `<table class="tab"><thead><tr><th>Indicador</th><th>Valor</th><th class="hl">Mês</th><th>Ano</th><th>6 meses</th><th>12 meses</th><th>24 meses</th></tr></thead><tbody>${corpo}</tbody></table>`;
+  return `<table class="tab${grupos ? ' compacta' : ''}"><thead><tr><th>Indicador</th><th>Fechamento</th>${cols.map(([k, t]) => `<th${k === 'mes' ? ' class="hl"' : ''}>${t}</th>`).join('')}</tr></thead><tbody>${corpo}</tbody></table>`;
 }
 
 // ── páginas ────────────────────────────────────────────────────────────────
@@ -383,9 +387,9 @@ function renderSecao(sec, n) {
   (sec.graficos || []).forEach(gr => blocos.push(blocoGrafico(gr)));
   if (sec.tabela === 'indices') blocos.push(tabelaIndices() + (sec.nota_tabela ? `<div class="tab-note">${esc(sec.nota_tabela)}</div>` : ''));
   if (sec.tabela === 'indicadores' && (DADOS.indicadores || []).length)
-    blocos.push(tabelaIndicadores(DADOS.indicadores) + `<div class="tab-note">Valores de referência no fechamento do mês. Variações não divulgadas para o período aparecem como “—”.</div>`);
-  if (sec.tabela === 'rentabilidade' && (DADOS.rentabilidade || []).length)
-    blocos.push(tabelaRentabilidade(DADOS.rentabilidade) + `<div class="tab-note">CDI, IPCA, IGP-M e poupança: variação composta de cada período; quando o dado do mês ainda não saiu, vale o último divulgado (referência indicada). R$/USD: PTAX de venda. Ibovespa e S&amp;P 500: pontos no fechamento. Fontes: Banco Central e Yahoo Finance.</div>`);
+    blocos.push(tabelaIndicadores(DADOS.indicadores) + `<div class="tab-note">${(DADOS.indicadores || []).some(l => l.grupo)
+      ? 'Selic e dívida bruta: variação em pontos percentuais. CDI: taxa ao ano no fechamento e rentabilidade acumulada em cada período. Inflação: variação composta, com o último mês divulgado. R$/USD: PTAX de venda. Fontes: Banco Central e Yahoo Finance. Dados não disponíveis aparecem como “—”.'
+      : 'Valores de referência no fechamento do mês. Variações não divulgadas para o período aparecem como “—”.'}</div>`);
   if (sec.focus && (DADOS.focus || []).length)
     blocos.push(`<div class="focus"><h4>${esc(DADOS.focus_titulo || 'Boletim Focus · projeções para o fim do ano')}</h4><div class="kpis">` +
       DADOS.focus.map(f => `<div class="kpi"><div class="lab">${esc(f.rotulo)}</div><div class="val">${esc(f.valor)}</div></div>`).join('') + '</div></div>');
