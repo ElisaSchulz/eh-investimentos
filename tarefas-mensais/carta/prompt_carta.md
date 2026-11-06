@@ -86,6 +86,8 @@ Focus, no formato das referências:
 - `sub` diz a referência: "Meta · Copom de 5 de agosto", "Referência julho", "Prévia de agosto",
   "Fechamento de agosto", "% do PIB · julho".
 - Focus: o boletim publicado mais perto do último dia útil do mês de referência.
+- Quando o pedido trouxer indicadores já calculados (Banco Central e Yahoo), repita esses
+  valores exatamente e use os mesmos números no texto. Pesquise só o que faltar.
 
 ## Resposta
 

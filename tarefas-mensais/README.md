@@ -6,7 +6,7 @@ na aba **Tarefas Mensais** do admin do site.
 
 | Script | O que gera | Substitui |
 |---|---|---|
-| `carta_mensal.py` | `carta_dados.json`: gráficos, índices e destaques da capa da carta | `template_carta_mensal.py` |
+| `carta_mensal.py` | `carta_dados.json`: gráficos, índices, destaques da capa e as tabelas de indicadores (`indicadores_carta.py`) | `template_carta_mensal.py` |
 | `carta_ia.py` | `carta_rascunho_ia.json`: rascunho da carta escrito pelo Claude via API (opcional, só com a chave) | o prompt colado à mão no Claude |
 | `indicadores_americanos.py` | `USA_Indicators.xlsx` (CPI + índices) | `pyscript-indicadores-americanos.py` |
 | `cotas_fundos.py` | `cotacoes_fundos_<mês>_<ano>.xlsx` (NAV dos UCITS) | `baixar_cotas_fundos.py` |
@@ -53,6 +53,17 @@ A carta é montada no admin, na tela **Editor da Carta**: os dados do mês vêm 
 (o rascunho fica salvo em `AAAA-MM/carta_textos.json` no Supabase) e a prévia em A4
 usa o modelo `carta/carta_template.html`. **Salvar PDF** imprime a carta;
 **Guardar carta final no site** grava o HTML junto dos arquivos do mês.
+
+Os números das tabelas vêm sozinhos (`indicadores_carta.py`, Banco Central e Yahoo):
+
+- **Indicadores** (fechamento, mês, ano e 12 meses): Selic, IPCA, IPCA-15, IGP-M, R$/USD (PTAX),
+  Brent e Dívida Bruta. Entram no editor ao abrir um mês novo e no botão **Atualizar com os dados
+  do mês**. A data do Copom no detalhe da Selic continua à mão.
+- **Rentabilidade acumulada** (valor, mês, ano, 6, 12 e 24 meses): CDI, IPCA, IGP-M, Poupança,
+  R$/USD, Ibovespa e S&P 500, a tabela das cartas antigas. Vai direto para a carta.
+
+IPCA e outros índices que saem depois do 3º dia útil usam o último mês divulgado, e a carta diz
+qual é. Rodando a tarefa `carta_mensal` de novo depois do dia 10, vem o IPCA do mês.
 
 ### Rascunho da carta com o Claude
 
