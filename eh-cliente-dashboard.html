@@ -458,6 +458,8 @@
     .mapping-table-ext th { text-align:left; font-family: 'Manrope', monospace; font-size:10px; font-weight:500; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold-text); padding:0.6rem 0.8rem; border-bottom:1px solid var(--rule-strong); background:var(--navy-3); }
     .mapping-table-ext td { padding:0.4rem 0.5rem; border-bottom:1px solid var(--rule); vertical-align:middle; }
     .mapping-table-ext input { width:100%; background:transparent; border:1px solid transparent; color:var(--cream); font-family:'Manrope',sans-serif; font-size:13px; padding:0.4rem 0.55rem; outline:none; transition:border-color 0.2s, background 0.2s; }
+    .mapping-table-ext tr.mapping-group td { font-family:'Manrope',monospace; font-size:10px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold-text); padding:1rem 0.8rem 0.4rem; border-bottom:1px solid var(--rule-strong); }
+    .mapping-table-ext tr.mapping-group td span { color:var(--gray); font-weight:400; letter-spacing:0.05em; margin-left:0.4rem; }
     .mapping-table-ext input:focus { border-color:var(--gold); background:rgba(238,154,30,0.04); }
     .mapping-table-ext input::placeholder { color:var(--cream-faint); }
 
@@ -1540,10 +1542,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       <div class="upload-panel">
         <h3>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
-          2. Tabela CNPJ
+          2. Tabela de Produtos
           <span style="font-size:0.62rem;font-weight:400;color:var(--gray);margin-left:0.5rem;" id="extMappingBrokerLabel">— XP</span>
         </h3>
-        <p style="font-size:0.78rem;color:var(--gray);margin-bottom:1rem;line-height:1.6;">Mapeie trechos do nome do fundo para o CNPJ. Cada corretora tem sua própria tabela, salva automaticamente no Supabase.</p>
+        <p style="font-size:0.78rem;color:var(--gray);margin-bottom:1rem;line-height:1.6;">Mapeie trechos do nome do produto para o CNPJ (fundos) ou código (FIIs, CRA, CRI, debêntures etc.). Os produtos aparecem agrupados por tipo. Cada corretora tem sua própria tabela, salva automaticamente no Supabase.</p>
 
         <button type="button" class="btn-upload mapping-toggle-btn" onclick="toggleMappingPanel(this,'extMappingPanel')" style="background:rgba(255,255,255,0.06);color:var(--gray-light);font-size:0.62rem;padding:0.4rem 0.8rem;margin-bottom:0.9rem;">Exibir tabela</button>
         <div id="extMappingPanel" style="display:none;">
@@ -1555,17 +1557,17 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
             <button onclick="extExportMapping()" class="btn-upload" style="background:rgba(255,255,255,0.06);color:var(--gray-light);font-size:0.62rem;padding:0.4rem 0.8rem;">↓ Exportar Excel</button>
             <label class="btn-upload" style="background:rgba(255,255,255,0.06);color:var(--gray-light);font-size:0.62rem;padding:0.4rem 0.8rem;cursor:pointer;">↑ Importar Excel<input type="file" accept=".xlsx,.xls" style="display:none" onchange="extImportMapping(this)"></label>
-            <button onclick="extMergeDefaultMapping()" class="btn-upload" style="background:rgba(238,154,30,0.1);color:var(--gold-text);border:1px solid var(--border);font-size:0.62rem;padding:0.4rem 0.8rem;" title="Acrescenta os fundos da tabela padrão que ainda não estão aqui, sem apagar nada">+ Completar com padrão</button>
+            <button onclick="extMergeDefaultMapping()" class="btn-upload" style="background:rgba(238,154,30,0.1);color:var(--gold-text);border:1px solid var(--border);font-size:0.62rem;padding:0.4rem 0.8rem;" title="Acrescenta os produtos da tabela padrão que ainda não estão aqui, sem apagar nada">+ Completar com padrão</button>
           </div>
         </div>
 
         <div style="overflow-x:auto;">
           <table class="mapping-table-ext">
-            <thead><tr><th>Trecho do nome</th><th>CNPJ</th><th>Nome completo</th><th></th></tr></thead>
+            <thead><tr><th>Trecho do nome</th><th>CNPJ / Código</th><th>Nome completo</th><th></th></tr></thead>
             <tbody id="extMappingBody"></tbody>
           </table>
         </div>
-        <button onclick="extAddMappingRow()" class="btn-upload" style="margin-top:0.8rem;background:rgba(238,154,30,0.1);color:var(--gold-text);border:1px solid var(--border);">+ Adicionar fundo</button>
+        <button onclick="extAddMappingRow()" class="btn-upload" style="margin-top:0.8rem;background:rgba(238,154,30,0.1);color:var(--gold-text);border:1px solid var(--border);">+ Adicionar produto</button>
         </div>
       </div>
 
@@ -3716,6 +3718,180 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     { key:"XPCI11",                      cnpj:"XPCI11", full:"XPCI11 - FII" },
     { key:"XPLG11",                      cnpj:"XPLG11", full:"XPLG11 - FII" },
     { key:"XPML11",                      cnpj:"XPML11", full:"XPML11 - FII" },
+    // Renda fixa (CRA, CRI, CDCA, debêntures e NTN-B): código do papel no lugar do CNPJ
+    { key:"24G02736843",                 cnpj:"24G02736843", full:"CDCA BTG (ENGELHART CTP)" },
+    { key:"24G02736844",                 cnpj:"24G02736844", full:"CDCA BTG (ENGELHART CTP)" },
+    { key:"24G02736845",                 cnpj:"24G02736845", full:"CDCA BTG (ENGELHART CTP)" },
+    { key:"24I01531614",                 cnpj:"24I01531614", full:"CDCA VAMOS" },
+    { key:"24I01531624",                 cnpj:"24I01531624", full:"CDCA VAMOS" },
+    { key:"CRA02600002",                 cnpj:"CRA02600002", full:"CRA AGRION" },
+    { key:"CRA022003JT",                 cnpj:"CRA022003JT", full:"CRA BEM BRASIL" },
+    { key:"CRA020002H1",                 cnpj:"CRA020002H1", full:"CRA BRF" },
+    { key:"CRA0210013B",                 cnpj:"CRA0210013B", full:"CRA BRF" },
+    { key:"CRA0220079D",                 cnpj:"CRA0220079D", full:"CRA BRF" },
+    { key:"CRA0240066G",                 cnpj:"CRA0240066G", full:"CRA BRF" },
+    { key:"CRA0240066K",                 cnpj:"CRA0240066K", full:"CRA BRF" },
+    { key:"CRA02500669",                 cnpj:"CRA02500669", full:"CRA BRF" },
+    { key:"CRA02500BVT",                 cnpj:"CRA02500BVT", full:"CRA BRF" },
+    { key:"CRA02300CYR",                 cnpj:"CRA02300CYR", full:"CRA BTG" },
+    { key:"CRA02300HWH",                 cnpj:"CRA02300HWH", full:"CRA BTG" },
+    { key:"CRA02300NX7",                 cnpj:"CRA02300NX7", full:"CRA BTG" },
+    { key:"CRA02300NX8",                 cnpj:"CRA02300NX8", full:"CRA BTG" },
+    { key:"CRA02300TSB",                 cnpj:"CRA02300TSB", full:"CRA BTG" },
+    { key:"CRA0260040Q",                 cnpj:"CRA0260040Q", full:"CRA CERES" },
+    { key:"CRA025008HM",                 cnpj:"CRA025008HM", full:"CRA COCAL" },
+    { key:"CRA022004SD",                 cnpj:"CRA022004SD", full:"CRA FS BIO" },
+    { key:"CRA02300795",                 cnpj:"CRA02300795", full:"CRA FS BIO" },
+    { key:"CRA02300796",                 cnpj:"CRA02300796", full:"CRA FS BIO" },
+    { key:"CRA02300CCH",                 cnpj:"CRA02300CCH", full:"CRA FS BIO" },
+    { key:"CRA02300CCI",                 cnpj:"CRA02300CCI", full:"CRA FS BIO" },
+    { key:"CRA022008NF",                 cnpj:"CRA022008NF", full:"CRA IRANI" },
+    { key:"CRA022002XN",                 cnpj:"CRA022002XN", full:"CRA JBS" },
+    { key:"CRA022008N6",                 cnpj:"CRA022008N6", full:"CRA JBS" },
+    { key:"CRA022008N7",                 cnpj:"CRA022008N7", full:"CRA JBS" },
+    { key:"CRA02300JG3",                 cnpj:"CRA02300JG3", full:"CRA JBS" },
+    { key:"CRA024004SA",                 cnpj:"CRA024004SA", full:"CRA JBS" },
+    { key:"CRA0210012Y",                 cnpj:"CRA0210012Y", full:"CRA JSL" },
+    { key:"CRA019003JY",                 cnpj:"CRA019003JY", full:"CRA KLABIN" },
+    { key:"CRA022007EP",                 cnpj:"CRA022007EP", full:"CRA KLABIN" },
+    { key:"CRA021001VA",                 cnpj:"CRA021001VA", full:"CRA MARFRIG" },
+    { key:"CRA024002MK",                 cnpj:"CRA024002MK", full:"CRA MARFRIG" },
+    { key:"CRA024002ML",                 cnpj:"CRA024002ML", full:"CRA MARFRIG" },
+    { key:"CRA024009Q4",                 cnpj:"CRA024009Q4", full:"CRA MARFRIG" },
+    { key:"CRA021000RY",                 cnpj:"CRA021000RY", full:"CRA MINERVA" },
+    { key:"CRA0220073P",                 cnpj:"CRA0220073P", full:"CRA MINERVA" },
+    { key:"CRA02300MJ9",                 cnpj:"CRA02300MJ9", full:"CRA MINERVA" },
+    { key:"CRA024002S3",                 cnpj:"CRA024002S3", full:"CRA MINERVA" },
+    { key:"CRA02400AYN",                 cnpj:"CRA02400AYN", full:"CRA MINERVA" },
+    { key:"CRA025002S5",                 cnpj:"CRA025002S5", full:"CRA MINERVA" },
+    { key:"CRA025005V5",                 cnpj:"CRA025005V5", full:"CRA MINERVA" },
+    { key:"CRA025005V7",                 cnpj:"CRA025005V7", full:"CRA MINERVA" },
+    { key:"CRA025005V8",                 cnpj:"CRA025005V8", full:"CRA MINERVA" },
+    { key:"CRA02300BVT",                 cnpj:"CRA02300BVT", full:"CRA PANTANAL" },
+    { key:"CRA02300HLD",                 cnpj:"CRA02300HLD", full:"CRA PANTANAL AGRÍCOLA" },
+    { key:"CRA019003V3",                 cnpj:"CRA019003V3", full:"CRA RAÍZEN" },
+    { key:"CRA020001P8",                 cnpj:"CRA020001P8", full:"CRA RAÍZEN" },
+    { key:"CRA022008NB",                 cnpj:"CRA022008NB", full:"CRA RAÍZEN" },
+    { key:"CRA022008ND",                 cnpj:"CRA022008ND", full:"CRA RAÍZEN" },
+    { key:"CRA02300JR7",                 cnpj:"CRA02300JR7", full:"CRA RAÍZEN" },
+    { key:"CRA0240086K",                 cnpj:"CRA0240086K", full:"CRA SEARA" },
+    { key:"CRA022008C9",                 cnpj:"CRA022008C9", full:"CRA UNIDAS" },
+    { key:"CRA01900749",                 cnpj:"CRA01900749", full:"CRA VAMOS" },
+    { key:"CRA020001US",                 cnpj:"CRA020001US", full:"CRA VAMOS" },
+    { key:"CRA020003PY",                 cnpj:"CRA020003PY", full:"CRA VAMOS" },
+    { key:"CRA023000GP",                 cnpj:"CRA023000GP", full:"CRA VAMOS" },
+    { key:"CRA021002N3",                 cnpj:"CRA021002N3", full:"CRA ZILOR" },
+    { key:"24K2452334",                   cnpj:"CRI24K2452334", full:"CRI ARTESANAL" },
+    { key:"22J0346710",                   cnpj:"CRI22J0346710", full:"CRI BTG" },
+    { key:"22K0767293",                   cnpj:"CRI22K0767293", full:"CRI BTG" },
+    { key:"22B0004808",                   cnpj:"CRI22B0004808", full:"CRI CSN CIMENTOS" },
+    { key:"24D3313888",                   cnpj:"CRI24D3313888", full:"CRI CURY" },
+    { key:"25A1946535",                   cnpj:"CRI25A1946535", full:"CRI CURY" },
+    { key:"22F0009804",                   cnpj:"CRI22F0009804", full:"CRI DIRECIONAL" },
+    { key:"25F0010202",                   cnpj:"CRI25F0010202", full:"CRI DIRECIONAL/RIVA" },
+    { key:"22E1315701",                   cnpj:"CRI22E1315701", full:"CRI EVEN" },
+    { key:"23B0493519",                   cnpj:"CRI23B0493519", full:"CRI FORGREEN" },
+    { key:"23J1338137",                   cnpj:"CRI23J1338137", full:"CRI FORGREEN" },
+    { key:"24D0781832",                   cnpj:"CRI24D0781832", full:"CRI FORGREEN" },
+    { key:"24D0781914",                   cnpj:"CRI24D0781914", full:"CRI FORGREEN" },
+    { key:"25E3904178",                   cnpj:"CRI25E3904178", full:"CRI FORGREEN" },
+    { key:"23G0006401",                   cnpj:"CRI23G0006401", full:"CRI HABITAT" },
+    { key:"23G0006601",                   cnpj:"CRI23G0006601", full:"CRI HABITAT" },
+    { key:"24C1582978",                   cnpj:"CRI24C1582978", full:"CRI HELBOR" },
+    { key:"24C1586480",                   cnpj:"CRI24C1586480", full:"CRI HELBOR" },
+    { key:"24C1589518",                   cnpj:"CRI24C1589518", full:"CRI HELBOR" },
+    { key:"23I1260682",                   cnpj:"CRI23I1260682", full:"CRI JSL" },
+    { key:"22K1685406",                   cnpj:"CRI22K1685406", full:"CRI KWP ENERGIA" },
+    { key:"17K0231156",                   cnpj:"CRI17K0231156", full:"CRI LOCALIZA" },
+    { key:"23C0247388",                   cnpj:"CRI23C0247388", full:"CRI LOCALIZA" },
+    { key:"21I0278118",                   cnpj:"CRI21I0278118", full:"CRI LOG" },
+    { key:"26C5564546",                   cnpj:"CRI26C5564546", full:"CRI LOTUS TOWER" },
+    { key:"19L0838850",                   cnpj:"CRI19L0838850", full:"CRI MAGAZINE LUIZA" },
+    { key:"20B0980166",                   cnpj:"CRI20B0980166", full:"CRI MATEUS" },
+    { key:"22C1362141",                   cnpj:"CRI22C1362141", full:"CRI MATEUS" },
+    { key:"23J1428588",                   cnpj:"CRI23J1428588", full:"CRI MOVIDA" },
+    { key:"21D0001232",                   cnpj:"CRI21D0001232", full:"CRI MRV" },
+    { key:"22B0006022",                   cnpj:"CRI22B0006022", full:"CRI MRV" },
+    { key:"22E1095384",                   cnpj:"CRI22E1095384", full:"CRI MRV" },
+    { key:"22E1095521",                   cnpj:"CRI22E1095521", full:"CRI MRV" },
+    { key:"23F1508169",                   cnpj:"CRI23F1508169", full:"CRI MRV" },
+    { key:"24I1980390",                   cnpj:"CRI24I1980390", full:"CRI MRV" },
+    { key:"25G5109813",                   cnpj:"CRI25G5109813", full:"CRI MRV" },
+    { key:"24D0007011",                   cnpj:"CRI24D0007011", full:"CRI MRV FLEX" },
+    { key:"24I1419236",                   cnpj:"CRI24I1419236", full:"CRI MRV FLEX" },
+    { key:"25C3917602",                   cnpj:"CRI25C3917602", full:"CRI MRV FLEX" },
+    { key:"23J1333602",                   cnpj:"CRI23J1333602", full:"CRI PATRIMAR" },
+    { key:"24D2688431",                   cnpj:"CRI24D2688431", full:"CRI PATRIMAR" },
+    { key:"24D2688432",                   cnpj:"CRI24D2688432", full:"CRI PATRIMAR" },
+    { key:"24K0003002",                   cnpj:"CRI24K0003002", full:"CRI PATRIMAR" },
+    { key:"22K0001203",                   cnpj:"CRI22K0001203", full:"CRI PETROBRÁS" },
+    { key:"22K0001204",                   cnpj:"CRI22K0001204", full:"CRI PETROBRÁS" },
+    { key:"19H0235501",                   cnpj:"CRI19H0235501", full:"CRI REDE D'OR" },
+    { key:"19H0262186",                   cnpj:"CRI19H0262186", full:"CRI REDE D'OR" },
+    { key:"21D0862572",                   cnpj:"CRI21D0862572", full:"CRI REDE D'OR" },
+    { key:"21K0001806",                   cnpj:"CRI21K0001806", full:"CRI REDE D'OR" },
+    { key:"21K0001807",                   cnpj:"CRI21K0001807", full:"CRI REDE D'OR" },
+    { key:"22D1289008",                   cnpj:"CRI22D1289008", full:"CRI REDE D'OR" },
+    { key:"23H0027403",                   cnpj:"CRI23H0027403", full:"CRI REDE D'OR" },
+    { key:"23H0027404",                   cnpj:"CRI23H0027404", full:"CRI REDE D'OR" },
+    { key:"25I3725398",                   cnpj:"CRI25I3725398", full:"CRI SOLFÁCIL" },
+    { key:"23F2367721",                   cnpj:"CRI23F2367721", full:"CRI URBA" },
+    { key:"24C1638623",                   cnpj:"CRI24C1638623", full:"CRI URBA" },
+    { key:"23F0012403",                   cnpj:"CRI23F0012403", full:"CRI VOTORANTIM" },
+    { key:"BRKMA6",                      cnpj:"DEB. BRKMA6", full:"DEB. BRASKEM" },
+    { key:"CSNAA1",                      cnpj:"DEB. CSNAA1", full:"DEB. CSN" },
+    { key:"VERTH2",                      cnpj:"DEB. VERTH2", full:"DEB. J&F" },
+    { key:"ALGAB1",                      cnpj:"DEB. ALGAB1", full:"DEB. INC. ALGAR" },
+    { key:"ALGAC2",                      cnpj:"DEB. ALGAC2", full:"DEB. INC. ALGAR" },
+    { key:"CCROB6",                      cnpj:"DEB. CCROB6", full:"DEB. INC. CCR" },
+    { key:"CGOS13",                      cnpj:"DEB. CGOS13", full:"DEB. INC. CELG" },
+    { key:"CMGD28",                      cnpj:"DEB. CMGD28", full:"DEB. INC. CEMIG" },
+    { key:"PALFB3",                      cnpj:"DEB. PALFB3", full:"DEB. INC. CPFL" },
+    { key:"CSNAC4",                      cnpj:"DEB. CSNAC4", full:"DEB. INC. CSN" },
+    { key:"CMIN11",                      cnpj:"DEB. CMIN11", full:"DEB. INC. CSN MINERAÇÃO" },
+    { key:"CMIN12",                      cnpj:"DEB. CMIN12", full:"DEB. INC. CSN MINERAÇÃO" },
+    { key:"ECHP11",                      cnpj:"DEB. ECHP11", full:"DEB. INC. ECHOENERGIA" },
+    { key:"MGSP12",                      cnpj:"DEB. MGSP12", full:"DEB. INC. EDP" },
+    { key:"ELET14",                      cnpj:"DEB. ELET14", full:"DEB. INC. ELETROBRÁS" },
+    { key:"ELET42",                      cnpj:"DEB. ELET42", full:"DEB. INC. ELETROBRÁS" },
+    { key:"ENAT23",                      cnpj:"DEB. ENAT23", full:"DEB. INC. ENAUTA" },
+    { key:"ENAT24",                      cnpj:"DEB. ENAT24", full:"DEB. INC. ENAUTA" },
+    { key:"ENAT32",                      cnpj:"DEB. ENAT32", full:"DEB. INC. ENAUTA" },
+    { key:"ENAT33",                      cnpj:"DEB. ENAT33", full:"DEB. INC. ENAUTA" },
+    { key:"ENGIA5",                      cnpj:"DEB. ENGIA5", full:"DEB. INC. ENERGISA" },
+    { key:"EGIEA0",                      cnpj:"DEB. EGIEA0", full:"DEB. INC. ENGIE ENERGIA" },
+    { key:"ENTV12",                      cnpj:"DEB. ENTV12", full:"DEB. INC. ENTREVIAS" },
+    { key:"EQTR11",                      cnpj:"DEB. EQTR11", full:"DEB. INC. EQUATORIAL" },
+    { key:"EQUA11",                      cnpj:"DEB. EQUA11", full:"DEB. INC. EQUATORIAL" },
+    { key:"ITPO14",                      cnpj:"DEB. ITPO14", full:"DEB. INC. ITAPOÃ TERMINAIS PORT." },
+    { key:"JALL15",                      cnpj:"DEB. JALL15", full:"DEB. INC. JALLES MACHADO" },
+    { key:"PLSB1A",                      cnpj:"DEB. PLSB1A", full:"DEB. INC. LITORAL SUL" },
+    { key:"MRSAB2",                      cnpj:"DEB. MRSAB2", full:"DEB. INC. MRS LOGISTICA" },
+    { key:"PETR18",                      cnpj:"DEB. PETR18", full:"DEB. INC. PETROBRÁS" },
+    { key:"PETR26",                      cnpj:"DEB. PETR26", full:"DEB. INC. PETROBRÁS" },
+    { key:"PETR27",                      cnpj:"DEB. PETR27", full:"DEB. INC. PETROBRÁS" },
+    { key:"RESA27",                      cnpj:"DEB. RESA27", full:"DEB. INC. RAÍZEN" },
+    { key:"CBAN12",                      cnpj:"DEB. CBAN12", full:"DEB. INC. ROTA DAS BANDEIRAS" },
+    { key:"RUMOA3",                      cnpj:"DEB. RUMOA3", full:"DEB. INC. RUMO" },
+    { key:"SBSPE9",                      cnpj:"DEB. SBSPE9", full:"DEB. INC. SABESP" },
+    { key:"SUZBA0",                      cnpj:"DEB. SUZBA0", full:"DEB. INC. SUZANO" },
+    { key:"TAEB15",                      cnpj:"DEB. TAEB15", full:"DEB. INC. TEREOS" },
+    { key:"ALIG12",                      cnpj:"DEB. ALIG12", full:"DEB. INC. TRANSMISSORA ALIANÇA - TAESA" },
+    { key:"TAEE17",                      cnpj:"DEB. TAEE17", full:"DEB. INC. TRANSMISSORA ALIANÇA - TAESA" },
+    { key:"TAEEB2",                      cnpj:"DEB. TAEEB2", full:"DEB. INC. TRANSMISSORA ALIANÇA - TAESA" },
+    { key:"TAEED2",                      cnpj:"DEB. TAEED2", full:"DEB. INC. TRANSMISSORA ALIANÇA - TAESA" },
+    { key:"UTPS11",                      cnpj:"DEB. UTPS11", full:"DEB. INC. USINA TERM. PAMPA SUL" },
+    { key:"BTEL13",                      cnpj:"DEB. BTEL13", full:"DEB. INC. V.TAL" },
+    { key:"VALEA0",                      cnpj:"DEB. VALEA0", full:"DEB. INC. VALE" },
+    { key:"VALEB0",                      cnpj:"DEB. VALEB0", full:"DEB. INC. VALE" },
+    { key:"VALEC0",                      cnpj:"DEB. VALEC0", full:"DEB. INC. VALE" },
+    { key:"VERTH1",                      cnpj:"DEB. VERTH1", full:"DEB. ÂMBAR ENERGIA" },
+    { key:"VBRR11",                      cnpj:"DEB. VBRR11", full:"DEB. INC. VIA BRASIL BR 163" },
+    { key:"QUAT13",                      cnpj:"DEB. QUAT13", full:"DEB. INC. ZILOR" },
+    { key:"MRFGA1",                      cnpj:"DEB. MRFGA1", full:"DEB. MARFRIG" },
+    { key:"JSMLA5",                      cnpj:"DEB. JSMLA5", full:"DEB. SIMPAR" },
+    { key:"NTNB 35",                     cnpj:"NTNB 35", full:"NTN-B 2035" },
+    { key:"NTNB 45",                     cnpj:"NTNB 45", full:"NTN-B 2045" },
   ];
 
   const DEFAULT_MAPPING_EQI = [
@@ -3757,6 +3933,180 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     { key:"CRI FORGREEN",                cnpj:"", full:"CRI Forgreen III - VENC 2034" },
     { key:"MINERVA",                     cnpj:"", full:"CRA Minerva" },
     { key:"PANTANAL",                    cnpj:"", full:"CRA Pantanal" },
+    // Renda fixa (CRA, CRI, CDCA, debêntures e NTN-B): código do papel no lugar do CNPJ
+    { key:"24G02736843",                 cnpj:"24G02736843", full:"CDCA BTG (ENGELHART CTP)" },
+    { key:"24G02736844",                 cnpj:"24G02736844", full:"CDCA BTG (ENGELHART CTP)" },
+    { key:"24G02736845",                 cnpj:"24G02736845", full:"CDCA BTG (ENGELHART CTP)" },
+    { key:"24I01531614",                 cnpj:"24I01531614", full:"CDCA VAMOS" },
+    { key:"24I01531624",                 cnpj:"24I01531624", full:"CDCA VAMOS" },
+    { key:"CRA02600002",                 cnpj:"CRA02600002", full:"CRA AGRION" },
+    { key:"CRA022003JT",                 cnpj:"CRA022003JT", full:"CRA BEM BRASIL" },
+    { key:"CRA020002H1",                 cnpj:"CRA020002H1", full:"CRA BRF" },
+    { key:"CRA0210013B",                 cnpj:"CRA0210013B", full:"CRA BRF" },
+    { key:"CRA0220079D",                 cnpj:"CRA0220079D", full:"CRA BRF" },
+    { key:"CRA0240066G",                 cnpj:"CRA0240066G", full:"CRA BRF" },
+    { key:"CRA0240066K",                 cnpj:"CRA0240066K", full:"CRA BRF" },
+    { key:"CRA02500669",                 cnpj:"CRA02500669", full:"CRA BRF" },
+    { key:"CRA02500BVT",                 cnpj:"CRA02500BVT", full:"CRA BRF" },
+    { key:"CRA02300CYR",                 cnpj:"CRA02300CYR", full:"CRA BTG" },
+    { key:"CRA02300HWH",                 cnpj:"CRA02300HWH", full:"CRA BTG" },
+    { key:"CRA02300NX7",                 cnpj:"CRA02300NX7", full:"CRA BTG" },
+    { key:"CRA02300NX8",                 cnpj:"CRA02300NX8", full:"CRA BTG" },
+    { key:"CRA02300TSB",                 cnpj:"CRA02300TSB", full:"CRA BTG" },
+    { key:"CRA0260040Q",                 cnpj:"CRA0260040Q", full:"CRA CERES" },
+    { key:"CRA025008HM",                 cnpj:"CRA025008HM", full:"CRA COCAL" },
+    { key:"CRA022004SD",                 cnpj:"CRA022004SD", full:"CRA FS BIO" },
+    { key:"CRA02300795",                 cnpj:"CRA02300795", full:"CRA FS BIO" },
+    { key:"CRA02300796",                 cnpj:"CRA02300796", full:"CRA FS BIO" },
+    { key:"CRA02300CCH",                 cnpj:"CRA02300CCH", full:"CRA FS BIO" },
+    { key:"CRA02300CCI",                 cnpj:"CRA02300CCI", full:"CRA FS BIO" },
+    { key:"CRA022008NF",                 cnpj:"CRA022008NF", full:"CRA IRANI" },
+    { key:"CRA022002XN",                 cnpj:"CRA022002XN", full:"CRA JBS" },
+    { key:"CRA022008N6",                 cnpj:"CRA022008N6", full:"CRA JBS" },
+    { key:"CRA022008N7",                 cnpj:"CRA022008N7", full:"CRA JBS" },
+    { key:"CRA02300JG3",                 cnpj:"CRA02300JG3", full:"CRA JBS" },
+    { key:"CRA024004SA",                 cnpj:"CRA024004SA", full:"CRA JBS" },
+    { key:"CRA0210012Y",                 cnpj:"CRA0210012Y", full:"CRA JSL" },
+    { key:"CRA019003JY",                 cnpj:"CRA019003JY", full:"CRA KLABIN" },
+    { key:"CRA022007EP",                 cnpj:"CRA022007EP", full:"CRA KLABIN" },
+    { key:"CRA021001VA",                 cnpj:"CRA021001VA", full:"CRA MARFRIG" },
+    { key:"CRA024002MK",                 cnpj:"CRA024002MK", full:"CRA MARFRIG" },
+    { key:"CRA024002ML",                 cnpj:"CRA024002ML", full:"CRA MARFRIG" },
+    { key:"CRA024009Q4",                 cnpj:"CRA024009Q4", full:"CRA MARFRIG" },
+    { key:"CRA021000RY",                 cnpj:"CRA021000RY", full:"CRA MINERVA" },
+    { key:"CRA0220073P",                 cnpj:"CRA0220073P", full:"CRA MINERVA" },
+    { key:"CRA02300MJ9",                 cnpj:"CRA02300MJ9", full:"CRA MINERVA" },
+    { key:"CRA024002S3",                 cnpj:"CRA024002S3", full:"CRA MINERVA" },
+    { key:"CRA02400AYN",                 cnpj:"CRA02400AYN", full:"CRA MINERVA" },
+    { key:"CRA025002S5",                 cnpj:"CRA025002S5", full:"CRA MINERVA" },
+    { key:"CRA025005V5",                 cnpj:"CRA025005V5", full:"CRA MINERVA" },
+    { key:"CRA025005V7",                 cnpj:"CRA025005V7", full:"CRA MINERVA" },
+    { key:"CRA025005V8",                 cnpj:"CRA025005V8", full:"CRA MINERVA" },
+    { key:"CRA02300BVT",                 cnpj:"CRA02300BVT", full:"CRA PANTANAL" },
+    { key:"CRA02300HLD",                 cnpj:"CRA02300HLD", full:"CRA PANTANAL AGRÍCOLA" },
+    { key:"CRA019003V3",                 cnpj:"CRA019003V3", full:"CRA RAÍZEN" },
+    { key:"CRA020001P8",                 cnpj:"CRA020001P8", full:"CRA RAÍZEN" },
+    { key:"CRA022008NB",                 cnpj:"CRA022008NB", full:"CRA RAÍZEN" },
+    { key:"CRA022008ND",                 cnpj:"CRA022008ND", full:"CRA RAÍZEN" },
+    { key:"CRA02300JR7",                 cnpj:"CRA02300JR7", full:"CRA RAÍZEN" },
+    { key:"CRA0240086K",                 cnpj:"CRA0240086K", full:"CRA SEARA" },
+    { key:"CRA022008C9",                 cnpj:"CRA022008C9", full:"CRA UNIDAS" },
+    { key:"CRA01900749",                 cnpj:"CRA01900749", full:"CRA VAMOS" },
+    { key:"CRA020001US",                 cnpj:"CRA020001US", full:"CRA VAMOS" },
+    { key:"CRA020003PY",                 cnpj:"CRA020003PY", full:"CRA VAMOS" },
+    { key:"CRA023000GP",                 cnpj:"CRA023000GP", full:"CRA VAMOS" },
+    { key:"CRA021002N3",                 cnpj:"CRA021002N3", full:"CRA ZILOR" },
+    { key:"24K2452334",                   cnpj:"CRI24K2452334", full:"CRI ARTESANAL" },
+    { key:"22J0346710",                   cnpj:"CRI22J0346710", full:"CRI BTG" },
+    { key:"22K0767293",                   cnpj:"CRI22K0767293", full:"CRI BTG" },
+    { key:"22B0004808",                   cnpj:"CRI22B0004808", full:"CRI CSN CIMENTOS" },
+    { key:"24D3313888",                   cnpj:"CRI24D3313888", full:"CRI CURY" },
+    { key:"25A1946535",                   cnpj:"CRI25A1946535", full:"CRI CURY" },
+    { key:"22F0009804",                   cnpj:"CRI22F0009804", full:"CRI DIRECIONAL" },
+    { key:"25F0010202",                   cnpj:"CRI25F0010202", full:"CRI DIRECIONAL/RIVA" },
+    { key:"22E1315701",                   cnpj:"CRI22E1315701", full:"CRI EVEN" },
+    { key:"23B0493519",                   cnpj:"CRI23B0493519", full:"CRI FORGREEN" },
+    { key:"23J1338137",                   cnpj:"CRI23J1338137", full:"CRI FORGREEN" },
+    { key:"24D0781832",                   cnpj:"CRI24D0781832", full:"CRI FORGREEN" },
+    { key:"24D0781914",                   cnpj:"CRI24D0781914", full:"CRI FORGREEN" },
+    { key:"25E3904178",                   cnpj:"CRI25E3904178", full:"CRI FORGREEN" },
+    { key:"23G0006401",                   cnpj:"CRI23G0006401", full:"CRI HABITAT" },
+    { key:"23G0006601",                   cnpj:"CRI23G0006601", full:"CRI HABITAT" },
+    { key:"24C1582978",                   cnpj:"CRI24C1582978", full:"CRI HELBOR" },
+    { key:"24C1586480",                   cnpj:"CRI24C1586480", full:"CRI HELBOR" },
+    { key:"24C1589518",                   cnpj:"CRI24C1589518", full:"CRI HELBOR" },
+    { key:"23I1260682",                   cnpj:"CRI23I1260682", full:"CRI JSL" },
+    { key:"22K1685406",                   cnpj:"CRI22K1685406", full:"CRI KWP ENERGIA" },
+    { key:"17K0231156",                   cnpj:"CRI17K0231156", full:"CRI LOCALIZA" },
+    { key:"23C0247388",                   cnpj:"CRI23C0247388", full:"CRI LOCALIZA" },
+    { key:"21I0278118",                   cnpj:"CRI21I0278118", full:"CRI LOG" },
+    { key:"26C5564546",                   cnpj:"CRI26C5564546", full:"CRI LOTUS TOWER" },
+    { key:"19L0838850",                   cnpj:"CRI19L0838850", full:"CRI MAGAZINE LUIZA" },
+    { key:"20B0980166",                   cnpj:"CRI20B0980166", full:"CRI MATEUS" },
+    { key:"22C1362141",                   cnpj:"CRI22C1362141", full:"CRI MATEUS" },
+    { key:"23J1428588",                   cnpj:"CRI23J1428588", full:"CRI MOVIDA" },
+    { key:"21D0001232",                   cnpj:"CRI21D0001232", full:"CRI MRV" },
+    { key:"22B0006022",                   cnpj:"CRI22B0006022", full:"CRI MRV" },
+    { key:"22E1095384",                   cnpj:"CRI22E1095384", full:"CRI MRV" },
+    { key:"22E1095521",                   cnpj:"CRI22E1095521", full:"CRI MRV" },
+    { key:"23F1508169",                   cnpj:"CRI23F1508169", full:"CRI MRV" },
+    { key:"24I1980390",                   cnpj:"CRI24I1980390", full:"CRI MRV" },
+    { key:"25G5109813",                   cnpj:"CRI25G5109813", full:"CRI MRV" },
+    { key:"24D0007011",                   cnpj:"CRI24D0007011", full:"CRI MRV FLEX" },
+    { key:"24I1419236",                   cnpj:"CRI24I1419236", full:"CRI MRV FLEX" },
+    { key:"25C3917602",                   cnpj:"CRI25C3917602", full:"CRI MRV FLEX" },
+    { key:"23J1333602",                   cnpj:"CRI23J1333602", full:"CRI PATRIMAR" },
+    { key:"24D2688431",                   cnpj:"CRI24D2688431", full:"CRI PATRIMAR" },
+    { key:"24D2688432",                   cnpj:"CRI24D2688432", full:"CRI PATRIMAR" },
+    { key:"24K0003002",                   cnpj:"CRI24K0003002", full:"CRI PATRIMAR" },
+    { key:"22K0001203",                   cnpj:"CRI22K0001203", full:"CRI PETROBRÁS" },
+    { key:"22K0001204",                   cnpj:"CRI22K0001204", full:"CRI PETROBRÁS" },
+    { key:"19H0235501",                   cnpj:"CRI19H0235501", full:"CRI REDE D'OR" },
+    { key:"19H0262186",                   cnpj:"CRI19H0262186", full:"CRI REDE D'OR" },
+    { key:"21D0862572",                   cnpj:"CRI21D0862572", full:"CRI REDE D'OR" },
+    { key:"21K0001806",                   cnpj:"CRI21K0001806", full:"CRI REDE D'OR" },
+    { key:"21K0001807",                   cnpj:"CRI21K0001807", full:"CRI REDE D'OR" },
+    { key:"22D1289008",                   cnpj:"CRI22D1289008", full:"CRI REDE D'OR" },
+    { key:"23H0027403",                   cnpj:"CRI23H0027403", full:"CRI REDE D'OR" },
+    { key:"23H0027404",                   cnpj:"CRI23H0027404", full:"CRI REDE D'OR" },
+    { key:"25I3725398",                   cnpj:"CRI25I3725398", full:"CRI SOLFÁCIL" },
+    { key:"23F2367721",                   cnpj:"CRI23F2367721", full:"CRI URBA" },
+    { key:"24C1638623",                   cnpj:"CRI24C1638623", full:"CRI URBA" },
+    { key:"23F0012403",                   cnpj:"CRI23F0012403", full:"CRI VOTORANTIM" },
+    { key:"BRKMA6",                      cnpj:"DEB. BRKMA6", full:"DEB. BRASKEM" },
+    { key:"CSNAA1",                      cnpj:"DEB. CSNAA1", full:"DEB. CSN" },
+    { key:"VERTH2",                      cnpj:"DEB. VERTH2", full:"DEB. J&F" },
+    { key:"ALGAB1",                      cnpj:"DEB. ALGAB1", full:"DEB. INC. ALGAR" },
+    { key:"ALGAC2",                      cnpj:"DEB. ALGAC2", full:"DEB. INC. ALGAR" },
+    { key:"CCROB6",                      cnpj:"DEB. CCROB6", full:"DEB. INC. CCR" },
+    { key:"CGOS13",                      cnpj:"DEB. CGOS13", full:"DEB. INC. CELG" },
+    { key:"CMGD28",                      cnpj:"DEB. CMGD28", full:"DEB. INC. CEMIG" },
+    { key:"PALFB3",                      cnpj:"DEB. PALFB3", full:"DEB. INC. CPFL" },
+    { key:"CSNAC4",                      cnpj:"DEB. CSNAC4", full:"DEB. INC. CSN" },
+    { key:"CMIN11",                      cnpj:"DEB. CMIN11", full:"DEB. INC. CSN MINERAÇÃO" },
+    { key:"CMIN12",                      cnpj:"DEB. CMIN12", full:"DEB. INC. CSN MINERAÇÃO" },
+    { key:"ECHP11",                      cnpj:"DEB. ECHP11", full:"DEB. INC. ECHOENERGIA" },
+    { key:"MGSP12",                      cnpj:"DEB. MGSP12", full:"DEB. INC. EDP" },
+    { key:"ELET14",                      cnpj:"DEB. ELET14", full:"DEB. INC. ELETROBRÁS" },
+    { key:"ELET42",                      cnpj:"DEB. ELET42", full:"DEB. INC. ELETROBRÁS" },
+    { key:"ENAT23",                      cnpj:"DEB. ENAT23", full:"DEB. INC. ENAUTA" },
+    { key:"ENAT24",                      cnpj:"DEB. ENAT24", full:"DEB. INC. ENAUTA" },
+    { key:"ENAT32",                      cnpj:"DEB. ENAT32", full:"DEB. INC. ENAUTA" },
+    { key:"ENAT33",                      cnpj:"DEB. ENAT33", full:"DEB. INC. ENAUTA" },
+    { key:"ENGIA5",                      cnpj:"DEB. ENGIA5", full:"DEB. INC. ENERGISA" },
+    { key:"EGIEA0",                      cnpj:"DEB. EGIEA0", full:"DEB. INC. ENGIE ENERGIA" },
+    { key:"ENTV12",                      cnpj:"DEB. ENTV12", full:"DEB. INC. ENTREVIAS" },
+    { key:"EQTR11",                      cnpj:"DEB. EQTR11", full:"DEB. INC. EQUATORIAL" },
+    { key:"EQUA11",                      cnpj:"DEB. EQUA11", full:"DEB. INC. EQUATORIAL" },
+    { key:"ITPO14",                      cnpj:"DEB. ITPO14", full:"DEB. INC. ITAPOÃ TERMINAIS PORT." },
+    { key:"JALL15",                      cnpj:"DEB. JALL15", full:"DEB. INC. JALLES MACHADO" },
+    { key:"PLSB1A",                      cnpj:"DEB. PLSB1A", full:"DEB. INC. LITORAL SUL" },
+    { key:"MRSAB2",                      cnpj:"DEB. MRSAB2", full:"DEB. INC. MRS LOGISTICA" },
+    { key:"PETR18",                      cnpj:"DEB. PETR18", full:"DEB. INC. PETROBRÁS" },
+    { key:"PETR26",                      cnpj:"DEB. PETR26", full:"DEB. INC. PETROBRÁS" },
+    { key:"PETR27",                      cnpj:"DEB. PETR27", full:"DEB. INC. PETROBRÁS" },
+    { key:"RESA27",                      cnpj:"DEB. RESA27", full:"DEB. INC. RAÍZEN" },
+    { key:"CBAN12",                      cnpj:"DEB. CBAN12", full:"DEB. INC. ROTA DAS BANDEIRAS" },
+    { key:"RUMOA3",                      cnpj:"DEB. RUMOA3", full:"DEB. INC. RUMO" },
+    { key:"SBSPE9",                      cnpj:"DEB. SBSPE9", full:"DEB. INC. SABESP" },
+    { key:"SUZBA0",                      cnpj:"DEB. SUZBA0", full:"DEB. INC. SUZANO" },
+    { key:"TAEB15",                      cnpj:"DEB. TAEB15", full:"DEB. INC. TEREOS" },
+    { key:"ALIG12",                      cnpj:"DEB. ALIG12", full:"DEB. INC. TRANSMISSORA ALIANÇA - TAESA" },
+    { key:"TAEE17",                      cnpj:"DEB. TAEE17", full:"DEB. INC. TRANSMISSORA ALIANÇA - TAESA" },
+    { key:"TAEEB2",                      cnpj:"DEB. TAEEB2", full:"DEB. INC. TRANSMISSORA ALIANÇA - TAESA" },
+    { key:"TAEED2",                      cnpj:"DEB. TAEED2", full:"DEB. INC. TRANSMISSORA ALIANÇA - TAESA" },
+    { key:"UTPS11",                      cnpj:"DEB. UTPS11", full:"DEB. INC. USINA TERM. PAMPA SUL" },
+    { key:"BTEL13",                      cnpj:"DEB. BTEL13", full:"DEB. INC. V.TAL" },
+    { key:"VALEA0",                      cnpj:"DEB. VALEA0", full:"DEB. INC. VALE" },
+    { key:"VALEB0",                      cnpj:"DEB. VALEB0", full:"DEB. INC. VALE" },
+    { key:"VALEC0",                      cnpj:"DEB. VALEC0", full:"DEB. INC. VALE" },
+    { key:"VERTH1",                      cnpj:"DEB. VERTH1", full:"DEB. ÂMBAR ENERGIA" },
+    { key:"VBRR11",                      cnpj:"DEB. VBRR11", full:"DEB. INC. VIA BRASIL BR 163" },
+    { key:"QUAT13",                      cnpj:"DEB. QUAT13", full:"DEB. INC. ZILOR" },
+    { key:"MRFGA1",                      cnpj:"DEB. MRFGA1", full:"DEB. MARFRIG" },
+    { key:"JSMLA5",                      cnpj:"DEB. JSMLA5", full:"DEB. SIMPAR" },
+    { key:"NTNB 35",                     cnpj:"NTNB 35", full:"NTN-B 2035" },
+    { key:"NTNB 45",                     cnpj:"NTNB 45", full:"NTN-B 2045" },
   ];
 
   // ── Broker selector ──
@@ -3834,9 +4184,37 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     }
   }
 
+  // Tipo do produto, deduzido do código/CNPJ e do nome (não fica salvo no Supabase)
+  const EXT_GRUPOS = ['Fundos','FIIs e Fiagros','CRA','CRI','CDCA','Debêntures','Títulos Públicos','Ações, ETFs e BDRs'];
+  function extTipoProduto(r) {
+    const txt = ((r.cnpj||'') + ' ' + (r.full||'') + ' ' + (r.key||'')).toUpperCase();
+    const ini = s => (r.cnpj||'').toUpperCase().startsWith(s) || (r.full||'').toUpperCase().startsWith(s);
+    if (ini('CRA')) return 'CRA';
+    if (ini('CRI')) return 'CRI';
+    if (ini('CDCA')) return 'CDCA';
+    if (ini('DEB')) return 'Debêntures';
+    if (ini('NTN') || ini('LTN') || ini('LFT') && !/ETF/.test(txt) || /TESOURO/.test(txt)) return 'Títulos Públicos';
+    const ticker = /^[A-Z]{4}\d{1,2}$/.test((r.cnpj||'').toUpperCase());
+    if (ticker && /\b(ETF|AÇÃO|ACAO|BDR)\b/.test(txt)) return 'Ações, ETFs e BDRs';
+    if (ticker && /11$/.test(r.cnpj)) return 'FIIs e Fiagros';
+    if (ticker) return 'Ações, ETFs e BDRs';
+    if (/\bFII\b/.test(txt)) return 'FIIs e Fiagros';
+    return 'Fundos';
+  }
+
   function extRenderMapping(rows) {
-    document.getElementById('extMappingBody').innerHTML = '';
-    rows.forEach(r => extAddMappingRow(r.key, r.cnpj, r.full));
+    const tbody = document.getElementById('extMappingBody');
+    tbody.innerHTML = '';
+    const porGrupo = new Map(EXT_GRUPOS.map(g => [g, []]));
+    rows.forEach(r => porGrupo.get(extTipoProduto(r)).push(r));
+    porGrupo.forEach((lista, grupo) => {
+      if (!lista.length) return;
+      const tr = document.createElement('tr');
+      tr.className = 'mapping-group';
+      tr.innerHTML = `<td colspan="4">${grupo}<span>${lista.length}</span></td>`;
+      tbody.appendChild(tr);
+      lista.forEach(r => extAddMappingRow(r.key, r.cnpj, r.full));
+    });
   }
 
   function extEscHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
@@ -3856,7 +4234,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   function extGetMappingRows() {
-    return Array.from(document.querySelectorAll('#extMappingBody tr')).map(tr => {
+    return Array.from(document.querySelectorAll('#extMappingBody tr:not(.mapping-group)')).map(tr => {
       const ins = tr.querySelectorAll('input');
       return { key: ins[0].value.trim(), cnpj: ins[1].value.trim(), full: ins[2].value.trim() };
     }).filter(r => r.key);
@@ -3873,10 +4251,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       if (!cur) { rows.push({ ...d }); added++; }
       else if (!cur.cnpj && d.cnpj) { cur.cnpj = d.cnpj; if (!cur.full) cur.full = d.full; filled++; }
     });
-    if (!added && !filled) { alert('A tabela já contém todos os fundos do padrão.'); return; }
+    if (!added && !filled) { alert('A tabela já contém todos os produtos do padrão.'); return; }
     extRenderMapping(rows);
     extSaveMappingToSupabase();
-    alert(`${added} fundo(s) adicionado(s) e ${filled} CNPJ(s) preenchido(s).`);
+    alert(`${added} produto(s) adicionado(s) e ${filled} CNPJ(s) preenchido(s).`);
   }
 
   function toggleMappingPanel(btn, id) {
@@ -3888,11 +4266,11 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
   function extExportMapping() {
     const rows = extGetMappingRows();
-    const data = [['Trecho do Nome','CNPJ','Nome Completo'], ...rows.map(r => [r.key, r.cnpj, r.full])];
+    const data = [['Trecho do Nome','CNPJ / Código','Nome Completo','Tipo'], ...rows.map(r => [r.key, r.cnpj, r.full, extTipoProduto(r)])];
     const ws = XLSX.utils.aoa_to_sheet(data);
-    ws['!cols'] = [28, 22, 42].map(w => ({ wch: w }));
+    ws['!cols'] = [28, 22, 42, 18].map(w => ({ wch: w }));
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Mapeamento CNPJ');
+    XLSX.utils.book_append_sheet(wb, ws, 'Tabela de Produtos');
     XLSX.writeFile(wb, `mapeamento_${extCurrentBroker.toLowerCase()}_eh.xlsx`);
   }
 
@@ -3909,7 +4287,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         if (!rows.length) { alert('Nenhuma linha encontrada.'); return; }
         extRenderMapping(rows);
         extSaveMappingToSupabase();
-        alert('✓ ' + rows.length + ' fundos importados.');
+        alert('✓ ' + rows.length + ' produtos importados.');
       } catch(err) { alert('Erro: ' + err.message); }
       input.value = '';
     };
@@ -3974,7 +4352,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
   function extLookupCNPJ(h, mapping) {
     const u = h.toUpperCase();
-    for (const m of mapping) { if (m.key && u.includes(m.key.toUpperCase())) return m.cnpj || '—'; }
+    // Linhas sem CNPJ/código (ex.: "CRA JBS" genérico) não param a busca: um código mais específico pode vir depois
+    for (const m of mapping) { if (m.key && m.cnpj && u.includes(m.key.toUpperCase())) return m.cnpj; }
     return '—';
   }
   function extGetSheetName(text, filename) {
@@ -4442,9 +4821,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const hay = xpnStrip(historico);
     const hayTight = hay.replace(/\s+/g,'');
     for (const m of mapping) {
-      if (!m.key) continue;
+      if (!m.key || !m.cnpj) continue;
       const needle = xpnStrip(m.key);
-      if (hay.includes(needle) || hayTight.includes(needle.replace(/\s+/g,''))) return m.cnpj || '—';
+      if (hay.includes(needle) || hayTight.includes(needle.replace(/\s+/g,''))) return m.cnpj;
     }
     return '—';
   }
@@ -4617,7 +4996,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   // ── Resolução de CNPJ (para fundos sem CNPJ no extrato, ex: XP) ──
-  // Prioridade: 1) CNPJ do próprio extrato  2) Tabela CNPJ XP (Supabase)  3) Lista mestre (fuzzy)
+  // Prioridade: 1) CNPJ do próprio extrato  2) Tabela de Produtos XP (Supabase)  3) Lista mestre (fuzzy)
   function ctResolveCnpj(f) {
     if (f.cnpj) return { cnpj: f.cnpj, fonte: 'Extrato', oficial: '' };
     const u = f.nome.toUpperCase();
@@ -5138,7 +5517,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     if (semCnpj) {
       ctLog(`${semCnpj} fundo(s) sem CNPJ:`, 'warn');
       [...new Set(ctRows.filter(r => !r.cnpj).map(r => r.fundo))].forEach(n => ctLog(`&nbsp;&nbsp;· ${n}`, 'warn'));
-      ctLog(`Adicione na Tabela CNPJ (XP) em "Extratos → Excel" ou na lista mestre e reprocesse.`, 'warn');
+      ctLog(`Adicione na Tabela de Produtos (XP) em "Extratos → Excel" ou na lista mestre e reprocesse.`, 'warn');
     }
     ctLog(`Total: ${ctRows.length} posição(ões) em fundos.`, 'head');
     btn.disabled = false;
