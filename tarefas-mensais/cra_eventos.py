@@ -525,8 +525,9 @@ def handle_riza(page, asset):
                     events.append(ev(asset, "Riza", d, "Amortização", valor=amort))
                 if amex > 0:
                     events.append(ev(asset, "Riza", d, "Amortização Extraordinária", valor=amex))
-        return events
-    # sem a série: usa o agregado da operação (totais / quantidade)
+        if events:
+            return events
+    # sem o fluxo da série: usa o agregado da operação (totais / quantidade)
     for it in data.get("aggregated", []):
         d = date_iso(it.get("date"))
         q = num_iso(it.get("quantity")) or 0
