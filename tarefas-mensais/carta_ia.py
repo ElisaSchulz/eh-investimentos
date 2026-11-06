@@ -105,7 +105,8 @@ def carta_em_texto(mes, t):
         partes.append("## Indicadores\n\n" + "\n".join(linhas))
     if t.get("focus"):
         partes.append(f"## {t.get('focus_titulo') or 'Focus'}\n\n" +
-                      "\n".join(f"- {f.get('rotulo')}: {f.get('valor')}" for f in t["focus"]))
+                      "\n".join(f"- {f.get('rotulo')}: {f.get('valor')}" for f in t["focus"])
+                      + (f"\n\n{t['focus_referencia']}" if t.get("focus_referencia") else ""))
     return "\n\n".join(partes)
 
 
@@ -192,6 +193,14 @@ def bloco_dados(dados, inicio, fim, indicadores, focus, pedidos):
         texto += ("\n<indicadores_calculados>\nJá calculados a partir do Banco Central e do Yahoo (repita estes "
                   "valores exatamente na tabela e use-os no texto; complete só o que faltar, como a data do Copom "
                   "no detalhe da Selic):\n" + "\n".join(calculados) + "\n</indicadores_calculados>\n")
+    fa = dados.get("focus_auto") or {}
+    if fa.get("itens"):
+        br = lambda iso: "/".join(reversed(iso.split("-"))) if iso else ""
+        texto += (f"\n<focus_calculado>\nBoletim Focus de {br(fa.get('data_boletim'))}, com as projeções coletadas até "
+                  f"{br(fa.get('data_coleta'))} (o último com coleta no mês), direto do Banco Central. Repita estes "
+                  "valores e esta referência exatamente e use este boletim no texto do Brasil:\n"
+                  + "\n".join(f"- {f['rotulo']}: {f['valor']}" for f in fa["itens"])
+                  + f"\nfocus_referencia: {fa.get('referencia', '')}\n</focus_calculado>\n")
     if pedidos:
         texto += f"\n<pedidos_do_mes>\n{pedidos}\n</pedidos_do_mes>\n"
     texto += ("\nAs cartas de referência acima mostram a linguagem e o tipo de informação esperados. "
@@ -270,7 +279,7 @@ def normalizar(r, indicadores, focus):
     fontes = [{"titulo": str(f.get("titulo") or f.get("url") or ""), "url": str(f.get("url") or ""),
                "uso": str(f.get("uso") or "")} for f in r.get("fontes") or [] if isinstance(f, dict)]
     return {"subtitulo": str(r.get("subtitulo") or "").strip(), "textos": textos, "indicadores": inds,
-            "focus": fcs, "fontes": fontes,
+            "focus": fcs, "focus_referencia": str(r.get("focus_referencia") or "").strip(), "fontes": fontes,
             "pontos_a_conferir": [str(p) for p in r.get("pontos_a_conferir") or []]}
 
 

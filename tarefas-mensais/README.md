@@ -69,6 +69,12 @@ que você criar fica no fim.
 IPCA e outros índices que saem depois do 3º dia útil usam o último mês divulgado, e a carta diz
 qual é. Rodando a tarefa `carta_mensal` de novo depois do dia 10, vem o IPCA do mês.
 
+O **Boletim Focus** também vem sozinho (API de Expectativas do Banco Central): Selic, IPCA, PIB e
+dólar para o fim do ano, mediana, do último boletim com a coleta dentro do mês. O Focus sai na
+segunda-feira com as projeções até a sexta anterior, então a carta de outubro usa o boletim de 3 de
+novembro (coleta até 30 de outubro). A referência com as duas datas aparece abaixo das projeções e
+pode ser editada no editor.
+
 ### Rascunho da carta com o Claude
 
 O pedido fixo ao Claude fica em `carta/prompt_carta.md` (estilo, roteiro de cada seção, formato).

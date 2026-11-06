@@ -72,8 +72,8 @@ por que aconteceu e o que isso pode significar daqui para frente, sem jargão de
 - **brasil** (Brasil, 6 a 9 parágrafos): Copom (decisão, placar, comunicado), IPCA do mês anterior
   e IPCA-15 do mês, com o que puxou, IGP-M, câmbio (fechamento do dólar e motivo), Ibovespa
   (fechamento, caminho no mês, fluxo estrangeiro, setores), fiscal (dívida bruta, resultado
-  primário) e política se mexer com o mercado. O último parágrafo traz o Boletim Focus do fim do mês
-  (Selic, IPCA, PIB e dólar para o fim do ano) e uma leitura dele.
+  primário) e política se mexer com o mercado. O último parágrafo traz o Boletim Focus do mês
+  (Selic, IPCA, PIB e dólar para o fim do ano), dizendo a data do boletim, e uma leitura dele.
 
 ## Indicadores e Focus
 
@@ -85,9 +85,13 @@ Focus, no formato das referências:
   não se aplica.
 - `sub` diz a referência: "Meta · Copom de 5 de agosto", "Referência julho", "Prévia de agosto",
   "Fechamento de agosto", "% do PIB · julho".
-- Focus: o boletim publicado mais perto do último dia útil do mês de referência.
-- Quando o pedido trouxer indicadores já calculados (Banco Central e Yahoo), repita esses
-  valores exatamente e use os mesmos números no texto. Pesquise só o que faltar.
+- Focus: o último boletim com a coleta dentro do mês de referência. O Focus sai na segunda-feira
+  (na terça, se a segunda for feriado) com as projeções coletadas até a sexta-feira anterior; para
+  outubro de 2026, por exemplo, vale o boletim de 3 de novembro, com coleta até 30 de outubro. Use o
+  mesmo boletim na tabela e no texto, e diga qual foi em `focus_referencia`.
+- Quando o pedido trouxer indicadores ou Focus já calculados (Banco Central e Yahoo), repita esses
+  valores e a referência do Focus exatamente e use os mesmos números no texto. Pesquise só o que
+  faltar.
 
 ## Resposta
 
@@ -107,6 +111,7 @@ Quando terminar a pesquisa, responda **apenas** com um objeto JSON entre as tags
   ],
   "focus": [{"rotulo": "Selic", "valor": "…"}, {"rotulo": "IPCA", "valor": "…"},
             {"rotulo": "PIB", "valor": "…"}, {"rotulo": "Dólar", "valor": "R$ …"}],
+  "focus_referencia": "Fonte: Banco Central do Brasil, Boletim Focus de …, com as projeções coletadas até … (mediana).",
   "fontes": [{"titulo": "…", "url": "https://…", "uso": "qual dado veio daqui"}],
   "pontos_a_conferir": ["dado ou afirmação que merece checagem humana, e por quê"]
 }
