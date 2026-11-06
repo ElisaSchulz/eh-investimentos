@@ -85,7 +85,9 @@ O pedido fixo ao Claude fica em `carta/prompt_carta.md` (estilo, roteiro de cada
 Pode editar à vontade. Há dois jeitos de usar:
 
 **De graça, copiando e colando (padrão).** No Editor da Carta, painel "Rascunho com o Claude":
-1. (opcional) escrever os pedidos do mês, por exemplo "dar mais espaço às eleições";
+1. (opcional) escrever os pedidos do mês, por exemplo "dar mais espaço às eleições", e contar
+   como foram as carteiras (campo "Como foram as carteiras neste mês"), que é a base da seção
+   **Desempenho das carteiras**. Sem texto, essa seção fica fora da carta;
 2. **Copiar pedido para o Claude**: junta o prompt, os números do mês e as cartas dos meses
    anteriores escritas no editor;
 3. colar numa conversa nova no Claude, com a busca na web ligada (dá para anexar PDFs de cartas

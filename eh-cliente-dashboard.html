@@ -5835,6 +5835,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     { id: 'brasil', kicker: 'Doméstico', titulo: 'Brasil',
       graficos: [{ tipo: 'linha', titulo: 'Ibovespa · retorno acumulado no mês', series: ['^BVSP'] }] },
     { id: 'indicadores', kicker: 'Doméstico', titulo: 'Indicadores', semTexto: true, tabela: 'indicadores', focus: true },
+    // opcional: sem texto, a seção fica fora da carta
+    { id: 'carteiras', kicker: 'Carteiras', titulo: 'Desempenho das', destaque: 'carteiras', opcional: true },
     { id: 'indices', kicker: 'Mercado', titulo: 'Índices', destaque: 'no mês', semTexto: true, tabela: 'indices' },
   ];
   const EC_INDICADORES_PADRAO = [
@@ -5919,7 +5921,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       const anterior = meses[meses.indexOf(mes) + 1];
       const velho = anterior ? await ecBaixarJson(`${anterior}/carta_textos.json`) : null;
       ecTextos = {
-        subtitulo: '', textos: {}, instrucoes_ia: '',
+        subtitulo: '', textos: {}, instrucoes_ia: '', notas_carteiras: '',
         removidos: (velho && velho.removidos) || [],
         indicadores: (velho && velho.indicadores ? velho.indicadores : EC_INDICADORES_PADRAO)
           .map(l => ({ grupo: l.grupo || '', nome: l.nome, sub: l.sub, valor: '', mes: '', ano: '', m6: '', m12: '', m24: '' })),
@@ -5976,6 +5978,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.getElementById('ecFocusTitulo').value = T.focus_titulo || '';
     document.getElementById('ecFocusRef').value = T.focus_referencia || '';
     document.getElementById('ecPedidosIA').value = T.instrucoes_ia || '';
+    document.getElementById('ecCarteirasIA').value = T.notas_carteiras || '';
     form.querySelectorAll('[data-sec]').forEach(el => { el.value = (T.textos || {})[el.dataset.sec] || ''; });
     form.querySelectorAll('[data-ind]').forEach(el => { el.value = T.indicadores[+el.dataset.ind][el.dataset.campo] || ''; });
     form.querySelectorAll('[data-focus]').forEach(el => { el.value = T.focus[+el.dataset.focus][el.dataset.campo] || ''; });
@@ -5987,7 +5990,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   // anteriores + pedidos do mês), você cola no Claude e cola a resposta de volta aqui.
   // Caminho automático (opcional, API paga): tarefa carta_ia no GitHub, com a chave ANTHROPIC_API_KEY.
   const EC_PROMPT = 'tarefas-mensais/carta/prompt_carta.md';
-  const EC_SECOES_IA = { visao: 'Visão geral', eua: 'Estados Unidos', europa: 'Europa', china: 'China', japao: 'Japão', brasil: 'Brasil' };
+  const EC_SECOES_IA = { visao: 'Visão geral', eua: 'Estados Unidos', europa: 'Europa', china: 'China', japao: 'Japão', brasil: 'Brasil', carteiras: 'Carteiras' };
 
   function ecPainelIA() {
     const R = ecRascunhoIA;
@@ -6014,6 +6017,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         <h3>Rascunho com o Claude</h3>
         <div class="upload-field"><label>Pedidos para o Claude neste mês (opcional)</label>
           <textarea id="ecPedidosIA" style="min-height:70px;font-size:13px;" placeholder="Ex.: dar mais espaço às eleições; comentar o resultado da Petrobras; não falar de cripto."></textarea></div>
+        <div class="upload-field"><label>Como foram as carteiras neste mês (para a seção Carteiras)</label>
+          <textarea id="ecCarteirasIA" style="min-height:70px;font-size:13px;" placeholder="Ex.: conservadoras perto do CDI; moderadas e sofisticadas abaixo do CDI por causa do IPCA negativo; com renda variável, acima do CDI. Estratégia: seguir reforçando prefixados, pós e IPCA+."></textarea></div>
         <div class="ec-ia-info" style="margin-top:0.9rem;"><strong>1.</strong> Copie o pedido completo: instruções, números do mês e as cartas dos meses anteriores como referência de linguagem.</div>
         <div class="ec-ia-botoes">
           <button class="btn-download-ext" onclick="ecCopiarPedido()">Copiar pedido para o Claude</button>
@@ -6078,6 +6083,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       .map(i => `- ${i.nome} (${i.praca}): fechamento ${num(Math.round(i.fechamento))}, retorno no mês ${num(i.retorno)}% (último pregão ${i.ultima_data})`);
     const destaques = (D.destaques || []).map(d => `- ${d.rotulo}: ${d.valor}`);
     const pedidos = (T.instrucoes_ia || '').trim();
+    const carteiras = (T.notas_carteiras || '').trim();
     return [
       prompt.trim(),
       '## Como responder nesta conversa\n\nEscreva o JSON da resposta dentro de um único bloco de código (```json). Não crie artefato nem arquivo e não escreva nada depois do bloco.',
@@ -6091,6 +6097,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       D.focus_auto && (D.focus_auto.itens || []).length ? `<focus_calculado>\nBoletim Focus de ${ecDataBr(D.focus_auto.data_boletim)}, com as projeções coletadas até ${ecDataBr(D.focus_auto.data_coleta)} (o último com coleta no mês), direto do Banco Central. Repita estes valores e esta referência exatamente e use este boletim no texto do Brasil:\n`
         + D.focus_auto.itens.map(f => `- ${f.rotulo}: ${f.valor}`).join('\n') + `\nfocus_referencia: ${D.focus_auto.referencia || ''}\n</focus_calculado>` : '',
       pedidos ? `<pedidos_do_mes>\n${pedidos}\n</pedidos_do_mes>` : '',
+      carteiras ? `<carteiras_do_mes>\nComo as carteiras da EH foram no mês, nas palavras da gestora (base da seção Carteiras):\n${carteiras}\n</carteiras_do_mes>`
+        : '<carteiras_do_mes>\n(A gestora não contou como foram as carteiras neste mês: escreva a seção Carteiras pelo comportamento de cada classe e anote em pontos_a_conferir que o resultado das carteiras precisa ser confirmado.)\n</carteiras_do_mes>',
       'As cartas de referência acima mostram a linguagem e o tipo de informação esperados. Pesquise os acontecimentos do mês e responda no formato pedido.',
     ].filter(Boolean).join('\n\n');
   }
@@ -6151,7 +6159,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const temTexto = Object.values(T.textos || {}).some(v => (v || '').trim());
     if (temTexto && !confirm('Substituir os textos, indicadores e Focus já preenchidos pelo rascunho do Claude?')) return false;
     T.subtitulo = R.subtitulo || T.subtitulo || '';
-    T.textos = { ...(T.textos || {}), ...(R.textos || {}) };
+    T.textos = { ...(T.textos || {}) };
+    Object.entries(R.textos || {}).forEach(([k, v]) => { if ((v || '').trim()) T.textos[k] = v; });  // seção vazia no rascunho não apaga a sua
     if ((R.indicadores || []).length) T.indicadores = R.indicadores.map(l => ({ grupo: l.grupo || '', nome: l.nome || '', sub: l.sub || '', valor: l.valor || '', mes: l.mes || '', ano: l.ano || '', m6: l.m6 || '', m12: l.m12 || '', m24: l.m24 || '' }));
     if ((R.focus || []).length) T.focus = R.focus.map(f => ({ rotulo: f.rotulo || '', valor: f.valor || '' }));
     if (R.focus_referencia) T.focus_referencia = R.focus_referencia;
@@ -6193,6 +6202,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     T.focus_titulo = document.getElementById('ecFocusTitulo').value;
     T.focus_referencia = document.getElementById('ecFocusRef').value;
     T.instrucoes_ia = document.getElementById('ecPedidosIA').value;
+    T.notas_carteiras = document.getElementById('ecCarteirasIA').value;
     T.textos = T.textos || {};
     form.querySelectorAll('[data-sec]').forEach(el => { T.textos[el.dataset.sec] = el.value; });
     form.querySelectorAll('[data-ind]').forEach(el => { T.indicadores[+el.dataset.ind][el.dataset.campo] = el.value; });
@@ -6285,7 +6295,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const atrasados = (D.indices || []).filter(i => i.ultima_data && i.ultima_data !== ultima)
       .map(i => `${i.nome}: fechamento de ${i.ultima_data}, último pregão com dado disponível no período.`);
     const [dd, mm, aa] = (ultima || '').split('/');
-    const secoes = EC_SECOES.map(s => {
+    const secoes = EC_SECOES.filter(s => !s.opcional || ((T.textos || {})[s.id] || '').trim()).map(s => {
       const sec = { ...s, texto: s.semTexto ? '' : ((T.textos || {})[s.id] || '') };
       if (s.id === 'indicadores') sec.descricao = (T.indicadores || []).some(l => l.grupo)
         ? `Juros, inflação, mercado e fiscal no fechamento de ${D.mes_nome.toLowerCase()}, com a variação no mês e acumulada.`

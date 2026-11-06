@@ -74,6 +74,21 @@ por que aconteceu e o que isso pode significar daqui para frente, sem jargão de
   (fechamento, caminho no mês, fluxo estrangeiro, setores), fiscal (dívida bruta, resultado
   primário) e política se mexer com o mercado. O último parágrafo traz o Boletim Focus do mês
   (Selic, IPCA, PIB e dólar para o fim do ano), dizendo a data do boletim, e uma leitura dele.
+- **carteiras** (Carteiras, 5 a 8 parágrafos): como o mês afetou as carteiras da EH. Escreva na
+  primeira pessoa do plural ("a estratégia que estabelecemos", "nossas carteiras"). A primeira frase
+  resume o mês para as carteiras numa ideia. Depois explique, classe por classe, o que aconteceu e
+  por quê: pós-fixados (Selic e CDI do mês), títulos atrelados à inflação (juro real combinado na
+  compra mais a inflação usada na correção, que é o IPCA do mês anterior; quando ele vem baixo ou
+  negativo, a classe rende menos no mês, e vale explicar que isso se compensa ao longo do tempo),
+  prefixados (movimento dos juros futuros), crédito privado (prêmios e spreads) e renda variável
+  (Ibovespa); exterior e dólar só se fizer parte do que a gestora contou. Em seguida, como ficaram
+  as carteiras por perfil (conservadoras, moderadas, sofisticadas) em relação ao CDI e o que
+  explicou a diferença. Termine com a estratégia e o horizonte de investimento, num tom que dê
+  perspectiva ao cliente sem prometer resultado.
+  O resultado das carteiras e a estratégia vêm só do que a gestora escreveu em `<carteiras_do_mes>`
+  (e das cartas de referência): não invente rentabilidade de carteira, mudança de estratégia, nome
+  de cliente, fundo ou ativo. Use os números do mês (CDI, IPCA, Ibovespa) da tabela de indicadores.
+  Se faltar informação, escreva pelo comportamento das classes e anote em `pontos_a_conferir`.
 
 ## Indicadores e Focus
 
@@ -103,7 +118,7 @@ Quando terminar a pesquisa, responda **apenas** com um objeto JSON entre as tags
   "subtitulo": "frase curta para a capa, ou vazio",
   "textos": {
     "visao": "parágrafos separados por uma linha em branco (\n\n)",
-    "eua": "…", "europa": "…", "china": "…", "japao": "…", "brasil": "…"
+    "eua": "…", "europa": "…", "china": "…", "japao": "…", "brasil": "…", "carteiras": "…"
   },
   "indicadores": [
     {"nome": "Selic", "sub": "Meta · Copom de …", "valor": "…", "mes": "…", "ano": "…",

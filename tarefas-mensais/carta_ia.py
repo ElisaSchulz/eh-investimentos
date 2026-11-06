@@ -41,7 +41,7 @@ PASTA_REFERENCIAS = "referencias-carta"       # no bucket do Supabase
 PASTA_REFERENCIAS_LOCAL = os.path.join(AQUI, "carta", "referencias")
 ARQUIVO_PROMPT = os.path.join(AQUI, "carta", "prompt_carta.md")
 SECOES = {"visao": "Visão geral", "eua": "Estados Unidos", "europa": "Europa",
-          "china": "China", "japao": "Japão", "brasil": "Brasil"}
+          "china": "China", "japao": "Japão", "brasil": "Brasil", "carteiras": "Carteiras"}
 INDICADORES_PADRAO = [("Selic", "Meta · Copom"), ("IPCA", "Referência do mês anterior"),
                       ("IPCA-15", "Prévia do mês"), ("IGP-M", ""), ("R$/USD", "Fechamento do mês"),
                       ("Brent", "US$ por barril"), ("Dívida Bruta", "% do PIB")]
@@ -161,14 +161,16 @@ def textos_do_mes(mes, anteriores):
     else:
         indicadores = INDICADORES_PADRAO
     focus = [f.get("rotulo") for f in (base or {}).get("focus") or []] or ["Selic", "IPCA", "PIB", "Dólar"]
-    return (atual or {}).get("instrucoes_ia", "").strip(), indicadores, focus
+    pedidos = (atual or {}).get("instrucoes_ia", "").strip()
+    carteiras = (atual or {}).get("notas_carteiras", "").strip()
+    return pedidos, indicadores, focus, carteiras
 
 
 def _milhar(v):
     return "—" if v is None else f"{v:,.0f}".replace(",", ".")
 
 
-def bloco_dados(dados, inicio, fim, indicadores, focus, pedidos):
+def bloco_dados(dados, inicio, fim, indicadores, focus, pedidos, carteiras=""):
     linhas = [f"- {i['nome']} ({i['praca']}): fechamento {_milhar(i['fechamento'])}, retorno no mês "
               f"{str(i['retorno']).replace('.', ',')}% (último pregão {i['ultima_data']})"
               for i in dados.get("indices", []) if i.get("retorno") is not None]
@@ -203,6 +205,11 @@ def bloco_dados(dados, inicio, fim, indicadores, focus, pedidos):
                   + f"\nfocus_referencia: {fa.get('referencia', '')}\n</focus_calculado>\n")
     if pedidos:
         texto += f"\n<pedidos_do_mes>\n{pedidos}\n</pedidos_do_mes>\n"
+    texto += ("\n<carteiras_do_mes>\nComo as carteiras da EH foram no mês, nas palavras da gestora (base da seção "
+              f"Carteiras):\n{carteiras}\n</carteiras_do_mes>\n" if carteiras else
+              "\n<carteiras_do_mes>\n(A gestora não contou como foram as carteiras neste mês: escreva a seção "
+              "Carteiras pelo comportamento de cada classe e anote em pontos_a_conferir que o resultado das "
+              "carteiras precisa ser confirmado.)\n</carteiras_do_mes>\n")
     texto += ("\nAs cartas de referência acima mostram a linguagem e o tipo de informação esperados. "
               "Pesquise os acontecimentos do mês e responda no formato pedido.")
     return texto
@@ -298,7 +305,7 @@ def main(mes=MES):
     pasta = pasta_saida(ano, m)
     dados = dados_do_mes(mes_txt, pasta)
     anteriores = meses_anteriores(mes_txt)
-    pedidos, indicadores, focus = textos_do_mes(mes_txt, anteriores)
+    pedidos, indicadores, focus, carteiras = textos_do_mes(mes_txt, anteriores)
     refs, usadas = referencias(mes_txt)
     if not usadas:
         print("Aviso: nenhuma carta de referência encontrada; o estilo vai depender só do prompt.")
@@ -306,7 +313,7 @@ def main(mes=MES):
     if pedidos:
         print(f"Pedidos do mês: {pedidos[:200]}")
 
-    conteudo = refs + [{"type": "text", "text": bloco_dados(dados, inicio, fim, indicadores, focus, pedidos)}]
+    conteudo = refs + [{"type": "text", "text": bloco_dados(dados, inicio, fim, indicadores, focus, pedidos, carteiras)}]
     blocos, usos = chamar_claude(chave, ler_prompt(), conteudo)
     texto = "".join(b.text for b in blocos if b.type == "text")
     uso = resumo_uso(usos)
