@@ -15,15 +15,15 @@ on:
         required: false
         default: ""
       tarefas:
-        description: "Tarefas separadas por vírgula. Vazio = todas (carta_mensal, carta_ia, indicadores_americanos, cotas_fundos, cotas_b3, etfs, dados_planilha, cra_eventos)"
+        description: "Tarefas separadas por vírgula. Vazio = todas (carta_mensal, carta_ia, indicadores_americanos, cotas_fundos, cotas_b3, etfs, dados_planilha, cra_eventos, rendimentos_fiis)"
         required: false
         default: ""
       data_inicio:
-        description: "Só cotas B3, dados da planilha e juros de CRA/CRI: data inicial (AAAA-MM-DD)"
+        description: "Só cotas B3, planilha, CRA/CRI e FIIs: data inicial (AAAA-MM-DD)"
         required: false
         default: ""
       data_fim:
-        description: "Só cotas B3, dados da planilha e juros de CRA/CRI: data final (AAAA-MM-DD)"
+        description: "Só cotas B3, planilha, CRA/CRI e FIIs: data final (AAAA-MM-DD)"
         required: false
         default: ""
 
