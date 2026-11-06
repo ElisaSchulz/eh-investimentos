@@ -6,10 +6,8 @@ import cra_eventos as c
 from playwright.sync_api import sync_playwright
 with sync_playwright() as p:
     b = p.chromium.launch(); ctx = b.new_context(user_agent=c.UA, locale="pt-BR")
-    pg = ctx.new_page(); pg.goto("https://investidor.rizasec.com/emissoes", wait_until="networkidle", timeout=90000)
-    links = sorted({h for h in pg.eval_on_selector_all("a[href*='/emissoes/RZA']", "els => els.map(e => e.href)")})
-    print("links Riza:", len(links)); pg.close()
-    for u in links[:3]:
+    links = [f"https://investidor.rizasec.com/emissoes/RZA{n:04d}" for n in (500, 700, 900, 1000)]
+    for u in links:
         pg = ctx.new_page()
         try:
             evs = c.handle_riza(pg, {"codigo": "X", "nome": "X", "url": u})
