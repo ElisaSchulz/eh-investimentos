@@ -10,5 +10,5 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with: {python-version: "3.12"}
-      - run: pip install -q playwright && python -m playwright install --with-deps chromium > /dev/null
+      - run: pip install -q playwright beautifulsoup4 lxml pandas openpyxl certifi && python -m playwright install --with-deps chromium > /dev/null
       - run: python tarefas-mensais/_sonda_cra.py
