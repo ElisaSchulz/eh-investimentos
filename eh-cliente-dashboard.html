@@ -458,6 +458,8 @@
     .mapping-table-ext th { text-align:left; font-family: 'Manrope', monospace; font-size:10px; font-weight:500; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold-text); padding:0.6rem 0.8rem; border-bottom:1px solid var(--rule-strong); background:var(--navy-3); }
     .mapping-table-ext td { padding:0.4rem 0.5rem; border-bottom:1px solid var(--rule); vertical-align:middle; }
     .mapping-table-ext input { width:100%; background:transparent; border:1px solid transparent; color:var(--cream); font-family:'Manrope',sans-serif; font-size:13px; padding:0.4rem 0.55rem; outline:none; transition:border-color 0.2s, background 0.2s; }
+    .mapping-table-ext tr.mapping-group td { font-family:'Manrope',monospace; font-size:10px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold-text); padding:1rem 0.8rem 0.4rem; border-bottom:1px solid var(--rule-strong); }
+    .mapping-table-ext tr.mapping-group td span { color:var(--gray); font-weight:400; letter-spacing:0.05em; margin-left:0.4rem; }
     .mapping-table-ext input:focus { border-color:var(--gold); background:rgba(238,154,30,0.04); }
     .mapping-table-ext input::placeholder { color:var(--cream-faint); }
 
@@ -1540,10 +1542,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       <div class="upload-panel">
         <h3>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
-          2. Tabela CNPJ
+          2. Tabela de Produtos
           <span style="font-size:0.62rem;font-weight:400;color:var(--gray);margin-left:0.5rem;" id="extMappingBrokerLabel">— XP</span>
         </h3>
-        <p style="font-size:0.78rem;color:var(--gray);margin-bottom:1rem;line-height:1.6;">Mapeie trechos do nome do fundo para o CNPJ. Cada corretora tem sua própria tabela, salva automaticamente no Supabase.</p>
+        <p style="font-size:0.78rem;color:var(--gray);margin-bottom:1rem;line-height:1.6;">Mapeie trechos do nome do produto para o CNPJ (fundos) ou código (FIIs, CRA, CRI, debêntures etc.). Os produtos aparecem agrupados por tipo. Cada corretora tem sua própria tabela, salva automaticamente no Supabase.</p>
 
         <button type="button" class="btn-upload mapping-toggle-btn" onclick="toggleMappingPanel(this,'extMappingPanel')" style="background:rgba(255,255,255,0.06);color:var(--gray-light);font-size:0.62rem;padding:0.4rem 0.8rem;margin-bottom:0.9rem;">Exibir tabela</button>
         <div id="extMappingPanel" style="display:none;">
@@ -1555,17 +1557,17 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
             <button onclick="extExportMapping()" class="btn-upload" style="background:rgba(255,255,255,0.06);color:var(--gray-light);font-size:0.62rem;padding:0.4rem 0.8rem;">↓ Exportar Excel</button>
             <label class="btn-upload" style="background:rgba(255,255,255,0.06);color:var(--gray-light);font-size:0.62rem;padding:0.4rem 0.8rem;cursor:pointer;">↑ Importar Excel<input type="file" accept=".xlsx,.xls" style="display:none" onchange="extImportMapping(this)"></label>
-            <button onclick="extMergeDefaultMapping()" class="btn-upload" style="background:rgba(238,154,30,0.1);color:var(--gold-text);border:1px solid var(--border);font-size:0.62rem;padding:0.4rem 0.8rem;" title="Acrescenta os fundos da tabela padrão que ainda não estão aqui, sem apagar nada">+ Completar com padrão</button>
+            <button onclick="extMergeDefaultMapping()" class="btn-upload" style="background:rgba(238,154,30,0.1);color:var(--gold-text);border:1px solid var(--border);font-size:0.62rem;padding:0.4rem 0.8rem;" title="Acrescenta os produtos da tabela padrão que ainda não estão aqui, sem apagar nada">+ Completar com padrão</button>
           </div>
         </div>
 
         <div style="overflow-x:auto;">
           <table class="mapping-table-ext">
-            <thead><tr><th>Trecho do nome</th><th>CNPJ</th><th>Nome completo</th><th></th></tr></thead>
+            <thead><tr><th>Trecho do nome</th><th>CNPJ / Código</th><th>Nome completo</th><th></th></tr></thead>
             <tbody id="extMappingBody"></tbody>
           </table>
         </div>
-        <button onclick="extAddMappingRow()" class="btn-upload" style="margin-top:0.8rem;background:rgba(238,154,30,0.1);color:var(--gold-text);border:1px solid var(--border);">+ Adicionar fundo</button>
+        <button onclick="extAddMappingRow()" class="btn-upload" style="margin-top:0.8rem;background:rgba(238,154,30,0.1);color:var(--gold-text);border:1px solid var(--border);">+ Adicionar produto</button>
         </div>
       </div>
 
@@ -4182,9 +4184,37 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     }
   }
 
+  // Tipo do produto, deduzido do código/CNPJ e do nome (não fica salvo no Supabase)
+  const EXT_GRUPOS = ['Fundos','FIIs e Fiagros','CRA','CRI','CDCA','Debêntures','Títulos Públicos','Ações, ETFs e BDRs'];
+  function extTipoProduto(r) {
+    const txt = ((r.cnpj||'') + ' ' + (r.full||'') + ' ' + (r.key||'')).toUpperCase();
+    const ini = s => (r.cnpj||'').toUpperCase().startsWith(s) || (r.full||'').toUpperCase().startsWith(s);
+    if (ini('CRA')) return 'CRA';
+    if (ini('CRI')) return 'CRI';
+    if (ini('CDCA')) return 'CDCA';
+    if (ini('DEB')) return 'Debêntures';
+    if (ini('NTN') || ini('LTN') || ini('LFT') && !/ETF/.test(txt) || /TESOURO/.test(txt)) return 'Títulos Públicos';
+    const ticker = /^[A-Z]{4}\d{1,2}$/.test((r.cnpj||'').toUpperCase());
+    if (ticker && /\b(ETF|AÇÃO|ACAO|BDR)\b/.test(txt)) return 'Ações, ETFs e BDRs';
+    if (ticker && /11$/.test(r.cnpj)) return 'FIIs e Fiagros';
+    if (ticker) return 'Ações, ETFs e BDRs';
+    if (/\bFII\b/.test(txt)) return 'FIIs e Fiagros';
+    return 'Fundos';
+  }
+
   function extRenderMapping(rows) {
-    document.getElementById('extMappingBody').innerHTML = '';
-    rows.forEach(r => extAddMappingRow(r.key, r.cnpj, r.full));
+    const tbody = document.getElementById('extMappingBody');
+    tbody.innerHTML = '';
+    const porGrupo = new Map(EXT_GRUPOS.map(g => [g, []]));
+    rows.forEach(r => porGrupo.get(extTipoProduto(r)).push(r));
+    porGrupo.forEach((lista, grupo) => {
+      if (!lista.length) return;
+      const tr = document.createElement('tr');
+      tr.className = 'mapping-group';
+      tr.innerHTML = `<td colspan="4">${grupo}<span>${lista.length}</span></td>`;
+      tbody.appendChild(tr);
+      lista.forEach(r => extAddMappingRow(r.key, r.cnpj, r.full));
+    });
   }
 
   function extEscHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
@@ -4204,7 +4234,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   function extGetMappingRows() {
-    return Array.from(document.querySelectorAll('#extMappingBody tr')).map(tr => {
+    return Array.from(document.querySelectorAll('#extMappingBody tr:not(.mapping-group)')).map(tr => {
       const ins = tr.querySelectorAll('input');
       return { key: ins[0].value.trim(), cnpj: ins[1].value.trim(), full: ins[2].value.trim() };
     }).filter(r => r.key);
@@ -4221,10 +4251,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       if (!cur) { rows.push({ ...d }); added++; }
       else if (!cur.cnpj && d.cnpj) { cur.cnpj = d.cnpj; if (!cur.full) cur.full = d.full; filled++; }
     });
-    if (!added && !filled) { alert('A tabela já contém todos os fundos do padrão.'); return; }
+    if (!added && !filled) { alert('A tabela já contém todos os produtos do padrão.'); return; }
     extRenderMapping(rows);
     extSaveMappingToSupabase();
-    alert(`${added} fundo(s) adicionado(s) e ${filled} CNPJ(s) preenchido(s).`);
+    alert(`${added} produto(s) adicionado(s) e ${filled} CNPJ(s) preenchido(s).`);
   }
 
   function toggleMappingPanel(btn, id) {
@@ -4236,11 +4266,11 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
   function extExportMapping() {
     const rows = extGetMappingRows();
-    const data = [['Trecho do Nome','CNPJ','Nome Completo'], ...rows.map(r => [r.key, r.cnpj, r.full])];
+    const data = [['Trecho do Nome','CNPJ / Código','Nome Completo','Tipo'], ...rows.map(r => [r.key, r.cnpj, r.full, extTipoProduto(r)])];
     const ws = XLSX.utils.aoa_to_sheet(data);
-    ws['!cols'] = [28, 22, 42].map(w => ({ wch: w }));
+    ws['!cols'] = [28, 22, 42, 18].map(w => ({ wch: w }));
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Mapeamento CNPJ');
+    XLSX.utils.book_append_sheet(wb, ws, 'Tabela de Produtos');
     XLSX.writeFile(wb, `mapeamento_${extCurrentBroker.toLowerCase()}_eh.xlsx`);
   }
 
@@ -4257,7 +4287,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         if (!rows.length) { alert('Nenhuma linha encontrada.'); return; }
         extRenderMapping(rows);
         extSaveMappingToSupabase();
-        alert('✓ ' + rows.length + ' fundos importados.');
+        alert('✓ ' + rows.length + ' produtos importados.');
       } catch(err) { alert('Erro: ' + err.message); }
       input.value = '';
     };
@@ -4966,7 +4996,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   // ── Resolução de CNPJ (para fundos sem CNPJ no extrato, ex: XP) ──
-  // Prioridade: 1) CNPJ do próprio extrato  2) Tabela CNPJ XP (Supabase)  3) Lista mestre (fuzzy)
+  // Prioridade: 1) CNPJ do próprio extrato  2) Tabela de Produtos XP (Supabase)  3) Lista mestre (fuzzy)
   function ctResolveCnpj(f) {
     if (f.cnpj) return { cnpj: f.cnpj, fonte: 'Extrato', oficial: '' };
     const u = f.nome.toUpperCase();
@@ -5487,7 +5517,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     if (semCnpj) {
       ctLog(`${semCnpj} fundo(s) sem CNPJ:`, 'warn');
       [...new Set(ctRows.filter(r => !r.cnpj).map(r => r.fundo))].forEach(n => ctLog(`&nbsp;&nbsp;· ${n}`, 'warn'));
-      ctLog(`Adicione na Tabela CNPJ (XP) em "Extratos → Excel" ou na lista mestre e reprocesse.`, 'warn');
+      ctLog(`Adicione na Tabela de Produtos (XP) em "Extratos → Excel" ou na lista mestre e reprocesse.`, 'warn');
     }
     ctLog(`Total: ${ctRows.length} posição(ões) em fundos.`, 'head');
     btn.disabled = false;
