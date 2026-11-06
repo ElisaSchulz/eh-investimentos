@@ -1,0 +1,14 @@
+name: sonda (temporario)
+on:
+  push:
+    branches: [claude/project-thread-39qhdi]
+    paths: [".github/workflows/sonda-cra.yml", "tarefas-mensais/_sonda_fii.py"]
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: {python-version: "3.12"}
+      - run: pip install -q -r tarefas-mensais/requirements.txt && python -m playwright install --with-deps chromium > /dev/null
+      - run: python tarefas-mensais/_sonda_fii.py
