@@ -13,7 +13,11 @@ with sync_playwright() as p:
             except Exception: pass
     pg.on("response", pega)
     pg.goto("https://investidor.rizasec.com/emissoes", wait_until="networkidle", timeout=90000); pg.wait_for_timeout(4000); pg.close()
-    ids = sorted(set(re.findall(r'"(RZA\d{4})"', " ".join(corpos))))
+    tudo = " ".join(corpos)
+    print("respostas:", len(corpos), "tamanho:", len(tudo))
+    ids = sorted(set(re.findall(r'RZA\d{4}', tudo)))
+    if not ids:
+        print("amostra:", re.sub(r"\s+", " ", tudo[:600]))
     print("ids na lista pública:", len(ids))
     teste = ids[::max(1, len(ids)//6)][:6]
     for u in teste:
