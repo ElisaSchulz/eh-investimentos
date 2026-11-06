@@ -457,44 +457,68 @@ def handle_opea(asset):
     return events
 
 
+RIZA_API = "https://aks-prod.virgo.inc/mtr/bff-portal/v1/operations"
+RIZA_FETCH_JS = ("async (u) => { const r = await fetch(u, {headers: {Accept: 'application/json'}});"
+                 " return [r.status, r.status === 200 ? await r.text() : '']; }")
+_riza_indice = {}
+
+
+def _riza_get(page, url):
+    status, texto = page.evaluate(RIZA_FETCH_JS, url)
+    if status != 200:
+        raise RuntimeError(f"API da Riza respondeu HTTP {status}")
+    return json.loads(texto)
+
+
+def _riza_carregar_indice(page):
+    """Código do papel (ifCode/instrumentCode) -> id da operação, a partir da lista pública."""
+    if _riza_indice:
+        return
+    pagina, total = 0, 1
+    while pagina < total and pagina < 60:
+        j = _riza_get(page, f"{RIZA_API}?orderBy=EMISSION_DATE_DESC&pageSize=50&pageNumber={pagina}")
+        total = (j.get("metadata") or {}).get("totalPages") or 1
+        for op in j.get("content", []):
+            _riza_indice[op["id"].upper()] = op["id"]
+            for se in op.get("series", []):
+                if se.get("instrumentCode"):
+                    _riza_indice[se["instrumentCode"].upper()] = op["id"]
+        pagina += 1
+
+
 def handle_riza(page, asset):
-    """Riza: a página exige navegador (fetch direto dá 404). Capturamos a
-    resposta de /payments de forma robusta com expect_response e pegamos o
-    operationId dela. Os valores da API são TOTAIS -> dividir por 'quantity'
-    para obter o valor por cota (mesma base do Fluxos)."""
-    # A API da Riza passou a responder 403 para pedidos feitos fora da página (ela
-    # exige o token que o próprio site manda). Então lemos a resposta que a PÁGINA
-    # recebe ao carregar, em vez de pedir de novo.
-    respostas = []
-
-    def guardar(r):
-        # 204 é a checagem de CORS (OPTIONS) que o navegador faz antes do GET de verdade
-        if "/operations/" in r.url and "/payments" in r.url and r.request.method == "GET":
-            respostas.append(r)
-
-    page.on("response", guardar)
-    page.goto(asset["url"], wait_until="domcontentloaded", timeout=60000)
-    for _ in range(45):
-        if any(r.status == 200 for r in respostas):
-            break
-        page.wait_for_timeout(1000)
-    data = None
-    # prefere a resposta completa (summary=false), se a página pediu as duas
-    for r in sorted(respostas, key=lambda r: "summary=false" not in r.url):
-        if r.status != 200:
-            continue
-        try:
-            corpo = r.json()
-        except Exception:
-            continue
-        if corpo.get("aggregated"):
-            data = corpo
-            break
-    if data is None:
-        codigos = sorted({r.status for r in respostas})
-        raise RuntimeError("a página da Riza não trouxe os pagamentos"
-                           + (f" (HTTP {codigos})" if codigos else " (nenhuma resposta /payments)"))
+    """Riza: em 2026 o site mudou os endereços (RZA0866 virou CRI_CORP_..., e os antigos
+    dão 404) e a API passou a recusar pedidos feitos de fora do site (403). Agora:
+    abre o site, faz as consultas de dentro da página (como o próprio site faz), acha a
+    operação pelo código do papel e lê o fluxo da SÉRIE do papel, já por unidade."""
+    page.goto("https://investidor.rizasec.com/emissoes", wait_until="domcontentloaded", timeout=60000)
+    _riza_carregar_indice(page)
+    codigo = asset["codigo"].upper().replace(" ", "")
+    sem_prefixo = re.sub(r"^(CRI|CRA)(?=\d{2}[A-Z])", "", codigo)
+    ultimo = asset["url"].rstrip("/").split("/")[-1].upper()
+    op = _riza_indice.get(codigo) or _riza_indice.get(sem_prefixo) or _riza_indice.get(ultimo)
+    if not op:
+        raise RuntimeError("papel não encontrado na lista de emissões da Riza")
+    data = _riza_get(page, f"{RIZA_API}/{op}/payments?summary=false")
     events = []
+    series = [se for se in data.get("series", [])
+              if (se.get("ifCode") or "").upper() in (codigo, sem_prefixo)]
+    if series:
+        for se in series:
+            for f in se.get("flow", []):
+                u = f.get("unitary") or {}
+                d = date_iso(f.get("date"))
+                juros = num_iso(u.get("interest"))
+                amort = num_iso(u.get("amortization"))
+                amex = (num_iso(u.get("extraAmortization")) or 0) + (num_iso(u.get("extraordinaryPayment")) or 0)
+                if juros and juros > 0:
+                    events.append(ev(asset, "Riza", d, "Juros", valor=juros))
+                if amort and amort > 0:
+                    events.append(ev(asset, "Riza", d, "Amortização", valor=amort))
+                if amex > 0:
+                    events.append(ev(asset, "Riza", d, "Amortização Extraordinária", valor=amex))
+        return events
+    # sem a série: usa o agregado da operação (totais / quantidade)
     for it in data.get("aggregated", []):
         d = date_iso(it.get("date"))
         q = num_iso(it.get("quantity")) or 0
