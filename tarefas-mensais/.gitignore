@@ -4,3 +4,4 @@ saidas/
 __pycache__/
 chave_anthropic.txt
 carta/referencias/
+ativos_cra.tsv

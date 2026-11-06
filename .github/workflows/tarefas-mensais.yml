@@ -15,15 +15,15 @@ on:
         required: false
         default: ""
       tarefas:
-        description: "Tarefas separadas por vírgula. Vazio = todas (carta_mensal, carta_ia, indicadores_americanos, cotas_fundos, cotas_b3, etfs, dados_planilha)"
+        description: "Tarefas separadas por vírgula. Vazio = todas (carta_mensal, carta_ia, indicadores_americanos, cotas_fundos, cotas_b3, etfs, dados_planilha, cra_eventos)"
         required: false
         default: ""
       data_inicio:
-        description: "Só cotas B3 e dados da planilha: data inicial própria (AAAA-MM-DD)"
+        description: "Só cotas B3, dados da planilha e juros de CRA/CRI: data inicial (AAAA-MM-DD)"
         required: false
         default: ""
       data_fim:
-        description: "Só cotas B3 e dados da planilha: data final própria (AAAA-MM-DD)"
+        description: "Só cotas B3, dados da planilha e juros de CRA/CRI: data final (AAAA-MM-DD)"
         required: false
         default: ""
 
@@ -55,7 +55,7 @@ jobs:
     needs: quando
     if: needs.quando.outputs.rodar == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 75
     defaults:
       run:
         working-directory: tarefas-mensais
@@ -85,6 +85,8 @@ jobs:
         run: |
           pip install -q -r requirements.txt
           command -v xvfb-run || (sudo apt-get update -q && sudo apt-get install -y -q xvfb)
+          # navegador do Playwright para ANBIMA, Riza e Oliveira Trust (juros de CRA/CRI)
+          python -m playwright install --with-deps chromium > /dev/null
           google-chrome --version
 
       - name: Mês de referência

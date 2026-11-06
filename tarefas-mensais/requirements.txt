@@ -5,3 +5,7 @@ openpyxl
 fredapi
 mstarpy
 anthropic>=2.4
+playwright>=1.49
+beautifulsoup4>=4.12
+lxml>=5.0
+certifi
