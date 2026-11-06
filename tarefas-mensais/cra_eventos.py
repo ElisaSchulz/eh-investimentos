@@ -503,11 +503,19 @@ def handle_riza(page, asset):
     events = []
     series = [se for se in data.get("series", [])
               if (se.get("ifCode") or "").upper() in (codigo, sem_prefixo)]
+    # O fluxo da série é DIÁRIO (os juros vão acumulando dia a dia); só valem as datas de
+    # pagamento, que são as do agregado da operação.
+    datas_pgto = {date_iso(it.get("date")) for it in data.get("aggregated", [])
+                  if (num_iso(it.get("totalPayment")) or 0) > 0}
     if series:
         for se in series:
             for f in se.get("flow", []):
                 u = f.get("unitary") or {}
                 d = date_iso(f.get("date"))
+                pago = (num_iso(u.get("payment")) or 0) > 0 or (
+                    (num_iso(u.get("amortization")) or 0) + (num_iso(u.get("extraAmortization")) or 0)) > 0
+                if d not in datas_pgto and not pago:
+                    continue
                 juros = num_iso(u.get("interest"))
                 amort = num_iso(u.get("amortization"))
                 amex = (num_iso(u.get("extraAmortization")) or 0) + (num_iso(u.get("extraordinaryPayment")) or 0)
