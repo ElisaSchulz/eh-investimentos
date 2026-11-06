@@ -8,3 +8,4 @@ arq = r.main()[0]
 import pandas as pd
 for n, d in pd.read_excel(arq, sheet_name=None).items():
     print("==", n, len(d)); print(d.head(6).to_string())
+# rodada 2
