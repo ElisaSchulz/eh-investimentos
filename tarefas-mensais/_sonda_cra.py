@@ -10,16 +10,16 @@ with sync_playwright() as p:
     st, txt = pg.evaluate(JS, API + "?orderBy=EMISSION_DATE_DESC&pageSize=200&pageNumber=0")
     print("lista", st, len(txt))
     j = json.loads(txt); print("meta", j.get("metadata"), "n", len(j["content"]))
-    o = next(o for o in j["content"] if len(o.get("series", [])) >= 2)
-    print("series", [(s["id"], s["number"], len(s.get("instrumentCode") or "")) for s in o["series"]])
-    st, txt = pg.evaluate(JS, f"{API}/{o['id']}/payments?summary=false")
-    print("payments false", st, len(txt))
-    if st == 200:
-        pj = json.loads(txt); print(list(pj.keys()))
-        s0 = pj["series"][0]; print("serie chaves", {k: (type(v).__name__) for k, v in s0.items()})
-        for k, v in s0.items():
-            if isinstance(v, list) and v: print(" ", k, json.dumps(v[0])[:300])
-            elif not isinstance(v, list): print(" ", k, str(v)[:60] if k not in ("instrumentCode",) else len(str(v)))
-    st, txt = pg.evaluate(JS, f"{API}/{o['id']}/payments?summary=true")
-    print("payments true", st, len(txt))
+    for o in j["content"][5:40]:
+        st, txt = pg.evaluate(JS, f"{API}/{o['id']}/payments?summary=false")
+        if st != 200: continue
+        pj = json.loads(txt)
+        fl = [f for se in pj.get("series", []) for f in se.get("flow", [])]
+        if not fl: continue
+        print("agg", len(pj["aggregated"]), "series", len(pj["series"]), "flow total", len(fl))
+        print("agg0", json.dumps(pj["aggregated"][0])[:300])
+        pagos = [f for f in fl if any(isinstance(v, (int, float)) and v for k, v in f.items() if "nterest" in k or "juros" in k.lower())]
+        print("flow0", json.dumps(fl[0])[:600])
+        if pagos: print("flowpago", json.dumps(pagos[0])[:600])
+        break
     b.close()
