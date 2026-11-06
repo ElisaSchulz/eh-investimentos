@@ -468,19 +468,20 @@ def handle_riza(page, asset):
     respostas = []
 
     def guardar(r):
-        if "/operations/" in r.url and "/payments" in r.url:
+        # 204 é a checagem de CORS (OPTIONS) que o navegador faz antes do GET de verdade
+        if "/operations/" in r.url and "/payments" in r.url and r.request.method == "GET":
             respostas.append(r)
 
     page.on("response", guardar)
     page.goto(asset["url"], wait_until="domcontentloaded", timeout=60000)
     for _ in range(45):
-        if any(r.ok for r in respostas):
+        if any(r.status == 200 for r in respostas):
             break
         page.wait_for_timeout(1000)
     data = None
     # prefere a resposta completa (summary=false), se a página pediu as duas
     for r in sorted(respostas, key=lambda r: "summary=false" not in r.url):
-        if not r.ok:
+        if r.status != 200:
             continue
         try:
             corpo = r.json()

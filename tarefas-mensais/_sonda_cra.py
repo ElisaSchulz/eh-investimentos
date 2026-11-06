@@ -7,6 +7,9 @@ from playwright.sync_api import sync_playwright
 with sync_playwright() as p:
     b = p.chromium.launch(); ctx = b.new_context(user_agent=c.UA, locale="pt-BR")
     links = [f"https://investidor.rizasec.com/emissoes/RZA{n:04d}" for n in (500, 700, 900, 1000)]
+    pg = ctx.new_page()
+    pg.on("response", lambda r: print("  rede", r.request.method, r.status, r.url[:110]) if "virgo" in r.url else None)
+    pg.goto(links[0], wait_until="networkidle", timeout=90000); pg.wait_for_timeout(5000); pg.close()
     for u in links:
         pg = ctx.new_page()
         try:
