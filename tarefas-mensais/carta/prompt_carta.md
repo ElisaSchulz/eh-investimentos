@@ -80,7 +80,7 @@ por que aconteceu e o que isso pode significar daqui para frente, sem jargão de
 Preencha também a tabela de indicadores (mesmas linhas da carta anterior, na mesma ordem) e o
 Focus, no formato das referências:
 
-- `valor`, `mes`, `ano`, `m12` como texto já formatado: "14,00%", "− 0,25 p.p.", "0,07%",
+- `valor`, `mes`, `ano`, `m6`, `m12`, `m24` como texto já formatado: "14,00%", "− 0,25 p.p.", "0,07%",
   "4,44%", "5,18", "alta". Para número negativo use o sinal "− " (menos com espaço). Vazio ("") quando
   não se aplica.
 - `sub` diz a referência: "Meta · Copom de 5 de agosto", "Referência julho", "Prévia de agosto",
@@ -102,7 +102,8 @@ Quando terminar a pesquisa, responda **apenas** com um objeto JSON entre as tags
     "eua": "…", "europa": "…", "china": "…", "japao": "…", "brasil": "…"
   },
   "indicadores": [
-    {"nome": "Selic", "sub": "Meta · Copom de …", "valor": "…", "mes": "…", "ano": "…", "m12": "…"}
+    {"nome": "Selic", "sub": "Meta · Copom de …", "valor": "…", "mes": "…", "ano": "…",
+     "m6": "…", "m12": "…", "m24": "…"}
   ],
   "focus": [{"rotulo": "Selic", "valor": "…"}, {"rotulo": "IPCA", "valor": "…"},
             {"rotulo": "PIB", "valor": "…"}, {"rotulo": "Dólar", "valor": "R$ …"}],

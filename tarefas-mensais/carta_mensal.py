@@ -1,7 +1,7 @@
 """
 Carta mensal: busca os dados do mês para a carta da EH e grava carta_dados.json
 (séries dos gráficos, fechamento e retorno de cada índice, destaques da capa e os
-indicadores das tabelas da carta, calculados em indicadores_carta.py).
+indicadores da tabela da carta, calculados em indicadores_carta.py).
 
 Os textos de cada seção são escritos no admin do site, na tela Editor da Carta,
 que junta estes dados ao modelo carta/carta_template.html e gera o PDF.
@@ -135,7 +135,6 @@ def main(mes=MES):
     try:
         extras = indicadores_carta.calcular(ano, m)
         dados["indicadores_auto"] = extras["indicadores"]
-        dados["rentabilidade"] = extras["rentabilidade"]
     except Exception as e:  # noqa: BLE001 (a carta sai sem eles; dá para preencher no editor)
         print(f"Aviso: não consegui calcular os indicadores da carta: {e}")
     caminho = os.path.join(pasta_saida(ano, m), "carta_dados.json")

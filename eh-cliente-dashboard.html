@@ -768,6 +768,8 @@
     .ec-grid { width:100%; border-collapse:collapse; font-size:12px; }
     .ec-grid th { font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:var(--cream-faint); font-weight:600; text-align:left; padding:0 4px 6px; }
     .ec-grid td { padding:2px 3px; }
+    .ec-grid-ind { min-width:640px; }
+    .ec-grid td.ec-grupo { padding:10px 3px 2px; font-size:9px; letter-spacing:0.16em; text-transform:uppercase; color:var(--gold-text); font-weight:700; }
     .ec-grid input { width:100%; background:transparent; border:none; border-bottom:1px solid var(--rule-strong); color:var(--cream); font-family:'Manrope',sans-serif; font-size:12px; padding:5px 2px; outline:none; }
     .ec-grid input:focus { border-bottom-color:var(--gold); }
     .ec-grid button { background:none; border:none; color:var(--err-text); cursor:pointer; font-size:15px; line-height:1; padding:0 4px; }
@@ -5762,7 +5764,6 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     { id: 'brasil', kicker: 'Doméstico', titulo: 'Brasil',
       graficos: [{ tipo: 'linha', titulo: 'Ibovespa · retorno acumulado no mês', series: ['^BVSP'] }] },
     { id: 'indicadores', kicker: 'Doméstico', titulo: 'Indicadores', semTexto: true, tabela: 'indicadores', focus: true },
-    { id: 'rentabilidade', kicker: 'Mercado', titulo: 'Rentabilidade', destaque: 'acumulada', semTexto: true, tabela: 'rentabilidade' },
     { id: 'indices', kicker: 'Mercado', titulo: 'Índices', destaque: 'no mês', semTexto: true, tabela: 'indices' },
   ];
   const EC_INDICADORES_PADRAO = [
@@ -5770,7 +5771,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     { nome: 'IPCA-15', sub: 'Prévia do mês' }, { nome: 'IGP-M', sub: '' },
     { nome: 'R$/USD', sub: 'Fechamento do mês' }, { nome: 'Brent', sub: 'US$ por barril' },
     { nome: 'Dívida Bruta', sub: '% do PIB' },
-  ].map(l => ({ ...l, valor: '', mes: '', ano: '', m12: '' }));
+  ].map(l => ({ grupo: '', ...l, valor: '', mes: '', ano: '', m6: '', m12: '', m24: '' }));
   const EC_FOCUS_PADRAO = ['Selic', 'IPCA', 'PIB', 'Dólar'].map(r => ({ rotulo: r, valor: '' }));
 
   let ecTemplate = null, ecLogo = null, ecDados = null, ecTextos = null, ecMesAtual = '', ecRascunhoIA = null, ecRefs = [];
@@ -5848,8 +5849,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       const velho = anterior ? await ecBaixarJson(`${anterior}/carta_textos.json`) : null;
       ecTextos = {
         subtitulo: '', textos: {}, instrucoes_ia: '',
+        removidos: (velho && velho.removidos) || [],
         indicadores: (velho && velho.indicadores ? velho.indicadores : EC_INDICADORES_PADRAO)
-          .map(l => ({ nome: l.nome, sub: l.sub, valor: '', mes: '', ano: '', m12: '' })),
+          .map(l => ({ grupo: l.grupo || '', nome: l.nome, sub: l.sub, valor: '', mes: '', ano: '', m6: '', m12: '', m24: '' })),
         focus_titulo: `Boletim Focus · projeções para o fim de ${ecDados.ano}`,
         focus: (velho && velho.focus ? velho.focus : EC_FOCUS_PADRAO).map(f => ({ rotulo: f.rotulo, valor: '' })),
       };
@@ -5866,11 +5868,15 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const secs = EC_SECOES.filter(s => !s.semTexto).map((s, i) => `
       <div class="upload-field ec-sec"><label>${String(EC_SECOES.indexOf(s) + 1).padStart(2, '0')} · ${escHtml(s.kicker)} · ${escHtml(s.titulo + (s.destaque ? ' ' + s.destaque : ''))}</label>
         <textarea data-sec="${s.id}" placeholder="Um parágrafo por bloco, separados por uma linha em branco. **negrito** funciona."></textarea></div>`).join('');
-    const linhas = T.indicadores.map((l, i) => `<tr>
+    let grupoAtual = null;
+    const linhas = T.indicadores.map((l, i) => {
+      let cab = '';
+      if (l.grupo && l.grupo !== grupoAtual) { grupoAtual = l.grupo; cab = `<tr><td colspan="9" class="ec-grupo">${escHtml(l.grupo)}</td></tr>`; }
+      return cab + `<tr>
         <td><input data-ind="${i}" data-campo="nome"></td><td><input data-ind="${i}" data-campo="sub"></td>
-        <td><input data-ind="${i}" data-campo="valor"></td><td><input data-ind="${i}" data-campo="mes"></td>
-        <td><input data-ind="${i}" data-campo="ano"></td><td><input data-ind="${i}" data-campo="m12"></td>
-        <td><button title="Remover" onclick="ecRemoverIndicador(${i})">×</button></td></tr>`).join('');
+        ${['valor', 'mes', 'ano', 'm6', 'm12', 'm24'].map(c => `<td><input data-ind="${i}" data-campo="${c}"></td>`).join('')}
+        <td><button title="Remover" onclick="ecRemoverIndicador(${i})">×</button></td></tr>`;
+    }).join('');
     const focus = T.focus.map((f, i) => `<tr><td><input data-focus="${i}" data-campo="rotulo"></td><td><input data-focus="${i}" data-campo="valor"></td></tr>`).join('');
     document.getElementById('ecForm').innerHTML = `
       ${ecPainelIA()}
@@ -5882,10 +5888,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       <div class="upload-panel"><h3>Textos</h3>${secs}</div>
       <div class="upload-panel">
         <h3>Indicadores</h3>
-        <table class="ec-grid"><thead><tr><th>Indicador</th><th>Detalhe</th><th>Fech.</th><th>Mês</th><th>Ano</th><th>12m</th><th></th></tr></thead><tbody>${linhas}</tbody></table>
+        <div style="overflow-x:auto;"><table class="ec-grid ec-grid-ind"><thead><tr><th>Indicador</th><th>Detalhe</th><th>Fech.</th><th>Mês</th><th>Ano</th><th>6m</th><th>12m</th><th>24m</th><th></th></tr></thead><tbody>${linhas}</tbody></table></div>
         <button class="ec-link" onclick="ecAdicionarIndicador()">+ Adicionar indicador</button>
         ${(ecDados.indicadores_auto || []).length ? `<button class="ec-link" style="margin-left:1rem;" onclick="ecAtualizarAuto()">↻ Atualizar com os dados do mês</button>` : ''}
-        <div class="ec-hint">${(ecDados.indicadores_auto || []).length ? 'Selic, IPCA, IPCA-15, IGP-M, dólar, Brent e dívida bruta vêm sozinhos do Banco Central e do Yahoo; a data do Copom e o que faltar você completa. ' : ''}Valores como você quer que apareçam (ex.: 14,00%, − 0,25 p.p.). Vazio vira “—”. Valores com sinal de menos ficam em vermelho.</div>
+        <div class="ec-hint">${(ecDados.indicadores_auto || []).length ? 'Os números vêm sozinhos do Banco Central e do Yahoo, em uma tabela só (juros, inflação, mercado e fiscal). A data do Copom no detalhe da Selic e o que faltar você completa. ' : ''}Valores como você quer que apareçam (ex.: 14,00%, − 0,25 p.p.). Vazio vira “—”. Valores com sinal de menos ficam em vermelho.</div>
         <div class="upload-field" style="margin-top:1.2rem;"><label>Título do Focus</label><input id="ecFocusTitulo"></div>
         <table class="ec-grid" style="margin-top:0.6rem;"><thead><tr><th>Projeção</th><th>Valor</th></tr></thead><tbody>${focus}</tbody></table>
       </div>`;
@@ -5966,7 +5972,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       const txt = ((t.textos || {})[k] || '').trim();
       if (txt) partes.push(`## ${titulo}\n\n${txt}`);
     });
-    const linhas = (t.indicadores || []).filter(l => l.nome).map(l => `- ${l.nome} (${l.sub || ''}): valor ${l.valor || ''}; mês ${l.mes || ''}; ano ${l.ano || ''}; 12m ${l.m12 || ''}`);
+    const linhas = (t.indicadores || []).filter(l => l.nome).map(l => `- ${l.nome} (${l.sub || ''}): valor ${l.valor || ''}; mês ${l.mes || ''}; ano ${l.ano || ''}; 6m ${l.m6 || ''}; 12m ${l.m12 || ''}; 24m ${l.m24 || ''}`);
     if (linhas.length) partes.push('## Indicadores\n\n' + linhas.join('\n'));
     if ((t.focus || []).length) partes.push(`## ${t.focus_titulo || 'Focus'}\n\n` + t.focus.map(f => `- ${f.rotulo}: ${f.valor}`).join('\n'));
     return partes.join('\n\n');
@@ -6002,10 +6008,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       '<dados_do_mes>\nÍndices de bolsa (fonte oficial da carta, use estes números):\n' + indices.join('\n') + '\n\nDestaques da capa:\n' + destaques.join('\n') + '\n</dados_do_mes>',
       'Linhas da tabela de indicadores, nesta ordem (nome · detalhe do mês anterior):\n' + (T.indicadores || []).filter(l => l.nome).map(l => `- ${l.nome} · ${l.sub || ''}`).join('\n'),
       (D.indicadores_auto || []).length ? '<indicadores_calculados>\nJá calculados a partir do Banco Central e do Yahoo (repita estes valores exatamente na tabela e use-os no texto; complete só o que faltar, como a data do Copom no detalhe da Selic):\n'
-        + D.indicadores_auto.map(a => `- ${a.nome}${a.sub ? ` (${a.sub})` : ''}: fechamento ${a.valor || '—'}; mês ${a.mes || '—'}; ano ${a.ano || '—'}; 12 meses ${a.m12 || '—'}`).join('\n') + '\n</indicadores_calculados>' : '',
-      (D.rentabilidade || []).length ? '<rentabilidade>\nVariações acumuladas (mês, ano, 6, 12 e 24 meses), para usar no texto se ajudar:\n'
-        + D.rentabilidade.map(a => { const f = v => v == null ? '—' : Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
-            return `- ${a.nome}${a.referencia ? ` (referência ${a.referencia})` : ''}: ${a.valor}; mês ${f(a.mes)}; ano ${f(a.ano)}; 6m ${f(a.m6)}; 12m ${f(a.m12)}; 24m ${f(a.m24)}`; }).join('\n') + '\n</rentabilidade>' : '',
+        + D.indicadores_auto.map(a => `- ${a.nome}${a.sub ? ` (${a.sub})` : ''}: fechamento ${a.valor || '—'}; mês ${a.mes || '—'}; ano ${a.ano || '—'}; 6 meses ${a.m6 || '—'}; 12 meses ${a.m12 || '—'}; 24 meses ${a.m24 || '—'}`).join('\n') + '\n</indicadores_calculados>' : '',
       'Projeções do Focus, nesta ordem: ' + (T.focus || []).map(f => f.rotulo).join(', '),
       pedidos ? `<pedidos_do_mes>\n${pedidos}\n</pedidos_do_mes>` : '',
       'As cartas de referência acima mostram a linguagem e o tipo de informação esperados. Pesquise os acontecimentos do mês e responda no formato pedido.',
@@ -6039,7 +6042,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     return {
       subtitulo: s(r.subtitulo).trim(), textos,
       indicadores: (r.indicadores || []).filter(l => l && typeof l === 'object')
-        .map(l => ({ nome: s(l.nome), sub: s(l.sub), valor: s(l.valor), mes: s(l.mes), ano: s(l.ano), m12: s(l.m12) })),
+        .map(l => ({ grupo: s(l.grupo), nome: s(l.nome), sub: s(l.sub), valor: s(l.valor), mes: s(l.mes), ano: s(l.ano), m6: s(l.m6), m12: s(l.m12), m24: s(l.m24) })),
       focus: (r.focus || []).filter(f => f && typeof f === 'object').map(f => ({ rotulo: s(f.rotulo), valor: s(f.valor) })),
       fontes: (r.fontes || []).filter(f => f && typeof f === 'object').map(f => ({ titulo: s(f.titulo || f.url), url: s(f.url), uso: s(f.uso) })),
       pontos_a_conferir: (r.pontos_a_conferir || []).map(s),
@@ -6068,7 +6071,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     if (temTexto && !confirm('Substituir os textos, indicadores e Focus já preenchidos pelo rascunho do Claude?')) return false;
     T.subtitulo = R.subtitulo || T.subtitulo || '';
     T.textos = { ...(T.textos || {}), ...(R.textos || {}) };
-    if ((R.indicadores || []).length) T.indicadores = R.indicadores.map(l => ({ nome: l.nome || '', sub: l.sub || '', valor: l.valor || '', mes: l.mes || '', ano: l.ano || '', m12: l.m12 || '' }));
+    if ((R.indicadores || []).length) T.indicadores = R.indicadores.map(l => ({ grupo: l.grupo || '', nome: l.nome || '', sub: l.sub || '', valor: l.valor || '', mes: l.mes || '', ano: l.ano || '', m6: l.m6 || '', m12: l.m12 || '', m24: l.m24 || '' }));
     ecAplicarAuto(T);
     if ((R.focus || []).length) T.focus = R.focus.map(f => ({ rotulo: f.rotulo || '', valor: f.valor || '' }));
     ecMontarFormulario();
@@ -6118,12 +6121,21 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   function ecChaveInd(n) { return (n || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9$]/g, ''); }
   function ecAplicarAuto(T) {
     const auto = (ecDados && ecDados.indicadores_auto) || [];
+    if (!auto.length) return 0;
+    const removidos = new Set((T.removidos || []).map(ecChaveInd));
+    const resto = [...T.indicadores];
+    const novas = [];
     auto.forEach(a => {
-      let l = T.indicadores.find(x => ecChaveInd(x.nome) === ecChaveInd(a.nome));
-      if (!l) { l = { nome: a.nome, sub: '', valor: '', mes: '', ano: '', m12: '' }; T.indicadores.push(l); }
-      ['valor', 'mes', 'ano', 'm12'].forEach(k => { if (a[k]) l[k] = a[k]; });
+      const i = resto.findIndex(x => ecChaveInd(x.nome) === ecChaveInd(a.nome));
+      if (i < 0 && removidos.has(ecChaveInd(a.nome))) return;  // você tirou esta linha da tabela
+      const l = i >= 0 ? resto.splice(i, 1)[0] : { nome: a.nome, sub: '', valor: '', mes: '', ano: '', m6: '', m12: '', m24: '' };
+      ['valor', 'mes', 'ano', 'm6', 'm12', 'm24'].forEach(k => { if (a[k]) l[k] = a[k]; });
       if (a.sub) l.sub = a.sub;
+      l.grupo = a.grupo || l.grupo || '';
+      novas.push(l);
     });
+    // linhas suas, que não vêm dos dados, ficam no fim
+    T.indicadores = novas.concat(resto);
     return auto.length;
   }
   function ecAtualizarAuto() {
@@ -6134,12 +6146,13 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
   function ecAdicionarIndicador() {
     ecLerFormulario();
-    ecTextos.indicadores.push({ nome: '', sub: '', valor: '', mes: '', ano: '', m12: '' });
+    ecTextos.indicadores.push({ grupo: '', nome: '', sub: '', valor: '', mes: '', ano: '', m6: '', m12: '', m24: '' });
     ecMontarFormulario(); ecMudou();
   }
   function ecRemoverIndicador(i) {
     ecLerFormulario();
-    ecTextos.indicadores.splice(i, 1);
+    const [tirada] = ecTextos.indicadores.splice(i, 1);
+    if (tirada && tirada.nome) ecTextos.removidos = [...new Set([...(ecTextos.removidos || []), tirada.nome])];
     ecMontarFormulario(); ecMudou();
   }
 
@@ -6172,17 +6185,18 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const atrasados = (D.indices || []).filter(i => i.ultima_data && i.ultima_data !== ultima)
       .map(i => `${i.nome}: fechamento de ${i.ultima_data}, último pregão com dado disponível no período.`);
     const [dd, mm, aa] = (ultima || '').split('/');
-    const secoes = EC_SECOES.filter(s => s.id !== 'rentabilidade' || (D.rentabilidade || []).length).map(s => {
+    const secoes = EC_SECOES.map(s => {
       const sec = { ...s, texto: s.semTexto ? '' : ((T.textos || {})[s.id] || '') };
-      if (s.id === 'indicadores') sec.descricao = `Principais referências domésticas no fechamento de ${D.mes_nome.toLowerCase()}.`;
-      if (s.id === 'rentabilidade') sec.descricao = `Variação no mês e acumulada em 6, 12 e 24 meses até o fechamento de ${D.mes_nome.toLowerCase()}.`;
+      if (s.id === 'indicadores') sec.descricao = (T.indicadores || []).some(l => l.grupo)
+        ? `Juros, inflação, mercado e fiscal no fechamento de ${D.mes_nome.toLowerCase()}, com a variação no mês e acumulada.`
+        : `Principais referências domésticas no fechamento de ${D.mes_nome.toLowerCase()}.`;
       if (s.id === 'indices') {
         sec.descricao = ultima ? `Fechamento de ${+dd} de ${TM_MESES_PT[+mm - 1].toLowerCase()} de ${aa} e variação acumulada no mês.` : '';
         sec.nota_tabela = atrasados.join(' ');
       }
       return sec;
     });
-    const temValor = l => ['valor', 'mes', 'ano', 'm12'].some(k => (l[k] || '').trim());
+    const temValor = l => ['valor', 'mes', 'ano', 'm6', 'm12', 'm24'].some(k => (l[k] || '').trim());
     return {
       ...D, subtitulo: T.subtitulo, secoes,
       indicadores: T.indicadores.filter(l => (l.nome || '').trim() && temValor(l)),
