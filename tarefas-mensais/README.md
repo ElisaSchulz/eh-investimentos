@@ -55,6 +55,8 @@ A carta é montada no admin, na tela **Editor da Carta**: os dados do mês vêm 
 (o rascunho fica salvo em `AAAA-MM/carta_textos.json` no Supabase) e a prévia em A4
 usa o modelo `carta/carta_template.html`. **Salvar PDF** imprime a carta;
 **Guardar carta final no site** grava o HTML junto dos arquivos do mês.
+**Ler em tela inteira** abre a carta ocupando a tela toda, com a letra maior e zoom (A− e A+); Esc
+ou Fechar volta para o editor.
 
 A tabela **Indicadores** vem sozinha (`indicadores_carta.py`, Banco Central e Yahoo), em grupos,
 com fechamento e variação no mês, no ano e em 6, 12 e 24 meses:

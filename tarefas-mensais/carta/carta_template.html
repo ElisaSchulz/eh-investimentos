@@ -434,13 +434,18 @@ function render() {
   ajustar();
 }
 
+// window.LEITURA = {zoom}: modo de leitura em tela inteira do Editor da Carta (página maior, com zoom)
 function ajustar() {
-  const escalaPg = Math.min(1, stage.clientWidth / 794);
+  const cabe = stage.clientWidth / 794, L = window.LEITURA;
+  const escalaPg = L ? Math.max(0.4, Math.min(1.6, cabe) * (L.zoom || 1)) : Math.min(1, cabe);
+  const alturaAntes = document.documentElement.scrollHeight, y = window.scrollY;
   document.querySelectorAll('.page-wrap').forEach(w => {
     w.style.width = (794 * escalaPg) + 'px';
     w.style.height = (1123 * escalaPg) + 'px';
     w.querySelector('.page').style.transform = 'scale(' + escalaPg + ')';
   });
+  // mantém o ponto de leitura quando a escala muda
+  if (y && alturaAntes) window.scrollTo(window.scrollX, y * document.documentElement.scrollHeight / alturaAntes);
 }
 window.addEventListener('resize', ajustar);
 document.getElementById('printBtn').addEventListener('click', () => window.print());

@@ -776,6 +776,13 @@
     .ec-link { background:none; border:none; color:var(--gold-text); font-family:'Manrope',sans-serif; font-weight:700; font-size:12px; cursor:pointer; padding:0.5rem 0 0; }
     .ec-preview { position:sticky; top:1rem; background:#0E1A33; border:1px solid var(--rule-strong); height:calc(100vh - 140px); min-height:520px; }
     .ec-preview iframe { width:100%; height:100%; border:0; display:block; }
+    /* leitura em tela inteira */
+    .ec-preview.cheia { position:fixed; inset:0; top:0; width:100vw; height:100vh; height:100dvh; min-height:0; z-index:10000; border:0; }
+    .ec-leitura { display:none; position:absolute; top:10px; right:14px; z-index:2; gap:4px; align-items:center; background:rgba(14,26,51,0.92); border:1px solid rgba(238,154,30,0.45); border-radius:8px; padding:4px; box-shadow:0 6px 20px rgba(0,0,0,0.35); }
+    .ec-preview.cheia .ec-leitura { display:flex; }
+    .ec-leitura button { background:transparent; color:#F4EEE2; border:0; border-radius:5px; padding:7px 11px; font-family:'Manrope',sans-serif; font-size:13px; font-weight:700; cursor:pointer; line-height:1; }
+    .ec-leitura button:hover { background:rgba(238,154,30,0.25); }
+    .ec-leitura .ec-zoom { min-width:40px; text-align:center; font-size:11.5px; color:#BFC7DE; font-family:'Manrope',sans-serif; }
     .ec-acoes { display:flex; flex-wrap:wrap; gap:0.7rem; align-items:center; margin-bottom:1rem; }
     .ec-acoes .btn-download-ext { margin-top:0; }
     .ec-salvo { font-size:11.5px; color:var(--cream-faint); }
@@ -1684,13 +1691,20 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         <div class="upload-field" style="min-width:200px;"><label>Mês da carta</label>
           <select id="ecMes" onchange="ecCarregar(this.value)"><option value="">Carregando…</option></select>
         </div>
+        <button class="btn-download-ext" onclick="ecTelaInteira(true)">Ler em tela inteira</button>
         <button class="btn-download-ext" onclick="ecImprimir()">Salvar PDF</button>
         <button class="btn-download-ext" onclick="ecPublicar()">Guardar carta final no site</button>
         <span class="ec-salvo" id="ecSalvo"></span>
       </div>
       <div class="ec-layout">
         <div class="ec-form" id="ecForm"><div class="upload-panel"><p>Carregando…</p></div></div>
-        <div class="ec-preview"><iframe id="ecPreview" title="Prévia da carta mensal"></iframe></div>
+        <div class="ec-preview" id="ecPreviewBox">
+          <div class="ec-leitura">
+            <button onclick="ecZoom(-1)" title="Diminuir">A−</button><span class="ec-zoom" id="ecZoomTxt">100%</span><button onclick="ecZoom(1)" title="Aumentar">A+</button>
+            <button onclick="ecTelaInteira(false)" title="Sair da tela inteira (Esc)">✕ Fechar</button>
+          </div>
+          <iframe id="ecPreview" title="Prévia da carta mensal"></iframe>
+        </div>
       </div>
     </div>
 
@@ -6300,9 +6314,61 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const fr = document.getElementById('ecPreview');
     let rolagem = 0;
     try { rolagem = inicio ? 0 : fr.contentWindow.scrollY; } catch (e) {}
-    fr.onload = () => { try { fr.contentWindow.scrollTo(0, rolagem); } catch (e) {} };
+    fr.onload = () => {
+      try {
+        fr.contentWindow.addEventListener('keydown', ecTecla);
+        if (ecLendo()) ecLeitura();
+        fr.contentWindow.scrollTo(0, rolagem);
+      } catch (e) {}
+    };
     fr.srcdoc = ecHtml();
   }
+
+  // ── Leitura em tela inteira ──
+  // A prévia ocupa a tela toda (tela cheia do navegador quando ele deixa; senão, a janela inteira),
+  // com a página maior e botões de zoom. Esc ou Fechar volta para o editor.
+  let ecZoomLeitura = 1;
+  function ecLendo() { return document.getElementById('ecPreviewBox').classList.contains('cheia'); }
+  function ecLeitura() {
+    const w = document.getElementById('ecPreview').contentWindow;
+    try { w.LEITURA = ecLendo() ? { zoom: ecZoomLeitura } : null; if (w.ajustar) w.ajustar(); } catch (e) {}
+    document.getElementById('ecZoomTxt').textContent = Math.round(ecZoomLeitura * 100) + '%';
+  }
+  function ecTelaInteira(abrir) {
+    if (abrir && !ecDados) return;
+    const box = document.getElementById('ecPreviewBox');
+    if (abrir === ecLendo()) return;
+    box.classList.toggle('cheia', abrir);
+    document.body.style.overflow = abrir ? 'hidden' : '';
+    const cheio = document.fullscreenElement || document.webkitFullscreenElement;
+    try {
+      if (abrir) {
+        ecZoomLeitura = 1;
+        const pedir = box.requestFullscreen || box.webkitRequestFullscreen;
+        const p = pedir ? pedir.call(box) : null;
+        if (p && p.catch) p.catch(() => {});
+      } else if (cheio) {
+        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      }
+    } catch (e) {}
+    ecLeitura();
+    try { document.getElementById('ecPreview').contentWindow.focus(); } catch (e) {}
+  }
+  function ecZoom(passo) {
+    ecZoomLeitura = Math.min(2, Math.max(0.6, Math.round((ecZoomLeitura + passo * 0.15) * 100) / 100));
+    ecLeitura();
+  }
+  function ecTecla(ev) {
+    if (!ecLendo()) return;
+    if (ev.key === 'Escape') ecTelaInteira(false);
+    else if (ev.key === '+' || ev.key === '=') ecZoom(1);
+    else if (ev.key === '-') ecZoom(-1);
+  }
+  document.addEventListener('keydown', ecTecla);
+  // Esc na tela cheia do navegador sai dela sem passar pelo teclado da página
+  ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => {
+    if (!(document.fullscreenElement || document.webkitFullscreenElement) && ecLendo()) ecTelaInteira(false);
+  }));
 
   async function ecImprimir() {
     if (!ecDados) return;
