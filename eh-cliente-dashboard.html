@@ -5909,10 +5909,13 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         removidos: (velho && velho.removidos) || [],
         indicadores: (velho && velho.indicadores ? velho.indicadores : EC_INDICADORES_PADRAO)
           .map(l => ({ grupo: l.grupo || '', nome: l.nome, sub: l.sub, valor: '', mes: '', ano: '', m6: '', m12: '', m24: '' })),
-        focus_titulo: `Boletim Focus · projeções para o fim de ${ecDados.ano}`,
+        focus_titulo: (ecDados.focus_auto && ecDados.focus_auto.titulo) || `Boletim Focus · projeções para o fim de ${ecDados.ano}`,
+        focus_referencia: '',
         focus: (velho && velho.focus ? velho.focus : EC_FOCUS_PADRAO).map(f => ({ rotulo: f.rotulo, valor: '' })),
       };
       ecAplicarAuto(ecTextos);
+    } else if (!(ecTextos.focus_referencia || '').trim() && !(ecTextos.focus || []).some(f => (f.valor || '').trim())) {
+      ecAplicarFocusAuto(ecTextos);  // Focus ainda vazio: preenche com o boletim do Banco Central
     }
     ecMontarFormulario();
     ecPrevia(true);
@@ -5947,14 +5950,17 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         <h3>Indicadores</h3>
         <div style="overflow-x:auto;"><table class="ec-grid ec-grid-ind"><thead><tr><th>Indicador</th><th>Detalhe</th><th>Fech.</th><th>Mês</th><th>Ano</th><th>6m</th><th>12m</th><th>24m</th><th></th></tr></thead><tbody>${linhas}</tbody></table></div>
         <button class="ec-link" onclick="ecAdicionarIndicador()">+ Adicionar indicador</button>
-        ${(ecDados.indicadores_auto || []).length ? `<button class="ec-link" style="margin-left:1rem;" onclick="ecAtualizarAuto()">↻ Atualizar com os dados do mês</button>` : ''}
+        ${(ecDados.indicadores_auto || []).length || ecDados.focus_auto ? `<button class="ec-link" style="margin-left:1rem;" onclick="ecAtualizarAuto()">↻ Atualizar com os dados do mês</button>` : ''}
         <div class="ec-hint">${(ecDados.indicadores_auto || []).length ? 'Os números vêm sozinhos do Banco Central e do Yahoo, em uma tabela só (juros, inflação, mercado e fiscal). A data do Copom no detalhe da Selic e o que faltar você completa. ' : ''}Valores como você quer que apareçam (ex.: 14,00%, − 0,25 p.p.). Vazio vira “—”. Valores com sinal de menos ficam em vermelho.</div>
         <div class="upload-field" style="margin-top:1.2rem;"><label>Título do Focus</label><input id="ecFocusTitulo"></div>
         <table class="ec-grid" style="margin-top:0.6rem;"><thead><tr><th>Projeção</th><th>Valor</th></tr></thead><tbody>${focus}</tbody></table>
+        <div class="upload-field" style="margin-top:0.8rem;"><label>Referência do Focus (aparece abaixo das projeções)</label><input id="ecFocusRef" placeholder="Fonte: Banco Central do Brasil, Boletim Focus de 3 de novembro de 2026, com as projeções coletadas até 30 de outubro (mediana)."></div>
+        <div class="ec-hint">${ecDados.focus_auto ? `Projeções e referência vêm sozinhas do Banco Central: o último Boletim Focus com coleta no mês (${escHtml(ecDataBr(ecDados.focus_auto.data_boletim))}, coleta até ${escHtml(ecDataBr(ecDados.focus_auto.data_coleta))}). ` : ''}Use o último boletim cuja coleta (até a sexta-feira) caiu dentro do mês da carta.</div>
       </div>`;
     const form = document.getElementById('ecForm');
     document.getElementById('ecSubtitulo').value = T.subtitulo || '';
     document.getElementById('ecFocusTitulo').value = T.focus_titulo || '';
+    document.getElementById('ecFocusRef').value = T.focus_referencia || '';
     document.getElementById('ecPedidosIA').value = T.instrucoes_ia || '';
     form.querySelectorAll('[data-sec]').forEach(el => { el.value = (T.textos || {})[el.dataset.sec] || ''; });
     form.querySelectorAll('[data-ind]').forEach(el => { el.value = T.indicadores[+el.dataset.ind][el.dataset.campo] || ''; });
@@ -6031,7 +6037,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     });
     const linhas = (t.indicadores || []).filter(l => l.nome).map(l => `- ${l.nome} (${l.sub || ''}): valor ${l.valor || ''}; mês ${l.mes || ''}; ano ${l.ano || ''}; 6m ${l.m6 || ''}; 12m ${l.m12 || ''}; 24m ${l.m24 || ''}`);
     if (linhas.length) partes.push('## Indicadores\n\n' + linhas.join('\n'));
-    if ((t.focus || []).length) partes.push(`## ${t.focus_titulo || 'Focus'}\n\n` + t.focus.map(f => `- ${f.rotulo}: ${f.valor}`).join('\n'));
+    if ((t.focus || []).length) partes.push(`## ${t.focus_titulo || 'Focus'}\n\n` + t.focus.map(f => `- ${f.rotulo}: ${f.valor}`).join('\n')
+      + (t.focus_referencia ? `\n\n${t.focus_referencia}` : ''));
     return partes.join('\n\n');
   }
 
@@ -6067,6 +6074,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       (D.indicadores_auto || []).length ? '<indicadores_calculados>\nJá calculados a partir do Banco Central e do Yahoo (repita estes valores exatamente na tabela e use-os no texto; complete só o que faltar, como a data do Copom no detalhe da Selic):\n'
         + D.indicadores_auto.map(a => `- ${a.nome}${a.sub ? ` (${a.sub})` : ''}: fechamento ${a.valor || '—'}; mês ${a.mes || '—'}; ano ${a.ano || '—'}; 6 meses ${a.m6 || '—'}; 12 meses ${a.m12 || '—'}; 24 meses ${a.m24 || '—'}`).join('\n') + '\n</indicadores_calculados>' : '',
       'Projeções do Focus, nesta ordem: ' + (T.focus || []).map(f => f.rotulo).join(', '),
+      D.focus_auto && (D.focus_auto.itens || []).length ? `<focus_calculado>\nBoletim Focus de ${ecDataBr(D.focus_auto.data_boletim)}, com as projeções coletadas até ${ecDataBr(D.focus_auto.data_coleta)} (o último com coleta no mês), direto do Banco Central. Repita estes valores e esta referência exatamente e use este boletim no texto do Brasil:\n`
+        + D.focus_auto.itens.map(f => `- ${f.rotulo}: ${f.valor}`).join('\n') + `\nfocus_referencia: ${D.focus_auto.referencia || ''}\n</focus_calculado>` : '',
       pedidos ? `<pedidos_do_mes>\n${pedidos}\n</pedidos_do_mes>` : '',
       'As cartas de referência acima mostram a linguagem e o tipo de informação esperados. Pesquise os acontecimentos do mês e responda no formato pedido.',
     ].filter(Boolean).join('\n\n');
@@ -6101,6 +6110,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       indicadores: (r.indicadores || []).filter(l => l && typeof l === 'object')
         .map(l => ({ grupo: s(l.grupo), nome: s(l.nome), sub: s(l.sub), valor: s(l.valor), mes: s(l.mes), ano: s(l.ano), m6: s(l.m6), m12: s(l.m12), m24: s(l.m24) })),
       focus: (r.focus || []).filter(f => f && typeof f === 'object').map(f => ({ rotulo: s(f.rotulo), valor: s(f.valor) })),
+      focus_referencia: s(r.focus_referencia).trim(),
       fontes: (r.fontes || []).filter(f => f && typeof f === 'object').map(f => ({ titulo: s(f.titulo || f.url), url: s(f.url), uso: s(f.uso) })),
       pontos_a_conferir: (r.pontos_a_conferir || []).map(s),
     };
@@ -6129,8 +6139,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     T.subtitulo = R.subtitulo || T.subtitulo || '';
     T.textos = { ...(T.textos || {}), ...(R.textos || {}) };
     if ((R.indicadores || []).length) T.indicadores = R.indicadores.map(l => ({ grupo: l.grupo || '', nome: l.nome || '', sub: l.sub || '', valor: l.valor || '', mes: l.mes || '', ano: l.ano || '', m6: l.m6 || '', m12: l.m12 || '', m24: l.m24 || '' }));
-    ecAplicarAuto(T);
     if ((R.focus || []).length) T.focus = R.focus.map(f => ({ rotulo: f.rotulo || '', valor: f.valor || '' }));
+    if (R.focus_referencia) T.focus_referencia = R.focus_referencia;
+    ecAplicarAuto(T);
     ecMontarFormulario();
     ecMudou();
     return true;
@@ -6166,6 +6177,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const T = ecTextos, form = document.getElementById('ecForm');
     T.subtitulo = document.getElementById('ecSubtitulo').value;
     T.focus_titulo = document.getElementById('ecFocusTitulo').value;
+    T.focus_referencia = document.getElementById('ecFocusRef').value;
     T.instrucoes_ia = document.getElementById('ecPedidosIA').value;
     T.textos = T.textos || {};
     form.querySelectorAll('[data-sec]').forEach(el => { T.textos[el.dataset.sec] = el.value; });
@@ -6176,7 +6188,24 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   // Indicadores calculados pela tarefa carta_mensal (Banco Central e Yahoo) entram por cima do que
   // estiver na tabela, casando pelo nome; o detalhe só muda quando o dado traz o mês de referência.
   function ecChaveInd(n) { return (n || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9$]/g, ''); }
+  function ecDataBr(iso) { const [a, m, d] = (iso || '').split('-'); return d ? `${d}/${m}/${a}` : ''; }
+  // Focus do Banco Central (último boletim com coleta no mês): valores e referência entram por cima
+  const EC_FOCUS_ALIAS = { cambio: 'dolar', pibtotal: 'pib' };
+  function ecAplicarFocusAuto(T) {
+    const F = ecDados && ecDados.focus_auto;
+    if (!F || !(F.itens || []).length) return false;
+    const chave = n => { const k = ecChaveInd(n); return EC_FOCUS_ALIAS[k] || k; };
+    T.focus = T.focus || [];
+    F.itens.forEach(a => {
+      const f = T.focus.find(x => chave(x.rotulo) === chave(a.rotulo));
+      if (f) f.valor = a.valor; else T.focus.push({ rotulo: a.rotulo, valor: a.valor });
+    });
+    if (F.referencia) T.focus_referencia = F.referencia;
+    if (F.titulo && !(T.focus_titulo || '').trim()) T.focus_titulo = F.titulo;
+    return true;
+  }
   function ecAplicarAuto(T) {
+    ecAplicarFocusAuto(T);
     const auto = (ecDados && ecDados.indicadores_auto) || [];
     if (!auto.length) return 0;
     const removidos = new Set((T.removidos || []).map(ecChaveInd));
@@ -6257,7 +6286,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     return {
       ...D, subtitulo: T.subtitulo, secoes,
       indicadores: T.indicadores.filter(l => (l.nome || '').trim() && temValor(l)),
-      focus_titulo: T.focus_titulo, focus: T.focus.filter(f => (f.valor || '').trim()),
+      focus_titulo: T.focus_titulo, focus_referencia: (T.focus_referencia || '').trim(), focus: T.focus.filter(f => (f.valor || '').trim()),
     };
   }
 

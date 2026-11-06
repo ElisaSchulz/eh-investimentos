@@ -137,6 +137,11 @@ def main(mes=MES):
         dados["indicadores_auto"] = extras["indicadores"]
     except Exception as e:  # noqa: BLE001 (a carta sai sem eles; dá para preencher no editor)
         print(f"Aviso: não consegui calcular os indicadores da carta: {e}")
+    print("Boletim Focus (Banco Central):")
+    try:
+        dados["focus_auto"] = indicadores_carta.focus(ano, m)
+    except Exception as e:  # noqa: BLE001 (dá para preencher o Focus no editor)
+        print(f"Aviso: não consegui buscar o Boletim Focus: {e}")
     caminho = os.path.join(pasta_saida(ano, m), "carta_dados.json")
     with open(caminho, "w", encoding="utf-8") as f:
         json.dump(dados, f, ensure_ascii=False, indent=1)

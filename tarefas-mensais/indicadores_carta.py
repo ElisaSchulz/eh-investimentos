@@ -13,6 +13,9 @@ Uma tabela só, em grupos, com fechamento e variação no mês, no ano e em 6, 1
 Índices de preço usam o último mês divulgado: no 3º dia útil o IPCA do mês de referência ainda
 não saiu, então a linha mostra o mês anterior e diz isso no detalhe.
 Cada indicador que falhar fica de fora com um aviso, sem derrubar a carta.
+
+focus() traz as projeções para o fim do ano (Selic, IPCA, PIB e dólar) do último Boletim Focus
+coletado no mês, com a data do boletim (chave focus_auto), da API de Expectativas do Banco Central.
 """
 import os
 import sys
@@ -224,3 +227,69 @@ def calcular(ano, mes):
         print(f"  {l['grupo']:<9} {l['nome']:<12} {l['sub']:<42} {l['valor']:>10} | " +
               " | ".join(f"{k} {l[k]:>11}" for k in periodos))
     return {"indicadores": ind}
+
+
+# ------------------------------------------------------------------ Boletim Focus
+FOCUS_URL = "https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais"
+# rótulo na carta → indicador na API de Expectativas do Banco Central
+FOCUS_ITENS = (("Selic", "Selic"), ("IPCA", "IPCA"), ("PIB", "PIB Total"), ("Dólar", "Câmbio"))
+# feriados nacionais de data fixa: se caírem na segunda, o Focus sai na terça
+FERIADOS_FIXOS = {(1, 1), (4, 21), (5, 1), (9, 7), (10, 12), (11, 2), (11, 15), (11, 20), (12, 25)}
+
+
+def boletim_do_mes(ano, mes):
+    """Boletim Focus da carta: (data de publicação, data da coleta).
+
+    É o último boletim com projeções coletadas dentro do mês. O Focus sai às segundas-feiras
+    (na terça, se a segunda for feriado) com a coleta até a sexta-feira anterior; para outubro
+    de 2026, o boletim de 3 de novembro, com coleta até 30 de outubro.
+    """
+    fim = _fim_mes(date(ano, mes, 1))
+    coleta = fim - timedelta(days=(fim.weekday() - 4) % 7)  # última sexta-feira do mês
+    segunda = coleta + timedelta(days=3)
+    publicacao = segunda + timedelta(days=1) if (segunda.month, segunda.day) in FERIADOS_FIXOS else segunda
+    return publicacao, coleta
+
+
+def focus(ano, mes):
+    """Projeções para o fim do ano do último Boletim Focus coletado no mês (mediana, 30 dias)."""
+    import json
+    from urllib.parse import quote
+
+    from dados_planilha import baixar
+
+    publicacao, coleta = boletim_do_mes(ano, mes)
+    indicadores = " or ".join(f"Indicador eq '{api}'" for _, api in FOCUS_ITENS)
+    filtro = (f"({indicadores}) and DataReferencia eq '{ano}' and "
+              f"Data ge '{coleta - timedelta(days=10):%Y-%m-%d}' and Data le '{coleta:%Y-%m-%d}'")
+    url = (f"{FOCUS_URL}?$format=json&$top=500"
+           f"&$select=Indicador,Data,DataReferencia,Mediana,baseCalculo&$filter={quote(filtro)}")
+    bruto = baixar(url)
+    if not bruto:
+        raise RuntimeError("a API de Expectativas do Banco Central não respondeu")
+    linhas = [l for l in json.loads(bruto).get("value", []) if l.get("baseCalculo", 0) in (0, "0")]
+
+    itens, datas = [], []
+    for rotulo, api in FOCUS_ITENS:
+        achadas = sorted((l for l in linhas if l.get("Indicador") == api and l.get("Mediana") is not None),
+                         key=lambda l: l["Data"])
+        if not achadas:
+            print(f"Aviso: o Focus não trouxe {api} para {ano}.")
+            continue
+        ultima = achadas[-1]
+        v = float(ultima["Mediana"])
+        itens.append({"rotulo": rotulo, "valor": "R$ " + num_txt(v) if rotulo == "Dólar" else pct_txt(v)})
+        datas.append(ultima["Data"])
+    if not itens:
+        raise RuntimeError("nenhuma projeção do Focus encontrada")
+    if max(datas) != coleta.isoformat():
+        print(f"Aviso: o Focus mais recente encontrado é de {max(datas)} (esperado {coleta:%Y-%m-%d}).")
+
+    data_txt = f"{publicacao.day} de {nome_mes(publicacao.month).lower()} de {publicacao.year}"
+    coleta_txt = f"{coleta.day} de {nome_mes(coleta.month).lower()}"
+    referencia = (f"Fonte: Banco Central do Brasil, Boletim Focus de {data_txt}, com as projeções "
+                  f"coletadas até {coleta_txt} (mediana).")
+    print(f"  Focus de {publicacao:%d/%m/%Y} (coleta até {coleta:%d/%m/%Y}): "
+          + ", ".join(f"{i['rotulo']} {i['valor']}" for i in itens))
+    return {"titulo": f"Boletim Focus · projeções para o fim de {ano}", "referencia": referencia,
+            "data_boletim": publicacao.isoformat(), "data_coleta": coleta.isoformat(), "itens": itens}

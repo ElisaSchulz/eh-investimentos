@@ -100,6 +100,7 @@
   .kpi .lab{font-size:8.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--bronze);font-weight:700;}
   .kpi .val{font-family:'Fraunces',serif;font-size:23px;color:var(--navy);font-weight:600;margin-top:5px;}
   .focus{margin-top:26px;}
+  .focus .tab-note{margin-top:12px;}
   .focus h4{font-size:9.5px;letter-spacing:0.2em;text-transform:uppercase;color:var(--bronze);font-weight:700;}
 
   /* ── capa ── */
@@ -392,7 +393,8 @@ function renderSecao(sec, n) {
       : 'Valores de referência no fechamento do mês. Variações não divulgadas para o período aparecem como “—”.'}</div>`);
   if (sec.focus && (DADOS.focus || []).length)
     blocos.push(`<div class="focus"><h4>${esc(DADOS.focus_titulo || 'Boletim Focus · projeções para o fim do ano')}</h4><div class="kpis">` +
-      DADOS.focus.map(f => `<div class="kpi"><div class="lab">${esc(f.rotulo)}</div><div class="val">${esc(f.valor)}</div></div>`).join('') + '</div></div>');
+      DADOS.focus.map(f => `<div class="kpi"><div class="lab">${esc(f.rotulo)}</div><div class="val">${esc(f.valor)}</div></div>`).join('') + '</div>' +
+      (DADOS.focus_referencia ? `<div class="tab-note">${esc(DADOS.focus_referencia)}</div>` : '') + '</div>');
 
   for (const html of blocos) {
     const holder = document.createElement('div');
