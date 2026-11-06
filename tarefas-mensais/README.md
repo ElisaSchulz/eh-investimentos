@@ -13,6 +13,7 @@ na aba **Tarefas Mensais** do admin do site.
 | `cotas_b3.py` | `cotas_b3_<mês>_<ano>.xlsx` (todos os pregões do mês) | `cotas_b3_datas.py` |
 | `etfs.py` | `fechamentos.csv` (Close) e `fechamentos_ajustados.csv` (Adj Close) | `cotacao_etfs.py` e `adj_cotacao_etfs.py` |
 | `dados_planilha.py` | `atualizacao_dados_<mês>_<ano>.xlsx`: índices do Banco Central, CDI, PTAX, Ibovespa, indicadores globais, CPI, cotas da CVM e da B3 no layout da planilha Dados EH, com aba de conferência | digitação na `Dados_EH_Investimentos.xlsx` |
+| `cra_eventos.py` | `Juros e Amortizacoes <período>.xlsx`: juros e amortizações de CRA, CRI e debêntures (ANBIMA, Opea, Riza, Oliveira Trust, Ecoagro, Habitasec, Pentágono, Vórtx) no período (mês de referência, ou `data_inicio`/`data_fim`), com abas Resumo, Eventos, Fonte (para a EH Base Unica), Proximos e Status. A lista de ativos fica no bucket privado em `config/ativos_cra.tsv` (enviada pelo admin), nunca no GitHub | o cra-scraper no computador |
 | `rodar_todas.py` | roda tudo e grava `status.json` | — |
 
 ## O que muda todo mês
