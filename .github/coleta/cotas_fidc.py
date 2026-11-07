@@ -1,8 +1,7 @@
 # Coleta pontual: cotas de FIDCs nos dados abertos da CVM (Informe Diário e Informe Mensal de FIDC).
 import csv, io, sys, urllib.request, zipfile, datetime as dt
 
-CNPJS = {"43596847000193", "66846870000194", "50695893000105", "60095738000101",
-         "34027976000170", "58311427000190", "58038938000180"}
+CNPJS = {"68411333000147"}
 BASE = "https://dados.cvm.gov.br/dados/FI"
 
 
@@ -61,7 +60,7 @@ for ano in range(2025, hoje.year + 1):
     for mes in range(1, 13):
         if (ano, mes) > (hoje.year, hoje.month):
             break
-        b = None and get(f"{BASE}/DOC/INF_DIARIO/DADOS/inf_diario_fi_{ano}{mes:02d}.zip")
+        b = get(f"{BASE}/DOC/INF_DIARIO/DADOS/inf_diario_fi_{ano}{mes:02d}.zip")
         if b:
             ler_diario(b)
         elif mes == 1:
