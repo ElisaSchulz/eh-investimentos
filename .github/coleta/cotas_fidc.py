@@ -1,7 +1,7 @@
 # Coleta pontual: cotas de FIDCs nos dados abertos da CVM (Informe Diário e Informe Mensal de FIDC).
 import csv, io, sys, urllib.request, zipfile, datetime as dt
 
-CNPJS = {"68411333000147"}
+CNPJS = {"67848363000152"}
 BASE = "https://dados.cvm.gov.br/dados/FI"
 
 
