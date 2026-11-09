@@ -1,0 +1,15 @@
+name: Coleta pontual de fundos CVM
+on:
+  push:
+    branches: [claude/project-thread-sascp9]
+    paths: [".github/coleta/**", ".github/workflows/coleta-fundos-cvm.yml"]
+  workflow_dispatch:
+jobs:
+  coletar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python .github/coleta/fundos_cvm.py
