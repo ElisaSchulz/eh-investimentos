@@ -1,8 +1,10 @@
 # Coleta pontual: cadastro e cotas diárias de 5 fundos nos dados abertos da CVM.
-import csv, io, sys, urllib.request, zipfile, datetime as dt, re
+import csv, io, os, sys, urllib.request, zipfile, datetime as dt, re
 
 CNPJS = {"68462426000109", "58311427000190", "34027976000170", "60095738000101", "50695893000105"}
 BASE = "https://dados.cvm.gov.br/dados/FI"
+os.makedirs("saida", exist_ok=True)
+sys.stdout = open("saida/coleta.txt", "w", encoding="utf-8")
 
 
 def get(url):
@@ -75,6 +77,7 @@ for ano in range(2019, 2021):
     b = get(f"{BASE}/DOC/INF_DIARIO/DADOS/HIST/inf_diario_fi_{ano}.zip")
     if b:
         ler(b)
+hist_lido = set()
 for ano in range(2021, hoje.year + 1):
     for mes in range(1, 13):
         if dt.date(ano, mes, 1) > hoje:
@@ -82,6 +85,32 @@ for ano in range(2021, hoje.year + 1):
         b = get(f"{BASE}/DOC/INF_DIARIO/DADOS/inf_diario_fi_{ano}{mes:02d}.zip")
         if b:
             ler(b)
+        elif ano not in hist_lido:
+            hist_lido.add(ano)
+            h = get(f"{BASE}/DOC/INF_DIARIO/DADOS/HIST/inf_diario_fi_{ano}.zip")
+            if h:
+                ler(h)
+
+# FIDC e FII: informes mensais
+def mensal(url, tag):
+    b = get(url)
+    if b:
+        for n, t in arquivos(b, url):
+            rd = csv.reader(io.StringIO(t), delimiter=";")
+            cab = next(rd)
+            achou = False
+            for r in rd:
+                if tem(r):
+                    if not achou:
+                        print(f"{tag}CAB[{n}];" + ";".join(cab)); achou = True
+                    print(f"{tag}[{n}];" + ";".join(r))
+for ano in range(2019, hoje.year + 1):
+    mensal(f"https://dados.cvm.gov.br/dados/FII/DOC/INF_MENSAL/DADOS/inf_mensal_fii_{ano}.zip", "FII")
+    for mes in range(1, 13):
+        if dt.date(ano, mes, 1) > hoje:
+            break
+        if ano >= 2023:
+            mensal(f"https://dados.cvm.gov.br/dados/FIDC/DOC/INF_MENSAL/DADOS/inf_mensal_fidc_{ano}{mes:02d}.zip", "FIDC")
 
 print("DIACAB;CNPJ;SUBCLASSE;DATA;COTA;PL;CAPT;RESG;COTISTAS;TP")
 for k in sorted(linhas):
