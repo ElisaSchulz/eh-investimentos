@@ -1,10 +1,10 @@
 # Coleta pontual: cadastro e cotas diárias de 5 fundos nos dados abertos da CVM.
 import csv, io, os, sys, urllib.request, zipfile, datetime as dt, re
 
-CNPJS = {"68462426000109", "58311427000190", "34027976000170", "60095738000101", "50695893000105"}
+CNPJS = {"67560824000197"}
 BASE = "https://dados.cvm.gov.br/dados/FI"
 os.makedirs("saida", exist_ok=True)
-sys.stdout = open("saida/coleta.txt", "w", encoding="utf-8")
+sys.stdout = open("saida/coleta_67560824.txt", "w", encoding="utf-8")
 
 
 def get(url):
@@ -73,12 +73,12 @@ def ler(b):
                 linhas[key] = d
 
 hoje = dt.date.today()
-for ano in range(2019, 2021):
+for ano in range(2025, 2025):
     b = get(f"{BASE}/DOC/INF_DIARIO/DADOS/HIST/inf_diario_fi_{ano}.zip")
     if b:
         ler(b)
 hist_lido = set()
-for ano in range(2021, hoje.year + 1):
+for ano in range(2025, hoje.year + 1):
     for mes in range(1, 13):
         if dt.date(ano, mes, 1) > hoje:
             break
@@ -104,7 +104,7 @@ def mensal(url, tag):
                     if not achou:
                         print(f"{tag}CAB[{n}];" + ";".join(cab)); achou = True
                     print(f"{tag}[{n}];" + ";".join(r))
-for ano in range(2019, hoje.year + 1):
+for ano in range(2025, hoje.year + 1):
     mensal(f"https://dados.cvm.gov.br/dados/FII/DOC/INF_MENSAL/DADOS/inf_mensal_fii_{ano}.zip", "FII")
     for mes in range(1, 13):
         if dt.date(ano, mes, 1) > hoje:
