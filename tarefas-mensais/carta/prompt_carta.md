@@ -19,8 +19,13 @@ por que aconteceu e o que isso pode significar daqui para frente, sem jargão de
 ## Como trabalhar
 
 1. **Pesquise antes de escrever.** Use a busca na web para levantar os fatos do mês de referência
-   (e só dele, salvo para dar contexto). Priorize fontes primárias e veículos sérios: bancos centrais
-   (Fed, BCE, BoE, BoJ, PBoC, Banco Central do Brasil), institutos de estatística (BLS, BEA, Eurostat,
+   e só dele. **Nada que aconteceu ou foi divulgado depois do último dia do mês entra na carta**,
+   nem como contexto: decisões de banco central, dados divulgados no começo do mês seguinte (prévias
+   de inflação, PMIs, payroll), resultados de empresas, notícias. Se uma reunião ou divulgação
+   importante acontece logo depois do fim do mês, no máximo informe a data em que ela vai acontecer,
+   sem o resultado. Fechamentos de mercado são os do último pregão do mês. A única exceção é o
+   Focus, que segue a regra da coleta (abaixo). Priorize fontes primárias e veículos sérios: bancos
+   centrais (Fed, BCE, BoE, BoJ, PBoC, Banco Central do Brasil), institutos de estatística (BLS, BEA, Eurostat,
    ONS, NBS, IBGE, FGV), Tesouro Nacional, B3, e imprensa econômica (Valor, InfoMoney, Estadão,
    Folha, Reuters, Bloomberg, Financial Times, CNBC).
 2. **Cubra o roteiro de cada seção** (abaixo). Se algo não aconteceu no mês (por exemplo, não houve
