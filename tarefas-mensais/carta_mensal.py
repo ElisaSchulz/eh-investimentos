@@ -84,6 +84,26 @@ def selic_meta():
         return None
 
 
+def ptax_fechamento(inicio, fim):
+    """PTAX de venda (série 1 do SGS do Banco Central) do último dia útil do mês, ou None.
+
+    É o mesmo dólar da tabela de indicadores; o Yahoo (BRL=X) dava um valor diferente,
+    porque é a cotação de mercado no fim do dia e não a PTAX oficial.
+    """
+    from dados_planilha import sgs  # mesma busca no Banco Central, com novas tentativas
+
+    try:
+        s = sgs(1, inicio - timedelta(days=10), fim)
+    except Exception as e:  # noqa: BLE001 (a carta sai sem o dólar na capa)
+        print(f"Aviso: não consegui buscar a PTAX no Banco Central ({e}).")
+        return None
+    s = s[s.index.date <= fim]
+    if s.empty:
+        print("Aviso: o Banco Central não devolveu a PTAX do mês; a capa sai sem o dólar.")
+        return None
+    return float(s.iloc[-1])
+
+
 def dados_carta(df, inicio, fim, mes_nome, ano):
     """Dados do mês para o modelo HTML da carta: séries dos gráficos, tabela de índices
     e destaques da capa. Os textos de cada seção entram depois, no editor."""
@@ -106,9 +126,9 @@ def dados_carta(df, inicio, fim, mes_nome, ano):
         if retorno.get(t) is not None:
             destaques.append({"rotulo": rotulo, "valor": _pct_texto(retorno[t]),
                               "classe": "pos" if retorno[t] >= 0 else "neg"})
-    dolar = fechamentos_yahoo("BRL=X", inicio - timedelta(days=10), fim + timedelta(days=1)).dropna()
-    if not dolar.empty:
-        destaques.append({"rotulo": "Dólar (fechamento)", "valor": f"R$ {dolar.iloc[-1]:.2f}".replace(".", ",")})
+    dolar = ptax_fechamento(inicio, fim)
+    if dolar is not None:
+        destaques.append({"rotulo": "Dólar (PTAX)", "valor": f"R$ {dolar:.2f}".replace(".", ",")})
     selic = selic_meta()
     if selic is not None:
         destaques.append({"rotulo": "Selic", "valor": f"{selic:.2f}%".replace(".", ",")})
