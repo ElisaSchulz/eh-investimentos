@@ -2,7 +2,7 @@ name: Coleta pontual - triagem RF vs CDI e lista XP
 on:
   push:
     branches: [claude/project-thread-xfv1i8]
-    paths: [".github/coleta/triagem_rf.py", ".github/coleta/xp_probe.py", ".github/workflows/triagem-rf-xp.yml"]
+    paths: [".github/coleta/detalhe_rf.py", ".github/workflows/triagem-rf-xp.yml"]
   workflow_dispatch:
 permissions:
   contents: write
@@ -15,8 +15,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: python .github/coleta/xp_probe.py || true
-      - run: python .github/coleta/triagem_rf.py
+      - run: python .github/coleta/detalhe_rf.py
       - if: always()
         run: |
           git config user.name "github-actions"; git config user.email "github-actions@users.noreply.github.com"
