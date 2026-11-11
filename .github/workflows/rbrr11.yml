@@ -1,0 +1,22 @@
+name: Coleta pontual - RBRR11
+on:
+  push:
+    branches: [claude/project-thread-tx0f2a]
+    paths: [".github/coleta/rbrr11.py", ".github/workflows/rbrr11.yml"]
+permissions:
+  contents: write
+jobs:
+  coletar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: sudo apt-get install -y poppler-utils >/dev/null
+      - run: python .github/coleta/rbrr11.py
+      - run: |
+          head -c 3000 saida/rbrr11/log.txt; ls -la saida/rbrr11
+          git config user.name "github-actions"; git config user.email "github-actions@users.noreply.github.com"
+          git add saida && git commit -m "Saida da coleta RBRR11" && git pull --rebase && git push
