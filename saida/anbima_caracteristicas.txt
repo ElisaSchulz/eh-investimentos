@@ -1,0 +1,136 @@
+Utilizamos cookies para melhorar sua experiência aqui no site ou em outros aplicativos da ANBIMA. Ao continuar navegando, você concorda com as nossas Regras de Privacidade.
+
+Prosseguir
+
+Dados de mercado
+Publicações
+Datasets
+Ferramentas
+HOME
+CRI E CRA
+DETALHES DO ATIVO
+CRA021000RY
+CRA
+ISIN
+BRIMWLCRA1B5
+Devedor
+MINERVA S.A.
+Securitizadora
+RIZA SECURITIZADORA S.A.
+CARACTERÍSTICAS
+DOCUMENTOS
+PREÇOS
+AGENDA DE EVENTOS
+39ª Série
+
+CONDIÇÕES GERAIS DA SÉRIE
+
+Remuneração
+IPCA + 5,5780%
+Data de início da rentabilidade
+16/04/2021
+Expressão do papel
+252 dias
+Volume da série na data de emissão
+R$ 107.500.000,00
+Quantidade da série na data de emissão
+107.500
+VNE (Valor nominal na emissão)
+R$ 1.000,00
+VNA (Valor nominal atual)
+R$ 1.358,26296000
+Data da emissão
+15/04/2021
+Data de vencimento
+15/04/2031
+Prazo da emissão
+10 anos
+Prazo remanescente
+1594 dias corridos
+Resgate antecipado
+Não
+ISIN
+BRIMWLCRA1B5
+Data do próximo evento na agenda
+15/04/2027
+
+Informações relacionadas ao Rating podem ser adquiridas através das agências de classificação de Rating.
+
+2ª Emissão
+
+PARTES ENVOLVIDAS
+
+Devedor
+MINERVA S.A.
+Cedente
+-
+
+CONDIÇÕES GERAIS DA EMISSÃO
+
+Securitizadora
+RIZA SECURITIZADORA S.A.
+08.769.451/0001-08
+Quantidade da emissão
+107.500
+Volume da emissão
+R$ 107.500.000,00
+Tipo
+CRA
+
+AGENTES CONTRATADOS
+
+Coordenador líder
+BANCO BTG PACTUAL S.A.
+30.306.294/0001-45
+Coordenadores
+BANCO BRADESCO BBI S.A.
+06.271.464/0073-93
+XP INVESTIMENTOS CORRETORA DE CAMBIO, TITULOS E VALORES MOBILIARIOS S/A
+02.332.886/0011-78
+BANCO ITAU-BBA S/A
+17.298.092/0001-30
+Agente fiduciário
+OLIVEIRA TRUST DTVM S/A
+36.113.876/0001-91
+CRA021000RY
+CRA
+Nome da operaçãoMinerva
+Série e Emissão39ª Série e 2ª Emissão
+Data de emissão15/04/2021
+Data de vencimento15/04/2031
+RemuneraçãoIPCA + 5,5780%
+
+Taxa indicativa
+(ref. 10/11/2026)
+
+12,4113 %
+
+PU Indicativo
+(ref. 10/11/2026)
+
+R$ 1.123,50844765
+
+PU PAR
+(ref. 10/11/2026)
+
+R$ 1.363,24567568
+
+Calcular ativo
+
+Os preços indicativos são uma referência de valor para os ativos. Podem ser observados negócios com valores diferentes em função da própria dinâmica de oferta e demanda, custos de transação e volume das operações.
+
+ANBIMA
+Portal ANBIMA
+ANBIMA Feed
+ANBIMA Edu
+Dúvidas e feedbacks
+MAIS INFORMAÇÕES
+Bússola
+Regras de privacidade
+Termos de uso
+Transparência e governança
+Versão: 4.0.0
+
+As fontes das informações apresentadas são ANBIMA, B3, CVM, demais participantes das ofertas de debêntures e responsáveis pelos fundos de investimento. Este site é protegido pelo reCAPTCHA, consulte a Política de privacidade e os Termos de serviço do Google.
+
+Neste portal ou aplicativo é terminantemente proibida a utilização de aplicativos spider ou de mineração de dados, de qualquer tipo ou espécie, além de outro aqui não tipificado, mas que atue de modo automatizado, seja para realizar operações massificadas, para qualquer uso seja em proveito próprio ou de terceiros e para quaisquer outras finalidades, ficando sujeito quem o fizer à legislação brasileira, podendo responder nas esferas civis e criminais, além de ser obrigado a reparar os danos que causar.

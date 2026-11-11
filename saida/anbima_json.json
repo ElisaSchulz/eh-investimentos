@@ -1,0 +1,4307 @@
+[
+ {
+  "url": "https://ekr.zdassets.com/compose/c0688e64-ceb3-4851-b023-6ba3188f00fe",
+  "body": {
+   "products": [
+    {
+     "name": "web_widget",
+     "id": "anbimaprecoseindices.zendesk.com",
+     "bootstrap": {
+      "config": {
+       "features": {},
+       "color": "#ffb102",
+       "brand": "Gerencia de preços e índices - ANBIMA",
+       "embeds": {
+        "ticketSubmissionForm": {
+         "embed": "submitTicket",
+         "props": {
+          "nameFieldRequired": true,
+          "color": "#ffb102",
+          "nameFieldEnabled": true,
+          "customFields": {
+           "all": true
+          },
+          "formTitleKey": "contact",
+          "attachmentsEnabled": true,
+          "maxFileSize": 52428800.0
+         }
+        },
+        "launcher": {
+         "embed": "launcher",
+         "props": {
+          "color": "#ffb102",
+          "labelKey": "support"
+         }
+        }
+       },
+       "brandCount": 1.0
+      }
+     },
+     "features": [
+      "ticket_submission"
+     ],
+     "url": "https://ekr.zendesk.com/compose_product/web_widget/338ab92bf86eb8f005a2ec2bb6450eba8185866e?features%5B%5D=ticket_submission",
+     "assets": {
+      "scripts": [
+       {
+        "src": "https://static.zdassets.com/web_widget/classic/latest/web-widget-main-338ab92.js"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ {
+  "url": "https://firebaseinstallations.googleapis.com/v1/projects/anbima-data-web/installations",
+  "body": {
+   "name": "projects/856358759540/installations/fkz4umQ1Z0scnuNY1kOKKv",
+   "fid": "fkz4umQ1Z0scnuNY1kOKKv",
+   "refreshToken": "3_AS3qfwLDKrlUILGb-ndJ8VHGvsVj3FLjdmaUa1s7H-gbfCVhwZ529t_35MoeM1R5iFiRXVl6jjXe5tGXST8rZAT-B5jTuur3Al2bZkbCiDOGCj0",
+   "authToken": {
+    "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6IjE6ODU2MzU4NzU5NTQwOndlYjpiNTZkNDcxOWE4MGM5NjhkM2MzNTIxIiwiZXhwIjoxNzk0OTcwOTc3LCJmaWQiOiJma3o0dW1RMVowc2NudU5ZMWtPS0t2IiwicHJvamVjdE51bWJlciI6ODU2MzU4NzU5NTQwfQ.AB2LPV8wRgIhALZIxetTbGj_7Nbaew5_dZCS7HbZ6YVzM2fiiSW1cDYyAiEAoQ9V2HX_LDEg3a-yWLKQ1C_qs-l0yOTR9i1XsEO0WIE",
+    "expiresIn": "604800s"
+   }
+  }
+ },
+ {
+  "url": "https://www.googleadservices.com/pagead/conversion/16617877817/?random=1794366177715&cv=11&fst=1794366177715&fmt=7&bg=ffffff&guid=ON&async=1&en=conversion&gtm=45be6b91v9214639253za200zb79713930zd79713930xecxf1&gcd=13l3l3l3l1l1&dma=0&tag_exp=115616986~115938465~115938468~117776796~118897920~118897930~120213116~120385422~120412528~120420414~120469145~120469153~121191155~121246026~121246034~123329125~124170883&u_w=1280&u_h=720&url=https%3A%2F%2Fdata.anbima.com.br%2Fcertificado-de-recebiveis%2FCRA021000RY%2Fprecos&rcb=17&label=klFPCJPn7cQZELnigvQ9&gtm_ee=1&frm=0&tiba=CRA021000RY%20%7C%20ANBIMA%20Data&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=1407531702.1794366178&uaa=x86&uab=64&uafvl=Chromium%3B158.0.8127.18%7CNot.A%252FBrand%3B24.0.0.0%7CHeadlessChrome%3B158.0.8127.18&uamb=0&uam=&uap=Linux&uapv=&uaw=0&ec_mode=a&oid=GG_442064478.1794366178&oidsrc=3&ecsid2=532027949.1794366178&_tu=ABA&gcl_ctr=1~0~0~0&data=event%3Dconversion&category=acrcp_v1_512&em=tv.1&emd=tvd.1&ept=5",
+  "erro": "Expecting value: line 1 column 1 (char 0)"
+ },
+ {
+  "url": "https://firebaseremoteconfig.googleapis.com/v1/projects/anbima-data-web/namespaces/firebase:fetch?key=AIzaSyArrpcrNGQ9fa7xbJXlJeReBkr0dGng7FY",
+  "body": {
+   "entries": {
+    "auth_power_bi_embedded": "false",
+    "boletim_mk_language_switch": "false",
+    "debentures_aba_precos": "false",
+    "detalhes_debentures_tabela_pu_indicativo": "true",
+    "disclaimer_calculadora": "true",
+    "enable_curvas_credito_customizada": "false",
+    "enable_datasets_menu_v2": "true",
+    "enable_new_breadcrumb_light": "false",
+    "enable_new_menu_by_theme": "false",
+    "enabled_anby_visibility": "false",
+    "filtros_175": "false",
+    "indices_customizados_page_release": "true",
+    "login_datasets": "false",
+    "monitor_intradiario_sdt_page_release": "true",
+    "publicacoes": "true",
+    "transparencia_em_taxas_de_fundos_page_release": "true",
+    "transparencia_strapi": "true"
+   },
+   "state": "UPDATE",
+   "templateVersion": "180"
+  }
+ },
+ {
+  "url": "https://data-api.prd.anbima.com.br/web-bff/v1/certificado-recebiveis/avisos",
+  "body": {
+   "titulo": "Retificação - 22F0675402",
+   "texto": "<p>As informa&ccedil;&otilde;es de pre&ccedil;o divulgadas para o Certificado de 22F0675402 no dia 16 de janeiro de 2025 foram retificadas conforme tabela abaixo.</p>\n\n<p></p>\n\n<table style=\"border-collapse:collapse; width:407px\" width=\"404\">\n\t<colgroup>\n\t\t<col style=\"width:73pt\" width=\"97\" />\n\t\t<col style=\"width:81pt\" width=\"107\" />\n\t\t<col style=\"width:65pt\" width=\"86\" />\n\t\t<col style=\"width:86pt\" width=\"114\" />\n\t</colgroup>\n\t<tbody>\n\t\t<tr>\n\t\t\t<td class=\"xl66\" style=\"border-bottom:1px solid black; height:19px; width:97px; text-align:center; vertical-align:middle; white-space:normal; padding-top:1px; padding-right:1px; padding-left:1px; border-top:none; border-right:1px solid black; border-left:none\"><span style=\"font-size:15px\"><span style=\"color:black\"><span style=\"font-weight:400\"><span style=\"font-style:normal\"><span style=\"text-decoration:none\"><span style=\"font-family:Calibri,sans-serif\">&nbsp;</span></span></span></span></span></span></td>\n\t\t\t<td class=\"xl65\" style=\"border-bottom:1px solid black; width:107px; text-align:center; vertical-align:middle; white-space:normal; padding-top:1px; padding-right:1px; padding-left:1px; background-color:#ffc000; border-top:1px solid black; border-right:1px solid black; border-left:none\"><span style=\"font-size:15px\"><span style=\"color:white\"><span style=\"font-weight:700\"><span style=\"font-style:normal\"><span style=\"text-decoration:none\"><span style=\"font-family:Calibri,sans-serif\">PU</span></span></span></span></span></span></td>\n\t\t\t<td class=\"xl65\" style=\"border-bottom:1px solid black; width:86px; text-align:center; vertical-align:middle; white-space:normal; padding-top:1px; padding-right:1px; padding-left:1px; background-color:#ffc000; border-top:1px solid black; border-right:1px solid black; border-left:none\"><span style=\"font-size:15px\"><span style=\"color:white\"><span style=\"font-weight:700\"><span style=\"font-style:normal\"><span style=\"text-decoration:none\"><span style=\"font-family:Calibri,sans-serif\">%PUPAR</span></span></span></span></span></span></td>\n\t\t\t<td class=\"xl65\" style=\"border-bottom:1px solid black; width:114px; text-align:center; vertical-align:middle; white-space:normal; padding-top:1px; padding-right:1px; padding-left:1px; background-color:#ffc000; border-top:1px solid black; border-right:1px solid black; border-left:none\"><span style=\"font-size:15px\"><span style=\"color:white\"><span style=\"font-weight:700\"><span style=\"font-style:normal\"><span style=\"text-decoration:none\"><span style=\"font-family:Calibri,sans-serif\">Duration</span></span></span></span></span></span></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td class=\"xl67\" style=\"border-bottom:1px solid black; height:19px; width:97px; text-align:center; vertical-align:middle; white-space:normal; padding-top:1px; padding-right:1px; padding-left:1px; border-top:none; border-right:1px solid black; border-left:1px solid black\"><span style=\"font-size:15px\"><span style=\"color:black\"><span style=\"font-weight:400\"><span style=\"font-style:normal\"><span style=\"text-decoration:none\"><span style=\"font-family:Calibri,sans-serif\">Divulgado</span></span></span></span></span></span></td>\n\t\t\t<td class=\"xl69\" style=\"border-bottom:1px solid black; width:107px; text-align:center; vertical-align:middle; white-space:normal; padding-top:1px; padding-right:1px; padding-left:1px; border-top:none; border-right:1px solid black; border-left:none\"><span style=\"font-size:15px\"><span style=\"color:black\"><span style=\"font-weight:400\"><span style=\"font-style:normal\"><span style=\"text-decoration:none\"><span style=\"font-family:Calibri,sans-serif\">1002,93614195</span></span></span></span></span></span></td>\n\t\t\t<td class=\"xl67\" style=\"border-bottom:1px solid black; width:86px; text-align:center; vertical-align:middle; white-space:normal; padding-top:1px; padding-right:1px; padding-left:1px; border-top:none; border-right:1px solid black; border-left:none\"><span style=\"font-size:15px\"><span style=\"color:black\"><span style=\"font-weight:400\"><span style=\"font-style:normal\"><span style=\"text-decoration:none\"><span style=\"font-family:Calibri,sans-serif\">100,1032</span></span></span></span></span></span></td>\n\t\t\t<td class=\"xl68\" style=\"border-bottom:1px solid black; width:114px; text-align:center; vertical-align:middle; white-space:normal; padding-top:1px; padding-right:1px; padding-left:1px; border-top:none; border-right:1px solid black; border-left:none\"><span style=\"font-size:15px\"><span style=\"color:black\"><span style=\"font-weight:400\"><span style=\"font-style:normal\"><span style=\"text-decoration:none\"><span style=\"font-family:Calibri,sans-serif\">540,76330</span></span></span></span></span></span></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td class=\"xl67\" style=\"border-bottom:1px solid black; height:19px; width:97px; text-align:center; vertical-align:middle; white-space:normal; padding-top:1px; padding-right:1px; padding-left:1px; border-top:none; border-right:1px solid black; border-left:1px solid black\"><span style=\"font-size:15px\"><span style=\"color:black\"><span style=\"font-weight:400\"><span style=\"font-style:normal\"><span style=\"text-decoration:none\"><span style=\"font-family:Calibri,sans-serif\">Correto</span></span></span></span></span></span></td>\n\t\t\t<td class=\"xl69\" style=\"border-bottom:1px solid black; width:107px; text-align:center; vertical-align:middle; white-space:normal; padding-top:1px; padding-right:1px; padding-left:1px; border-top:none; border-right:1px solid black; border-left:none\"><span style=\"font-size:15px\"><span style=\"color:black\"><span style=\"font-weight:400\"><span style=\"font-style:normal\"><span style=\"text-decoration:none\"><span style=\"font-family:Calibri,sans-serif\">1001,52478342</span></span></span></span></span></span></td>\n\t\t\t<td class=\"xl67\" style=\"border-bottom:1px solid black; width:86px; text-align:center; vertical-align:middle; white-space:normal; padding-top:1px; padding-right:1px; padding-left:1px; border-top:none; border-right:1px solid black; border-left:none\"><span style=\"font-size:15px\"><span style=\"color:black\"><span style=\"font-weight:400\"><span style=\"font-style:normal\"><span style=\"text-decoration:none\"><span style=\"font-family:Calibri,sans-serif\">100,1033</span></span></span></span></span></span></td>\n\t\t\t<td class=\"xl68\" style=\"border-bottom:1px solid black; width:114px; text-align:center; vertical-align:middle; white-space:normal; padding-top:1px; padding-right:1px; padding-left:1px; border-top:none; border-right:1px solid black; border-left:none\"><span style=\"font-size:15px\"><span style=\"color:black\"><span style=\"font-weight:400\"><span style=\"font-style:normal\"><span style=\"text-decoration:none\"><span style=\"font-family:Calibri,sans-serif\">541,35200</span></span></span></span></span></span></td>\n\t\t</tr>\n\t</tbody>\n</table>\n"
+  }
+ },
+ {
+  "url": "https://anbimaprecoseindices.zendesk.com/embeddable/config",
+  "body": {
+   "brand": "Gerencia de preços e índices - ANBIMA",
+   "brandCount": 1,
+   "color": "#ffb102",
+   "embeds": {
+    "ticketSubmissionForm": {
+     "embed": "submitTicket",
+     "props": {
+      "color": "#ffb102",
+      "customFields": {
+       "all": true
+      },
+      "formTitleKey": "contact",
+      "attachmentsEnabled": true,
+      "maxFileSize": 52428800,
+      "nameFieldEnabled": true,
+      "nameFieldRequired": true
+     }
+    },
+    "launcher": {
+     "embed": "launcher",
+     "props": {
+      "color": "#ffb102",
+      "labelKey": "support"
+     }
+    }
+   },
+   "features": {}
+  }
+ },
+ {
+  "url": "https://data-strapi.prd.anbima.com.br/api/menu-anbima-data",
+  "body": {
+   "data": {
+    "id": 1,
+    "attributes": {
+     "data": {
+      "ferramentas": [
+       {
+        "href": "/datasets",
+        "icon": "download-fill",
+        "badge": "BETA",
+        "label": "Datasets",
+        "enabled": false,
+        "description": "Crie e faça download da sua amostra personalizada de dados."
+       },
+       {
+        "href": "/ferramentas/calculadora",
+        "icon": "calculator",
+        "label": "Calculadoras",
+        "enabled": true,
+        "description": "Cálculo de taxas e preços negociados no mercado secundário."
+       },
+       {
+        "href": "/ferramentas/comparador/debentures",
+        "icon": "double-arrow",
+        "label": "Comparador de debêntures",
+        "enabled": true,
+        "description": "Veja informações relevantes de debêntures lado a lado."
+       }
+      ],
+      "publicacoes": [
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/relatorios-de-precificacao",
+            "isNew": false,
+            "label": "Relatório de precificação"
+           },
+           {
+            "href": "/titulos-publicos/ranking-de-titulos-publicos",
+            "isNew": false,
+            "label": "Ranking de títulos públicos"
+           },
+           {
+            "href": "/publicacoes/boletim-de-debentures-incentivadas-e-de-infraestrutura",
+            "isNew": false,
+            "label": "Boletim de debêntures incentivadas e de infraestrutura"
+           },
+           {
+            "href": "/publicacoes/boletim-de-renda-fixa",
+            "isNew": false,
+            "label": "Boletim de renda fixa"
+           }
+          ],
+          "title": "Títulos públicos e privados",
+          "enabled": true
+         },
+         {
+          "items": [
+           {
+            "href": "/publicacoes/boletim-de-financiamento-de-projetos",
+            "isNew": false,
+            "label": "Boletim de financiamento de projetos",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/ranking-de-financiamento-de-projetos",
+            "isNew": false,
+            "label": "Ranking de financiamento de projetos",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/projetos-e-emissoes-incentivadas",
+            "isNew": false,
+            "label": "Projetos e emissões incentivadas (lei 12.431)",
+            "enabled": true
+           }
+          ],
+          "title": "Financiamento de longo prazo",
+          "enabled": true
+         },
+         {
+          "items": [
+           {
+            "href": "/publicacoes/boletim-de-mercado-de-capitais",
+            "isNew": false,
+            "label": "Boletim de mercado de capitais",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/ranking-de-renda-fixa-e-hibridos",
+            "isNew": false,
+            "label": "Ranking de renda fixa e híbridos",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/ranking-de-renda-variavel",
+            "isNew": false,
+            "label": "Ranking de renda variável",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/ranking-de-emissoes-no-mercado-externo",
+            "isNew": false,
+            "label": "Ranking de emissões no mercado externo",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/dashboard-de-mercado-brasileiro",
+            "isNew": false,
+            "label": "Dashboard de Mercado Brasileiro",
+            "enabled": true
+           }
+          ],
+          "title": "Ofertas públicas",
+          "enabled": true
+         }
+        ],
+        "label": "Mercado de capitais",
+        "isNewDot": false,
+        "releated": {
+         "items": [
+          {
+           "href": "/debentures",
+           "isNew": false,
+           "label": "Debêntures"
+          },
+          {
+           "href": "/certificado-de-recebiveis",
+           "isNew": false,
+           "label": "Certificados de recebíveis (CRI e CRA)"
+          },
+          {
+           "href": "/letras-financeiras",
+           "isNew": false,
+           "label": "Letras financeiras"
+          },
+          {
+           "href": "/titulos-publicos",
+           "isNew": false,
+           "label": "Títulos públicos"
+          }
+         ],
+         "title": "Relacionados",
+         "enabled": true
+        },
+        "highlight": {
+         "href": "/bussola",
+         "badge": false,
+         "title": "Bússola",
+         "bgColor": "#082F7D",
+         "enabled": true,
+         "subtitle": "Confira as principais publicações e ferramentas que vão facilitar a sua análise estratégica."
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/publicacoes/fundos-de-investimento/dashboard-carteiras-administradas",
+            "isNew": true,
+            "label": "Dashboard Carteiras Administradas",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/fundos-de-investimento/dashboard-de-fidcs",
+            "isNew": false,
+            "label": "Dashboard de FIDC",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/fundos-de-investimento/dashboard-de-fip",
+            "isNew": false,
+            "label": "Dashboard de FIP",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/consolidado-diario-de-fundos-de-investimento",
+            "isNew": false,
+            "label": "Consolidado diário de fundos de investimento",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/boletim-de-fundos-de-investimento",
+            "isNew": false,
+            "label": "Boletim de fundos de investimento",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/fundos-de-investimento/dashboard-radar-175",
+            "isNew": false,
+            "label": "Dashboard radar 175",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/dashboard-de-mercado-brasileiro",
+            "isNew": false,
+            "label": "Dashboard de Mercado Brasileiro",
+            "enabled": true
+           }
+          ],
+          "enabled": true
+         },
+         {
+          "items": [
+           {
+            "href": " /publicacoes/ranking-de-administradores-de-fundos-de-investimento",
+            "isNew": false,
+            "label": "Ranking de administradores de fundos de investimento"
+           },
+           {
+            "href": "/publicacoes/ranking-global-de-administracao-de-recursos-de-terceiros",
+            "isNew": false,
+            "label": "Ranking global de administração de recursos de terceiros"
+           },
+           {
+            "href": "/publicacoes/ranking-de-gestores-de-fundos-de-investimento",
+            "isNew": false,
+            "label": "Ranking de gestores de fundos de investimento "
+           }
+          ],
+          "title": "Administração/Gestão",
+          "enabled": true
+         },
+         {
+          "items": [
+           {
+            "href": "/publicacoes/ranking-de-custodia-de-ativos",
+            "isNew": false,
+            "label": "Ranking de custódia de ativos"
+           },
+           {
+            "href": "/publicacoes/ranking-de-controladoria-de-ativos",
+            "isNew": false,
+            "label": "Ranking de controladoria de ativos"
+           },
+           {
+            "href": "/publicacoes/ranking-de-controladoria-de-passivos",
+            "isNew": false,
+            "label": "Ranking de controladoria de passivos"
+           }
+          ],
+          "title": "Serviço Qualificados",
+          "enabled": true
+         }
+        ],
+        "label": "Fundos de investimento",
+        "isNewDot": true,
+        "releated": {
+         "items": [
+          {
+           "href": "/fundos",
+           "isNew": false,
+           "label": "Fundos (RCVM-175)"
+          },
+          {
+           "href": "/indices",
+           "isNew": false,
+           "label": "Índices ANBIMA (IHFA)"
+          }
+         ],
+         "title": "Relacionados",
+         "enabled": true
+        },
+        "highlight": {
+         "href": "/bussola",
+         "badge": false,
+         "title": "Bússola",
+         "bgColor": "#082F7D",
+         "enabled": true,
+         "subtitle": "Confira as principais publicações e ferramentas que vão facilitar a sua análise estratégica."
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/publicacoes/boletim-de-private-e-varejo",
+            "isNew": false,
+            "label": "Boletim de private e varejo"
+           },
+           {
+            "href": "/publicacoes/estatisticas-de-gestores-de-patrimonio",
+            "isNew": false,
+            "label": "Estatísticas de gestores de patrimônio"
+           },
+           {
+            "href": "/publicacoes/estatisticas-de-private",
+            "isNew": false,
+            "label": "Estatísticas de private"
+           },
+           {
+            "href": "/publicacoes/estatisticas-de-varejo",
+            "isNew": false,
+            "label": "Estatísticas de varejo"
+           },
+           {
+            "href": "/publicacoes/estatisticas/estatisticas-de-distribuicao",
+            "isNew": false,
+            "label": "Estatísticas de Distribuição"
+           }
+          ],
+          "enabled": true
+         }
+        ],
+        "label": "Distribuição",
+        "isNewDot": false,
+        "releated": {
+         "items": [
+          {
+           "href": "#",
+           "isNew": false,
+           "label": ""
+          }
+         ],
+         "title": "Relacionados",
+         "enabled": false
+        },
+        "highlight": {
+         "href": "/bussola",
+         "badge": false,
+         "title": "Bússola",
+         "bgColor": "#082F7D",
+         "enabled": true,
+         "subtitle": "Confira as principais publicações e ferramentas que vão facilitar a sua análise estratégica."
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/publicacoes/boletim-macroeconomico",
+            "isNew": false,
+            "label": "Boletim macroeconômico"
+           }
+          ],
+          "enabled": true
+         }
+        ],
+        "label": "Macroeconômico",
+        "isNewDot": false,
+        "highlight": {
+         "href": "/bussola",
+         "badge": false,
+         "title": "Bússola",
+         "bgColor": "#082F7D",
+         "enabled": true,
+         "subtitle": "Confira as principais publicações e ferramentas que vão facilitar a sua análise estratégica."
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/publicacoes/analises-de-mercado",
+            "isNew": false,
+            "label": "Análises de mercado"
+           }
+          ],
+          "enabled": true
+         }
+        ],
+        "label": "Análises de mercado",
+        "isNewDot": false,
+        "highlight": {
+         "href": "/bussola",
+         "badge": false,
+         "title": "Bússola",
+         "bgColor": "#082F7D",
+         "enabled": true,
+         "subtitle": "Confira as principais publicações e ferramentas que vão facilitar a sua análise estratégica."
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/publicacoes/anbima-edu/radar-das-certificacoes",
+            "isNew": true,
+            "label": "Radar das Certificações",
+            "enabled": true
+           }
+          ],
+          "enabled": true
+         }
+        ],
+        "label": "ANBIMA Edu",
+        "isNewDot": true,
+        "highlight": {
+         "href": "/bussola",
+         "badge": false,
+         "title": "Bússola",
+         "bgColor": "#082F7D",
+         "enabled": true,
+         "subtitle": "Confira as principais publicações e ferramentas que vão facilitar a sua análise estratégica."
+        }
+       }
+      ],
+      "dadosDeMercado": [
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/titulos-publicos/monitoramento-intradiario-de-titulos-publicos-federais",
+            "isNew": false,
+            "label": "Monitoramento intradiário de títulos públicos federais"
+           },
+           {
+            "href": "/titulos-publicos",
+            "label": "Títulos públicos"
+           },
+           {
+            "href": "/titulos-publicos/valor-nominal-atualizado",
+            "label": "Valor Nominal Atualizado (VNA)"
+           }
+          ],
+          "title": "Títulos Públicos"
+         },
+         {
+          "items": [
+           {
+            "href": "/debentures",
+            "label": "Debêntures"
+           },
+           {
+            "href": "/certificado-de-recebiveis",
+            "label": "Taxas de certificados de recebíveis (CRI e CRA)"
+           },
+           {
+            "href": "/letras-financeiras",
+            "label": "Taxas de letras financeiras"
+           },
+           {
+            "href": "/reune/previas",
+            "isNew": false,
+            "label": "Dados de negociação (prévias do REUNE)"
+           },
+           {
+            "href": "/publicacoes/estatisticas/painel-de-precos-de-renda-fixa",
+            "isNew": false,
+            "label": "Painel de Preços de Renda Fixa"
+           }
+          ],
+          "title": "Títulos Privados"
+         }
+        ],
+        "label": "Mercado de capitais",
+        "isNewDot": false,
+        "releated": {
+         "items": [
+          {
+           "href": "/titulos-publicos/ranking-de-titulos-publicos",
+           "label": "Ranking de títulos públicos"
+          },
+          {
+           "href": "/ferramentas/calculadora",
+           "label": "Calculadoras"
+          },
+          {
+           "href": "/ferramentas/comparador/debentures",
+           "label": "Comparador de debêntures"
+          }
+         ],
+         "title": "Relacionados",
+         "enabled": true
+        },
+        "highlight": {
+         "href": "/datasets",
+         "badge": false,
+         "title": "Datasets",
+         "enabled": true,
+         "subtitle": "Crie e faça download da sua amostra personalizada de dados."
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/fundos",
+            "isNew": false,
+            "label": "Fundos (RCVM-175)"
+           },
+           {
+            "href": "/fidc",
+            "isNew": false,
+            "label": "Taxas de FIDCs"
+           },
+           {
+            "href": "/reune/previas",
+            "isNew": false,
+            "label": "Dados de negociação (prévias do REUNE)"
+           },
+           {
+            "href": "/publicacoes/estatisticas/painel-de-precos-de-renda-fixa",
+            "isNew": false,
+            "label": "Painel de Preços de Renda Fixa"
+           },
+           {
+            "href": "/busca/transparencia-de-taxas-de-fundos",
+            "isNew": false,
+            "label": "Transparência de taxas de fundos"
+           }
+          ]
+         }
+        ],
+        "label": "Fundos de investimento",
+        "isNewDot": false,
+        "releated": {
+         "items": [
+          {
+           "href": "/publicacoes/fundos-de-investimento/dashboard-radar-175",
+           "label": "Dashboard radar 175"
+          },
+          {
+           "href": "/publicacoes/fundos-de-investimento/dashboard-de-fip",
+           "label": "Dashboard de FIP"
+          },
+          {
+           "href": "/analises/estatisticas-de-fiagro-mercado-de-capitais",
+           "label": "Estatísticas de Fiagro (ofertas públicas)"
+          },
+          {
+           "href": "/analises/estatisticas-de-fiagro",
+           "label": "Estatísticas de Fiagro (fundos de investimento)"
+          }
+         ],
+         "title": "Relacionados",
+         "enabled": true
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/titulos-publicos",
+            "label": "Taxas de títulos públicos"
+           },
+           {
+            "href": "/titulos-publicos/valor-nominal-atualizado",
+            "label": "Valor Nominal Atualizado (VNA)"
+           },
+           {
+            "href": "/titulos-publicos/monitoramento-intradiario-de-titulos-publicos-federais",
+            "isNew": false,
+            "label": "Monitoramento intradiário de títulos públicos federais"
+           }
+          ],
+          "title": "Títulos Públicos"
+         },
+         {
+          "items": [
+           {
+            "href": "/debentures?view=precos",
+            "label": "Taxas de debêntures"
+           },
+           {
+            "href": "/certificado-de-recebiveis",
+            "label": "Taxas de certificados de recebíveis (CRI e CRA)"
+           },
+           {
+            "href": "/letras-financeiras",
+            "label": "Taxas de letras financeiras"
+           }
+          ],
+          "title": "Títulos Privados"
+         },
+         {
+          "items": [
+           {
+            "href": "/fidc",
+            "label": "Taxas de FIDCs"
+           },
+           {
+            "href": "/reune/previas",
+            "label": "Dados de negociação (prévias do REUNE)"
+           },
+           {
+            "href": "/publicacoes/estatisticas/painel-de-precos-de-renda-fixa",
+            "isNew": false,
+            "label": "Painel de Preços de Renda Fixa"
+           }
+          ],
+          "title": "Fundos de investimento"
+         }
+        ],
+        "label": "Preços",
+        "isNewDot": false,
+        "releated": {
+         "items": [],
+         "title": "Relacionados",
+         "enabled": false
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/indices",
+            "label": "IMA"
+           },
+           {
+            "href": "/indices",
+            "label": "IDkA"
+           }
+          ],
+          "title": "Títulos Públicos"
+         },
+         {
+          "items": [
+           {
+            "href": "/indices",
+            "label": "IDA"
+           },
+           {
+            "href": "/indices",
+            "label": "IDA LIQ"
+           }
+          ],
+          "title": "Títulos Privados"
+         },
+         {
+          "items": [
+           {
+            "href": "/indices",
+            "label": "IHFA"
+           }
+          ],
+          "title": "Fundos de investimento"
+         },
+         {
+          "items": [
+           {
+            "href": "/indices-customizados",
+            "isNew": false,
+            "label": "Índices Customizados"
+           }
+          ],
+          "title": "Outros Índices"
+         }
+        ],
+        "label": "Índices",
+        "isNewDot": false,
+        "releated": {
+         "items": [
+          {
+           "href": "/titulos-publicos",
+           "isNew": false,
+           "label": "Taxas de títulos públicos"
+          },
+          {
+           "href": "/titulos-publicos/valor-nominal-atualizado",
+           "isNew": false,
+           "label": "Valor Nominal Atualizado (VNA)"
+          },
+          {
+           "href": "/debentures?view=precos",
+           "isNew": false,
+           "label": "Taxas de debêntures"
+          },
+          {
+           "href": "/fundos",
+           "isNew": false,
+           "label": "Fundos (RCVM-175)"
+          }
+         ],
+         "title": "Relacionados",
+         "enabled": true
+        }
+       }
+      ]
+     },
+     "createdAt": "2023-12-19T18:33:22.331Z",
+     "updatedAt": "2026-11-03T20:44:23.696Z",
+     "publishedAt": "2023-12-19T18:33:24.774Z"
+    }
+   },
+   "meta": {}
+  }
+ },
+ {
+  "url": "https://ipmeta.io/api/enrich",
+  "body": {
+   "name": "Microsoft Corporation",
+   "domain": "microsoft.com",
+   "type": "spider"
+  }
+ },
+ {
+  "url": "https://data-api.prd.anbima.com.br/web-bff/v1/certificado-recebiveis/CRA021000RY/precos/pu-historico?page=0&size=20",
+  "body": {
+   "content": [
+    {
+     "data_referencia": "2026-11-10",
+     "pu_par": "1363.245675680000000",
+     "vna": "1358.262960000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-11-10T00:00:00"
+    },
+    {
+     "data_referencia": "2026-11-09",
+     "pu_par": "1362.815921069000000",
+     "vna": "1358.127280000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-11-09T00:00:00"
+    },
+    {
+     "data_referencia": "2026-11-08",
+     "pu_par": "1362.386307660000000",
+     "vna": "1357.991620000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-11-09T00:00:00"
+    },
+    {
+     "data_referencia": "2026-11-07",
+     "pu_par": "1362.386307660000000",
+     "vna": "1357.991620000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-11-09T00:00:00"
+    },
+    {
+     "data_referencia": "2026-11-06",
+     "pu_par": "1362.386307660000000",
+     "vna": "1357.991620000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-11-06T00:00:00"
+    },
+    {
+     "data_referencia": "2026-11-05",
+     "pu_par": "1361.956826740000000",
+     "vna": "1357.855970000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-11-05T00:00:00"
+    },
+    {
+     "data_referencia": "2026-11-04",
+     "pu_par": "1361.527478270000000",
+     "vna": "1357.720330000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-11-04T00:00:00"
+    },
+    {
+     "data_referencia": "2026-11-03",
+     "pu_par": "1361.098270910000000",
+     "vna": "1357.584710000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-11-03T00:00:00"
+    },
+    {
+     "data_referencia": "2026-11-02",
+     "pu_par": "1360.669195950000000",
+     "vna": "1357.449100000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-11-02T00:00:00"
+    },
+    {
+     "data_referencia": "2026-11-01",
+     "pu_par": "1360.669195950000000",
+     "vna": "1357.449100000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-11-02T00:00:00"
+    },
+    {
+     "data_referencia": "2026-10-31",
+     "pu_par": "1360.669195950000000",
+     "vna": "1357.449100000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-11-02T00:00:00"
+    },
+    {
+     "data_referencia": "2026-10-30",
+     "pu_par": "1360.669195950000000",
+     "vna": "1357.449100000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-10-30T00:00:00"
+    },
+    {
+     "data_referencia": "2026-10-29",
+     "pu_par": "1360.240252020000000",
+     "vna": "1357.313500000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-10-29T00:00:00"
+    },
+    {
+     "data_referencia": "2026-10-28",
+     "pu_par": "1359.811450460000000",
+     "vna": "1357.177920000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-10-28T00:00:00"
+    },
+    {
+     "data_referencia": "2026-10-27",
+     "pu_par": "1359.382779870000000",
+     "vna": "1357.042350000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-10-27T00:00:00"
+    },
+    {
+     "data_referencia": "2026-10-26",
+     "pu_par": "1358.954240220000000",
+     "vna": "1356.906790000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-10-26T00:00:00"
+    },
+    {
+     "data_referencia": "2026-10-25",
+     "pu_par": "1358.758192950000000",
+     "vna": "1357.003300000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-10-26T00:00:00"
+    },
+    {
+     "data_referencia": "2026-10-24",
+     "pu_par": "1358.758192950000000",
+     "vna": "1357.003300000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-10-26T00:00:00"
+    },
+    {
+     "data_referencia": "2026-10-23",
+     "pu_par": "1358.758192950000000",
+     "vna": "1357.003300000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-10-23T00:00:00"
+    },
+    {
+     "data_referencia": "2026-10-22",
+     "pu_par": "1358.291136080000000",
+     "vna": "1356.829070000000000",
+     "juros": null,
+     "prazo_remanescente": null,
+     "flag_status": "TOTAL",
+     "data_ultima_atualizacao": "2026-10-22T00:00:00"
+    }
+   ],
+   "number": 0,
+   "size": 20,
+   "total_elements": 1358,
+   "pageable": {
+    "sort": {
+     "unsorted": true,
+     "sorted": false,
+     "empty": true
+    },
+    "page_number": 0,
+    "page_size": 20,
+    "offset": 0,
+    "paged": true,
+    "unpaged": false
+   },
+   "last": false,
+   "total_pages": 68,
+   "sort": {
+    "unsorted": true,
+    "sorted": false,
+    "empty": true
+   },
+   "first": true,
+   "number_of_elements": 20,
+   "custom_field": null,
+   "alerta_liquidacao": false,
+   "empty": false
+  }
+ },
+ {
+  "url": "https://data-api.prd.anbima.com.br/web-bff/v1/certificado-recebiveis/CRA021000RY/grafico-pu-historico-indicativo?periodo=6",
+  "body": {
+   "periodo": 6,
+   "pus": [
+    {
+     "data": "2026-05-08",
+     "eventos": [],
+     "valor_pu_historico": "1340.477175",
+     "valor_pu_indicativo": "1203.1"
+    },
+    {
+     "data": "2026-05-11",
+     "eventos": [],
+     "valor_pu_historico": "1341.213671",
+     "valor_pu_indicativo": "1203.9"
+    },
+    {
+     "data": "2026-05-12",
+     "eventos": [],
+     "valor_pu_historico": "1341.951324",
+     "valor_pu_indicativo": "1203.9"
+    },
+    {
+     "data": "2026-05-13",
+     "eventos": [],
+     "valor_pu_historico": "1342.688671",
+     "valor_pu_indicativo": "1196.8"
+    },
+    {
+     "data": "2026-05-14",
+     "eventos": [],
+     "valor_pu_historico": "1343.426424",
+     "valor_pu_indicativo": "1200.3"
+    },
+    {
+     "data": "2026-05-15",
+     "eventos": [],
+     "valor_pu_historico": "1344.164582",
+     "valor_pu_indicativo": "1198.9"
+    },
+    {
+     "data": "2026-05-18",
+     "eventos": [],
+     "valor_pu_historico": "1344.789455",
+     "valor_pu_indicativo": "1161.8"
+    },
+    {
+     "data": "2026-05-19",
+     "eventos": [],
+     "valor_pu_historico": "1345.414625",
+     "valor_pu_indicativo": "1172.7"
+    },
+    {
+     "data": "2026-05-20",
+     "eventos": [],
+     "valor_pu_historico": "1346.040091",
+     "valor_pu_indicativo": "1171.9"
+    },
+    {
+     "data": "2026-05-21",
+     "eventos": [],
+     "valor_pu_historico": "1346.665827",
+     "valor_pu_indicativo": "1177.1"
+    },
+    {
+     "data": "2026-05-22",
+     "eventos": [],
+     "valor_pu_historico": "1347.291878",
+     "valor_pu_indicativo": "1180.4"
+    },
+    {
+     "data": "2026-05-25",
+     "eventos": [],
+     "valor_pu_historico": "1347.918208",
+     "valor_pu_indicativo": "1183.3"
+    },
+    {
+     "data": "2026-05-26",
+     "eventos": [],
+     "valor_pu_historico": "1348.544825",
+     "valor_pu_indicativo": "1183.3"
+    },
+    {
+     "data": "2026-05-27",
+     "eventos": [],
+     "valor_pu_historico": "1349.171731",
+     "valor_pu_indicativo": "1184.1"
+    },
+    {
+     "data": "2026-05-28",
+     "eventos": [],
+     "valor_pu_historico": "1349.798944",
+     "valor_pu_indicativo": "1184.0"
+    },
+    {
+     "data": "2026-05-29",
+     "eventos": [],
+     "valor_pu_historico": "1350.426437",
+     "valor_pu_indicativo": "1183.4"
+    },
+    {
+     "data": "2026-06-01",
+     "eventos": [],
+     "valor_pu_historico": "1351.054226",
+     "valor_pu_indicativo": "1173.6"
+    },
+    {
+     "data": "2026-06-02",
+     "eventos": [],
+     "valor_pu_historico": "1351.682304",
+     "valor_pu_indicativo": "1164.9"
+    },
+    {
+     "data": "2026-06-03",
+     "eventos": [],
+     "valor_pu_historico": "1352.310681",
+     "valor_pu_indicativo": "1149.7"
+    },
+    {
+     "data": "2026-06-05",
+     "eventos": [],
+     "valor_pu_historico": "1352.939346",
+     "valor_pu_indicativo": "1143.6"
+    },
+    {
+     "data": "2026-06-08",
+     "eventos": [],
+     "valor_pu_historico": "1353.568301",
+     "valor_pu_indicativo": "1139.3"
+    },
+    {
+     "data": "2026-06-09",
+     "eventos": [],
+     "valor_pu_historico": "1354.197544",
+     "valor_pu_indicativo": "1139.7"
+    },
+    {
+     "data": "2026-06-10",
+     "eventos": [],
+     "valor_pu_historico": "1354.827086",
+     "valor_pu_indicativo": "1142.5"
+    },
+    {
+     "data": "2026-06-11",
+     "eventos": [],
+     "valor_pu_historico": "1355.456917",
+     "valor_pu_indicativo": "1152.6"
+    },
+    {
+     "data": "2026-06-12",
+     "eventos": [],
+     "valor_pu_historico": "1357.112970",
+     "valor_pu_indicativo": "1154.3"
+    },
+    {
+     "data": "2026-06-15",
+     "eventos": [],
+     "valor_pu_historico": "1357.797915",
+     "valor_pu_indicativo": "1152.9"
+    },
+    {
+     "data": "2026-06-16",
+     "eventos": [],
+     "valor_pu_historico": "1358.299954",
+     "valor_pu_indicativo": "1148.0"
+    },
+    {
+     "data": "2026-06-17",
+     "eventos": [],
+     "valor_pu_historico": "1358.802186",
+     "valor_pu_indicativo": "1150.6"
+    },
+    {
+     "data": "2026-06-18",
+     "eventos": [],
+     "valor_pu_historico": "1359.304592",
+     "valor_pu_indicativo": "1144.5"
+    },
+    {
+     "data": "2026-06-19",
+     "eventos": [],
+     "valor_pu_historico": "1359.807201",
+     "valor_pu_indicativo": "1138.2"
+    },
+    {
+     "data": "2026-06-22",
+     "eventos": [],
+     "valor_pu_historico": "1360.309983",
+     "valor_pu_indicativo": "1149.7"
+    },
+    {
+     "data": "2026-06-23",
+     "eventos": [],
+     "valor_pu_historico": "1360.812951",
+     "valor_pu_indicativo": "1160.6"
+    },
+    {
+     "data": "2026-06-24",
+     "eventos": [],
+     "valor_pu_historico": "1361.316111",
+     "valor_pu_indicativo": "1169.9"
+    },
+    {
+     "data": "2026-06-25",
+     "eventos": [],
+     "valor_pu_historico": "1361.819457",
+     "valor_pu_indicativo": "1172.9"
+    },
+    {
+     "data": "2026-06-26",
+     "eventos": [],
+     "valor_pu_historico": "1362.267442",
+     "valor_pu_indicativo": "1182.1"
+    },
+    {
+     "data": "2026-06-29",
+     "eventos": [],
+     "valor_pu_historico": "1362.764967",
+     "valor_pu_indicativo": "1189.1"
+    },
+    {
+     "data": "2026-06-30",
+     "eventos": [],
+     "valor_pu_historico": "1363.262673",
+     "valor_pu_indicativo": "1198.2"
+    },
+    {
+     "data": "2026-07-01",
+     "eventos": [],
+     "valor_pu_historico": "1363.760560",
+     "valor_pu_indicativo": "1197.3"
+    },
+    {
+     "data": "2026-07-02",
+     "eventos": [],
+     "valor_pu_historico": "1364.258620",
+     "valor_pu_indicativo": null
+    },
+    {
+     "data": "2026-07-03",
+     "eventos": [],
+     "valor_pu_historico": "1364.756871",
+     "valor_pu_indicativo": "1201.0"
+    },
+    {
+     "data": "2026-07-06",
+     "eventos": [],
+     "valor_pu_historico": "1365.255303",
+     "valor_pu_indicativo": "1207.0"
+    },
+    {
+     "data": "2026-07-07",
+     "eventos": [],
+     "valor_pu_historico": "1365.753918",
+     "valor_pu_indicativo": "1206.4"
+    },
+    {
+     "data": "2026-07-08",
+     "eventos": [],
+     "valor_pu_historico": "1366.252705",
+     "valor_pu_indicativo": "1207.2"
+    },
+    {
+     "data": "2026-07-09",
+     "eventos": [],
+     "valor_pu_historico": "1366.751692",
+     "valor_pu_indicativo": "1209.5"
+    },
+    {
+     "data": "2026-07-10",
+     "eventos": [],
+     "valor_pu_historico": "1365.249185",
+     "valor_pu_indicativo": "1211.2"
+    },
+    {
+     "data": "2026-07-13",
+     "eventos": [],
+     "valor_pu_historico": "1365.642491",
+     "valor_pu_indicativo": "1207.8"
+    },
+    {
+     "data": "2026-07-14",
+     "eventos": [],
+     "valor_pu_historico": "1366.035901",
+     "valor_pu_indicativo": "1211.3"
+    },
+    {
+     "data": "2026-07-15",
+     "eventos": [],
+     "valor_pu_historico": "1366.429439",
+     "valor_pu_indicativo": "1212.5"
+    },
+    {
+     "data": "2026-07-16",
+     "eventos": [],
+     "valor_pu_historico": "1366.860314",
+     "valor_pu_indicativo": "1212.7"
+    },
+    {
+     "data": "2026-07-17",
+     "eventos": [],
+     "valor_pu_historico": "1367.291333",
+     "valor_pu_indicativo": "1208.1"
+    },
+    {
+     "data": "2026-07-20",
+     "eventos": [],
+     "valor_pu_historico": "1367.722482",
+     "valor_pu_indicativo": "1202.3"
+    },
+    {
+     "data": "2026-07-21",
+     "eventos": [],
+     "valor_pu_historico": "1368.153765",
+     "valor_pu_indicativo": "1198.6"
+    },
+    {
+     "data": "2026-07-22",
+     "eventos": [],
+     "valor_pu_historico": "1368.585181",
+     "valor_pu_indicativo": "1192.3"
+    },
+    {
+     "data": "2026-07-23",
+     "eventos": [],
+     "valor_pu_historico": "1369.016738",
+     "valor_pu_indicativo": "1197.4"
+    },
+    {
+     "data": "2026-07-24",
+     "eventos": [],
+     "valor_pu_historico": "1369.448439",
+     "valor_pu_indicativo": "1188.9"
+    },
+    {
+     "data": "2026-07-27",
+     "eventos": [],
+     "valor_pu_historico": "1369.880262",
+     "valor_pu_indicativo": "1186.8"
+    },
+    {
+     "data": "2026-07-28",
+     "eventos": [],
+     "valor_pu_historico": "1370.312228",
+     "valor_pu_indicativo": "1185.1"
+    },
+    {
+     "data": "2026-07-29",
+     "eventos": [],
+     "valor_pu_historico": "1369.673498",
+     "valor_pu_indicativo": "1194.3"
+    },
+    {
+     "data": "2026-07-30",
+     "eventos": [],
+     "valor_pu_historico": "1369.998316",
+     "valor_pu_indicativo": "1196.6"
+    },
+    {
+     "data": "2026-07-31",
+     "eventos": [],
+     "valor_pu_historico": "1370.323222",
+     "valor_pu_indicativo": "1200.0"
+    },
+    {
+     "data": "2026-08-03",
+     "eventos": [],
+     "valor_pu_historico": "1370.648203",
+     "valor_pu_indicativo": "1203.1"
+    },
+    {
+     "data": "2026-08-04",
+     "eventos": [],
+     "valor_pu_historico": "1370.973261",
+     "valor_pu_indicativo": "1213.8"
+    },
+    {
+     "data": "2026-08-05",
+     "eventos": [],
+     "valor_pu_historico": "1371.298396",
+     "valor_pu_indicativo": null
+    },
+    {
+     "data": "2026-08-06",
+     "eventos": [],
+     "valor_pu_historico": "1371.623617",
+     "valor_pu_indicativo": "1221.2"
+    },
+    {
+     "data": "2026-08-07",
+     "eventos": [],
+     "valor_pu_historico": "1371.948914",
+     "valor_pu_indicativo": "1234.0"
+    },
+    {
+     "data": "2026-08-10",
+     "eventos": [],
+     "valor_pu_historico": "1372.274277",
+     "valor_pu_indicativo": "1222.3"
+    },
+    {
+     "data": "2026-08-11",
+     "eventos": [],
+     "valor_pu_historico": "1372.826877",
+     "valor_pu_indicativo": "1220.8"
+    },
+    {
+     "data": "2026-08-12",
+     "eventos": [],
+     "valor_pu_historico": "1373.164413",
+     "valor_pu_indicativo": "1220.3"
+    },
+    {
+     "data": "2026-08-13",
+     "eventos": [],
+     "valor_pu_historico": "1373.502030",
+     "valor_pu_indicativo": "1224.6"
+    },
+    {
+     "data": "2026-08-14",
+     "eventos": [],
+     "valor_pu_historico": "1373.839738",
+     "valor_pu_indicativo": "1223.7"
+    },
+    {
+     "data": "2026-08-17",
+     "eventos": [],
+     "valor_pu_historico": "1374.177518",
+     "valor_pu_indicativo": "1225.7"
+    },
+    {
+     "data": "2026-08-18",
+     "eventos": [],
+     "valor_pu_historico": "1374.335958",
+     "valor_pu_indicativo": "1222.6"
+    },
+    {
+     "data": "2026-08-19",
+     "eventos": [],
+     "valor_pu_historico": "1374.494422",
+     "valor_pu_indicativo": "1215.2"
+    },
+    {
+     "data": "2026-08-20",
+     "eventos": [],
+     "valor_pu_historico": "1374.652911",
+     "valor_pu_indicativo": "1215.6"
+    },
+    {
+     "data": "2026-08-21",
+     "eventos": [],
+     "valor_pu_historico": "1374.811405",
+     "valor_pu_indicativo": "1224.4"
+    },
+    {
+     "data": "2026-08-24",
+     "eventos": [],
+     "valor_pu_historico": "1374.969934",
+     "valor_pu_indicativo": "1220.7"
+    },
+    {
+     "data": "2026-08-25",
+     "eventos": [],
+     "valor_pu_historico": "1375.128456",
+     "valor_pu_indicativo": "1212.3"
+    },
+    {
+     "data": "2026-08-26",
+     "eventos": [],
+     "valor_pu_historico": "1375.287024",
+     "valor_pu_indicativo": "1195.4"
+    },
+    {
+     "data": "2026-08-27",
+     "eventos": [],
+     "valor_pu_historico": "1375.004458",
+     "valor_pu_indicativo": "1190.6"
+    },
+    {
+     "data": "2026-08-28",
+     "eventos": [],
+     "valor_pu_historico": "1375.107866",
+     "valor_pu_indicativo": "1181.5"
+    },
+    {
+     "data": "2026-08-31",
+     "eventos": [],
+     "valor_pu_historico": "1375.211275",
+     "valor_pu_indicativo": "1175.4"
+    },
+    {
+     "data": "2026-09-01",
+     "eventos": [],
+     "valor_pu_historico": "1375.314696",
+     "valor_pu_indicativo": "1173.4"
+    },
+    {
+     "data": "2026-09-02",
+     "eventos": [],
+     "valor_pu_historico": "1375.418118",
+     "valor_pu_indicativo": "1171.1"
+    },
+    {
+     "data": "2026-09-03",
+     "eventos": [],
+     "valor_pu_historico": "1375.521562",
+     "valor_pu_indicativo": "1169.2"
+    },
+    {
+     "data": "2026-09-04",
+     "eventos": [],
+     "valor_pu_historico": "1375.625007",
+     "valor_pu_indicativo": "1168.4"
+    },
+    {
+     "data": "2026-09-08",
+     "eventos": [],
+     "valor_pu_historico": "1375.728452",
+     "valor_pu_indicativo": "1178.0"
+    },
+    {
+     "data": "2026-09-09",
+     "eventos": [],
+     "valor_pu_historico": "1375.831920",
+     "valor_pu_indicativo": "1175.2"
+    },
+    {
+     "data": "2026-09-10",
+     "eventos": [],
+     "valor_pu_historico": "1375.935378",
+     "valor_pu_indicativo": "1174.3"
+    },
+    {
+     "data": "2026-09-11",
+     "eventos": [],
+     "valor_pu_historico": "1375.542846",
+     "valor_pu_indicativo": "1174.4"
+    },
+    {
+     "data": "2026-09-14",
+     "eventos": [],
+     "valor_pu_historico": "1375.618741",
+     "valor_pu_indicativo": "1171.7"
+    },
+    {
+     "data": "2026-09-15",
+     "eventos": [],
+     "valor_pu_historico": "1375.694626",
+     "valor_pu_indicativo": "1167.4"
+    },
+    {
+     "data": "2026-09-16",
+     "eventos": [],
+     "valor_pu_historico": "1376.356928",
+     "valor_pu_indicativo": "1174.5"
+    },
+    {
+     "data": "2026-09-17",
+     "eventos": [],
+     "valor_pu_historico": "1377.019553",
+     "valor_pu_indicativo": "1167.3"
+    },
+    {
+     "data": "2026-09-18",
+     "eventos": [],
+     "valor_pu_historico": "1377.682503",
+     "valor_pu_indicativo": "1169.5"
+    },
+    {
+     "data": "2026-09-21",
+     "eventos": [],
+     "valor_pu_historico": "1378.345768",
+     "valor_pu_indicativo": "1169.0"
+    },
+    {
+     "data": "2026-09-22",
+     "eventos": [],
+     "valor_pu_historico": "1379.009345",
+     "valor_pu_indicativo": "1175.0"
+    },
+    {
+     "data": "2026-09-23",
+     "eventos": [],
+     "valor_pu_historico": "1379.673257",
+     "valor_pu_indicativo": "1175.4"
+    },
+    {
+     "data": "2026-09-24",
+     "eventos": [],
+     "valor_pu_historico": "1380.337473",
+     "valor_pu_indicativo": "1174.6"
+    },
+    {
+     "data": "2026-09-25",
+     "eventos": [],
+     "valor_pu_historico": "1381.002014",
+     "valor_pu_indicativo": "1177.3"
+    },
+    {
+     "data": "2026-09-28",
+     "eventos": [],
+     "valor_pu_historico": "1382.608612",
+     "valor_pu_indicativo": "1177.4"
+    },
+    {
+     "data": "2026-09-29",
+     "eventos": [],
+     "valor_pu_historico": "1383.378964",
+     "valor_pu_indicativo": "1170.8"
+    },
+    {
+     "data": "2026-09-30",
+     "eventos": [],
+     "valor_pu_historico": "1384.149757",
+     "valor_pu_indicativo": "1169.7"
+    },
+    {
+     "data": "2026-10-01",
+     "eventos": [],
+     "valor_pu_historico": "1384.920971",
+     "valor_pu_indicativo": "1168.8"
+    },
+    {
+     "data": "2026-10-02",
+     "eventos": [],
+     "valor_pu_historico": "1385.692639",
+     "valor_pu_indicativo": "1171.0"
+    },
+    {
+     "data": "2026-10-05",
+     "eventos": [],
+     "valor_pu_historico": "1386.464708",
+     "valor_pu_indicativo": "1183.9"
+    },
+    {
+     "data": "2026-10-06",
+     "eventos": [],
+     "valor_pu_historico": "1387.237221",
+     "valor_pu_indicativo": "1180.5"
+    },
+    {
+     "data": "2026-10-07",
+     "eventos": [],
+     "valor_pu_historico": "1388.010156",
+     "valor_pu_indicativo": "1182.7"
+    },
+    {
+     "data": "2026-10-08",
+     "eventos": [],
+     "valor_pu_historico": "1388.783532",
+     "valor_pu_indicativo": "1182.5"
+    },
+    {
+     "data": "2026-10-09",
+     "eventos": [],
+     "valor_pu_historico": "1390.739399",
+     "valor_pu_indicativo": "1183.0"
+    },
+    {
+     "data": "2026-10-13",
+     "eventos": [],
+     "valor_pu_historico": "1391.580030",
+     "valor_pu_indicativo": "1180.1"
+    },
+    {
+     "data": "2026-10-14",
+     "eventos": [],
+     "valor_pu_historico": "1392.421166",
+     "valor_pu_indicativo": "1180.1"
+    },
+    {
+     "data": "2026-10-15",
+     "eventos": [
+      {
+       "data": "2026-10-15",
+       "tipo": "PAGAMENTO DE JUROS",
+       "valor": 37.304524
+      }
+     ],
+     "valor_pu_historico": "1355.958290",
+     "valor_pu_indicativo": "1150.5"
+    },
+    {
+     "data": "2026-10-16",
+     "eventos": [],
+     "valor_pu_historico": "1356.424527",
+     "valor_pu_indicativo": "1152.9"
+    },
+    {
+     "data": "2026-10-19",
+     "eventos": [],
+     "valor_pu_historico": "1356.890942",
+     "valor_pu_indicativo": "1155.0"
+    },
+    {
+     "data": "2026-10-20",
+     "eventos": [],
+     "valor_pu_historico": "1357.357515",
+     "valor_pu_indicativo": "1163.2"
+    },
+    {
+     "data": "2026-10-21",
+     "eventos": [],
+     "valor_pu_historico": "1357.824247",
+     "valor_pu_indicativo": "1164.3"
+    },
+    {
+     "data": "2026-10-22",
+     "eventos": [],
+     "valor_pu_historico": "1358.291136",
+     "valor_pu_indicativo": "1167.4"
+    },
+    {
+     "data": "2026-10-23",
+     "eventos": [],
+     "valor_pu_historico": "1358.758193",
+     "valor_pu_indicativo": "1163.2"
+    },
+    {
+     "data": "2026-10-26",
+     "eventos": [],
+     "valor_pu_historico": "1358.954240",
+     "valor_pu_indicativo": "1112.1"
+    },
+    {
+     "data": "2026-10-27",
+     "eventos": [],
+     "valor_pu_historico": "1359.382780",
+     "valor_pu_indicativo": "1106.5"
+    },
+    {
+     "data": "2026-10-28",
+     "eventos": [],
+     "valor_pu_historico": "1359.811450",
+     "valor_pu_indicativo": "1102.9"
+    },
+    {
+     "data": "2026-10-29",
+     "eventos": [],
+     "valor_pu_historico": "1360.240252",
+     "valor_pu_indicativo": "1105.1"
+    },
+    {
+     "data": "2026-10-30",
+     "eventos": [],
+     "valor_pu_historico": "1360.669196",
+     "valor_pu_indicativo": "1104.4"
+    },
+    {
+     "data": "2026-11-03",
+     "eventos": [],
+     "valor_pu_historico": "1361.098271",
+     "valor_pu_indicativo": "1104.0"
+    },
+    {
+     "data": "2026-11-04",
+     "eventos": [],
+     "valor_pu_historico": "1361.527478",
+     "valor_pu_indicativo": "1115.136031"
+    },
+    {
+     "data": "2026-11-05",
+     "eventos": [],
+     "valor_pu_historico": "1361.956827",
+     "valor_pu_indicativo": "1116.589107"
+    },
+    {
+     "data": "2026-11-06",
+     "eventos": [],
+     "valor_pu_historico": "1362.386308",
+     "valor_pu_indicativo": "1118.415851"
+    },
+    {
+     "data": "2026-11-09",
+     "eventos": [],
+     "valor_pu_historico": "1362.815921",
+     "valor_pu_indicativo": "1119.024623"
+    },
+    {
+     "data": "2026-11-10",
+     "eventos": [],
+     "valor_pu_historico": "1363.245676",
+     "valor_pu_indicativo": "1123.508448"
+    }
+   ],
+   "datas_filtradas": {
+    "data_inicio": "2026-05-08",
+    "data_fim": "2026-11-10"
+   },
+   "periodos_disponiveis": [
+    0,
+    6,
+    12,
+    24,
+    36
+   ],
+   "datas_disponiveis": {
+    "data_inicio": "2021-08-26",
+    "data_fim": "2026-11-10"
+   }
+  }
+ },
+ {
+  "url": "https://data-api.prd.anbima.com.br/web-bff/v1/certificado-recebiveis/CRA021000RY",
+  "body": {
+   "codigo_b3": "CRA021000RY",
+   "numero_serie": "39ª",
+   "tipo": "CRA",
+   "isin": "BRIMWLCRA1B5",
+   "devedor": "MINERVA S.A.",
+   "lei": false,
+   "emissao": {
+    "volume": "107500000.000000000000000",
+    "garantia": null,
+    "status": null,
+    "emissor": {
+     "nome": "RIZA SECURITIZADORA S.A.",
+     "cnpj": "08769451000108",
+     "setor": null,
+     "razao_social": "RIZA SECURITIZADORA S.A."
+    },
+    "coordenadores": [
+     {
+      "nome": "BANCO BRADESCO BBI S.A.",
+      "cnpj": "06271464007393",
+      "setor": null,
+      "razao_social": "BANCO BRADESCO BBI S.A."
+     },
+     {
+      "nome": "XP INVESTIMENTOS CORRETORA DE CAMBIO, TITULOS E VALORES MOBILIARIOS S/A",
+      "cnpj": "02332886001178",
+      "setor": null,
+      "razao_social": "XP INVESTIMENTOS CORRETORA DE CAMBIO, TITULOS E VALORES MOBILIARIOS S/A"
+     },
+     {
+      "nome": "BANCO ITAU-BBA S/A",
+      "cnpj": "17298092000130",
+      "setor": "TI e Telecomunicações",
+      "razao_social": "BANCO ITAU-BBA S/A"
+     }
+    ],
+    "numero_emissao": "2ª",
+    "data_emissao": "2021-04-15",
+    "quantidade_emitida": "107500",
+    "quantidade_mercado": "0",
+    "registro_cvm": "ICVM/400 - Registrada",
+    "prefixo_codigo_b3": "CRA0",
+    "numero_processo": "RJ-2021-3732",
+    "coordenador_lider": {
+     "nome": "BANCO BTG PACTUAL S.A.",
+     "cnpj": "30306294000145",
+     "setor": "Assistência Médica",
+     "razao_social": "BANCO BTG PACTUAL S.A."
+    },
+    "banco_mandatario": null,
+    "agente_fiduciario": {
+     "nome": "OLIVEIRA TRUST DTVM S/A",
+     "cnpj": "36113876000191",
+     "setor": null,
+     "razao_social": "OLIVEIRA TRUST DTVM S/A"
+    },
+    "data_registro_b3": null
+   },
+   "setor": null,
+   "data_vencimento": "2031-04-15",
+   "remuneracao": "IPCA + 5.5780%",
+   "pu_indicativo": {
+    "data_referencia": "2026-11-10",
+    "taxa_indicativa": "12.4113",
+    "taxa_compra": "12.7139",
+    "taxa_venda": "11.6915",
+    "duration": "768.74",
+    "pu_par": null,
+    "percentual_pu_par": "82.41",
+    "percentual_vne": null,
+    "data_referencia_ntnb": "2030-08-15",
+    "desvio_padrao": "0.61",
+    "pu_indicativo_status": "Total",
+    "taxa_indicativa_status": "Total",
+    "data_ultima_atualizacao": "2026-11-10T00:00:00",
+    "reune": null,
+    "data_vencimento": null,
+    "intervalo_indicativo_maximo": null,
+    "intervalo_indicativo_minimo": null,
+    "pu_indicativo": "1123.50844765"
+   },
+   "pu_historico": {
+    "data_referencia": "2026-11-10",
+    "pu_par": "1363.245675680000000",
+    "vna": "1358.262960000000000",
+    "juros": null,
+    "prazo_remanescente": 1594,
+    "flag_status": "TOTAL",
+    "data_ultima_atualizacao": "2026-11-10T00:00:00"
+   },
+   "nome_operacao": "Minerva",
+   "flag_aprovar_caracteristicas": "TOTAL",
+   "flag_liberar_confere": "Total",
+   "series_da_mesma_emissao": null
+  }
+ },
+ {
+  "url": "https://data-api.prd.anbima.com.br/web-bff/v1/certificado-recebiveis/CRA021000RY/precos",
+  "body": {
+   "pu_historico": {
+    "data_referencia": "2026-11-10",
+    "pu_par": "1363.245675680000000",
+    "vna": "1358.262960000000000",
+    "juros": null,
+    "prazo_remanescente": 1594,
+    "flag_status": "TOTAL",
+    "data_ultima_atualizacao": "2026-11-10T00:00:00"
+   },
+   "pu_indicativo": {
+    "data_referencia": "2026-11-10",
+    "taxa_indicativa": "12.4113",
+    "taxa_compra": "12.7139",
+    "taxa_venda": "11.6915",
+    "duration": "768.74",
+    "pu_par": null,
+    "percentual_pu_par": "82.41",
+    "percentual_vne": null,
+    "data_referencia_ntnb": "2030-08-15",
+    "desvio_padrao": "0.61",
+    "pu_indicativo_status": "Total",
+    "taxa_indicativa_status": "Total",
+    "data_ultima_atualizacao": "2026-11-10T00:00:00",
+    "reune": null,
+    "data_vencimento": "2031-04-15",
+    "intervalo_indicativo_maximo": null,
+    "intervalo_indicativo_minimo": null,
+    "pu_indicativo": "1123.50844765"
+   },
+   "precificado": true,
+   "flag_liberar_confere": "Total",
+   "precos": [
+    {
+     "data_referencia": "2026-11-10",
+     "taxa_indicativa": "12.4113",
+     "taxa_compra": "12.7139",
+     "taxa_venda": "11.6915",
+     "duration": "768.74",
+     "pu_par": null,
+     "percentual_pu_par": "82.41",
+     "percentual_vne": null,
+     "data_referencia_ntnb": "2030-08-15",
+     "desvio_padrao": "0.61",
+     "pu_indicativo_status": "Total",
+     "taxa_indicativa_status": "Total",
+     "data_ultima_atualizacao": "2026-11-10T00:00:00",
+     "reune": null,
+     "data_vencimento": null,
+     "intervalo_indicativo_maximo": null,
+     "intervalo_indicativo_minimo": null,
+     "pu_indicativo": "1123.50844765"
+    },
+    {
+     "data_referencia": "2026-11-09",
+     "taxa_indicativa": "12.5378",
+     "taxa_compra": "12.7814",
+     "taxa_venda": "11.1220",
+     "duration": "769.43",
+     "pu_par": null,
+     "percentual_pu_par": "82.11",
+     "percentual_vne": null,
+     "data_referencia_ntnb": "2030-08-15",
+     "desvio_padrao": "0.96",
+     "pu_indicativo_status": "Total",
+     "taxa_indicativa_status": "Total",
+     "data_ultima_atualizacao": "2026-11-09T00:00:00",
+     "reune": null,
+     "data_vencimento": null,
+     "intervalo_indicativo_maximo": null,
+     "intervalo_indicativo_minimo": null,
+     "pu_indicativo": "1119.02462279"
+    },
+    {
+     "data_referencia": "2026-11-06",
+     "taxa_indicativa": "12.5369",
+     "taxa_compra": "12.8921",
+     "taxa_venda": "11.3070",
+     "duration": "770.44",
+     "pu_par": null,
+     "percentual_pu_par": "82.09",
+     "percentual_vne": null,
+     "data_referencia_ntnb": "2030-08-15",
+     "desvio_padrao": "1.03",
+     "pu_indicativo_status": "Total",
+     "taxa_indicativa_status": "Total",
+     "data_ultima_atualizacao": "2026-11-06T00:00:00",
+     "reune": null,
+     "data_vencimento": null,
+     "intervalo_indicativo_maximo": null,
+     "intervalo_indicativo_minimo": null,
+     "pu_indicativo": "1118.41585050"
+    },
+    {
+     "data_referencia": "2026-11-05",
+     "taxa_indicativa": "12.5761",
+     "taxa_compra": "12.9373",
+     "taxa_venda": "11.1369",
+     "duration": "771.34",
+     "pu_par": null,
+     "percentual_pu_par": "81.98",
+     "percentual_vne": null,
+     "data_referencia_ntnb": "2030-08-15",
+     "desvio_padrao": "0.99",
+     "pu_indicativo_status": "Total",
+     "taxa_indicativa_status": "Total",
+     "data_ultima_atualizacao": "2026-11-05T00:00:00",
+     "reune": null,
+     "data_vencimento": null,
+     "intervalo_indicativo_maximo": null,
+     "intervalo_indicativo_minimo": null,
+     "pu_indicativo": "1116.58910695"
+    },
+    {
+     "data_referencia": "2026-11-04",
+     "taxa_indicativa": "12.6030",
+     "taxa_compra": "13.0019",
+     "taxa_venda": "11.1733",
+     "duration": "772.28",
+     "pu_par": null,
+     "percentual_pu_par": "81.90",
+     "percentual_vne": null,
+     "data_referencia_ntnb": "2030-08-15",
+     "desvio_padrao": "0.63",
+     "pu_indicativo_status": "Total",
+     "taxa_indicativa_status": "Total",
+     "data_ultima_atualizacao": "2026-11-04T00:00:00",
+     "reune": null,
+     "data_vencimento": null,
+     "intervalo_indicativo_maximo": null,
+     "intervalo_indicativo_minimo": null,
+     "pu_indicativo": "1115.13603080"
+    }
+   ]
+  }
+ },
+ {
+  "url": "https://ekr.zdassets.com/compose/c0688e64-ceb3-4851-b023-6ba3188f00fe",
+  "body": {
+   "products": [
+    {
+     "name": "web_widget",
+     "id": "anbimaprecoseindices.zendesk.com",
+     "bootstrap": {
+      "config": {
+       "features": {},
+       "color": "#ffb102",
+       "brand": "Gerencia de preços e índices - ANBIMA",
+       "embeds": {
+        "ticketSubmissionForm": {
+         "embed": "submitTicket",
+         "props": {
+          "nameFieldRequired": true,
+          "color": "#ffb102",
+          "nameFieldEnabled": true,
+          "customFields": {
+           "all": true
+          },
+          "formTitleKey": "contact",
+          "attachmentsEnabled": true,
+          "maxFileSize": 52428800.0
+         }
+        },
+        "launcher": {
+         "embed": "launcher",
+         "props": {
+          "color": "#ffb102",
+          "labelKey": "support"
+         }
+        }
+       },
+       "brandCount": 1.0
+      }
+     },
+     "features": [
+      "ticket_submission"
+     ],
+     "url": "https://ekr.zendesk.com/compose_product/web_widget/338ab92bf86eb8f005a2ec2bb6450eba8185866e?features%5B%5D=ticket_submission",
+     "assets": {
+      "scripts": [
+       {
+        "src": "https://static.zdassets.com/web_widget/classic/latest/web-widget-main-338ab92.js"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ {
+  "url": "https://anbimaprecoseindices.zendesk.com/embeddable/config",
+  "body": {
+   "brand": "Gerencia de preços e índices - ANBIMA",
+   "brandCount": 1,
+   "color": "#ffb102",
+   "embeds": {
+    "ticketSubmissionForm": {
+     "embed": "submitTicket",
+     "props": {
+      "color": "#ffb102",
+      "customFields": {
+       "all": true
+      },
+      "formTitleKey": "contact",
+      "attachmentsEnabled": true,
+      "maxFileSize": 52428800,
+      "nameFieldEnabled": true,
+      "nameFieldRequired": true
+     }
+    },
+    "launcher": {
+     "embed": "launcher",
+     "props": {
+      "color": "#ffb102",
+      "labelKey": "support"
+     }
+    }
+   },
+   "features": {}
+  }
+ },
+ {
+  "url": "https://anbimaprecoseindices.zendesk.com/embeddable/config",
+  "erro": "Expecting value: line 1 column 1 (char 0)"
+ },
+ {
+  "url": "https://data-api.prd.anbima.com.br/web-bff/v1/certificado-recebiveis/CRA021000RY/agenda?page=0&size=20",
+  "body": {
+   "msg": "token timed out or duplicated"
+  }
+ },
+ {
+  "url": "https://www.googleadservices.com/pagead/conversion/16617877817/?random=1794366184550&cv=11&fst=1794366184550&fmt=7&bg=ffffff&guid=ON&async=1&en=conversion&gtm=45be6b91v9214639253za200zb79713930zd79713930xecxf1&gcd=13l3l3l3l1l1&dma=0&tag_exp=115616986~115938465~115938469~117776796~118897920~118897930~120213116~120385423~120412526~120420416~120469145~120469153~121191155~121246026~121246034~123329123~124170883&u_w=1280&u_h=720&url=https%3A%2F%2Fdata.anbima.com.br%2Fcertificado-de-recebiveis%2FCRA021000RY%2Fagenda&rcb=19&label=klFPCJPn7cQZELnigvQ9&gtm_ee=1&frm=0&tiba=CRA021000RY%20%7C%20ANBIMA%20Data&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=1407531702.1794366178&uaa=x86&uab=64&uafvl=Chromium%3B158.0.8127.18%7CNot.A%252FBrand%3B24.0.0.0%7CHeadlessChrome%3B158.0.8127.18&uamb=0&uam=&uap=Linux&uapv=&uaw=0&ec_mode=a&oid=GG_1799649370.1794366185&oidsrc=3&ecsid2=532027949.1794366178&_tu=ABA&gcl_ctr=2~0~0~0&data=event%3Dconversion&category=acrcp_v1_512&em=tv.1&emd=tvd.1&ept=5",
+  "erro": "Expecting value: line 1 column 1 (char 0)"
+ },
+ {
+  "url": "https://data-api.prd.anbima.com.br/web-bff/v1/certificado-recebiveis/CRA021000RY",
+  "body": {
+   "codigo_b3": "CRA021000RY",
+   "numero_serie": "39ª",
+   "tipo": "CRA",
+   "isin": "BRIMWLCRA1B5",
+   "devedor": "MINERVA S.A.",
+   "lei": false,
+   "emissao": {
+    "volume": "107500000.000000000000000",
+    "garantia": null,
+    "status": null,
+    "emissor": {
+     "nome": "RIZA SECURITIZADORA S.A.",
+     "cnpj": "08769451000108",
+     "setor": null,
+     "razao_social": "RIZA SECURITIZADORA S.A."
+    },
+    "coordenadores": [
+     {
+      "nome": "BANCO BRADESCO BBI S.A.",
+      "cnpj": "06271464007393",
+      "setor": null,
+      "razao_social": "BANCO BRADESCO BBI S.A."
+     },
+     {
+      "nome": "XP INVESTIMENTOS CORRETORA DE CAMBIO, TITULOS E VALORES MOBILIARIOS S/A",
+      "cnpj": "02332886001178",
+      "setor": null,
+      "razao_social": "XP INVESTIMENTOS CORRETORA DE CAMBIO, TITULOS E VALORES MOBILIARIOS S/A"
+     },
+     {
+      "nome": "BANCO ITAU-BBA S/A",
+      "cnpj": "17298092000130",
+      "setor": "TI e Telecomunicações",
+      "razao_social": "BANCO ITAU-BBA S/A"
+     }
+    ],
+    "numero_emissao": "2ª",
+    "data_emissao": "2021-04-15",
+    "quantidade_emitida": "107500",
+    "quantidade_mercado": "0",
+    "registro_cvm": "ICVM/400 - Registrada",
+    "prefixo_codigo_b3": "CRA0",
+    "numero_processo": "RJ-2021-3732",
+    "coordenador_lider": {
+     "nome": "BANCO BTG PACTUAL S.A.",
+     "cnpj": "30306294000145",
+     "setor": "Assistência Médica",
+     "razao_social": "BANCO BTG PACTUAL S.A."
+    },
+    "banco_mandatario": null,
+    "agente_fiduciario": {
+     "nome": "OLIVEIRA TRUST DTVM S/A",
+     "cnpj": "36113876000191",
+     "setor": null,
+     "razao_social": "OLIVEIRA TRUST DTVM S/A"
+    },
+    "data_registro_b3": null
+   },
+   "setor": null,
+   "data_vencimento": "2031-04-15",
+   "remuneracao": "IPCA + 5.5780%",
+   "pu_indicativo": {
+    "data_referencia": "2026-11-10",
+    "taxa_indicativa": "12.4113",
+    "taxa_compra": "12.7139",
+    "taxa_venda": "11.6915",
+    "duration": "768.74",
+    "pu_par": null,
+    "percentual_pu_par": "82.41",
+    "percentual_vne": null,
+    "data_referencia_ntnb": "2030-08-15",
+    "desvio_padrao": "0.61",
+    "pu_indicativo_status": "Total",
+    "taxa_indicativa_status": "Total",
+    "data_ultima_atualizacao": "2026-11-10T00:00:00",
+    "reune": null,
+    "data_vencimento": null,
+    "intervalo_indicativo_maximo": null,
+    "intervalo_indicativo_minimo": null,
+    "pu_indicativo": "1123.50844765"
+   },
+   "pu_historico": {
+    "data_referencia": "2026-11-10",
+    "pu_par": "1363.245675680000000",
+    "vna": "1358.262960000000000",
+    "juros": null,
+    "prazo_remanescente": 1594,
+    "flag_status": "TOTAL",
+    "data_ultima_atualizacao": "2026-11-10T00:00:00"
+   },
+   "nome_operacao": "Minerva",
+   "flag_aprovar_caracteristicas": "TOTAL",
+   "flag_liberar_confere": "Total",
+   "series_da_mesma_emissao": null
+  }
+ },
+ {
+  "url": "https://data-api.prd.anbima.com.br/web-bff/v1/certificado-recebiveis/CRA021000RY/agenda?page=0&size=20",
+  "body": {
+   "content": [
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2021-10-15",
+     "data_liquidacao": "2021-10-15",
+     "data_evento": "2021-10-15",
+     "taxa": "5.578000000000000",
+     "valor": "28.813820670000000",
+     "status": {
+      "status": "Liquidado",
+      "grupo_status": "Positivo"
+     },
+     "evento": "PAGAMENTO DE JUROS",
+     "evento_arc": "Juros",
+     "flag_status": "Total"
+    },
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2022-04-18",
+     "data_liquidacao": "2022-04-18",
+     "data_evento": "2022-04-18",
+     "taxa": "5.578000000000000",
+     "valor": "30.615686800000000",
+     "status": {
+      "status": "Liquidado",
+      "grupo_status": "Positivo"
+     },
+     "evento": "PAGAMENTO DE JUROS",
+     "evento_arc": "Juros",
+     "flag_status": "Total"
+    },
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2022-10-17",
+     "data_liquidacao": "2022-10-17",
+     "data_evento": "2022-10-17",
+     "taxa": "5.578000000000000",
+     "valor": "30.879431840000000",
+     "status": {
+      "status": "Liquidado",
+      "grupo_status": "Positivo"
+     },
+     "evento": "PAGAMENTO DE JUROS",
+     "evento_arc": "Juros",
+     "flag_status": "Total"
+    },
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2023-04-17",
+     "data_liquidacao": "2023-04-17",
+     "data_evento": "2023-04-17",
+     "taxa": "5.578000000000000",
+     "valor": "31.781833100000000",
+     "status": {
+      "status": "Liquidado",
+      "grupo_status": "Positivo"
+     },
+     "evento": "PAGAMENTO DE JUROS",
+     "evento_arc": "Juros",
+     "flag_status": "Total"
+    },
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2023-10-16",
+     "data_liquidacao": "2023-10-16",
+     "data_evento": "2023-10-16",
+     "taxa": "5.578000000000000",
+     "valor": "32.219346980000000",
+     "status": {
+      "status": "Liquidado",
+      "grupo_status": "Positivo"
+     },
+     "evento": "PAGAMENTO DE JUROS",
+     "evento_arc": "Juros",
+     "flag_status": "Total"
+    },
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2024-04-15",
+     "data_liquidacao": "2024-04-15",
+     "data_evento": "2024-04-15",
+     "taxa": "5.578000000000000",
+     "valor": "32.493959600000000",
+     "status": {
+      "status": "Liquidado",
+      "grupo_status": "Positivo"
+     },
+     "evento": "PAGAMENTO DE JUROS",
+     "evento_arc": "Juros",
+     "flag_status": "Total"
+    },
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2024-10-15",
+     "data_liquidacao": "2024-10-15",
+     "data_evento": "2024-10-15",
+     "taxa": "5.578000000000000",
+     "valor": "34.736651870000000",
+     "status": {
+      "status": "Liquidado",
+      "grupo_status": "Positivo"
+     },
+     "evento": "PAGAMENTO DE JUROS",
+     "evento_arc": "Juros",
+     "flag_status": "Total"
+    },
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2025-04-15",
+     "data_liquidacao": "2025-04-15",
+     "data_evento": "2025-04-15",
+     "taxa": "5.578000000000000",
+     "valor": "34.556119660000000",
+     "status": {
+      "status": "Liquidado",
+      "grupo_status": "Positivo"
+     },
+     "evento": "PAGAMENTO DE JUROS",
+     "evento_arc": "Juros",
+     "flag_status": "Total"
+    },
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2025-10-15",
+     "data_liquidacao": "2025-10-15",
+     "data_evento": "2025-10-15",
+     "taxa": "5.578000000000000",
+     "valor": "35.959125980000000",
+     "status": {
+      "status": "Liquidado",
+      "grupo_status": "Positivo"
+     },
+     "evento": "PAGAMENTO DE JUROS",
+     "evento_arc": "Juros",
+     "flag_status": "Total"
+    },
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2026-04-15",
+     "data_liquidacao": "2026-04-15",
+     "data_evento": "2026-04-15",
+     "taxa": "5.578000000000000",
+     "valor": "35.987653860000000",
+     "status": {
+      "status": "Liquidado",
+      "grupo_status": "Positivo"
+     },
+     "evento": "PAGAMENTO DE JUROS",
+     "evento_arc": "Juros",
+     "flag_status": "Total"
+    },
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2026-10-15",
+     "data_liquidacao": "2026-10-15",
+     "data_evento": "2026-10-15",
+     "taxa": "5.578000000000000",
+     "valor": "37.304523780000000",
+     "status": {
+      "status": "Liquidado",
+      "grupo_status": "Positivo"
+     },
+     "evento": "PAGAMENTO DE JUROS",
+     "evento_arc": "Juros",
+     "flag_status": "Total"
+    },
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2027-04-15",
+     "data_liquidacao": "2027-04-15",
+     "data_evento": "2027-04-15",
+     "taxa": "5.578000000000000",
+     "valor": null,
+     "status": {
+      "status": "Previsto",
+      "grupo_status": "Planejado"
+     },
+     "evento": "PAGAMENTO DE JUROS",
+     "evento_arc": "Juros",
+     "flag_status": "Total"
+    },
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2027-10-15",
+     "data_liquidacao": "2027-10-15",
+     "data_evento": "2027-10-15",
+     "taxa": "5.578000000000000",
+     "valor": null,
+     "status": {
+      "status": "Previsto",
+      "grupo_status": "Planejado"
+     },
+     "evento": "PAGAMENTO DE JUROS",
+     "evento_arc": "Juros",
+     "flag_status": "Total"
+    },
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2028-04-17",
+     "data_liquidacao": "2028-04-17",
+     "data_evento": "2028-04-15",
+     "taxa": "5.578000000000000",
+     "valor": null,
+     "status": {
+      "status": "Previsto",
+      "grupo_status": "Planejado"
+     },
+     "evento": "PAGAMENTO DE JUROS",
+     "evento_arc": "Juros",
+     "flag_status": "Total"
+    },
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2028-10-16",
+     "data_liquidacao": "2028-10-16",
+     "data_evento": "2028-10-15",
+     "taxa": "5.578000000000000",
+     "valor": null,
+     "status": {
+      "status": "Previsto",
+      "grupo_status": "Planejado"
+     },
+     "evento": "PAGAMENTO DE JUROS",
+     "evento_arc": "Juros",
+     "flag_status": "Total"
+    },
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2029-04-16",
+     "data_liquidacao": "2029-04-16",
+     "data_evento": "2029-04-15",
+     "taxa": "33.333300000000000",
+     "valor": null,
+     "status": {
+      "status": "Previsto",
+      "grupo_status": "Planejado"
+     },
+     "evento": "AMORTIZACAO",
+     "evento_arc": "Amortização",
+     "flag_status": "Total"
+    },
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2029-04-16",
+     "data_liquidacao": "2029-04-16",
+     "data_evento": "2029-04-15",
+     "taxa": "5.578000000000000",
+     "valor": null,
+     "status": {
+      "status": "Previsto",
+      "grupo_status": "Planejado"
+     },
+     "evento": "PAGAMENTO DE JUROS",
+     "evento_arc": "Juros",
+     "flag_status": "Total"
+    },
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2029-10-15",
+     "data_liquidacao": "2029-10-15",
+     "data_evento": "2029-10-15",
+     "taxa": "5.578000000000000",
+     "valor": null,
+     "status": {
+      "status": "Previsto",
+      "grupo_status": "Planejado"
+     },
+     "evento": "PAGAMENTO DE JUROS",
+     "evento_arc": "Juros",
+     "flag_status": "Total"
+    },
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2030-04-15",
+     "data_liquidacao": "2030-04-15",
+     "data_evento": "2030-04-15",
+     "taxa": "50.000000000000000",
+     "valor": null,
+     "status": {
+      "status": "Previsto",
+      "grupo_status": "Planejado"
+     },
+     "evento": "AMORTIZACAO",
+     "evento_arc": "Amortização",
+     "flag_status": "Total"
+    },
+    {
+     "codigo_b3": "CRA021000RY",
+     "data_base": "2030-04-15",
+     "data_liquidacao": "2030-04-15",
+     "data_evento": "2030-04-15",
+     "taxa": "5.578000000000000",
+     "valor": null,
+     "status": {
+      "status": "Previsto",
+      "grupo_status": "Planejado"
+     },
+     "evento": "PAGAMENTO DE JUROS",
+     "evento_arc": "Juros",
+     "flag_status": "Total"
+    }
+   ],
+   "number": 0,
+   "size": 20,
+   "total_elements": 23,
+   "pageable": {
+    "sort": {
+     "unsorted": true,
+     "sorted": false,
+     "empty": true
+    },
+    "page_number": 0,
+    "page_size": 20,
+    "offset": 0,
+    "paged": true,
+    "unpaged": false
+   },
+   "last": false,
+   "total_pages": 2,
+   "sort": {
+    "unsorted": true,
+    "sorted": false,
+    "empty": true
+   },
+   "first": true,
+   "number_of_elements": 20,
+   "custom_field": null,
+   "alerta_liquidacao": false,
+   "empty": false
+  }
+ },
+ {
+  "url": "https://firebaseremoteconfig.googleapis.com/v1/projects/anbima-data-web/namespaces/firebase:fetch?key=AIzaSyArrpcrNGQ9fa7xbJXlJeReBkr0dGng7FY",
+  "body": {
+   "state": "NO_CHANGE",
+   "templateVersion": "180"
+  }
+ },
+ {
+  "url": "https://data-strapi.prd.anbima.com.br/api/menu-anbima-data",
+  "body": {
+   "data": {
+    "id": 1,
+    "attributes": {
+     "data": {
+      "ferramentas": [
+       {
+        "href": "/datasets",
+        "icon": "download-fill",
+        "badge": "BETA",
+        "label": "Datasets",
+        "enabled": false,
+        "description": "Crie e faça download da sua amostra personalizada de dados."
+       },
+       {
+        "href": "/ferramentas/calculadora",
+        "icon": "calculator",
+        "label": "Calculadoras",
+        "enabled": true,
+        "description": "Cálculo de taxas e preços negociados no mercado secundário."
+       },
+       {
+        "href": "/ferramentas/comparador/debentures",
+        "icon": "double-arrow",
+        "label": "Comparador de debêntures",
+        "enabled": true,
+        "description": "Veja informações relevantes de debêntures lado a lado."
+       }
+      ],
+      "publicacoes": [
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/relatorios-de-precificacao",
+            "isNew": false,
+            "label": "Relatório de precificação"
+           },
+           {
+            "href": "/titulos-publicos/ranking-de-titulos-publicos",
+            "isNew": false,
+            "label": "Ranking de títulos públicos"
+           },
+           {
+            "href": "/publicacoes/boletim-de-debentures-incentivadas-e-de-infraestrutura",
+            "isNew": false,
+            "label": "Boletim de debêntures incentivadas e de infraestrutura"
+           },
+           {
+            "href": "/publicacoes/boletim-de-renda-fixa",
+            "isNew": false,
+            "label": "Boletim de renda fixa"
+           }
+          ],
+          "title": "Títulos públicos e privados",
+          "enabled": true
+         },
+         {
+          "items": [
+           {
+            "href": "/publicacoes/boletim-de-financiamento-de-projetos",
+            "isNew": false,
+            "label": "Boletim de financiamento de projetos",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/ranking-de-financiamento-de-projetos",
+            "isNew": false,
+            "label": "Ranking de financiamento de projetos",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/projetos-e-emissoes-incentivadas",
+            "isNew": false,
+            "label": "Projetos e emissões incentivadas (lei 12.431)",
+            "enabled": true
+           }
+          ],
+          "title": "Financiamento de longo prazo",
+          "enabled": true
+         },
+         {
+          "items": [
+           {
+            "href": "/publicacoes/boletim-de-mercado-de-capitais",
+            "isNew": false,
+            "label": "Boletim de mercado de capitais",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/ranking-de-renda-fixa-e-hibridos",
+            "isNew": false,
+            "label": "Ranking de renda fixa e híbridos",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/ranking-de-renda-variavel",
+            "isNew": false,
+            "label": "Ranking de renda variável",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/ranking-de-emissoes-no-mercado-externo",
+            "isNew": false,
+            "label": "Ranking de emissões no mercado externo",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/dashboard-de-mercado-brasileiro",
+            "isNew": false,
+            "label": "Dashboard de Mercado Brasileiro",
+            "enabled": true
+           }
+          ],
+          "title": "Ofertas públicas",
+          "enabled": true
+         }
+        ],
+        "label": "Mercado de capitais",
+        "isNewDot": false,
+        "releated": {
+         "items": [
+          {
+           "href": "/debentures",
+           "isNew": false,
+           "label": "Debêntures"
+          },
+          {
+           "href": "/certificado-de-recebiveis",
+           "isNew": false,
+           "label": "Certificados de recebíveis (CRI e CRA)"
+          },
+          {
+           "href": "/letras-financeiras",
+           "isNew": false,
+           "label": "Letras financeiras"
+          },
+          {
+           "href": "/titulos-publicos",
+           "isNew": false,
+           "label": "Títulos públicos"
+          }
+         ],
+         "title": "Relacionados",
+         "enabled": true
+        },
+        "highlight": {
+         "href": "/bussola",
+         "badge": false,
+         "title": "Bússola",
+         "bgColor": "#082F7D",
+         "enabled": true,
+         "subtitle": "Confira as principais publicações e ferramentas que vão facilitar a sua análise estratégica."
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/publicacoes/fundos-de-investimento/dashboard-carteiras-administradas",
+            "isNew": true,
+            "label": "Dashboard Carteiras Administradas",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/fundos-de-investimento/dashboard-de-fidcs",
+            "isNew": false,
+            "label": "Dashboard de FIDC",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/fundos-de-investimento/dashboard-de-fip",
+            "isNew": false,
+            "label": "Dashboard de FIP",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/consolidado-diario-de-fundos-de-investimento",
+            "isNew": false,
+            "label": "Consolidado diário de fundos de investimento",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/boletim-de-fundos-de-investimento",
+            "isNew": false,
+            "label": "Boletim de fundos de investimento",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/fundos-de-investimento/dashboard-radar-175",
+            "isNew": false,
+            "label": "Dashboard radar 175",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/dashboard-de-mercado-brasileiro",
+            "isNew": false,
+            "label": "Dashboard de Mercado Brasileiro",
+            "enabled": true
+           }
+          ],
+          "enabled": true
+         },
+         {
+          "items": [
+           {
+            "href": " /publicacoes/ranking-de-administradores-de-fundos-de-investimento",
+            "isNew": false,
+            "label": "Ranking de administradores de fundos de investimento"
+           },
+           {
+            "href": "/publicacoes/ranking-global-de-administracao-de-recursos-de-terceiros",
+            "isNew": false,
+            "label": "Ranking global de administração de recursos de terceiros"
+           },
+           {
+            "href": "/publicacoes/ranking-de-gestores-de-fundos-de-investimento",
+            "isNew": false,
+            "label": "Ranking de gestores de fundos de investimento "
+           }
+          ],
+          "title": "Administração/Gestão",
+          "enabled": true
+         },
+         {
+          "items": [
+           {
+            "href": "/publicacoes/ranking-de-custodia-de-ativos",
+            "isNew": false,
+            "label": "Ranking de custódia de ativos"
+           },
+           {
+            "href": "/publicacoes/ranking-de-controladoria-de-ativos",
+            "isNew": false,
+            "label": "Ranking de controladoria de ativos"
+           },
+           {
+            "href": "/publicacoes/ranking-de-controladoria-de-passivos",
+            "isNew": false,
+            "label": "Ranking de controladoria de passivos"
+           }
+          ],
+          "title": "Serviço Qualificados",
+          "enabled": true
+         }
+        ],
+        "label": "Fundos de investimento",
+        "isNewDot": true,
+        "releated": {
+         "items": [
+          {
+           "href": "/fundos",
+           "isNew": false,
+           "label": "Fundos (RCVM-175)"
+          },
+          {
+           "href": "/indices",
+           "isNew": false,
+           "label": "Índices ANBIMA (IHFA)"
+          }
+         ],
+         "title": "Relacionados",
+         "enabled": true
+        },
+        "highlight": {
+         "href": "/bussola",
+         "badge": false,
+         "title": "Bússola",
+         "bgColor": "#082F7D",
+         "enabled": true,
+         "subtitle": "Confira as principais publicações e ferramentas que vão facilitar a sua análise estratégica."
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/publicacoes/boletim-de-private-e-varejo",
+            "isNew": false,
+            "label": "Boletim de private e varejo"
+           },
+           {
+            "href": "/publicacoes/estatisticas-de-gestores-de-patrimonio",
+            "isNew": false,
+            "label": "Estatísticas de gestores de patrimônio"
+           },
+           {
+            "href": "/publicacoes/estatisticas-de-private",
+            "isNew": false,
+            "label": "Estatísticas de private"
+           },
+           {
+            "href": "/publicacoes/estatisticas-de-varejo",
+            "isNew": false,
+            "label": "Estatísticas de varejo"
+           },
+           {
+            "href": "/publicacoes/estatisticas/estatisticas-de-distribuicao",
+            "isNew": false,
+            "label": "Estatísticas de Distribuição"
+           }
+          ],
+          "enabled": true
+         }
+        ],
+        "label": "Distribuição",
+        "isNewDot": false,
+        "releated": {
+         "items": [
+          {
+           "href": "#",
+           "isNew": false,
+           "label": ""
+          }
+         ],
+         "title": "Relacionados",
+         "enabled": false
+        },
+        "highlight": {
+         "href": "/bussola",
+         "badge": false,
+         "title": "Bússola",
+         "bgColor": "#082F7D",
+         "enabled": true,
+         "subtitle": "Confira as principais publicações e ferramentas que vão facilitar a sua análise estratégica."
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/publicacoes/boletim-macroeconomico",
+            "isNew": false,
+            "label": "Boletim macroeconômico"
+           }
+          ],
+          "enabled": true
+         }
+        ],
+        "label": "Macroeconômico",
+        "isNewDot": false,
+        "highlight": {
+         "href": "/bussola",
+         "badge": false,
+         "title": "Bússola",
+         "bgColor": "#082F7D",
+         "enabled": true,
+         "subtitle": "Confira as principais publicações e ferramentas que vão facilitar a sua análise estratégica."
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/publicacoes/analises-de-mercado",
+            "isNew": false,
+            "label": "Análises de mercado"
+           }
+          ],
+          "enabled": true
+         }
+        ],
+        "label": "Análises de mercado",
+        "isNewDot": false,
+        "highlight": {
+         "href": "/bussola",
+         "badge": false,
+         "title": "Bússola",
+         "bgColor": "#082F7D",
+         "enabled": true,
+         "subtitle": "Confira as principais publicações e ferramentas que vão facilitar a sua análise estratégica."
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/publicacoes/anbima-edu/radar-das-certificacoes",
+            "isNew": true,
+            "label": "Radar das Certificações",
+            "enabled": true
+           }
+          ],
+          "enabled": true
+         }
+        ],
+        "label": "ANBIMA Edu",
+        "isNewDot": true,
+        "highlight": {
+         "href": "/bussola",
+         "badge": false,
+         "title": "Bússola",
+         "bgColor": "#082F7D",
+         "enabled": true,
+         "subtitle": "Confira as principais publicações e ferramentas que vão facilitar a sua análise estratégica."
+        }
+       }
+      ],
+      "dadosDeMercado": [
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/titulos-publicos/monitoramento-intradiario-de-titulos-publicos-federais",
+            "isNew": false,
+            "label": "Monitoramento intradiário de títulos públicos federais"
+           },
+           {
+            "href": "/titulos-publicos",
+            "label": "Títulos públicos"
+           },
+           {
+            "href": "/titulos-publicos/valor-nominal-atualizado",
+            "label": "Valor Nominal Atualizado (VNA)"
+           }
+          ],
+          "title": "Títulos Públicos"
+         },
+         {
+          "items": [
+           {
+            "href": "/debentures",
+            "label": "Debêntures"
+           },
+           {
+            "href": "/certificado-de-recebiveis",
+            "label": "Taxas de certificados de recebíveis (CRI e CRA)"
+           },
+           {
+            "href": "/letras-financeiras",
+            "label": "Taxas de letras financeiras"
+           },
+           {
+            "href": "/reune/previas",
+            "isNew": false,
+            "label": "Dados de negociação (prévias do REUNE)"
+           },
+           {
+            "href": "/publicacoes/estatisticas/painel-de-precos-de-renda-fixa",
+            "isNew": false,
+            "label": "Painel de Preços de Renda Fixa"
+           }
+          ],
+          "title": "Títulos Privados"
+         }
+        ],
+        "label": "Mercado de capitais",
+        "isNewDot": false,
+        "releated": {
+         "items": [
+          {
+           "href": "/titulos-publicos/ranking-de-titulos-publicos",
+           "label": "Ranking de títulos públicos"
+          },
+          {
+           "href": "/ferramentas/calculadora",
+           "label": "Calculadoras"
+          },
+          {
+           "href": "/ferramentas/comparador/debentures",
+           "label": "Comparador de debêntures"
+          }
+         ],
+         "title": "Relacionados",
+         "enabled": true
+        },
+        "highlight": {
+         "href": "/datasets",
+         "badge": false,
+         "title": "Datasets",
+         "enabled": true,
+         "subtitle": "Crie e faça download da sua amostra personalizada de dados."
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/fundos",
+            "isNew": false,
+            "label": "Fundos (RCVM-175)"
+           },
+           {
+            "href": "/fidc",
+            "isNew": false,
+            "label": "Taxas de FIDCs"
+           },
+           {
+            "href": "/reune/previas",
+            "isNew": false,
+            "label": "Dados de negociação (prévias do REUNE)"
+           },
+           {
+            "href": "/publicacoes/estatisticas/painel-de-precos-de-renda-fixa",
+            "isNew": false,
+            "label": "Painel de Preços de Renda Fixa"
+           },
+           {
+            "href": "/busca/transparencia-de-taxas-de-fundos",
+            "isNew": false,
+            "label": "Transparência de taxas de fundos"
+           }
+          ]
+         }
+        ],
+        "label": "Fundos de investimento",
+        "isNewDot": false,
+        "releated": {
+         "items": [
+          {
+           "href": "/publicacoes/fundos-de-investimento/dashboard-radar-175",
+           "label": "Dashboard radar 175"
+          },
+          {
+           "href": "/publicacoes/fundos-de-investimento/dashboard-de-fip",
+           "label": "Dashboard de FIP"
+          },
+          {
+           "href": "/analises/estatisticas-de-fiagro-mercado-de-capitais",
+           "label": "Estatísticas de Fiagro (ofertas públicas)"
+          },
+          {
+           "href": "/analises/estatisticas-de-fiagro",
+           "label": "Estatísticas de Fiagro (fundos de investimento)"
+          }
+         ],
+         "title": "Relacionados",
+         "enabled": true
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/titulos-publicos",
+            "label": "Taxas de títulos públicos"
+           },
+           {
+            "href": "/titulos-publicos/valor-nominal-atualizado",
+            "label": "Valor Nominal Atualizado (VNA)"
+           },
+           {
+            "href": "/titulos-publicos/monitoramento-intradiario-de-titulos-publicos-federais",
+            "isNew": false,
+            "label": "Monitoramento intradiário de títulos públicos federais"
+           }
+          ],
+          "title": "Títulos Públicos"
+         },
+         {
+          "items": [
+           {
+            "href": "/debentures?view=precos",
+            "label": "Taxas de debêntures"
+           },
+           {
+            "href": "/certificado-de-recebiveis",
+            "label": "Taxas de certificados de recebíveis (CRI e CRA)"
+           },
+           {
+            "href": "/letras-financeiras",
+            "label": "Taxas de letras financeiras"
+           }
+          ],
+          "title": "Títulos Privados"
+         },
+         {
+          "items": [
+           {
+            "href": "/fidc",
+            "label": "Taxas de FIDCs"
+           },
+           {
+            "href": "/reune/previas",
+            "label": "Dados de negociação (prévias do REUNE)"
+           },
+           {
+            "href": "/publicacoes/estatisticas/painel-de-precos-de-renda-fixa",
+            "isNew": false,
+            "label": "Painel de Preços de Renda Fixa"
+           }
+          ],
+          "title": "Fundos de investimento"
+         }
+        ],
+        "label": "Preços",
+        "isNewDot": false,
+        "releated": {
+         "items": [],
+         "title": "Relacionados",
+         "enabled": false
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/indices",
+            "label": "IMA"
+           },
+           {
+            "href": "/indices",
+            "label": "IDkA"
+           }
+          ],
+          "title": "Títulos Públicos"
+         },
+         {
+          "items": [
+           {
+            "href": "/indices",
+            "label": "IDA"
+           },
+           {
+            "href": "/indices",
+            "label": "IDA LIQ"
+           }
+          ],
+          "title": "Títulos Privados"
+         },
+         {
+          "items": [
+           {
+            "href": "/indices",
+            "label": "IHFA"
+           }
+          ],
+          "title": "Fundos de investimento"
+         },
+         {
+          "items": [
+           {
+            "href": "/indices-customizados",
+            "isNew": false,
+            "label": "Índices Customizados"
+           }
+          ],
+          "title": "Outros Índices"
+         }
+        ],
+        "label": "Índices",
+        "isNewDot": false,
+        "releated": {
+         "items": [
+          {
+           "href": "/titulos-publicos",
+           "isNew": false,
+           "label": "Taxas de títulos públicos"
+          },
+          {
+           "href": "/titulos-publicos/valor-nominal-atualizado",
+           "isNew": false,
+           "label": "Valor Nominal Atualizado (VNA)"
+          },
+          {
+           "href": "/debentures?view=precos",
+           "isNew": false,
+           "label": "Taxas de debêntures"
+          },
+          {
+           "href": "/fundos",
+           "isNew": false,
+           "label": "Fundos (RCVM-175)"
+          }
+         ],
+         "title": "Relacionados",
+         "enabled": true
+        }
+       }
+      ]
+     },
+     "createdAt": "2023-12-19T18:33:22.331Z",
+     "updatedAt": "2026-11-03T20:44:23.696Z",
+     "publishedAt": "2023-12-19T18:33:24.774Z"
+    }
+   },
+   "meta": {}
+  }
+ },
+ {
+  "url": "https://ekr.zdassets.com/compose/c0688e64-ceb3-4851-b023-6ba3188f00fe",
+  "body": {
+   "products": [
+    {
+     "name": "web_widget",
+     "id": "anbimaprecoseindices.zendesk.com",
+     "bootstrap": {
+      "config": {
+       "features": {},
+       "color": "#ffb102",
+       "brand": "Gerencia de preços e índices - ANBIMA",
+       "embeds": {
+        "ticketSubmissionForm": {
+         "embed": "submitTicket",
+         "props": {
+          "nameFieldRequired": true,
+          "color": "#ffb102",
+          "nameFieldEnabled": true,
+          "customFields": {
+           "all": true
+          },
+          "formTitleKey": "contact",
+          "attachmentsEnabled": true,
+          "maxFileSize": 52428800.0
+         }
+        },
+        "launcher": {
+         "embed": "launcher",
+         "props": {
+          "color": "#ffb102",
+          "labelKey": "support"
+         }
+        }
+       },
+       "brandCount": 1.0
+      }
+     },
+     "features": [
+      "ticket_submission"
+     ],
+     "url": "https://ekr.zendesk.com/compose_product/web_widget/338ab92bf86eb8f005a2ec2bb6450eba8185866e?features%5B%5D=ticket_submission",
+     "assets": {
+      "scripts": [
+       {
+        "src": "https://static.zdassets.com/web_widget/classic/latest/web-widget-main-338ab92.js"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ {
+  "url": "https://anbimaprecoseindices.zendesk.com/embeddable/config",
+  "body": {
+   "brand": "Gerencia de preços e índices - ANBIMA",
+   "brandCount": 1,
+   "color": "#ffb102",
+   "embeds": {
+    "ticketSubmissionForm": {
+     "embed": "submitTicket",
+     "props": {
+      "color": "#ffb102",
+      "customFields": {
+       "all": true
+      },
+      "formTitleKey": "contact",
+      "attachmentsEnabled": true,
+      "maxFileSize": 52428800,
+      "nameFieldEnabled": true,
+      "nameFieldRequired": true
+     }
+    },
+    "launcher": {
+     "embed": "launcher",
+     "props": {
+      "color": "#ffb102",
+      "labelKey": "support"
+     }
+    }
+   },
+   "features": {}
+  }
+ },
+ {
+  "url": "https://firebaseremoteconfig.googleapis.com/v1/projects/anbima-data-web/namespaces/firebase:fetch?key=AIzaSyArrpcrNGQ9fa7xbJXlJeReBkr0dGng7FY",
+  "body": {
+   "state": "NO_CHANGE",
+   "templateVersion": "180"
+  }
+ },
+ {
+  "url": "https://www.googleadservices.com/pagead/conversion/16617877817/?random=1794366274560&cv=11&fst=1794366274560&fmt=7&bg=ffffff&guid=ON&async=1&en=conversion&gtm=45be6b91v9214639253za200zb79713930zd79713930xecxf1&gcd=13l3l3l3l1l1&dma=0&tag_exp=115938466~115938468~117776796~118897920~118897930~119860442~120213116~120385422~120412526~120420414~120469145~120469153~121191155~121246026~121246034~123329123~124170883&u_w=1280&u_h=720&url=https%3A%2F%2Fdata.anbima.com.br%2Fcertificado-de-recebiveis%2FCRA021000RY%2Fcaracteristicas&rcb=12&label=klFPCJPn7cQZELnigvQ9&gtm_ee=1&frm=0&tiba=CRA021000RY%20%7C%20ANBIMA%20Data&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=1407531702.1794366178&uaa=x86&uab=64&uafvl=Chromium%3B158.0.8127.18%7CNot.A%252FBrand%3B24.0.0.0%7CHeadlessChrome%3B158.0.8127.18&uamb=0&uam=&uap=Linux&uapv=&uaw=0&ec_mode=a&oid=GG_1206025685.1794366275&oidsrc=3&ecsid2=532027949.1794366178&_tu=ABA&gcl_ctr=3~0~0~0&data=event%3Dconversion&category=acrcp_v1_512&em=tv.1&emd=tvd.1&ept=5",
+  "erro": "Expecting value: line 1 column 1 (char 0)"
+ },
+ {
+  "url": "https://data-strapi.prd.anbima.com.br/api/menu-anbima-data",
+  "body": {
+   "data": {
+    "id": 1,
+    "attributes": {
+     "data": {
+      "ferramentas": [
+       {
+        "href": "/datasets",
+        "icon": "download-fill",
+        "badge": "BETA",
+        "label": "Datasets",
+        "enabled": false,
+        "description": "Crie e faça download da sua amostra personalizada de dados."
+       },
+       {
+        "href": "/ferramentas/calculadora",
+        "icon": "calculator",
+        "label": "Calculadoras",
+        "enabled": true,
+        "description": "Cálculo de taxas e preços negociados no mercado secundário."
+       },
+       {
+        "href": "/ferramentas/comparador/debentures",
+        "icon": "double-arrow",
+        "label": "Comparador de debêntures",
+        "enabled": true,
+        "description": "Veja informações relevantes de debêntures lado a lado."
+       }
+      ],
+      "publicacoes": [
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/relatorios-de-precificacao",
+            "isNew": false,
+            "label": "Relatório de precificação"
+           },
+           {
+            "href": "/titulos-publicos/ranking-de-titulos-publicos",
+            "isNew": false,
+            "label": "Ranking de títulos públicos"
+           },
+           {
+            "href": "/publicacoes/boletim-de-debentures-incentivadas-e-de-infraestrutura",
+            "isNew": false,
+            "label": "Boletim de debêntures incentivadas e de infraestrutura"
+           },
+           {
+            "href": "/publicacoes/boletim-de-renda-fixa",
+            "isNew": false,
+            "label": "Boletim de renda fixa"
+           }
+          ],
+          "title": "Títulos públicos e privados",
+          "enabled": true
+         },
+         {
+          "items": [
+           {
+            "href": "/publicacoes/boletim-de-financiamento-de-projetos",
+            "isNew": false,
+            "label": "Boletim de financiamento de projetos",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/ranking-de-financiamento-de-projetos",
+            "isNew": false,
+            "label": "Ranking de financiamento de projetos",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/projetos-e-emissoes-incentivadas",
+            "isNew": false,
+            "label": "Projetos e emissões incentivadas (lei 12.431)",
+            "enabled": true
+           }
+          ],
+          "title": "Financiamento de longo prazo",
+          "enabled": true
+         },
+         {
+          "items": [
+           {
+            "href": "/publicacoes/boletim-de-mercado-de-capitais",
+            "isNew": false,
+            "label": "Boletim de mercado de capitais",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/ranking-de-renda-fixa-e-hibridos",
+            "isNew": false,
+            "label": "Ranking de renda fixa e híbridos",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/ranking-de-renda-variavel",
+            "isNew": false,
+            "label": "Ranking de renda variável",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/ranking-de-emissoes-no-mercado-externo",
+            "isNew": false,
+            "label": "Ranking de emissões no mercado externo",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/dashboard-de-mercado-brasileiro",
+            "isNew": false,
+            "label": "Dashboard de Mercado Brasileiro",
+            "enabled": true
+           }
+          ],
+          "title": "Ofertas públicas",
+          "enabled": true
+         }
+        ],
+        "label": "Mercado de capitais",
+        "isNewDot": false,
+        "releated": {
+         "items": [
+          {
+           "href": "/debentures",
+           "isNew": false,
+           "label": "Debêntures"
+          },
+          {
+           "href": "/certificado-de-recebiveis",
+           "isNew": false,
+           "label": "Certificados de recebíveis (CRI e CRA)"
+          },
+          {
+           "href": "/letras-financeiras",
+           "isNew": false,
+           "label": "Letras financeiras"
+          },
+          {
+           "href": "/titulos-publicos",
+           "isNew": false,
+           "label": "Títulos públicos"
+          }
+         ],
+         "title": "Relacionados",
+         "enabled": true
+        },
+        "highlight": {
+         "href": "/bussola",
+         "badge": false,
+         "title": "Bússola",
+         "bgColor": "#082F7D",
+         "enabled": true,
+         "subtitle": "Confira as principais publicações e ferramentas que vão facilitar a sua análise estratégica."
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/publicacoes/fundos-de-investimento/dashboard-carteiras-administradas",
+            "isNew": true,
+            "label": "Dashboard Carteiras Administradas",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/fundos-de-investimento/dashboard-de-fidcs",
+            "isNew": false,
+            "label": "Dashboard de FIDC",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/fundos-de-investimento/dashboard-de-fip",
+            "isNew": false,
+            "label": "Dashboard de FIP",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/consolidado-diario-de-fundos-de-investimento",
+            "isNew": false,
+            "label": "Consolidado diário de fundos de investimento",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/boletim-de-fundos-de-investimento",
+            "isNew": false,
+            "label": "Boletim de fundos de investimento",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/fundos-de-investimento/dashboard-radar-175",
+            "isNew": false,
+            "label": "Dashboard radar 175",
+            "enabled": true
+           },
+           {
+            "href": "/publicacoes/dashboard-de-mercado-brasileiro",
+            "isNew": false,
+            "label": "Dashboard de Mercado Brasileiro",
+            "enabled": true
+           }
+          ],
+          "enabled": true
+         },
+         {
+          "items": [
+           {
+            "href": " /publicacoes/ranking-de-administradores-de-fundos-de-investimento",
+            "isNew": false,
+            "label": "Ranking de administradores de fundos de investimento"
+           },
+           {
+            "href": "/publicacoes/ranking-global-de-administracao-de-recursos-de-terceiros",
+            "isNew": false,
+            "label": "Ranking global de administração de recursos de terceiros"
+           },
+           {
+            "href": "/publicacoes/ranking-de-gestores-de-fundos-de-investimento",
+            "isNew": false,
+            "label": "Ranking de gestores de fundos de investimento "
+           }
+          ],
+          "title": "Administração/Gestão",
+          "enabled": true
+         },
+         {
+          "items": [
+           {
+            "href": "/publicacoes/ranking-de-custodia-de-ativos",
+            "isNew": false,
+            "label": "Ranking de custódia de ativos"
+           },
+           {
+            "href": "/publicacoes/ranking-de-controladoria-de-ativos",
+            "isNew": false,
+            "label": "Ranking de controladoria de ativos"
+           },
+           {
+            "href": "/publicacoes/ranking-de-controladoria-de-passivos",
+            "isNew": false,
+            "label": "Ranking de controladoria de passivos"
+           }
+          ],
+          "title": "Serviço Qualificados",
+          "enabled": true
+         }
+        ],
+        "label": "Fundos de investimento",
+        "isNewDot": true,
+        "releated": {
+         "items": [
+          {
+           "href": "/fundos",
+           "isNew": false,
+           "label": "Fundos (RCVM-175)"
+          },
+          {
+           "href": "/indices",
+           "isNew": false,
+           "label": "Índices ANBIMA (IHFA)"
+          }
+         ],
+         "title": "Relacionados",
+         "enabled": true
+        },
+        "highlight": {
+         "href": "/bussola",
+         "badge": false,
+         "title": "Bússola",
+         "bgColor": "#082F7D",
+         "enabled": true,
+         "subtitle": "Confira as principais publicações e ferramentas que vão facilitar a sua análise estratégica."
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/publicacoes/boletim-de-private-e-varejo",
+            "isNew": false,
+            "label": "Boletim de private e varejo"
+           },
+           {
+            "href": "/publicacoes/estatisticas-de-gestores-de-patrimonio",
+            "isNew": false,
+            "label": "Estatísticas de gestores de patrimônio"
+           },
+           {
+            "href": "/publicacoes/estatisticas-de-private",
+            "isNew": false,
+            "label": "Estatísticas de private"
+           },
+           {
+            "href": "/publicacoes/estatisticas-de-varejo",
+            "isNew": false,
+            "label": "Estatísticas de varejo"
+           },
+           {
+            "href": "/publicacoes/estatisticas/estatisticas-de-distribuicao",
+            "isNew": false,
+            "label": "Estatísticas de Distribuição"
+           }
+          ],
+          "enabled": true
+         }
+        ],
+        "label": "Distribuição",
+        "isNewDot": false,
+        "releated": {
+         "items": [
+          {
+           "href": "#",
+           "isNew": false,
+           "label": ""
+          }
+         ],
+         "title": "Relacionados",
+         "enabled": false
+        },
+        "highlight": {
+         "href": "/bussola",
+         "badge": false,
+         "title": "Bússola",
+         "bgColor": "#082F7D",
+         "enabled": true,
+         "subtitle": "Confira as principais publicações e ferramentas que vão facilitar a sua análise estratégica."
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/publicacoes/boletim-macroeconomico",
+            "isNew": false,
+            "label": "Boletim macroeconômico"
+           }
+          ],
+          "enabled": true
+         }
+        ],
+        "label": "Macroeconômico",
+        "isNewDot": false,
+        "highlight": {
+         "href": "/bussola",
+         "badge": false,
+         "title": "Bússola",
+         "bgColor": "#082F7D",
+         "enabled": true,
+         "subtitle": "Confira as principais publicações e ferramentas que vão facilitar a sua análise estratégica."
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/publicacoes/analises-de-mercado",
+            "isNew": false,
+            "label": "Análises de mercado"
+           }
+          ],
+          "enabled": true
+         }
+        ],
+        "label": "Análises de mercado",
+        "isNewDot": false,
+        "highlight": {
+         "href": "/bussola",
+         "badge": false,
+         "title": "Bússola",
+         "bgColor": "#082F7D",
+         "enabled": true,
+         "subtitle": "Confira as principais publicações e ferramentas que vão facilitar a sua análise estratégica."
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/publicacoes/anbima-edu/radar-das-certificacoes",
+            "isNew": true,
+            "label": "Radar das Certificações",
+            "enabled": true
+           }
+          ],
+          "enabled": true
+         }
+        ],
+        "label": "ANBIMA Edu",
+        "isNewDot": true,
+        "highlight": {
+         "href": "/bussola",
+         "badge": false,
+         "title": "Bússola",
+         "bgColor": "#082F7D",
+         "enabled": true,
+         "subtitle": "Confira as principais publicações e ferramentas que vão facilitar a sua análise estratégica."
+        }
+       }
+      ],
+      "dadosDeMercado": [
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/titulos-publicos/monitoramento-intradiario-de-titulos-publicos-federais",
+            "isNew": false,
+            "label": "Monitoramento intradiário de títulos públicos federais"
+           },
+           {
+            "href": "/titulos-publicos",
+            "label": "Títulos públicos"
+           },
+           {
+            "href": "/titulos-publicos/valor-nominal-atualizado",
+            "label": "Valor Nominal Atualizado (VNA)"
+           }
+          ],
+          "title": "Títulos Públicos"
+         },
+         {
+          "items": [
+           {
+            "href": "/debentures",
+            "label": "Debêntures"
+           },
+           {
+            "href": "/certificado-de-recebiveis",
+            "label": "Taxas de certificados de recebíveis (CRI e CRA)"
+           },
+           {
+            "href": "/letras-financeiras",
+            "label": "Taxas de letras financeiras"
+           },
+           {
+            "href": "/reune/previas",
+            "isNew": false,
+            "label": "Dados de negociação (prévias do REUNE)"
+           },
+           {
+            "href": "/publicacoes/estatisticas/painel-de-precos-de-renda-fixa",
+            "isNew": false,
+            "label": "Painel de Preços de Renda Fixa"
+           }
+          ],
+          "title": "Títulos Privados"
+         }
+        ],
+        "label": "Mercado de capitais",
+        "isNewDot": false,
+        "releated": {
+         "items": [
+          {
+           "href": "/titulos-publicos/ranking-de-titulos-publicos",
+           "label": "Ranking de títulos públicos"
+          },
+          {
+           "href": "/ferramentas/calculadora",
+           "label": "Calculadoras"
+          },
+          {
+           "href": "/ferramentas/comparador/debentures",
+           "label": "Comparador de debêntures"
+          }
+         ],
+         "title": "Relacionados",
+         "enabled": true
+        },
+        "highlight": {
+         "href": "/datasets",
+         "badge": false,
+         "title": "Datasets",
+         "enabled": true,
+         "subtitle": "Crie e faça download da sua amostra personalizada de dados."
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/fundos",
+            "isNew": false,
+            "label": "Fundos (RCVM-175)"
+           },
+           {
+            "href": "/fidc",
+            "isNew": false,
+            "label": "Taxas de FIDCs"
+           },
+           {
+            "href": "/reune/previas",
+            "isNew": false,
+            "label": "Dados de negociação (prévias do REUNE)"
+           },
+           {
+            "href": "/publicacoes/estatisticas/painel-de-precos-de-renda-fixa",
+            "isNew": false,
+            "label": "Painel de Preços de Renda Fixa"
+           },
+           {
+            "href": "/busca/transparencia-de-taxas-de-fundos",
+            "isNew": false,
+            "label": "Transparência de taxas de fundos"
+           }
+          ]
+         }
+        ],
+        "label": "Fundos de investimento",
+        "isNewDot": false,
+        "releated": {
+         "items": [
+          {
+           "href": "/publicacoes/fundos-de-investimento/dashboard-radar-175",
+           "label": "Dashboard radar 175"
+          },
+          {
+           "href": "/publicacoes/fundos-de-investimento/dashboard-de-fip",
+           "label": "Dashboard de FIP"
+          },
+          {
+           "href": "/analises/estatisticas-de-fiagro-mercado-de-capitais",
+           "label": "Estatísticas de Fiagro (ofertas públicas)"
+          },
+          {
+           "href": "/analises/estatisticas-de-fiagro",
+           "label": "Estatísticas de Fiagro (fundos de investimento)"
+          }
+         ],
+         "title": "Relacionados",
+         "enabled": true
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/titulos-publicos",
+            "label": "Taxas de títulos públicos"
+           },
+           {
+            "href": "/titulos-publicos/valor-nominal-atualizado",
+            "label": "Valor Nominal Atualizado (VNA)"
+           },
+           {
+            "href": "/titulos-publicos/monitoramento-intradiario-de-titulos-publicos-federais",
+            "isNew": false,
+            "label": "Monitoramento intradiário de títulos públicos federais"
+           }
+          ],
+          "title": "Títulos Públicos"
+         },
+         {
+          "items": [
+           {
+            "href": "/debentures?view=precos",
+            "label": "Taxas de debêntures"
+           },
+           {
+            "href": "/certificado-de-recebiveis",
+            "label": "Taxas de certificados de recebíveis (CRI e CRA)"
+           },
+           {
+            "href": "/letras-financeiras",
+            "label": "Taxas de letras financeiras"
+           }
+          ],
+          "title": "Títulos Privados"
+         },
+         {
+          "items": [
+           {
+            "href": "/fidc",
+            "label": "Taxas de FIDCs"
+           },
+           {
+            "href": "/reune/previas",
+            "label": "Dados de negociação (prévias do REUNE)"
+           },
+           {
+            "href": "/publicacoes/estatisticas/painel-de-precos-de-renda-fixa",
+            "isNew": false,
+            "label": "Painel de Preços de Renda Fixa"
+           }
+          ],
+          "title": "Fundos de investimento"
+         }
+        ],
+        "label": "Preços",
+        "isNewDot": false,
+        "releated": {
+         "items": [],
+         "title": "Relacionados",
+         "enabled": false
+        }
+       },
+       {
+        "items": [
+         {
+          "items": [
+           {
+            "href": "/indices",
+            "label": "IMA"
+           },
+           {
+            "href": "/indices",
+            "label": "IDkA"
+           }
+          ],
+          "title": "Títulos Públicos"
+         },
+         {
+          "items": [
+           {
+            "href": "/indices",
+            "label": "IDA"
+           },
+           {
+            "href": "/indices",
+            "label": "IDA LIQ"
+           }
+          ],
+          "title": "Títulos Privados"
+         },
+         {
+          "items": [
+           {
+            "href": "/indices",
+            "label": "IHFA"
+           }
+          ],
+          "title": "Fundos de investimento"
+         },
+         {
+          "items": [
+           {
+            "href": "/indices-customizados",
+            "isNew": false,
+            "label": "Índices Customizados"
+           }
+          ],
+          "title": "Outros Índices"
+         }
+        ],
+        "label": "Índices",
+        "isNewDot": false,
+        "releated": {
+         "items": [
+          {
+           "href": "/titulos-publicos",
+           "isNew": false,
+           "label": "Taxas de títulos públicos"
+          },
+          {
+           "href": "/titulos-publicos/valor-nominal-atualizado",
+           "isNew": false,
+           "label": "Valor Nominal Atualizado (VNA)"
+          },
+          {
+           "href": "/debentures?view=precos",
+           "isNew": false,
+           "label": "Taxas de debêntures"
+          },
+          {
+           "href": "/fundos",
+           "isNew": false,
+           "label": "Fundos (RCVM-175)"
+          }
+         ],
+         "title": "Relacionados",
+         "enabled": true
+        }
+       }
+      ]
+     },
+     "createdAt": "2023-12-19T18:33:22.331Z",
+     "updatedAt": "2026-11-03T20:44:23.696Z",
+     "publishedAt": "2023-12-19T18:33:24.774Z"
+    }
+   },
+   "meta": {}
+  }
+ },
+ {
+  "url": "https://data-api.prd.anbima.com.br/web-bff/v1/certificado-recebiveis/CRA021000RY/caracteristicas",
+  "body": {
+   "tipo": "CRA",
+   "volume": "107500000.000000000000000",
+   "vne": "1000.000000000000000",
+   "isin": "BRIMWLCRA1B5",
+   "indexador": {
+    "nome": "IPCA",
+    "relevancia": 20,
+    "exibe_sinal_spread": true
+   },
+   "emissao": {
+    "volume": "107500000.000000000000000",
+    "garantia": null,
+    "status": null,
+    "emissor": {
+     "nome": "RIZA SECURITIZADORA S.A.",
+     "cnpj": "08769451000108",
+     "setor": null,
+     "razao_social": "RIZA SECURITIZADORA S.A."
+    },
+    "coordenadores": [
+     {
+      "nome": "BANCO BRADESCO BBI S.A.",
+      "cnpj": "06271464007393",
+      "setor": null,
+      "razao_social": "BANCO BRADESCO BBI S.A."
+     },
+     {
+      "nome": "XP INVESTIMENTOS CORRETORA DE CAMBIO, TITULOS E VALORES MOBILIARIOS S/A",
+      "cnpj": "02332886001178",
+      "setor": null,
+      "razao_social": "XP INVESTIMENTOS CORRETORA DE CAMBIO, TITULOS E VALORES MOBILIARIOS S/A"
+     },
+     {
+      "nome": "BANCO ITAU-BBA S/A",
+      "cnpj": "17298092000130",
+      "setor": "TI e Telecomunicações",
+      "razao_social": "BANCO ITAU-BBA S/A"
+     }
+    ],
+    "numero_emissao": "2ª",
+    "data_emissao": "2021-04-15",
+    "quantidade_emitida": "107500",
+    "quantidade_mercado": "0",
+    "registro_cvm": "ICVM/400 - Registrada",
+    "prefixo_codigo_b3": "CRA0",
+    "numero_processo": "RJ-2021-3732",
+    "coordenador_lider": {
+     "nome": "BANCO BTG PACTUAL S.A.",
+     "cnpj": "30306294000145",
+     "setor": "Assistência Médica",
+     "razao_social": "BANCO BTG PACTUAL S.A."
+    },
+    "banco_mandatario": null,
+    "agente_fiduciario": {
+     "nome": "OLIVEIRA TRUST DTVM S/A",
+     "cnpj": "36113876000191",
+     "setor": null,
+     "razao_social": "OLIVEIRA TRUST DTVM S/A"
+    },
+    "data_registro_b3": null
+   },
+   "lei": false,
+   "artigo": null,
+   "remuneracao": "IPCA + 5.5780%",
+   "devedor": "MINERVA S.A.",
+   "cedente": null,
+   "classe": null,
+   "concentracao": null,
+   "categoria": null,
+   "setor": null,
+   "premios": null,
+   "codigo_b3": "CRA021000RY",
+   "numero_serie": "39ª",
+   "data_vencimento": "2031-04-15",
+   "prazo_remanescente": 1594,
+   "quantidade_mercado": null,
+   "quantidade_emitida": 107500,
+   "proxima_repactuacao": null,
+   "resgate_antecipado": false,
+   "taxa_emissao": "5.578000000000000",
+   "data_inicio_rentabilidade": "2021-04-16",
+   "data_proximo_evento": "2027-04-15",
+   "prazo_emissao": "10 anos",
+   "estoque_mercado": "0.000000000000000",
+   "valor_nominal_atual": "1358.262960000000000",
+   "data_registro_b3": null,
+   "data_operacao_minima": "2021-10-06",
+   "expressao_papel": "252 dias",
+   "originador_credito": "MINERVA S.A.",
+   "tipo_lastro": null,
+   "nome_operacao": "Minerva",
+   "flag_aprovar_caracteristicas": "TOTAL",
+   "flag_liberar_confere": "Total"
+  }
+ },
+ {
+  "url": "https://data-api.prd.anbima.com.br/web-bff/v1/certificado-recebiveis/CRA021000RY",
+  "body": {
+   "codigo_b3": "CRA021000RY",
+   "numero_serie": "39ª",
+   "tipo": "CRA",
+   "isin": "BRIMWLCRA1B5",
+   "devedor": "MINERVA S.A.",
+   "lei": false,
+   "emissao": {
+    "volume": "107500000.000000000000000",
+    "garantia": null,
+    "status": null,
+    "emissor": {
+     "nome": "RIZA SECURITIZADORA S.A.",
+     "cnpj": "08769451000108",
+     "setor": null,
+     "razao_social": "RIZA SECURITIZADORA S.A."
+    },
+    "coordenadores": [
+     {
+      "nome": "BANCO BRADESCO BBI S.A.",
+      "cnpj": "06271464007393",
+      "setor": null,
+      "razao_social": "BANCO BRADESCO BBI S.A."
+     },
+     {
+      "nome": "XP INVESTIMENTOS CORRETORA DE CAMBIO, TITULOS E VALORES MOBILIARIOS S/A",
+      "cnpj": "02332886001178",
+      "setor": null,
+      "razao_social": "XP INVESTIMENTOS CORRETORA DE CAMBIO, TITULOS E VALORES MOBILIARIOS S/A"
+     },
+     {
+      "nome": "BANCO ITAU-BBA S/A",
+      "cnpj": "17298092000130",
+      "setor": "TI e Telecomunicações",
+      "razao_social": "BANCO ITAU-BBA S/A"
+     }
+    ],
+    "numero_emissao": "2ª",
+    "data_emissao": "2021-04-15",
+    "quantidade_emitida": "107500",
+    "quantidade_mercado": "0",
+    "registro_cvm": "ICVM/400 - Registrada",
+    "prefixo_codigo_b3": "CRA0",
+    "numero_processo": "RJ-2021-3732",
+    "coordenador_lider": {
+     "nome": "BANCO BTG PACTUAL S.A.",
+     "cnpj": "30306294000145",
+     "setor": "Assistência Médica",
+     "razao_social": "BANCO BTG PACTUAL S.A."
+    },
+    "banco_mandatario": null,
+    "agente_fiduciario": {
+     "nome": "OLIVEIRA TRUST DTVM S/A",
+     "cnpj": "36113876000191",
+     "setor": null,
+     "razao_social": "OLIVEIRA TRUST DTVM S/A"
+    },
+    "data_registro_b3": null
+   },
+   "setor": null,
+   "data_vencimento": "2031-04-15",
+   "remuneracao": "IPCA + 5.5780%",
+   "pu_indicativo": {
+    "data_referencia": "2026-11-10",
+    "taxa_indicativa": "12.4113",
+    "taxa_compra": "12.7139",
+    "taxa_venda": "11.6915",
+    "duration": "768.74",
+    "pu_par": null,
+    "percentual_pu_par": "82.41",
+    "percentual_vne": null,
+    "data_referencia_ntnb": "2030-08-15",
+    "desvio_padrao": "0.61",
+    "pu_indicativo_status": "Total",
+    "taxa_indicativa_status": "Total",
+    "data_ultima_atualizacao": "2026-11-10T00:00:00",
+    "reune": null,
+    "data_vencimento": null,
+    "intervalo_indicativo_maximo": null,
+    "intervalo_indicativo_minimo": null,
+    "pu_indicativo": "1123.50844765"
+   },
+   "pu_historico": {
+    "data_referencia": "2026-11-10",
+    "pu_par": "1363.245675680000000",
+    "vna": "1358.262960000000000",
+    "juros": null,
+    "prazo_remanescente": 1594,
+    "flag_status": "TOTAL",
+    "data_ultima_atualizacao": "2026-11-10T00:00:00"
+   },
+   "nome_operacao": "Minerva",
+   "flag_aprovar_caracteristicas": "TOTAL",
+   "flag_liberar_confere": "Total",
+   "series_da_mesma_emissao": null
+  }
+ },
+ {
+  "url": "https://anbimaprecoseindices.zendesk.com/embeddable/config",
+  "erro": "Expecting value: line 1 column 1 (char 0)"
+ }
+]
