@@ -21,6 +21,7 @@ if b:
                 for v in r:
                     d = "".join(c for c in v if c.isdigit())
                     if len(d) == 14 and cnpj is None and n.startswith("registro_fundo"): cnpj = d
+cnpj = cnpj or "29467977000103"
 p("CNPJ", cnpj)
 # Informe mensal FII 2025-2026
 for ano in (2025, 2026):
@@ -30,7 +31,7 @@ for ano in (2025, 2026):
     for n in z.namelist():
         rd = csv.reader(io.StringIO(z.read(n).decode("latin-1")), delimiter=";"); cab = next(rd); first = True
         for r in rd:
-            if any("RBR HIGH GRADE" in (v or "").upper() for v in r) or (cnpj and any("".join(c for c in v if c.isdigit()) == cnpj for v in r)):
+            if (cnpj and any("".join(c for c in v if c.isdigit()) == cnpj for v in r)):
                 if first: p("MCAB", n, *cab); first = False
                 p("M", n, *r)
 # FNET
