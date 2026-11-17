@@ -7119,7 +7119,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       titulo: `${ordem} – CLIENTE ${(gv('mo_nome') || '[NOME]').toUpperCase()}`,
       infos: [['Data da ordem:', data], ...(gv('mo_conta') ? [['Conta:', gv('mo_conta')]] : [])],
       colunasGrupo: g => ['CNPJ', 'Fundo', ...(comLiq ? ['Liquidez'] : []), g.op === 'resgate' ? 'Valor do Resgate (R$)' : 'Valor da Aplicação (R$)'],
-      alinhar: ['right', 'left', 'center'],
+      alinhar: ['right', 'left', 'left'],
       cels: l => [l.cnpj, l.fundo, ...(comLiq ? [l.liquidez] : [])]
     };
   }
