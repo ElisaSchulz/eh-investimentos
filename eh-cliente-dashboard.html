@@ -6416,6 +6416,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       });
       ['mc_tipo','mc_ativo','mc_caracteristicas',...MC_CAMPOS_ATIVO]
         .forEach(id => { const el = document.getElementById(id); el.addEventListener('input', mcEditorMudou); el.addEventListener('change', mcEditorMudou); });
+      document.getElementById('mo_f_liq').addEventListener('change', () => gset('mo_f_liq', msgNormLiq(gv('mo_f_liq'))));
       ['mo_nome','mo_conta','mo_tipo','mo_data','mo_f_fundo','mo_f_cnpj','mo_f_liq']
         .forEach(id => { const el = document.getElementById(id); el.addEventListener('input', moRender); el.addEventListener('change', moRender); });
       document.getElementById('mo_f_fundo').addEventListener('change', () => {
@@ -6806,6 +6807,18 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     if (a) return a.campos.mc_c_liquidez;
     return /^[A-Z]{4}\d{1,2}$/.test(k) ? MSG_LIQ_BOLSA : '';
   }
+  // Padroniza a liquidez digitada ou colada: "D + 30" → "D+30"; "D + 47253" (data do Excel
+  // formatada como D+, caso dos títulos e fundos fechados) e "15/05/2029" → "Venc. dd/mm/aaaa".
+  function msgNormLiq(v) {
+    const t = (v || '').trim();
+    const d = t.match(/^d\s*\+\s*(\d+)$/i);
+    if (d) {
+      const n = parseInt(d[1], 10);
+      if (n < 1000) return 'D+' + n;
+      return 'Venc. ' + new Date(Date.UTC(1899, 11, 30) + n * 864e5).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+    }
+    return /^\d{2}\/\d{2}\/\d{4}$/.test(t) ? 'Venc. ' + t : t;
+  }
   // Preenche a liquidez sem apagar uma digitada à mão (mesma regra da conta).
   function msgPreencherLiq(input, liq) {
     if (input.value.trim() && input.value !== input.dataset.auto) return;
@@ -6922,6 +6935,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       moCelulasValor(d, id);
     const cnpj = tr.querySelector('.mo-cnpj'), fundo = tr.querySelector('.mo-fundo'), liq = tr.querySelector('.mo-liq');
     [cnpj, fundo, liq].forEach(el => el.addEventListener('input', moRender));
+    liq.addEventListener('change', () => { liq.value = msgNormLiq(liq.value); moRender(); });
     const preencherLiq = () => msgPreencherLiq(liq, msgLiquidezPara(cnpj.value, fundo.value));
     cnpj.addEventListener('change', () => {
       cnpj.value = moFmtCnpj(cnpj.value);
@@ -7057,8 +7071,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       // Liquidez: "D+30", "D + 30", "Venc. 28/08/2030" ou uma data; código (CRA…, ticker) cadastrado vira o CNPJ
       const ehLiq = c => /^(d\s*\+\s*\d+|venc|\d{2}\/\d{2}\/\d{4}$)/i.test(c);
       let textos = cols.filter((c, i) => i !== iCnpj && i !== iValor);
-      const liquidez = textos.find(ehLiq) || '';
-      textos = textos.filter(c => c !== liquidez);
+      const liqBruta = textos.find(ehLiq) || '', liquidez = msgNormLiq(liqBruta);
+      textos = textos.filter(c => c !== liqBruta);
       const codigo = iCnpj < 0 && textos.length > 1 && msgAtivoPorCodigo(textos[0]) ? textos.shift() : '';
       const fundo = textos[0] || '';
       if (iCnpj < 0 && iValor < 0 && !extras[li].total) return;
