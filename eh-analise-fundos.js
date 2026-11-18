@@ -28,8 +28,8 @@
   // ── utilidades ──
   const dig = s => String(s == null ? '' : s).replace(/\D/g, '');
   const fmtCnpj = c => c.length === 14 ? `${c.slice(0, 2)}.${c.slice(2, 5)}.${c.slice(5, 8)}/${c.slice(8, 12)}-${c.slice(12)}` : c;
-  const pct = (x, d = 2) => x == null || !isFinite(x) ? '—' : (x * 100).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d }) + '%';
-  const pctCdi = x => x == null || !isFinite(x) ? '—' : Math.round(x * 100).toLocaleString('pt-BR') + '%';
+  const pct = (x, d = 2) => x == null || !isFinite(x) ? '—' : (Math.abs(x) < 0.5 * Math.pow(10, -d - 2) ? 0 : x * 100).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d }) + '%';
+  const pctCdi = x => x == null || !isFinite(x) ? '—' : (Math.abs(x) < 0.00005 ? 0 : x * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
   const num = (x, d = 2) => x == null || !isFinite(x) ? '—' : x.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
   const mi = x => x == null ? '—' : (x / 1e6).toLocaleString('pt-BR', { maximumFractionDigits: x >= 1e8 ? 0 : 1 });
   const mesCurto = m => { const [a, mm] = m.split('-'); return `${MESES_CURTOS[+mm - 1]}/${a.slice(2)}`; };
@@ -125,6 +125,7 @@
   async function afInit() {
     if (S.iniciado) return;
     S.iniciado = true;
+    try { const a = localStorage.getItem('eh-af-aba'); if (a) afAba(a); } catch (e) {}
     const sel = document.getElementById('afMes');
     const { data, error } = await sb.storage.from(TM_BUCKET).list('', { limit: 200, sortBy: { column: 'name', order: 'desc' } });
     if (error) { msgTabela(`Não consegui ler o bucket: ${esc(error.message)}`, 'td-neg'); S.iniciado = false; return; }
@@ -266,26 +267,68 @@
       `${lista.length.toLocaleString('pt-BR')} fundos` + (lista.length > MAX_LINHAS ? ` (mostrando os ${MAX_LINHAS} primeiros; use os filtros ou baixe o Excel)` : '');
     if (!lista.length) { msgTabela('Nenhum fundo com esses filtros.', 'td-na'); return; }
     const est = S.editando;
-    const cab = '<tr>' + (est ? '<th></th>' : '') + COLS.map(c =>
-      `<th class="af-th" onclick="afOrdenar('${c.k}')">${c.t}${S.ordem.col === c.k ? (S.ordem.dir < 0 ? ' ▼' : ' ▲') : ''}</th>`).join('') + '</tr>';
+    const cab = '<tr>' + COLS.map(c =>
+      `<th class="af-th${c.k === 'n' ? ' af-fixa' : ''}" onclick="afOrdenar('${c.k}')">${c.t}${S.ordem.col === c.k ? (S.ordem.dir < 0 ? ' ▼' : ' ▲') : ''}</th>`).join('') + '</tr>';
     const linhas = lista.slice(0, MAX_LINHAS).map(f => {
       const nome = `<div class="af-nome"><a href="#" onclick="afDetalhe('${f.id}');return false;">${esc(f.n)}</a>` +
         (f.ns ? `<div class="af-sub">${esc(f.ns)}</div>` : '') +
         `<div class="af-sub">${fmtCnpj(f.c)} · ${f.t}${f.cl && f.cl !== f.t ? ' · ' + esc(f.cl) : ''} · ${f.p === 'G' ? 'Geral' : f.p === 'Q' ? 'Qualificado' : 'Profissional'}${f.g ? ' · ' + esc(f.g) : ''}` +
         (f.ind.defas ? ` · <span class="td-neg">dados até ${mesCurto(f.ind.defas)}</span>` : '') + '</div></div>';
+      const marca = est ? `<input type="checkbox" class="af-marca" title="Incluir em ${esc(est.nome)}" ${est.itens.some(i => i.id === f.id) ? 'checked' : ''} onchange="afMarcar('${f.id}', this.checked)">` : '';
       const tds = COLS.map(c => {
-        if (c.k === 'n') return `<td>${nome}</td>`;
+        if (c.k === 'n') return `<td class="af-fixa"><div class="af-nome-linha">${marca}${nome}</div></td>`;
         if (c.k === 'pf') return `<td>${celulaPlats(f)}</td>`;
         let cls = '';
         if (c.pc) { const v = c.v(f); cls = v == null ? 'td-na' : v >= 1 ? 'td-pos' : 'td-neg'; }
         else if (c.cmp) { const p = c.cmp(f); cls = !p || p[0] == null ? 'td-na' : p[0] >= p[1] ? 'td-pos' : 'td-neg'; }
         return `<td class="af-num ${cls}">${c.fmt(f)}</td>`;
       }).join('');
-      const marca = est ? `<td><input type="checkbox" title="Incluir na estratégia" ${est.itens.some(i => i.id === f.id) ? 'checked' : ''} onchange="afMarcar('${f.id}', this.checked)"></td>` : '';
-      return `<tr class="${S.sel === f.id ? 'af-sel' : ''}">${marca}${tds}</tr>`;
+      return `<tr class="${S.sel === f.id ? 'af-sel' : ''}">${tds}</tr>`;
     }).join('');
     tab.innerHTML = cab + linhas;
+    barraEdicao();
   }
+
+  // Faixa no topo da aba Fundos enquanto uma estratégia está sendo montada
+  function barraEdicao() {
+    const el = document.getElementById('afBarraEdicao');
+    if (!el) return;
+    const e = S.editando;
+    el.style.display = e ? '' : 'none';
+    if (e) el.innerHTML = `Montando <strong>${esc(e.nome)}</strong> · ${e.itens.length} fundo(s). Marque a caixinha ao lado do nome para incluir. ` +
+      `<a href="#" onclick="afAba('estrategias');return false;">Ver pesos e indicadores →</a> · <a href="#" onclick="afEditar('${e.id}');return false;">concluir</a>`;
+  }
+
+  // Sub-abas da tela: fundos, estratégias e listas das plataformas
+  function afAba(nome) {
+    document.querySelectorAll('#view-fundos .af-aba').forEach(d => d.classList.toggle('active', d.id === 'afAba-' + nome));
+    document.querySelectorAll('#view-fundos .af-aba-btn').forEach(b => b.classList.toggle('active', b.dataset.aba === nome));
+    try { localStorage.setItem('eh-af-aba', nome); } catch (e) {}
+  }
+
+  // Tela inteira: esconde menu e topo e usa a tela cheia do navegador
+  function afTelaInteira(abrir) {
+    if (abrir === undefined) abrir = !document.body.classList.contains('af-cheia');
+    document.body.classList.toggle('af-cheia', abrir);
+    const cheio = document.fullscreenElement || document.webkitFullscreenElement;
+    try {
+      if (abrir && !cheio) {
+        const el = document.documentElement, pedir = el.requestFullscreen || el.webkitRequestFullscreen;
+        const pr = pedir ? pedir.call(el) : null;
+        if (pr && pr.catch) pr.catch(() => {});
+      } else if (!abrir && cheio) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    } catch (e) {}
+    const b = document.getElementById('afBtnCheia');
+    if (b) b.textContent = abrir ? 'Sair da tela inteira' : 'Tela inteira';
+  }
+  document.addEventListener('keydown', ev => {
+    if (ev.key !== 'Escape') return;
+    if (document.getElementById('afModal').classList.contains('aberto')) afFecharDetalhe();
+    else if (document.body.classList.contains('af-cheia')) afTelaInteira(false);
+  });
+  ['fullscreenchange', 'webkitfullscreenchange'].forEach(n => document.addEventListener(n, () => {
+    if (!(document.fullscreenElement || document.webkitFullscreenElement) && document.body.classList.contains('af-cheia')) afTelaInteira(false);
+  }));
 
   function afOrdenar(k) {
     if (S.ordem.col === k) S.ordem.dir = -S.ordem.dir;
@@ -329,7 +372,7 @@
     const f = S.porId[fid];
     if (!f) return;
     S.sel = fid;
-    const box = document.getElementById('afDetalhe');
+    const box = document.getElementById('afDetalheCorpo');
     const plats = f.plats.map(p => {
       const meta = S.plats.plataformas[p].fundos[f.c] || {};
       const info = Object.entries(meta).filter(([k]) => k !== 'n').map(([k, v]) => `${esc(k)}: <strong>${esc(v)}</strong>`).join(' · ');
@@ -342,8 +385,8 @@
           <div class="af-sub">PL R$ ${mi(f.pl)} mi · ${f.ct ? f.ct.toLocaleString('pt-BR') + ' cotistas' : 'cotistas não informados'} · último dado ${esc(f.dt)}${f.capm ? ` · captação em ${mesCurto(f.capm)}: R$ ${mi(f.cap)} mi` : ''}</div>
         </div>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-          ${S.editando ? `<button class="btn-download-ext" onclick="afMarcar('${f.id}', true)">Incluir na estratégia</button>` : ''}
-          <button class="btn-download-ext" onclick="document.getElementById('afDetalhe').innerHTML='';AF.sel=null;">Fechar</button>
+          ${S.editando ? (S.editando.itens.some(i => i.id === f.id) ? '<span class="af-nota" style="margin:0;align-self:center;">Já está na estratégia</span>' : `<button class="btn-download-ext" onclick="afMarcar('${f.id}', true);afDetalhe('${f.id}')">Incluir em ${esc(S.editando.nome)}</button>`) : ''}
+          <button class="btn-download-ext" onclick="afFecharDetalhe()">Fechar (Esc)</button>
         </div>
       </div>
       <div style="margin:0.8rem 0;font-size:12px;">${plats}</div>
@@ -353,7 +396,15 @@
       <p class="af-nota">Verde: mês acima do CDI. Abaixo de cada mês, o rendimento em % do CDI. Fonte: cotas de fim de mês da CVM${f.t === 'FIDC' ? ' (informe mensal de FIDC, série sênior quando há)' : ''}.</p>
     </div>`;
     renderTabela();
-    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const modal = document.getElementById('afModal');
+    modal.classList.add('aberto');
+    modal.scrollTop = 0;
+  }
+
+  function afFecharDetalhe() {
+    document.getElementById('afModal').classList.remove('aberto');
+    S.sel = null;
+    if (S.lista) renderTabela();
   }
 
   // ── listas de plataforma ──
@@ -455,12 +506,13 @@
     S.editando = e;
     salvarEstr();
     renderEstrategias(); renderTabela();
+    afAba('fundos');
   }
 
   function afEditar(eid) {
     S.editando = S.editando && S.editando.id === eid ? null : S.estr.estrategias.find(e => e.id === eid) || null;
     renderEstrategias(); renderTabela();
-    if (S.editando) document.getElementById('afEditor').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (S.editando) { afAba('estrategias'); document.getElementById('afEditor').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   }
 
   function afMarcar(fid, sim) {
@@ -561,7 +613,7 @@
     };
     const tabela = lista.length
       ? '<tr><th title="Mostrar no gráfico">Gráf.</th><th>Estratégia</th><th>YTD</th><th>12m</th><th>24m</th><th>36m</th><th>Vol 12m</th><th>Sharpe 12m</th><th>Sharpe 36m</th><th>Drawdown</th><th></th></tr>' + lista.map(linhaInd).join('')
-      : '<tr><td class="td-na">Nenhuma estratégia ainda. Clique em "Nova estratégia", depois marque os fundos na tabela acima e ajuste os pesos.</td></tr>';
+      : '<tr><td class="td-na">Nenhuma estratégia ainda. Clique em "Nova estratégia", marque os fundos na aba Fundos e depois ajuste os pesos aqui.</td></tr>';
     el.innerHTML = `<div class="ext-preview-wrap" style="max-height:none;"><table class="ext-preview-table">${tabela}</table></div>` +
       grafico() + editor();
   }
@@ -586,12 +638,13 @@
       <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center;">
         <h3>Editando: ${esc(e.nome)} <a href="#" onclick="afRenomear();return false;" style="font-size:11px;">renomear</a></h3>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+          <button class="btn-download-ext" onclick="afAba('fundos')">Escolher fundos</button>
           <button class="btn-download-ext" onclick="afIgualar()">Pesos iguais</button>
           <button class="btn-download-ext" onclick="afNormalizar()">Somar 100%</button>
           <button class="btn-download-ext" onclick="afEditar('${e.id}')">Concluir</button>
         </div>
       </div>
-      <p class="af-nota">Marque os fundos na primeira coluna da tabela de fundos para incluir. Soma dos pesos: <strong class="${Math.abs(total - 100) < 0.01 ? 'td-pos' : 'td-neg'}">${num(total, 1)}%</strong> (os indicadores usam os pesos proporcionais, então não precisa fechar 100%).</p>
+      <p class="af-nota">Para incluir fundos, vá em <a href="#" onclick="afAba('fundos');return false;">Fundos</a> e marque a caixinha ao lado do nome. Soma dos pesos: <strong class="${Math.abs(total - 100) < 0.01 ? 'td-pos' : 'td-neg'}">${num(total, 1)}%</strong> (os indicadores usam os pesos proporcionais, então não precisa fechar 100%).</p>
       <div class="upload-field" style="margin-bottom:0.8rem;"><label>Observações (perfil, clientes que usam, racional)</label>
         <input type="text" value="${esc(e.obs || '')}" onchange="afObs(this.value)" placeholder="ex.: moderado, não qualificado, liquidez até D+30"></div>
       <div class="ext-preview-wrap" style="max-height:none;"><table class="ext-preview-table">
@@ -729,7 +782,7 @@
   Object.assign(window, {
     afInit, afCarregar, afFiltrar, afOrdenar, afDetalhe, afEnviarPlat, afRemoverPlat, afNovaEstrategia,
     afEditar, afMarcar, afPeso, afNormalizar, afIgualar, afRenomear, afObs, afExcluir, afDuplicar,
-    afComparar, afJanela, afHover, afExportar,
+    afComparar, afJanela, afHover, afExportar, afAba, afTelaInteira, afFecharDetalhe,
   });
   window.AF_TESTE = { janela, acumulado, escalaPasso };
 })();
