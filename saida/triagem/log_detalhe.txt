@@ -1,0 +1,2 @@
+ERRO https://dados.cvm.gov.br/dados/FI/DOC/LAMINA/DADOS/lamina_fi_202611.zip HTTP Error 404: Not Found
+laminas 8
