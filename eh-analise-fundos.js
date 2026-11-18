@@ -708,6 +708,8 @@
       return `<tr><td>${f ? `<a href="${linkFundo(i.id)}" onclick="return afClique(event, '${i.id}')">${esc(f.n)}</a>${f.ns ? `<div class="af-sub">${esc(f.ns)}</div>` : ''}` : `${esc(i.n)} <span class="td-neg">(sem dados neste mês)</span>`}<div class="af-sub">${fmtCnpj(i.c)}${f ? ' · ' + f.t + ' · ' + celulaPlats(f) : ''}</div></td>
         <td><input class="af-peso" type="number" min="0" step="0.5" value="${i.peso}" onchange="afPeso('${i.id}', this.value)"> %</td>
         <td class="af-num">${total ? pct(i.peso / total, 1) : '—'}</td>
+        <td class="af-num">${e.valorTotal && total ? brl(e.valorTotal * i.peso / total) : '—'}</td>
+        <td class="af-num">${f && f.liq ? esc(f.liq.txt) : '—'}</td>
         <td class="af-num">${pct(j12 && j12.ret)}<div class="af-sub">${pctCdi(j12 && j12.pc)} CDI</div></td>
         <td class="af-num">${num(j12 && j12.sharpe)}</td>
         <td><a href="#" style="color:var(--err-text);" onclick="afMarcar('${i.id}', false);return false;">tirar</a></td></tr>`;
@@ -726,13 +728,185 @@
       <div class="upload-field" style="margin-bottom:0.8rem;"><label>Observações (perfil, clientes que usam, racional)</label>
         <input type="text" value="${esc(e.obs || '')}" onchange="afObs(this.value)" placeholder="ex.: moderado, não qualificado, liquidez até D+30"></div>
       <div class="ext-preview-wrap" style="max-height:none;"><table class="ext-preview-table">
-        <tr><th>Fundo</th><th>Peso</th><th>Proporção</th><th>12m</th><th>Sharpe 12m</th><th></th></tr>${itens || '<tr><td colspan="6" class="td-na">Nenhum fundo ainda.</td></tr>'}</table></div>
+        <tr><th>Fundo</th><th>Peso</th><th>Proporção</th><th>Valor (R$)</th><th>Liquidez</th><th>12m</th><th>Sharpe 12m</th><th></th></tr>${itens || '<tr><td colspan="8" class="td-na">Nenhum fundo ainda.</td></tr>'}</table></div>
+      ${e.itens.length ? painelEnvio(e, ind) : ''}
       ${e.itens.length ? `<h3 style="margin-top:1.2rem;">Indicadores da carteira</h3>
       <div class="ext-preview-wrap" style="max-height:none;"><table class="ext-preview-table">${cartoesIndicadores(ind)}</table></div>
       <h3 style="margin-top:1.2rem;">Carteira mês a mês</h3>
       <div class="ext-preview-wrap" style="max-height:none;"><table class="ext-preview-table af-grade">${gradeMensal(se.r)}</table></div>
       ${se.parcial.length ? `<p class="af-nota">Em ${se.parcial.length} mês(es) algum fundo não tinha dado (fundo mais novo ou FIDC ainda sem informe); nesses meses a carteira usa os demais fundos com os pesos reescalados.</p>` : ''}` : ''}
     </div>`;
+  }
+
+  // ── proposta para o cliente (imagem e WhatsApp) e ordem ao banco ──
+  const brl = v => v == null || !isFinite(v) ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // Nome do catálogo da EH quando houver (mais curto que a denominação da CVM)
+  function nomeCurto(c, n) {
+    const a = (window.EH_ATIVOS_CATALOGO || []).find(x => dig(x[0]) === c);
+    return a ? a[1] : n;
+  }
+
+  function linhasProposta(e) {
+    const total = e.itens.reduce((a, i) => a + i.peso, 0) || 1;
+    const L = e.itens.filter(i => i.peso > 0).map(i => {
+      const f = S.porId[i.id];
+      const j12 = f && f.ind.j12;
+      return {
+        id: i.id, c: i.c, nome: nomeCurto(i.c, f ? f.n : i.n), nomeCvm: f ? f.n : i.n,
+        peso: i.peso / total, valor: e.valorTotal ? Math.round(e.valorTotal * i.peso / total * 100) / 100 : null,
+        liq: f && f.liq && f.liq.txt !== '—' ? f.liq.txt : '', r12: j12 ? j12.ret : null, pc12: j12 ? j12.pc : null,
+      };
+    });
+    // Centavos do arredondamento vão para o maior fundo, para o total fechar
+    if (e.valorTotal && L.length) {
+      const dif = Math.round((e.valorTotal - L.reduce((a, l) => a + l.valor, 0)) * 100) / 100;
+      const maior = L.reduce((m, l) => l.peso > m.peso ? l : m, L[0]);
+      maior.valor = Math.round((maior.valor + dif) * 100) / 100;
+    }
+    return L;
+  }
+
+  function propostaHtml(e, ind) {
+    const L = linhasProposta(e), rent = e.envRent !== false;
+    const f = "font-family:Calibri,Arial,sans-serif;font-size:11pt;";
+    const td = f + 'padding:5px 10px;border-bottom:1px solid #d9d9d9;color:#000;';
+    const th = f + 'color:#fff;font-weight:bold;padding:9px 10px;background:#002060;';
+    const comValor = L.some(l => l.valor != null);
+    const cab = ['Fundo', 'Liquidez', '% da carteira', ...(comValor ? ['Valor (R$)'] : []), ...(rent ? ['Rent. 12m', '% do CDI 12m'] : [])];
+    const linhas = L.map((l, k) => `<tr style="background:${k % 2 ? '#f2f2f2' : '#fff'};">
+      <td style="${td}">${esc(l.nome)}</td><td style="${td}text-align:center;">${esc(l.liq || '—')}</td>
+      <td style="${td}text-align:right;">${pct(l.peso, 1)}</td>
+      ${comValor ? `<td style="${td}text-align:right;color:#0000ff;">${brl(l.valor)}</td>` : ''}
+      ${rent ? `<td style="${td}text-align:right;">${pct(l.r12)}</td><td style="${td}text-align:right;">${pctCdi(l.pc12)}</td>` : ''}</tr>`).join('');
+    const tot = `<tr style="background:#dfe5f1;"><td style="${td}font-weight:bold;border-top:2px solid #002060;">TOTAL</td><td style="${td}border-top:2px solid #002060;"></td>
+      <td style="${td}text-align:right;font-weight:bold;border-top:2px solid #002060;">100%</td>
+      ${comValor ? `<td style="${td}text-align:right;font-weight:bold;border-top:2px solid #002060;">${brl(L.reduce((a, l) => a + (l.valor || 0), 0))}</td>` : ''}
+      ${rent ? `<td style="${td}text-align:right;font-weight:bold;border-top:2px solid #002060;">${pct(ind.j12 && ind.j12.ret)}</td><td style="${td}text-align:right;font-weight:bold;border-top:2px solid #002060;">${pctCdi(ind.j12 && ind.j12.pc)}</td>` : ''}</tr>`;
+    const fim = S.dados.meses[ind.fim >= 0 ? ind.fim : S.dados.meses.length - 1];
+    const resumo = rent && ind.j12 ? `<div style="${f}margin-top:10px;color:#000;">Carteira proposta nos últimos 12 meses: <b>${pct(ind.j12.ret)}</b> (${pctCdi(ind.j12.pc)} do CDI). CDI no período: ${pct(ind.j12.cdi)}.` +
+      (ind.j24 ? ` Em 24 meses: <b>${pct(ind.j24.ret)}</b> (${pctCdi(ind.j24.pc)} do CDI).` : '') + '</div>' : '';
+    return `<div style="${f}color:#000;">
+      <div style="${f}font-size:15pt;font-weight:bold;color:#002060;">PROPOSTA DE ALOCAÇÃO${e.cliente ? ' – ' + esc(e.cliente.toUpperCase()) : ''}</div>
+      <div style="${f}color:#92600D;margin:2px 0 10px;">${esc(new Date().toLocaleDateString('pt-BR'))} · EH Investimentos</div>
+      <table style="border-collapse:collapse;${f}min-width:620px;"><thead><tr>${cab.map((c, j) => `<th style="${th}text-align:${j ? 'right' : 'left'};${j === 1 ? 'text-align:center;' : ''}">${c}</th>`).join('')}</tr></thead>
+      <tbody>${linhas}${tot}</tbody></table>${resumo}
+      ${rent ? `<div style="${f}font-size:9pt;color:#6C6D70;margin-top:8px;">Rentabilidade passada não é garantia de rentabilidade futura. Fonte: CVM e Banco Central, dados até ${mesCurto(fim)}.</div>` : ''}
+    </div>`;
+  }
+
+  function propostaTexto(e, ind) {
+    const L = linhasProposta(e), rent = e.envRent !== false;
+    const linhas = L.map(l => `• ${l.nome}: ${pct(l.peso, 1)}${l.valor != null ? ` (R$ ${brl(l.valor)})` : ''}${l.liq ? ` · liquidez ${l.liq}` : ''}` +
+      (rent && l.r12 != null ? ` · 12m ${pct(l.r12)} (${pctCdi(l.pc12)} do CDI)` : ''));
+    const totalV = L.reduce((a, l) => a + (l.valor || 0), 0);
+    return [`*Proposta de alocação${e.cliente ? ' – ' + e.cliente : ''}*`, '', ...linhas,
+      ...(totalV ? ['', `*Total: R$ ${brl(totalV)}*`] : []),
+      ...(rent && ind.j12 ? ['', `Carteira proposta nos últimos 12 meses: ${pct(ind.j12.ret)} (${pctCdi(ind.j12.pc)} do CDI). CDI no período: ${pct(ind.j12.cdi)}.`,
+        '_Rentabilidade passada não é garantia de rentabilidade futura._'] : [])].join('\n');
+  }
+
+  function painelEnvio(e, ind) {
+    return `<h3 style="margin-top:1.2rem;">Enviar ao cliente e gerar a ordem</h3>
+      <div class="upload-form af-filtros" style="margin-bottom:0.6rem;">
+        <div class="upload-field"><label>Cliente (nome na proposta)</label><input type="text" value="${esc(e.cliente || '')}" placeholder="ex.: Viviane" onchange="afEnvio('cliente', this.value)"></div>
+        <div class="upload-field"><label>Valor total (R$)</label><input type="text" inputmode="decimal" value="${e.valorTotal ? brl(e.valorTotal) : ''}" placeholder="ex.: 250.000,00" onchange="afEnvio('valorTotal', this.value)"></div>
+        <div class="upload-field" style="justify-content:flex-end;"><label>&nbsp;</label><label style="display:flex;gap:0.4rem;align-items:center;font-size:12px;cursor:pointer;"><input type="checkbox" ${e.envRent !== false ? 'checked' : ''} onchange="afEnvio('envRent', this.checked)"> Mostrar rentabilidade</label></div>
+      </div>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.6rem;">
+        <button class="btn-download-ext" onclick="afPropostaImagem('copiar')">Copiar imagem</button>
+        <button class="btn-download-ext" onclick="afPropostaImagem('baixar')">Baixar imagem</button>
+        <button class="btn-download-ext" onclick="afPropostaTexto('copiar')">Copiar texto</button>
+        <button class="btn-download-ext" onclick="afPropostaTexto('whatsapp')">Abrir no WhatsApp</button>
+        <button class="btn-download-ext" onclick="afParaOrdem()">Gerar ordem ao banco →</button>
+        <span class="af-nota" id="afEnvioFb" style="margin:0;align-self:center;"></span>
+      </div>
+      <div class="af-proposta-prev">${propostaHtml(e, ind)}</div>`;
+  }
+
+  function afEnvio(campo, v) {
+    const e = S.editando;
+    if (!e) return;
+    if (campo === 'valorTotal') {
+      const n = parseFloat(String(v).replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.'));
+      e.valorTotal = isFinite(n) && n > 0 ? n : null;
+    } else e[campo] = v;
+    e.atualizado = new Date().toISOString();
+    salvarEstr();
+    renderEstrategias();
+  }
+
+  function fbEnvio(txt, ok = true) {
+    const el = document.getElementById('afEnvioFb');
+    if (el) { el.textContent = txt; el.className = 'af-nota ' + (ok ? 'td-pos' : 'td-neg'); }
+  }
+
+  function nomeArquivo(e) {
+    return `Proposta ${(e.cliente || e.nome).replace(/[\\/:*?"<>|]/g, '')} - ${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.png`;
+  }
+
+  async function canvasProposta(e) {
+    const box = document.createElement('div');
+    box.style.cssText = 'position:fixed;left:-10000px;top:0;background:#fff;padding:18px;display:inline-block;';
+    box.innerHTML = propostaHtml(e, indicadores(serieEstrategia(e).r));
+    document.body.appendChild(box);
+    try { return await html2canvas(box, { backgroundColor: '#ffffff', scale: 2 }); }
+    finally { box.remove(); }
+  }
+
+  // Mesmo jeito da Ordem ao Banco: ClipboardItem criado no clique (Safari), e no celular sem
+  // suporte cai no menu de compartilhar.
+  async function afPropostaImagem(modo) {
+    const e = S.editando;
+    if (!e || !e.itens.length) return;
+    if (modo === 'baixar') {
+      try {
+        const c = await canvasProposta(e);
+        const a = document.createElement('a');
+        a.href = c.toDataURL('image/png'); a.download = nomeArquivo(e); a.click();
+      } catch (err) { fbEnvio('Erro ao gerar a imagem: ' + err.message, false); }
+      return;
+    }
+    const blob = canvasProposta(e).then(c => new Promise((ok, erro) => c.toBlob(b => b ? ok(b) : erro(new Error('falha ao gerar a imagem')), 'image/png')));
+    try {
+      if (!window.ClipboardItem || !navigator.clipboard?.write) throw new Error('sem suporte');
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      fbEnvio('✓ Imagem copiada. Cole no WhatsApp.');
+    } catch (err) {
+      try {
+        const arq = new File([await blob], nomeArquivo(e), { type: 'image/png' });
+        if (navigator.canShare?.({ files: [arq] })) await navigator.share({ files: [arq] });
+        else fbEnvio('Este navegador não deixa copiar imagem. Use "Baixar imagem".', false);
+      } catch (e2) { if (e2.name !== 'AbortError') fbEnvio('Não consegui copiar a imagem: ' + e2.message, false); }
+    }
+  }
+
+  async function afPropostaTexto(modo) {
+    const e = S.editando;
+    if (!e || !e.itens.length) return;
+    const txt = propostaTexto(e, indicadores(serieEstrategia(e).r));
+    if (modo === 'whatsapp') { window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank'); return; }
+    try { await navigator.clipboard.writeText(txt); fbEnvio('✓ Texto copiado.'); }
+    catch (err) { fbEnvio('Não consegui copiar: ' + err.message, false); }
+  }
+
+  // Leva a carteira para Mensagens Padrão → Ordem ao Banco (ordem de compra por cliente),
+  // com CNPJ, fundo, liquidez e valor de cada fundo; lá saem a tabela, a imagem e o Excel.
+  async function afParaOrdem() {
+    const e = S.editando;
+    if (!e || !e.itens.length) return;
+    if (typeof msgInit !== 'function' || typeof moAddRow !== 'function') { fbEnvio('Não achei a tela de Mensagens Padrão.', false); return; }
+    const L = linhasProposta(e);
+    navigateToView('mensagens');
+    await msgInit();
+    const aba = [...document.querySelectorAll('#view-mensagens .email-tab')].find(b => (b.getAttribute('onclick') || '').includes("'banco'"));
+    if (aba) msgSwitchTab('banco', aba);
+    gset('mo_modo', 'cliente'); moModoChange();
+    gset('mo_tipo', 'compra');
+    if (e.cliente) gset('mo_nome', e.cliente.toUpperCase());
+    document.getElementById('mo_rows').innerHTML = '';
+    L.forEach(l => moAddRow({ cnpj: fmtCnpj(l.c), fundo: l.nome, liquidez: l.liq, valor: l.valor != null ? brl(l.valor) : '' }));
+    moAtualizarLinhas();
+    window.scrollTo(0, 0);
   }
 
   // Gráfico de retorno acumulado das estratégias marcadas contra o CDI
@@ -863,6 +1037,7 @@
     afInit, afCarregar, afFiltrar, afOrdenar, afDetalhe, afEnviarPlat, afRemoverPlat, afNovaEstrategia,
     afEditar, afMarcar, afPeso, afNormalizar, afIgualar, afRenomear, afObs, afExcluir, afDuplicar,
     afComparar, afJanela, afHover, afExportar, afAba, afTelaInteira, afFecharDetalhe, afClique, afSairPagina,
+    afEnvio, afPropostaImagem, afPropostaTexto, afParaOrdem,
   });
   window.AF_TESTE = { janela, acumulado, escalaPasso };
 })();
