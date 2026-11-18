@@ -249,6 +249,52 @@ def cotas_fidc(cand, meses):
     return ult, info, capt
 
 
+def liquidez_cvm(cand, ano):
+    """Prazos de resgate do extrato de informações dos fundos da CVM: {cnpj: (cotização, pagamento)} em dias.
+
+    O extrato é anual e nem toda classe está nele (FIDC não entra); o que faltar fica sem liquidez
+    e a aba usa o catálogo de ativos ou a lista da plataforma.
+    """
+    alvo = {c for c, i in cand.items() if i["t"] == "FIF"}
+    out = {}
+    for a in (ano, ano - 1):
+        bruto = baixar(f"{CVM}/FI/DOC/EXTRATO/DADOS/extrato_fi_{a}.csv", tentativas=2)
+        if not bruto:
+            continue
+        for _, texto in textos(bruto):
+            cab, rd = linhas(texto)
+            ic = coluna(cab, "CNPJ_FUNDO_CLASSE", "CNPJ_FUNDO")
+            idt = coluna(cab, "DT_COMPTC")
+            icv = coluna(cab, "QT_DIA_CONVERSAO_COTA_RESGATE", "CONVERSAO_COTA_RESGATE", "CONVERSAO_RESGATE")
+            ipg = coluna(cab, "QT_DIA_PAGTO_RESGATE", "PAGTO_RESGATE", "PAGAMENTO_RESGATE")
+            if ic is None or ipg is None:
+                print(f"Aviso: leiaute inesperado no extrato da CVM {a}; colunas: {', '.join(cab)[:300]}")
+                continue
+            for r in rd:
+                if len(r) < len(cab):
+                    continue
+                c = dig(r[ic])
+                if c not in alvo or c in out and a != ano:
+                    continue
+                d = r[idt] if idt is not None else ""
+                try:
+                    pg = int(float(r[ipg].replace(",", ".")))
+                except ValueError:
+                    continue
+                cv = None
+                if icv is not None:
+                    try:
+                        cv = int(float(r[icv].replace(",", ".")))
+                    except ValueError:
+                        pass
+                if c not in out or d >= out[c][2]:
+                    out[c] = (cv, pg, d)
+        if out:
+            break
+    print(f"Liquidez pelo extrato da CVM: {len(out)} classes")
+    return {c: v[:2] for c, v in out.items()}
+
+
 def cdi_mensal(meses):
     """CDI de cada mês (fator - 1) pela série diária 12 do Banco Central."""
     from dados_planilha import sgs
@@ -278,6 +324,7 @@ def main(mes=MES):
     u2, i2, c2 = cotas_fidc(cand, meses)
     ult, info, capt = {**u1, **u2}, {**i1, **i2}, {**c1, **c2}
     cdi = cdi_mensal(meses)
+    liq = liquidez_cvm(cand, ano)
 
     retornos_meses = meses[1:]
     fundos = []
@@ -306,6 +353,7 @@ def main(mes=MES):
             "g": i["g"], "pl": round(pl), "ct": cot, "dt": d_ult,
             "cap": None if ult_capt_mes is None else round(cm[ult_capt_mes]),
             "capm": ult_capt_mes, "r": r,
+            "lq": list(liq[c]) if c in liq else None,
         })
     fundos.sort(key=lambda f: -f["pl"])
     saida = {

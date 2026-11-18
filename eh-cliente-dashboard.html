@@ -17,7 +17,7 @@
   <script src="eh-senha.js"></script>
   <script src="eh-ativos-catalogo.js"></script>
   <script src="eh-clientes-contas.js"></script>
-  <script src="eh-analise-fundos.js?v=2026-11-18c"></script>
+  <script src="eh-analise-fundos.js?v=2026-11-18d"></script>
   <style>
     :root {
       /* Navy & accent palette — aligned to index.html */
@@ -1797,6 +1797,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           <div class="upload-field"><label>Investidor</label><select id="afPublico" onchange="afFiltrar()"><option value="Q">Qualificado (tudo)</option><option value="G">Público geral</option><option value="SQ">Só os de qualificado</option></select></div>
           <div class="upload-field"><label>Plataforma</label><select id="afPlat" onchange="afFiltrar()"><option value="">Todas</option></select></div>
           <div class="upload-field" style="max-width:130px;"><label>PL mínimo (R$ mi)</label><input type="number" id="afPlMin" value="50" min="0" step="10" oninput="afFiltrar()"></div>
+          <div class="upload-field" style="max-width:130px;"><label>Liquidez até D+</label><input type="number" id="afLiqMax" min="0" step="1" placeholder="qualquer" oninput="afFiltrar()"></div>
         </div>
         <div class="af-checks">
           <label><input type="checkbox" id="afAcima" checked onchange="afFiltrar()"> Acima do CDI em 12 meses</label>
