@@ -17,6 +17,7 @@
   <script src="eh-senha.js"></script>
   <script src="eh-ativos-catalogo.js"></script>
   <script src="eh-clientes-contas.js"></script>
+  <script src="eh-analise-fundos.js"></script>
   <style>
     :root {
       /* Navy & accent palette — aligned to index.html */
@@ -794,6 +795,37 @@
     .ec-ia-botoes { display:flex; flex-wrap:wrap; gap:0.7rem; align-items:center; }
     .ec-ia-botoes .btn-download-ext { margin-top:0; }
     @media (max-width: 1100px) { .ec-layout { grid-template-columns: 1fr; } .ec-preview { position:relative; top:0; height:80vh; } }
+      /* Análise de Fundos */
+    .af-filtros { flex-wrap: wrap; }
+    .af-checks { display:flex; gap:1.2rem; flex-wrap:wrap; font-size:12px; margin:0.2rem 0 1rem; color:var(--cream-soft); }
+    .af-checks label { display:flex; align-items:center; gap:0.4rem; cursor:pointer; }
+    .af-tabela-wrap { max-height: 70vh; }
+    .af-tabela td, .af-grade td { vertical-align: top; }
+    .af-th { cursor: pointer; user-select: none; }
+    .af-th:hover { color: var(--cream); }
+    .af-num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    #view-fundos .upload-panel a { color: var(--gold-text); }
+    .af-nome { min-width: 240px; max-width: 360px; white-space: normal; }
+    #view-fundos .af-nome a { color: var(--cream); font-weight: 600; text-decoration: none; }
+    #view-fundos .af-nome a:hover { color: var(--gold-text); }
+    .af-sub { font-size: 10.5px; color: var(--cream-faint); font-weight: 400; white-space: normal; }
+    .af-tag { display:inline-block; border:1px solid var(--rule-strong); padding:1px 6px; font-size:10px; letter-spacing:0.06em; color:var(--gold-text); white-space:nowrap; }
+    .af-tag-off { color: var(--err-text); }
+    .af-sel td { background: var(--gold-pale); }
+    .af-nota { font-size: 12px; color: var(--cream-faint); margin: 0.6rem 0; }
+    .af-grade th, .af-grade td { padding: 0.45rem 0.55rem; }
+    .af-peso { width: 70px; padding: 0.3rem; border: 1px solid var(--rule-strong); background: transparent; color: var(--cream); }
+    .af-editor { border-left: 3px solid var(--gold); }
+    .af-legenda { display:flex; gap:1rem; flex-wrap:wrap; font-size:11px; color:var(--cream-soft); margin:0.6rem 0; }
+    .af-leg { display:inline-flex; align-items:center; gap:0.35rem; }
+    .af-leg span { width:14px; height:3px; border-radius:2px; display:inline-block; }
+    .af-graf-wrap { position: relative; }
+    .af-graf { width: 100%; height: auto; display: block; }
+    .af-eixo { font-size: 10px; fill: var(--cream-faint); }
+    .af-rot { font-size: 10.5px; fill: var(--cream-soft); }
+    .af-tip { position:absolute; top:8px; display:none; background:var(--navy-2); border:1px solid var(--rule-strong); padding:0.5rem 0.7rem; font-size:11px; pointer-events:none; white-space:nowrap; box-shadow:0 8px 24px -12px rgba(0,32,96,0.4); }
+    .af-jan { background:none; border:1px solid var(--rule-strong); color:var(--cream-soft); padding:0.25rem 0.6rem; font-size:11px; cursor:pointer; margin-left:0.25rem; }
+    .af-jan.on { color:var(--gold-text); border-color:var(--gold); }
   </style>
   <link rel="stylesheet" href="eh-tema.css" />
 </head>
@@ -880,6 +912,10 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 15l2 2 4-4"/></svg>
     Tarefas Mensais
   </button>
+  <button class="mobile-drawer-link" id="mobileFundosBtn" style="display:none;" onclick="showView('fundos',this);closeDrawer()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>
+    Análise de Fundos
+  </button>
   <button class="mobile-drawer-link" id="mobileEditorCartaBtn" style="display:none;" onclick="showView('editorcarta',this);closeDrawer()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
     Editor da Carta
@@ -957,6 +993,10 @@
     <button class="sidebar-link" onclick="showView('tarefas',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 15l2 2 4-4"/></svg>
       Tarefas Mensais
+    </button>
+    <button class="sidebar-link" onclick="showView('fundos',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>
+      Análise de Fundos
     </button>
     <button class="sidebar-link" onclick="showView('editorcarta',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
@@ -1681,6 +1721,60 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     </div>
 
 
+    <!-- ANÁLISE DE FUNDOS (admin only) — lógica em eh-analise-fundos.js -->
+    <div class="view" id="view-fundos">
+      <div class="welcome-banner">
+        <h2>Análise de <em>Fundos</em></h2>
+        <p>Fundos de renda fixa e FIDCs abertos (público geral e qualificado) com rentabilidade mês a mês dos últimos 36 meses pela CVM, comparados ao CDI. Os dados são atualizados pela tarefa mensal "Análise de fundos (CVM)". Monte estratégias de alocação com os fundos e compare com o CDI.</p>
+      </div>
+
+      <div class="upload-panel">
+        <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg> Fundos</h3>
+        <div class="upload-form af-filtros">
+          <div class="upload-field"><label>Mês dos dados</label><select id="afMes" onchange="afCarregar(this.value)"><option value="">Carregando…</option></select></div>
+          <div class="upload-field" style="flex:2;min-width:220px;"><label>Buscar (nome, gestor ou CNPJ)</label><input type="text" id="afBusca" oninput="afFiltrar()" placeholder="ex.: Kinea, Sparta, 12.345.678"></div>
+          <div class="upload-field"><label>Tipo</label><select id="afTipo" onchange="afFiltrar()"><option value="">Todos</option><option value="FIF">Fundos RF</option><option value="FIDC">FIDCs</option></select></div>
+          <div class="upload-field"><label>Investidor</label><select id="afPublico" onchange="afFiltrar()"><option value="Q">Qualificado (tudo)</option><option value="G">Público geral</option><option value="SQ">Só os de qualificado</option></select></div>
+          <div class="upload-field"><label>Plataforma</label><select id="afPlat" onchange="afFiltrar()"><option value="">Todas</option></select></div>
+          <div class="upload-field" style="max-width:130px;"><label>PL mínimo (R$ mi)</label><input type="number" id="afPlMin" value="50" min="0" step="10" oninput="afFiltrar()"></div>
+        </div>
+        <div class="af-checks">
+          <label><input type="checkbox" id="afAcima" checked onchange="afFiltrar()"> Acima do CDI em 12 meses</label>
+          <label><input type="checkbox" id="afCapt" onchange="afFiltrar()"> Com captação no último mês</label>
+          <label><input type="checkbox" id="afAberto" onchange="afFiltrar()"> Aberto para aplicação na plataforma</label>
+        </div>
+        <div class="ext-chips" id="afResumo"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.8rem;flex-wrap:wrap;margin-bottom:0.6rem;">
+          <span class="af-nota" id="afContagem" style="margin:0;"></span>
+          <button class="btn-download-ext" onclick="afExportar()">Baixar Excel (filtro atual)</button>
+        </div>
+        <div class="ext-preview-wrap af-tabela-wrap"><table class="ext-preview-table af-tabela" id="afTabela"></table></div>
+        <p class="af-nota">Clique no nome para ver a rentabilidade mês a mês. Clique no título da coluna para ordenar. Verde: acima do CDI no período. Sharpe = (retorno anualizado − CDI anualizado) ÷ volatilidade anual dos retornos mensais.</p>
+      </div>
+
+      <div id="afDetalhe"></div>
+
+      <div class="upload-panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.8rem;flex-wrap:wrap;">
+          <h3 style="margin:0;">Estratégias de alocação</h3>
+          <button class="btn-download-ext" onclick="afNovaEstrategia()">Nova estratégia</button>
+        </div>
+        <p class="af-nota">Cada estratégia é uma carteira de fundos com pesos. A rentabilidade da carteira é a média ponderada dos fundos mês a mês. Fica salva no armazenamento privado e aparece para todos os admins.</p>
+        <div id="afEstrategias"></div>
+      </div>
+
+      <div class="upload-panel">
+        <h3>Listas das plataformas</h3>
+        <p class="af-nota">Envie a lista de fundos de cada plataforma (Excel ou CSV com uma coluna de CNPJ). As outras colunas, como "Aberto para aplicação" e liquidez, ficam guardadas e aparecem na tabela. Os CNPJs das listas entram na tarefa mensal mesmo quando não são de renda fixa. Enviar de novo com o mesmo nome substitui a lista.</p>
+        <div class="upload-form">
+          <div class="upload-field" style="max-width:200px;"><label>Plataforma</label><input type="text" id="afPlatNome" placeholder="XP, BTG…"></div>
+          <div class="upload-field" style="justify-content:flex-end;"><label>&nbsp;</label><label class="btn-download-ext" style="cursor:pointer;text-align:center;">Escolher arquivo<input type="file" accept=".xlsx,.xls,.csv,.txt" style="display:none;" onchange="afEnviarPlat(this)"></label></div>
+        </div>
+        <div class="ext-preview-wrap" style="max-height:none;"><table class="ext-preview-table" id="afPlats"></table></div>
+      </div>
+    </div>
+
+
     <!-- EDITOR DA CARTA (admin only) -->
     <div class="view" id="view-editorcarta">
       <div class="welcome-banner">
@@ -1976,6 +2070,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       document.getElementById('mobileMensagensBtn').style.display = 'flex';
       document.getElementById('mobileTarefasBtn').style.display = 'flex';
       document.getElementById('mobileEditorCartaBtn').style.display = 'flex';
+      document.getElementById('mobileFundosBtn').style.display = 'flex';
     }
     restoreViewFromHash();
     loadReports();
@@ -2030,7 +2125,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.querySelectorAll('.mobile-drawer-link').forEach(l => l.classList.remove('active'));
     document.getElementById('view-' + viewId).classList.add('active');
     if (btn) btn.classList.add('active');
-    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Documentos', documentos:'Meus Documentos', extratos:'Extratos → Excel', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos', mensagens:'Mensagens Padrão', tarefas:'Tarefas Mensais', editorcarta:'Editor da Carta' };
+    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Documentos', documentos:'Meus Documentos', extratos:'Extratos → Excel', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos', mensagens:'Mensagens Padrão', tarefas:'Tarefas Mensais', editorcarta:'Editor da Carta', fundos:'Análise de Fundos' };
     const topbar = document.getElementById('topbarTitle');
     if (topbar) topbar.textContent = titles[viewId] || viewId;
     // keep the active tab in the URL so a refresh returns to it
@@ -2043,6 +2138,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     if (viewId === 'mensagens') msgInit();
     if (viewId === 'tarefas') tmInit();
     if (viewId === 'editorcarta') ecInit();
+    if (viewId === 'fundos') afInit();
     if (viewId === 'perfil') populatePerfil();
   }
 
@@ -2565,7 +2661,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   // reopen the tab saved in the URL hash (e.g. #mensagens) after a refresh
-  const ADMIN_VIEWS = ['upload','extratos','cotas','emails','clientes','gerador','mensagens','tarefas','editorcarta'];
+  const ADMIN_VIEWS = ['upload','extratos','cotas','emails','clientes','gerador','mensagens','tarefas','editorcarta','fundos'];
   function restoreViewFromHash() {
     const viewId = decodeURIComponent(window.location.hash.substring(1));
     if (!viewId || viewId === 'inicio' || !/^[a-z]+$/.test(viewId) || !document.getElementById('view-' + viewId)) return;
