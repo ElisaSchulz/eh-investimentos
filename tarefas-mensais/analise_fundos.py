@@ -206,7 +206,8 @@ def cotas_fidc(cand, meses):
             elif tab == "tab_IV_":
                 cols = [coluna(cab, "_VL_PL")]
             elif tab == "tab_X_1_":
-                cols = [coluna(cab, "NR_COTST", "COTST")]
+                # tab_X_1_1: cotistas por tipo de investidor e por série (soma todas as colunas)
+                cols = [i for i, k in enumerate(cab) if "NR_COTST" in k.upper()] or [None]
             else:
                 cols = [coluna(cab, "TP_OPER"), coluna(cab, "VL_TOTAL")]
             if ic is None or idt is None or None in cols:
@@ -221,7 +222,7 @@ def cotas_fidc(cand, meses):
                 elif tab == "tab_IV_":
                     pl[(c, d[:7])] = num(r[cols[0]])
                 elif tab == "tab_X_1_":
-                    nc[(c, d[:7])] = nc.get((c, d[:7]), 0) + int(num(r[cols[0]]))
+                    nc[(c, d[:7])] = nc.get((c, d[:7]), 0) + int(sum(num(r[i]) for i in cols))
                 elif "capta" in r[cols[0]].lower():
                     cap[(c, d[:7])] = cap.get((c, d[:7]), 0) + num(r[cols[1]])
     if sem:
