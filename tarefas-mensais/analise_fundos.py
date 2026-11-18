@@ -31,6 +31,7 @@ MESES = 38            # meses de cota de fim de mês (36 meses de retorno + folg
 PL_MINIMO = 10e6      # FIF menor que isso só entra se estiver numa lista de plataforma
 CVM = "https://dados.cvm.gov.br/dados"
 ARQUIVO = "analise_fundos.json"
+FIDC_INICIO = "2025-01"   # antes disso o zip do informe mensal de FIDC não existe na CVM (404)
 
 
 def dig(s):
@@ -58,6 +59,15 @@ def linhas(texto):
     rd = csv.reader(io.StringIO(texto), delimiter=";")
     cab = next(rd, [])
     return cab, rd
+
+
+def coluna(cab, *finais):
+    """Índice da primeira coluna cujo nome termina com um dos finais (o leiaute da CVM muda)."""
+    for f in finais:
+        for i, k in enumerate(cab):
+            if k.upper().endswith(f):
+                return i
+    return None
 
 
 def meses_ate(ano, mes, n):
@@ -178,6 +188,8 @@ def cotas_fidc(cand, meses):
     x2, pl, nc, cap = {}, {}, {}, {}
     sem = []
     for m in meses:
+        if m < FIDC_INICIO:          # a CVM só tem o informe mensal de FIDC em zip a partir de 2025
+            continue
         bruto = baixar(f"{CVM}/FIDC/DOC/INF_MENSAL/DADOS/inf_mensal_fidc_{m.replace('-', '')}.zip", tentativas=2)
         if not bruto:
             sem.append(m)
@@ -187,23 +199,31 @@ def cotas_fidc(cand, meses):
             if not tab:
                 continue
             cab, rd = linhas(texto)
-            h = {k: i for i, k in enumerate(cab)}
-            ic = h.get("CNPJ_FUNDO_CLASSE", h.get("CNPJ_FUNDO"))
+            ic = coluna(cab, "CNPJ_FUNDO_CLASSE", "CNPJ_FUNDO")
+            idt = coluna(cab, "DT_COMPTC")
+            if tab == "tab_X_2_":
+                cols = [coluna(cab, "CLASSE_SERIE"), coluna(cab, "VL_COTA"), coluna(cab, "QT_COTA")]
+            elif tab == "tab_IV_":
+                cols = [coluna(cab, "_VL_PL")]
+            elif tab == "tab_X_1_":
+                cols = [coluna(cab, "NR_COTST", "COTST")]
+            else:
+                cols = [coluna(cab, "TP_OPER"), coluna(cab, "VL_TOTAL")]
+            if ic is None or idt is None or None in cols:
+                print(f"Aviso: leiaute inesperado em {nome} ({m}); colunas: {', '.join(cab)[:300]}")
+                continue
             for r in rd:
                 if len(r) < len(cab) or dig(r[ic]) not in alvo:
                     continue
-                c, d = dig(r[ic]), r[h["DT_COMPTC"]]
+                c, d = dig(r[ic]), r[idt]
                 if tab == "tab_X_2_":
-                    x2.setdefault((c, d[:7]), []).append(
-                        (r[h["TAB_X_CLASSE_SERIE"]], num(r[h["TAB_X_VL_COTA"]]), num(r[h["TAB_X_QT_COTA"]]), d))
+                    x2.setdefault((c, d[:7]), []).append((r[cols[0]], num(r[cols[1]]), num(r[cols[2]]), d))
                 elif tab == "tab_IV_":
-                    col = next((k for k in cab if k.endswith("_VL_PL")), None)
-                    if col:
-                        pl[(c, d[:7])] = num(r[h[col]])
+                    pl[(c, d[:7])] = num(r[cols[0]])
                 elif tab == "tab_X_1_":
-                    nc[(c, d[:7])] = nc.get((c, d[:7]), 0) + int(num(r[h["TAB_X_NR_COTST"]]))
-                elif tab == "tab_X_4_" and "capta" in r[h["TAB_X_TP_OPER"]].lower():
-                    cap[(c, d[:7])] = cap.get((c, d[:7]), 0) + num(r[h["TAB_X_VL_TOTAL"]])
+                    nc[(c, d[:7])] = nc.get((c, d[:7]), 0) + int(num(r[cols[0]]))
+                elif "capta" in r[cols[0]].lower():
+                    cap[(c, d[:7])] = cap.get((c, d[:7]), 0) + num(r[cols[1]])
     if sem:
         print(f"Aviso: informe mensal de FIDC indisponível para {', '.join(sem)} (sai até uns 15 dias depois do fim do mês)")
     ult = {}
