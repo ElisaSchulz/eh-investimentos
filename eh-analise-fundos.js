@@ -146,7 +146,11 @@
       return;
     }
     sel.innerHTML = comDados.map(m => `<option value="${m}">${tmNomeMes(m)}</option>`).join('');
-    await afCarregar(comDados[0]);
+    const q = new URLSearchParams(location.search);
+    const mesQ = comDados.includes(q.get('mes')) ? q.get('mes') : comDados[0];
+    sel.value = mesQ;
+    await afCarregar(mesQ);
+    if (q.get('fundo')) paginaFundo(q.get('fundo'));
   }
 
   async function afCarregar(mes) {
@@ -270,7 +274,7 @@
     const cab = '<tr>' + COLS.map(c =>
       `<th class="af-th${c.k === 'n' ? ' af-fixa' : ''}" onclick="afOrdenar('${c.k}')">${c.t}${S.ordem.col === c.k ? (S.ordem.dir < 0 ? ' ▼' : ' ▲') : ''}</th>`).join('') + '</tr>';
     const linhas = lista.slice(0, MAX_LINHAS).map(f => {
-      const nome = `<div class="af-nome"><a href="#" onclick="afDetalhe('${f.id}');return false;">${esc(f.n)}</a>` +
+      const nome = `<div class="af-nome"><a href="${linkFundo(f.id)}" onclick="return afClique(event, '${f.id}')">${esc(f.n)}</a>` +
         (f.ns ? `<div class="af-sub">${esc(f.ns)}</div>` : '') +
         `<div class="af-sub">${fmtCnpj(f.c)} · ${f.t}${f.cl && f.cl !== f.t ? ' · ' + esc(f.cl) : ''} · ${f.p === 'G' ? 'Geral' : f.p === 'Q' ? 'Qualificado' : 'Profissional'}${f.g ? ' · ' + esc(f.g) : ''}` +
         (f.ind.defas ? ` · <span class="td-neg">dados até ${mesCurto(f.ind.defas)}</span>` : '') + '</div></div>';
@@ -368,26 +372,36 @@
       linha('YTD', ind.ytd) + linha('12 meses', ind.j12) + linha('24 meses', ind.j24) + linha('36 meses', ind.j36);
   }
 
-  function afDetalhe(fid) {
-    const f = S.porId[fid];
-    if (!f) return;
-    S.sel = fid;
-    const box = document.getElementById('afDetalheCorpo');
+  // Endereço da ficha do fundo: abre numa aba própria (clique com o scroll ou Ctrl+clique)
+  function linkFundo(fid) {
+    const q = new URLSearchParams({ fundo: fid, mes: S.mes || '' });
+    return `${location.pathname}?${q.toString()}#fundos`;
+  }
+
+  // Clique normal abre o painel; Ctrl/Cmd/Shift+clique deixa o navegador abrir em outra aba
+  function afClique(ev, fid) {
+    if (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.button !== 0) return true;
+    afDetalhe(fid);
+    return false;
+  }
+
+  function htmlDetalhe(f, pagina) {
     const plats = f.plats.map(p => {
       const meta = S.plats.plataformas[p].fundos[f.c] || {};
       const info = Object.entries(meta).filter(([k]) => k !== 'n').map(([k, v]) => `${esc(k)}: <strong>${esc(v)}</strong>`).join(' · ');
       return `<div><span class="af-tag">${esc(p)}</span> ${info}</div>`;
     }).join('') || '<div class="td-na">Não está em nenhuma lista de plataforma enviada.</div>';
-    box.innerHTML = `<div class="upload-panel">
+    const incluir = S.editando ? (S.editando.itens.some(i => i.id === f.id) ? '<span class="af-nota" style="margin:0;align-self:center;">Já está na estratégia</span>' : `<button class="btn-download-ext" onclick="afMarcar('${f.id}', true);afDetalhe('${f.id}')">Incluir em ${esc(S.editando.nome)}</button>`) : '';
+    const botoes = pagina
+      ? `<a class="btn-download-ext" style="text-decoration:none;" href="${location.pathname}#fundos" onclick="return afSairPagina(event)">← Todos os fundos</a>`
+      : `${incluir}<a class="btn-download-ext" style="text-decoration:none;" href="${linkFundo(f.id)}" target="_blank" rel="noopener">Abrir em nova aba ↗</a><button class="btn-download-ext" onclick="afFecharDetalhe()">Fechar (Esc)</button>`;
+    return `<div class="upload-panel">
       <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:flex-start;">
         <div><h3 style="margin-bottom:0.3rem;">${esc(f.n)}</h3>
           <div class="af-sub">${f.ns ? esc(f.ns) + ' · ' : ''}${fmtCnpj(f.c)} · ${f.t} · ${esc(f.cl || '')} · ${f.p === 'G' ? 'Público geral' : f.p === 'Q' ? 'Qualificado' : 'Profissional'} · Gestor: ${esc(f.g || '—')}</div>
-          <div class="af-sub">PL R$ ${mi(f.pl)} mi · ${f.ct ? f.ct.toLocaleString('pt-BR') + ' cotistas' : 'cotistas não informados'} · último dado ${esc(f.dt)}${f.capm ? ` · captação em ${mesCurto(f.capm)}: R$ ${mi(f.cap)} mi` : ''}</div>
+          <div class="af-sub">PL R$ ${mi(f.pl)} mi · ${f.ct ? f.ct.toLocaleString('pt-BR') + ' cotistas' : 'cotistas não informados'} · último dado ${esc(f.dt)}${f.capm ? ` · captação em ${mesCurto(f.capm)}: R$ ${mi(f.cap)} mi` : ''} · dados de ${mesCurto(S.dados.meses[S.dados.meses.length - 1])}</div>
         </div>
-        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-          ${S.editando ? (S.editando.itens.some(i => i.id === f.id) ? '<span class="af-nota" style="margin:0;align-self:center;">Já está na estratégia</span>' : `<button class="btn-download-ext" onclick="afMarcar('${f.id}', true);afDetalhe('${f.id}')">Incluir em ${esc(S.editando.nome)}</button>`) : ''}
-          <button class="btn-download-ext" onclick="afFecharDetalhe()">Fechar (Esc)</button>
-        </div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">${botoes}</div>
       </div>
       <div style="margin:0.8rem 0;font-size:12px;">${plats}</div>
       <div class="ext-preview-wrap" style="max-height:none;"><table class="ext-preview-table">${cartoesIndicadores(f.ind)}</table></div>
@@ -395,6 +409,13 @@
       <div class="ext-preview-wrap" style="max-height:none;"><table class="ext-preview-table af-grade">${gradeMensal(f.r)}</table></div>
       <p class="af-nota">Verde: mês acima do CDI. Abaixo de cada mês, o rendimento em % do CDI. Fonte: cotas de fim de mês da CVM${f.t === 'FIDC' ? ' (informe mensal de FIDC, série sênior quando há)' : ''}.</p>
     </div>`;
+  }
+
+  function afDetalhe(fid) {
+    const f = S.porId[fid];
+    if (!f) return;
+    S.sel = fid;
+    document.getElementById('afDetalheCorpo').innerHTML = htmlDetalhe(f, false);
     renderTabela();
     const modal = document.getElementById('afModal');
     modal.classList.add('aberto');
@@ -405,6 +426,25 @@
     document.getElementById('afModal').classList.remove('aberto');
     S.sel = null;
     if (S.lista) renderTabela();
+  }
+
+  // Aba própria do fundo (endereço com ?fundo=...): só a ficha, sem a tabela
+  function paginaFundo(fid) {
+    const f = S.porId[fid];
+    const el = document.getElementById('afPagina');
+    document.body.classList.add('af-pagina');
+    el.innerHTML = f ? htmlDetalhe(f, true)
+      : `<div class="upload-panel"><p class="td-neg">Não achei esse fundo nos dados deste mês.</p><a class="btn-download-ext" style="text-decoration:none;" href="${location.pathname}#fundos" onclick="return afSairPagina(event)">← Todos os fundos</a></div>`;
+    if (f) document.title = f.n + ' · EH Investimentos';
+    window.scrollTo(0, 0);
+  }
+
+  function afSairPagina(ev) {
+    if (ev && (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.button !== 0)) return true;
+    document.body.classList.remove('af-pagina');
+    document.getElementById('afPagina').innerHTML = '';
+    history.replaceState(null, '', location.pathname + '#fundos');
+    return false;
   }
 
   // ── listas de plataforma ──
@@ -627,7 +667,7 @@
     const itens = e.itens.map(i => {
       const f = S.porId[i.id];
       const j12 = f && f.ind.j12;
-      return `<tr><td>${f ? `<a href="#" onclick="afDetalhe('${i.id}');return false;">${esc(f.n)}</a>${f.ns ? `<div class="af-sub">${esc(f.ns)}</div>` : ''}` : `${esc(i.n)} <span class="td-neg">(sem dados neste mês)</span>`}<div class="af-sub">${fmtCnpj(i.c)}${f ? ' · ' + f.t + ' · ' + celulaPlats(f) : ''}</div></td>
+      return `<tr><td>${f ? `<a href="${linkFundo(i.id)}" onclick="return afClique(event, '${i.id}')">${esc(f.n)}</a>${f.ns ? `<div class="af-sub">${esc(f.ns)}</div>` : ''}` : `${esc(i.n)} <span class="td-neg">(sem dados neste mês)</span>`}<div class="af-sub">${fmtCnpj(i.c)}${f ? ' · ' + f.t + ' · ' + celulaPlats(f) : ''}</div></td>
         <td><input class="af-peso" type="number" min="0" step="0.5" value="${i.peso}" onchange="afPeso('${i.id}', this.value)"> %</td>
         <td class="af-num">${total ? pct(i.peso / total, 1) : '—'}</td>
         <td class="af-num">${pct(j12 && j12.ret)}<div class="af-sub">${pctCdi(j12 && j12.pc)} CDI</div></td>
@@ -782,7 +822,7 @@
   Object.assign(window, {
     afInit, afCarregar, afFiltrar, afOrdenar, afDetalhe, afEnviarPlat, afRemoverPlat, afNovaEstrategia,
     afEditar, afMarcar, afPeso, afNormalizar, afIgualar, afRenomear, afObs, afExcluir, afDuplicar,
-    afComparar, afJanela, afHover, afExportar, afAba, afTelaInteira, afFecharDetalhe,
+    afComparar, afJanela, afHover, afExportar, afAba, afTelaInteira, afFecharDetalhe, afClique, afSairPagina,
   });
   window.AF_TESTE = { janela, acumulado, escalaPasso };
 })();
