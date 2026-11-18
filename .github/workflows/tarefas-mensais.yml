@@ -15,7 +15,7 @@ on:
         required: false
         default: ""
       tarefas:
-        description: "Tarefas separadas por vírgula. Vazio = todas (carta_mensal, carta_ia, indicadores_americanos, cotas_fundos, cotas_b3, etfs, dados_planilha, cra_eventos, rendimentos_fiis)"
+        description: "Tarefas separadas por vírgula. Vazio = todas (carta_mensal, carta_ia, indicadores_americanos, cotas_fundos, cotas_b3, etfs, dados_planilha, cra_eventos, rendimentos_fiis, analise_fundos)"
         required: false
         default: ""
       data_inicio:
@@ -55,7 +55,7 @@ jobs:
     needs: quando
     if: needs.quando.outputs.rodar == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 120
     defaults:
       run:
         working-directory: tarefas-mensais
