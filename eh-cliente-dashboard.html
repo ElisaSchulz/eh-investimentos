@@ -826,6 +826,48 @@
     .af-tip { position:absolute; top:8px; display:none; background:var(--navy-2); border:1px solid var(--rule-strong); padding:0.5rem 0.7rem; font-size:11px; pointer-events:none; white-space:nowrap; box-shadow:0 8px 24px -12px rgba(0,32,96,0.4); }
     .af-jan { background:none; border:1px solid var(--rule-strong); color:var(--cream-soft); padding:0.25rem 0.6rem; font-size:11px; cursor:pointer; margin-left:0.25rem; }
     .af-jan.on { color:var(--gold-text); border-color:var(--gold); }
+    /* Menu lateral recolhido (só ícones) */
+    .sidebar, .main { transition: width 0.2s ease, margin-left 0.2s ease; }
+    .sb-toggle { background:none; border:1px solid var(--rule-strong); color:var(--cream-soft); width:34px; height:34px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+    .sb-toggle:hover { color:var(--gold-text); border-color:var(--gold); }
+    .sb-seta { transition: transform 0.2s; transform-origin: 14px 12px; }
+    body.sb-recolhida .sb-seta { transform: scaleX(-1); }
+    body.sb-recolhida .sidebar { width: 64px; }
+    body.sb-recolhida .main { margin-left: 64px; }
+    body.sb-recolhida .sidebar-logo { padding: 0; justify-content: center; }
+    body.sb-recolhida .sidebar-logo-text, body.sb-recolhida .sidebar-section-label, body.sb-recolhida .sidebar-user > div:last-child { display: none; }
+    body.sb-recolhida .sidebar-section, body.sb-recolhida .sidebar-bottom { padding-left: 0.5rem; padding-right: 0.5rem; }
+    body.sb-recolhida .sidebar-user { justify-content: center; padding: 0; }
+    body.sb-recolhida .sidebar-link { font-size: 0; gap: 0; justify-content: center; padding: 0.65rem 0; }
+    body.sb-recolhida .sidebar-link > :not(svg) { display: none; }
+
+    /* Análise de Fundos: sub-abas, tela inteira, coluna fixa e painel do fundo */
+    .af-banner { padding-top: 1.4rem; padding-bottom: 1.4rem; margin-bottom: 1.2rem; }
+    .af-banner h2 { margin-bottom: 0.3rem; }
+    .af-abas { display:flex; align-items:flex-end; gap:1rem; border-bottom:1px solid var(--rule); margin-bottom:1.2rem; flex-wrap:wrap; }
+    .af-btn-cheia { margin-bottom: 0.4rem; }
+    .af-aba { display: none; }
+    .af-aba.active { display: block; }
+    .af-filtros { display:flex !important; flex-wrap:wrap; gap:0.8rem 1rem; }
+    .af-filtros .upload-field { flex: 1 1 140px; }
+    .af-barra-edicao { position: sticky; top: calc(var(--header-h) + 8px); z-index: 20; background:#002060; color:#F7F5EF; padding:0.7rem 1rem; margin-bottom:0.8rem; font-size:13px; border-left:3px solid #EE9A1E; }
+    .af-barra-edicao a { color:#EE9A1E !important; font-weight:700; }
+    #view-fundos .af-tabela .af-fixa, #view-fundos .af-tabela tr:nth-child(even) td.af-fixa { position: sticky; left: 0; z-index: 2; background: #FFFFFF; box-shadow: 1px 0 0 var(--rule); }
+    #view-fundos .af-tabela th.af-fixa { z-index: 3; background: var(--navy-3); }
+    #view-fundos .af-tabela tr.af-sel td.af-fixa { background: #FCF1DF; }
+    .af-grade .af-sub { white-space: nowrap; }
+    .af-nome-linha { display:flex; gap:0.55rem; align-items:flex-start; }
+    .af-marca { margin-top: 3px; width: 16px; height: 16px; accent-color: #C17A12; flex-shrink: 0; cursor: pointer; }
+    .af-modal { position: fixed; inset: 0; background: rgba(0,20,60,0.45); z-index: 400; display: none; overflow-y: auto; padding: 4vh 3vw; }
+    .af-modal.aberto { display: block; }
+    .af-modal-caixa { max-width: 1180px; margin: 0 auto; }
+    .af-modal-caixa > .upload-panel { margin-bottom: 0; }
+    body.af-cheia .sidebar, body.af-cheia .topbar, body.af-cheia .mobile-nav, body.af-cheia #view-fundos .af-banner { display: none !important; }
+    body.af-cheia .main { margin-left: 0 !important; padding-top: 0 !important; }
+    body.af-cheia .content { padding: 1rem 1.4rem; }
+    body.af-cheia .af-tabela-wrap { max-height: calc(100vh - 330px); }
+    body.af-cheia .af-barra-edicao { top: 8px; }
+    @media (max-width: 900px) { body.sb-recolhida .main { margin-left: 0; } .sb-toggle { display: none; } .af-btn-cheia { display: none; } }
   </style>
   <link rel="stylesheet" href="eh-tema.css" />
 </head>
@@ -1022,7 +1064,12 @@
 
 <main class="main">
   <div class="topbar">
-    <div class="topbar-title" id="topbarTitle">Início</div>
+    <div style="display:flex;align-items:center;gap:0.9rem;min-width:0;">
+      <button class="sb-toggle" id="sbToggle" onclick="sbRecolher()" title="Recolher o menu" aria-label="Recolher o menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1"/><line x1="9" y1="4" x2="9" y2="20"/><polyline class="sb-seta" points="15.5 9.5 13 12 15.5 14.5"/></svg>
+      </button>
+      <div class="topbar-title" id="topbarTitle">Início</div>
+    </div>
     <div class="topbar-date" id="topbarDate"></div>
   </div>
   <div class="content">
@@ -1723,13 +1770,23 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
     <!-- ANÁLISE DE FUNDOS (admin only) — lógica em eh-analise-fundos.js -->
     <div class="view" id="view-fundos">
-      <div class="welcome-banner">
+      <div class="welcome-banner af-banner">
         <h2>Análise de <em>Fundos</em></h2>
-        <p>Fundos de renda fixa e FIDCs abertos (público geral e qualificado) com rentabilidade mês a mês dos últimos 36 meses pela CVM, comparados ao CDI. Os dados são atualizados pela tarefa mensal "Análise de fundos (CVM)". Monte estratégias de alocação com os fundos e compare com o CDI.</p>
+        <p>Fundos de renda fixa e FIDCs abertos (público geral e qualificado), mês a mês pela CVM, comparados ao CDI. Atualizado pela tarefa mensal "Análise de fundos (CVM)".</p>
       </div>
 
-      <div class="upload-panel">
-        <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg> Fundos</h3>
+      <div class="af-abas">
+        <div class="msg-tabs" style="margin-bottom:0;border-bottom:none;flex:1;">
+          <button class="email-tab af-aba-btn active" data-aba="fundos" onclick="afAba('fundos')">Fundos</button>
+          <button class="email-tab af-aba-btn" data-aba="estrategias" onclick="afAba('estrategias')">Estratégias</button>
+          <button class="email-tab af-aba-btn" data-aba="listas" onclick="afAba('listas')">Listas das plataformas</button>
+        </div>
+        <button class="btn-download-ext af-btn-cheia" id="afBtnCheia" onclick="afTelaInteira()" title="Esconde o menu e o topo (Esc sai)">Tela inteira</button>
+      </div>
+
+      <div class="af-aba active" id="afAba-fundos">
+        <div class="af-barra-edicao" id="afBarraEdicao" style="display:none;"></div>
+        <div class="upload-panel af-painel">
         <div class="upload-form af-filtros">
           <div class="upload-field"><label>Mês dos dados</label><select id="afMes" onchange="afCarregar(this.value)"><option value="">Carregando…</option></select></div>
           <div class="upload-field" style="flex:2;min-width:220px;"><label>Buscar (nome, gestor ou CNPJ)</label><input type="text" id="afBusca" oninput="afFiltrar()" placeholder="ex.: Kinea, Sparta, 12.345.678"></div>
@@ -1749,28 +1806,34 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           <button class="btn-download-ext" onclick="afExportar()">Baixar Excel (filtro atual)</button>
         </div>
         <div class="ext-preview-wrap af-tabela-wrap"><table class="ext-preview-table af-tabela" id="afTabela"></table></div>
-        <p class="af-nota">Clique no nome para ver a rentabilidade mês a mês. Clique no título da coluna para ordenar. Verde: acima do CDI no período. Sharpe = (retorno anualizado − CDI anualizado) ÷ volatilidade anual dos retornos mensais.</p>
-      </div>
-
-      <div id="afDetalhe"></div>
-
-      <div class="upload-panel">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.8rem;flex-wrap:wrap;">
-          <h3 style="margin:0;">Estratégias de alocação</h3>
-          <button class="btn-download-ext" onclick="afNovaEstrategia()">Nova estratégia</button>
+          <p class="af-nota">Clique no nome para ver a rentabilidade mês a mês. Clique no título da coluna para ordenar. Verde: acima do CDI no período. Sharpe = (retorno anualizado − CDI anualizado) ÷ volatilidade anual dos retornos mensais.</p>
         </div>
-        <p class="af-nota">Cada estratégia é uma carteira de fundos com pesos. A rentabilidade da carteira é a média ponderada dos fundos mês a mês. Fica salva no armazenamento privado e aparece para todos os admins.</p>
-        <div id="afEstrategias"></div>
       </div>
 
-      <div class="upload-panel">
-        <h3>Listas das plataformas</h3>
+      <div class="af-aba" id="afAba-estrategias">
+        <div class="upload-panel af-painel">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:0.8rem;flex-wrap:wrap;">
+            <h3 style="margin:0;">Estratégias de alocação</h3>
+            <button class="btn-download-ext" onclick="afNovaEstrategia()">Nova estratégia</button>
+          </div>
+          <p class="af-nota">Cada estratégia é uma carteira de fundos com pesos. A rentabilidade da carteira é a média ponderada dos fundos mês a mês. Fica salva no armazenamento privado e aparece para todos os admins.</p>
+          <div id="afEstrategias"></div>
+        </div>
+      </div>
+
+      <div class="af-aba" id="afAba-listas">
+        <div class="upload-panel af-painel">
         <p class="af-nota">Envie a lista de fundos de cada plataforma (Excel ou CSV com uma coluna de CNPJ). As outras colunas, como "Aberto para aplicação" e liquidez, ficam guardadas e aparecem na tabela. Os CNPJs das listas entram na tarefa mensal mesmo quando não são de renda fixa. Enviar de novo com o mesmo nome substitui a lista.</p>
         <div class="upload-form">
           <div class="upload-field" style="max-width:200px;"><label>Plataforma</label><input type="text" id="afPlatNome" placeholder="XP, BTG…"></div>
           <div class="upload-field" style="justify-content:flex-end;"><label>&nbsp;</label><label class="btn-download-ext" style="cursor:pointer;text-align:center;">Escolher arquivo<input type="file" accept=".xlsx,.xls,.csv,.txt" style="display:none;" onchange="afEnviarPlat(this)"></label></div>
         </div>
         <div class="ext-preview-wrap" style="max-height:none;"><table class="ext-preview-table" id="afPlats"></table></div>
+        </div>
+      </div>
+
+      <div class="af-modal" id="afModal" onclick="if (event.target === this) afFecharDetalhe()">
+        <div class="af-modal-caixa" id="afDetalheCorpo"></div>
       </div>
     </div>
 
@@ -2117,6 +2180,22 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
     banner.classList.add('visible');
   }
+
+  // ── MENU LATERAL RECOLHIDO ──
+  function sbRecolher(recolher) {
+    if (recolher === undefined) recolher = !document.body.classList.contains('sb-recolhida');
+    document.body.classList.toggle('sb-recolhida', recolher);
+    const b = document.getElementById('sbToggle');
+    if (b) b.title = recolher ? 'Mostrar o menu' : 'Recolher o menu';
+    try { localStorage.setItem('eh-sb-recolhida', recolher ? '1' : ''); } catch (e) {}
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    // nome de cada item como dica, para o menu recolhido
+    document.querySelectorAll('.sidebar-link').forEach(l => { if (!l.title) l.title = l.textContent.trim(); });
+    let salvo = '';
+    try { salvo = localStorage.getItem('eh-sb-recolhida') || ''; } catch (e) {}
+    if (salvo) sbRecolher(true);
+  });
 
   // ── NAV ──
   function showView(viewId, btn) {
