@@ -1,3 +1,0 @@
-https://www.xpi.com.br/investimentos/fundos-de-investimento/lista/ ERRO HTTP Error 403: Forbidden
-https://www.xpi.com.br/investimentos/fundos-de-investimento/ ERRO HTTP Error 403: Forbidden
-https://www.xpi.com.br/produtos/fundos-de-investimento/ ERRO HTTP Error 403: Forbidden

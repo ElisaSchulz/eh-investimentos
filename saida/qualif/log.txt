@@ -1,7 +1,0 @@
-fidc candidatos 122
-ERRO https://dados.cvm.gov.br/dados/FIDC/DOC/INF_MENSAL/DADOS/inf_mensal_fidc_202409.zip HTTP Error 404: Not Found
-ERRO https://dados.cvm.gov.br/dados/FIDC/DOC/INF_MENSAL/DADOS/inf_mensal_fidc_202410.zip HTTP Error 404: Not Found
-ERRO https://dados.cvm.gov.br/dados/FIDC/DOC/INF_MENSAL/DADOS/inf_mensal_fidc_202411.zip HTTP Error 404: Not Found
-ERRO https://dados.cvm.gov.br/dados/FIDC/DOC/INF_MENSAL/DADOS/inf_mensal_fidc_202412.zip HTTP Error 404: Not Found
-ERRO https://dados.cvm.gov.br/dados/FIDC/DOC/INF_MENSAL/DADOS/inf_mensal_fidc_202611.zip HTTP Error 404: Not Found
-fim
