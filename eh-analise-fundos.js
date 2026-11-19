@@ -6,7 +6,8 @@
  * % do CDI, volatilidade, Sharpe, drawdown e meses abaixo do CDI.
  *
  * Também guarda no bucket (config/) as listas de fundos de cada plataforma (XP, BTG...)
- * e as estratégias de alocação montadas aqui.
+ * e as estratégias de alocação montadas aqui, e a carteira atual de cada cliente
+ * (config/carteiras_clientes.json), para marcar os fundos que o cliente já tem.
  *
  * Usa do dashboard: sb (Supabase), escHtml, TM_BUCKET, tmNomeMes e XLSX (SheetJS).
  */
@@ -14,13 +15,14 @@
   const ARQ_DADOS = 'analise_fundos.json';
   const ARQ_PLATS = 'config/plataformas.json';
   const ARQ_ESTR = 'config/estrategias_fundos.json';
+  const ARQ_CART = 'config/carteiras_clientes.json';
   const MAX_LINHAS = 300;
   const CORES = ['#2a78d6', '#eb6834', '#1baf7a'];   // até 3 estratégias no gráfico; CDI em cinza tracejado
   const MESES_CURTOS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
   const S = {
     iniciado: false, mes: null, dados: null, fundos: [], porId: {},
-    plats: { plataformas: {} }, estr: { estrategias: [] },
+    plats: { plataformas: {} }, estr: { estrategias: [] }, cart: { clientes: {} }, importando: null, cartAberta: null, esconderTem: false,
     ordem: { col: 'r12', dir: -1 }, sel: null, editando: null, comparar: new Set(), janela: 36,
   };
   window.AF = S;  // para inspecionar no console
@@ -170,10 +172,11 @@
       if ((arqs || []).some(a => a.name === ARQ_DADOS)) comDados.push(m);
       if (comDados.length >= 12) break;
     }
-    [S.plats, S.estr] = await Promise.all([baixarJson(ARQ_PLATS), baixarJson(ARQ_ESTR)]);
+    [S.plats, S.estr, S.cart] = await Promise.all([baixarJson(ARQ_PLATS), baixarJson(ARQ_ESTR), baixarJson(ARQ_CART)]);
     S.plats = S.plats && S.plats.plataformas ? S.plats : { plataformas: {} };
     S.estr = S.estr && S.estr.estrategias ? S.estr : { estrategias: [] };
-    renderPlats();
+    S.cart = S.cart && S.cart.clientes ? S.cart : { clientes: {} };
+    renderPlats(); renderCarteiras();
     if (!comDados.length) {
       sel.innerHTML = '<option value="">Ainda sem dados</option>';
       msgTabela('A tarefa "Análise de fundos (CVM)" ainda não rodou. Rode no GitHub (Tarefas Mensais → Rodar agora, tarefa analise_fundos); leva uns 15 a 25 minutos.', 'td-na');
@@ -199,7 +202,7 @@
     marcarPlats();
     renderResumo();
     afFiltrar();
-    renderEstrategias();
+    renderEstrategias(); renderCarteiras();
   }
 
   function marcarPlats() {
@@ -247,7 +250,9 @@
     const acima = document.getElementById('afAcima').checked;
     const capt = document.getElementById('afCapt').checked;
     const aberto = document.getElementById('afAberto').checked;
+    const cart = S.esconderTem ? carteiraAtiva() : null;
     return S.fundos.filter(f => {
+      if (cart && posicao(cart, f.c) != null && !(S.editando.itens.some(i => i.id === f.id))) return false;
       if (q && !(f.n.toLowerCase().includes(q) || (f.ns || '').toLowerCase().includes(q) || (f.g || '').toLowerCase().includes(q) || (qd.length >= 4 && f.c.includes(qd)))) return false;
       if (tipo && f.t !== tipo) return false;
       if (pub === 'G' && f.p !== 'G') return false;
@@ -309,10 +314,13 @@
       `${lista.length.toLocaleString('pt-BR')} fundos` + (lista.length > MAX_LINHAS ? ` (mostrando os ${MAX_LINHAS} primeiros; use os filtros ou baixe o Excel)` : '');
     if (!lista.length) { msgTabela('Nenhum fundo com esses filtros.', 'td-na'); return; }
     const est = S.editando;
+    const cart = carteiraAtiva();
     const cab = '<tr>' + COLS.map(c =>
       `<th class="af-th${c.k === 'n' ? ' af-fixa' : ''}" onclick="afOrdenar('${c.k}')">${c.t}${S.ordem.col === c.k ? (S.ordem.dir < 0 ? ' ▼' : ' ▲') : ''}</th>`).join('') + '</tr>';
     const linhas = lista.slice(0, MAX_LINHAS).map(f => {
+      const tem = posicao(cart, f.c);
       const nome = `<div class="af-nome"><a href="${linkFundo(f.id)}" onclick="return afClique(event, '${f.id}')">${esc(f.n)}</a>` +
+        (tem != null ? ' ' + tagTem(tem, cart.nome) : '') +
         (f.ns ? `<div class="af-sub">${esc(f.ns)}</div>` : '') +
         `<div class="af-sub">${fmtCnpj(f.c)} · ${f.t}${f.cl && f.cl !== f.t ? ' · ' + esc(f.cl) : ''} · ${f.p === 'G' ? 'Geral' : f.p === 'Q' ? 'Qualificado' : 'Profissional'}${f.g ? ' · ' + esc(f.g) : ''}` +
         (f.ind.defas ? ` · <span class="td-neg">dados até ${mesCurto(f.ind.defas)}</span>` : '') + '</div></div>';
@@ -337,8 +345,16 @@
     if (!el) return;
     const e = S.editando;
     el.style.display = e ? '' : 'none';
-    if (e) el.innerHTML = `Montando <strong>${esc(e.nome)}</strong> · ${e.itens.length} fundo(s). Marque a caixinha ao lado do nome para incluir. ` +
-      `<a href="#" onclick="afAba('estrategias');return false;">Ver pesos e indicadores →</a> · <a href="#" onclick="afEditar('${e.id}');return false;">concluir</a>`;
+    if (!e) return;
+    const cart = carteiraAtiva();
+    const nTem = cart ? new Set(cart.itens.filter(i => i.c && S.fundos.some(f => f.c === i.c)).map(i => i.c)).size : 0;
+    const cli = cart ? `<div style="margin-top:0.3rem;">Cliente: <strong>${esc(cart.nome)}</strong>, carteira de ${esc(cart.ref || 'data não informada')} com R$ ${brl(totalCart(cart))}. ` +
+      `${nTem} fundo(s) que ${esc(cart.nome)} já tem aparecem com a marca <span class="af-tag af-tag-tem">já tem</span>. ` +
+      `<label style="cursor:pointer;"><input type="checkbox" ${S.esconderTem ? 'checked' : ''} onchange="afEsconderTem(this.checked)"> esconder esses fundos</label></div>`
+      : e.cliente ? `<div style="margin-top:0.3rem;">Cliente: <strong>${esc(e.cliente)}</strong> (sem carteira guardada; envie em <a href="#" onclick="afAba('carteiras');return false;">Carteiras dos clientes</a>)</div>`
+      : `<div style="margin-top:0.3rem;">Sem cliente. Escolha o cliente em <a href="#" onclick="afAba('estrategias');return false;">Estratégias</a> para ver o que ele já tem.</div>`;
+    el.innerHTML = `Montando <strong>${esc(e.nome)}</strong> · ${e.itens.length} fundo(s). Marque a caixinha ao lado do nome para incluir. ` +
+      `<a href="#" onclick="afAba('estrategias');return false;">Ver pesos e indicadores →</a> · <a href="#" onclick="afEditar('${e.id}');return false;">concluir</a>` + cli;
   }
 
   // Sub-abas da tela: fundos, estratégias e listas das plataformas
@@ -429,6 +445,8 @@
       const info = Object.entries(meta).filter(([k]) => k !== 'n').map(([k, v]) => `${esc(k)}: <strong>${esc(v)}</strong>`).join(' · ');
       return `<div><span class="af-tag">${esc(p)}</span> ${info}</div>`;
     }).join('') || '<div class="td-na">Não está em nenhuma lista de plataforma enviada.</div>';
+    const donos = Object.values(S.cart.clientes).map(c => [c.nome, posicao(c, f.c)]).filter(x => x[1] != null);
+    const quemTem = donos.length ? `<div class="af-sub">Clientes que já têm: ${donos.map(([n, v]) => `<strong>${esc(n)}</strong> (R$ ${brl(v)})`).join(', ')}</div>` : '';
     const incluir = S.editando ? (S.editando.itens.some(i => i.id === f.id) ? '<span class="af-nota" style="margin:0;align-self:center;">Já está na estratégia</span>' : `<button class="btn-download-ext" onclick="afMarcar('${f.id}', true);afDetalhe('${f.id}')">Incluir em ${esc(S.editando.nome)}</button>`) : '';
     const botoes = pagina
       ? `<a class="btn-download-ext" style="text-decoration:none;" href="${location.pathname}#fundos" onclick="return afSairPagina(event)">← Todos os fundos</a>`
@@ -438,6 +456,7 @@
         <div><h3 style="margin-bottom:0.3rem;">${esc(f.n)}</h3>
           <div class="af-sub">${f.ns ? esc(f.ns) + ' · ' : ''}${fmtCnpj(f.c)} · ${f.t} · ${esc(f.cl || '')} · ${f.p === 'G' ? 'Público geral' : f.p === 'Q' ? 'Qualificado' : 'Profissional'} · Gestor: ${esc(f.g || '—')}</div>
           <div class="af-sub">Liquidez: <strong>${esc(f.liq ? f.liq.txt : '—')}</strong>${f.liq && f.liq.fonte ? ` (${esc(f.liq.fonte)})` : ''} · PL R$ ${mi(f.pl)} mi · ${f.ct ? f.ct.toLocaleString('pt-BR') + ' cotistas' : 'cotistas não informados'} · último dado ${esc(f.dt)}${f.capm ? ` · captação em ${mesCurto(f.capm)}: R$ ${mi(f.cap)} mi` : ''} · dados de ${mesCurto(S.dados.meses[S.dados.meses.length - 1])}</div>
+          ${quemTem}
         </div>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">${botoes}</div>
       </div>
@@ -555,6 +574,212 @@
     if (S.dados) { marcarPlats(); afFiltrar(); }
   }
 
+  // ── carteiras dos clientes ──
+  // O que cada cliente já tem, lido do "Extrato detalhado" do relatório mensal (copiar e colar
+  // o texto do PDF) e guardado no bucket privado. Na estratégia com esse cliente, os fundos que
+  // ele já tem aparecem marcados, para não comprar de novo sem querer.
+  const normNome = s => String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim();
+  const carteiraDe = nome => nome ? S.cart.clientes[normNome(nome)] || null : null;
+  const carteiraAtiva = () => S.editando ? carteiraDe(S.editando.cliente) : null;
+  function posicao(cart, c) {
+    if (!cart || !c) return null;
+    const its = cart.itens.filter(i => i.c === c);
+    return its.length ? its.reduce((a, i) => a + (i.valor || 0), 0) : null;
+  }
+  const totalCart = cart => cart.itens.reduce((a, i) => a + (i.valor || 0), 0);
+  const tagTem = (v, quem) => `<span class="af-tag af-tag-tem" title="${esc(quem)} já tem este fundo">já tem R$ ${brl(v)}</span>`;
+
+  const RE_CNPJ = /\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}/;
+  const RE_LIQ = /\bD\s*\+\s*\d+\b|\b\d{2}\/\d{2}\/\d{2,4}\b/i;
+  const RE_VAL = /-?\d{1,3}(?:\.\d{3})*,\d{2}(?![\d%]|\s*%)/g;
+  const RE_OUTRO = /^(CRI|CRA|DEB|DEBENTURE|DEBENTURES|CDB|LCI|LCA|LIG|LF|LFT|LTN|NTN|NTNB|TESOURO|COE|CPR|CCB)\b/;
+  const brNum = s => parseFloat(s.replace(/\./g, '').replace(',', '.'));
+  const GENERICOS = new Set(['FI', 'FIC', 'FIF', 'FIM', 'FIDC', 'FICFIDC', 'FICFI', 'CP', 'RL', 'DE', 'DA', 'DO', 'DOS', 'DAS', 'EM', 'E',
+    'COTAS', 'FUNDO', 'FUNDOS', 'INVESTIMENTO', 'INVESTIMENTOS', 'CREDITO', 'PRIVADO', 'RESPONSABILIDADE', 'LIMITADA', 'CLASSE',
+    'MULTIMERCADO', 'RENDA', 'FIXA', 'DIREITOS', 'CREDITORIOS', 'SUBCLASSE', 'UNICA']);
+
+  // Acha o CNPJ pelo nome: primeiro o catálogo da EH (mesmos nomes dos relatórios), depois os
+  // nomes da CVM que contêm todas as palavras "próprias" do nome do relatório.
+  function casarAtivo(nome) {
+    const k = normNome(nome);
+    const cat = (window.EH_ATIVOS_CATALOGO || []).find(a => normNome(a[1]) === k);
+    if (cat) return { c: dig(cat[0]), via: 'catálogo da EH', liq: cat[2] || '' };
+    const tok = k.split(' ').filter(t => t.length >= 2 && !GENERICOS.has(t));
+    if (!tok.length || !S.fundos.length) return null;
+    const cands = {};
+    S.fundos.forEach(f => {
+      const nn = ' ' + normNome(f.n + ' ' + (f.ns || '')) + ' ';
+      if (tok.every(t => nn.includes(' ' + t + ' '))) cands[f.c] = cands[f.c] || f;
+    });
+    const cs = Object.keys(cands);
+    if (cs.length === 1) return { c: cs[0], via: 'nome na CVM', liq: '' };
+    if (cs.length > 1) return { c: '', via: '', liq: '', sugestoes: cs.slice(0, 6).map(c => ({ c, n: cands[c].n })) };
+    return null;
+  }
+
+  // Uma linha por ativo: nome, liquidez (D+N ou vencimento), valores. Com 3 valores ou mais
+  // (movimentação, rendimento, saldo final, como no relatório da EH) usa o 3º; senão o último.
+  function lerExtrato(txt) {
+    // Alguns leitores de PDF copiam cada célula numa linha: junta as linhas sem letras
+    // (liquidez, valores, %) à última linha com nome.
+    const linhas = [];
+    String(txt || '').split(/\r?\n/).forEach(l0 => {
+      const l = l0.replace(/\u00a0/g, ' ').replace(/\t/g, '  ').trim();
+      if (!l) return;
+      if (/[A-Za-zÀ-ú]{2}/.test(l) || !linhas.length) linhas.push(l);
+      else linhas[linhas.length - 1] += '  ' + l;
+    });
+    const itens = [];
+    linhas.forEach(l => {
+      const vals = [...l.matchAll(RE_VAL)];
+      if (!vals.length) return;
+      const mC = RE_CNPJ.exec(l), mL = RE_LIQ.exec(l);
+      const fimNome = Math.min(vals[0].index, mC ? mC.index : 1e9, mL ? mL.index : 1e9);
+      const nome = l.slice(0, fimNome).replace(/[\s.;|-]+$/, '').trim();
+      if (!/[A-Za-zÀ-ú]{2}/.test(nome) || /^(total|saldo|subtotal|ativos)\b/i.test(nome)) return;
+      const valor = brNum((vals.length >= 3 ? vals[2] : vals[vals.length - 1])[0]);
+      if (!(valor > 0)) return;
+      const outro = RE_OUTRO.test(normNome(nome));
+      const m = mC ? { c: dig(mC[0]), via: 'CNPJ no texto', liq: '' } : outro ? null : casarAtivo(nome);
+      itens.push({
+        n: nome, valor, liq: mL ? mL[0].replace(/\s+/g, '').toUpperCase() : (m && m.liq) || '',
+        tipo: outro ? 'outro' : 'fundo', c: m ? m.c : '', via: m ? m.via : '', sugestoes: m && m.sugestoes,
+      });
+    });
+    return itens;
+  }
+
+  function tabelaCarteira(cart, comLink) {
+    const tot = totalCart(cart) || 1;
+    const linhas = cart.itens.slice().sort((a, b) => b.valor - a.valor).map(i => {
+      const fs = i.c ? S.fundos.filter(f => f.c === i.c) : [];
+      const f = fs[0];
+      const j12 = f && f.ind.j12;
+      const nome = f && comLink ? `<a href="${linkFundo(f.id)}" onclick="return afClique(event, '${f.id}')">${esc(i.n)}</a>` : esc(i.n);
+      const sub = i.tipo === 'outro' ? 'título (fora da análise de fundos)' : i.c ? fmtCnpj(i.c) + (f ? '' : ' · sem dados neste mês') : '<span class="td-neg">CNPJ não identificado</span>';
+      return `<tr><td>${nome}<div class="af-sub">${sub}</div></td><td class="af-num">${esc(i.liq || '—')}</td>
+        <td class="af-num">${brl(i.valor)}</td><td class="af-num">${pct(i.valor / tot, 1)}</td>
+        <td class="af-num ${j12 ? (j12.ret >= j12.cdi ? 'td-pos' : 'td-neg') : 'td-na'}">${j12 ? `${pct(j12.ret)}<div class="af-sub">${pctCdi(j12.pc)} CDI</div>` : '—'}</td></tr>`;
+    }).join('');
+    return `<div class="ext-preview-wrap" style="max-height:none;"><table class="ext-preview-table">
+      <tr><th>Ativo</th><th>Liquidez</th><th>Valor (R$)</th><th>% carteira</th><th>12m</th></tr>${linhas}
+      <tr><td style="font-weight:600;">Total</td><td></td><td class="af-num" style="font-weight:600;">${brl(totalCart(cart))}</td><td class="af-num">100%</td><td></td></tr></table></div>`;
+  }
+
+  function renderCarteiras() {
+    const dl = document.getElementById('afCliLista');
+    const nomes = Object.values(S.cart.clientes).map(c => c.nome).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    if (dl) dl.innerHTML = nomes.map(n => `<option value="${esc(n)}"></option>`).join('');
+    const el = document.getElementById('afCarteiras');
+    if (!el) return;
+    const lista = Object.entries(S.cart.clientes).sort((a, b) => a[1].nome.localeCompare(b[1].nome, 'pt-BR'));
+    const linhas = lista.map(([k, c]) => {
+      const fundos = c.itens.filter(i => i.tipo !== 'outro').length;
+      const aberto = S.cartAberta === k;
+      return `<tr><td style="font-weight:600;"><a href="#" onclick="afVerCarteira('${k}');return false;">${esc(c.nome)}</a></td>
+        <td>${c.itens.length} ativos (${fundos} fundos)</td><td class="af-num">R$ ${brl(totalCart(c))}</td><td>${esc(c.ref || '—')}</td>
+        <td>${c.atualizado ? esc(new Date(c.atualizado).toLocaleDateString('pt-BR')) : '—'}</td>
+        <td style="white-space:nowrap;"><a href="#" onclick="afVerCarteira('${k}');return false;">${aberto ? 'fechar' : 'ver'}</a> · <a href="#" onclick="afEstrategiaPara('${k}');return false;">nova estratégia</a> · <a href="#" style="color:var(--err-text);" onclick="afRemoverCarteira('${k}');return false;">remover</a></td></tr>` +
+        (aberto ? `<tr><td colspan="6" style="padding:0.6rem 0 1rem;">${tabelaCarteira(c, true)}</td></tr>` : '');
+    }).join('');
+    el.innerHTML = '<tr><th>Cliente</th><th>Ativos</th><th>Total</th><th>Referência</th><th>Atualizada em</th><th></th></tr>' +
+      (linhas || '<tr><td colspan="6" class="td-na">Nenhuma carteira guardada ainda.</td></tr>');
+    renderImportacao();
+  }
+
+  function renderImportacao() {
+    const el = document.getElementById('afCartPrevia');
+    if (!el) return;
+    const imp = S.importando;
+    if (!imp) { el.innerHTML = ''; return; }
+    if (!imp.itens.length) { el.innerHTML = '<p class="af-nota td-neg">Não achei nenhum ativo com valor no texto. Copie as linhas do "Extrato detalhado" do relatório (nome, liquidez e valores na mesma linha).</p>'; return; }
+    const linhas = imp.itens.map((i, k) => {
+      const f = i.c && S.fundos.find(x => x.c === i.c);
+      let st;
+      if (i.tipo === 'outro') st = '<span class="af-sub">título, não é fundo</span>';
+      else if (i.c) st = `<span class="td-pos">✓</span> <span class="af-sub">${esc(i.via || 'informado')}${f ? ' · ' + esc(f.n) : ' · sem dados neste mês'}</span>`;
+      else st = '<span class="td-neg">CNPJ não encontrado</span>' + (i.sugestoes ? '<div class="af-sub">Seria um destes? ' + i.sugestoes.map(s =>
+        `<a href="#" onclick="afCartCnpj(${k}, '${s.c}');return false;">${esc(s.n)} (${fmtCnpj(s.c)})</a>`).join(' · ') + '</div>' : '');
+      return `<tr><td>${esc(i.n)}</td>
+        <td><select onchange="afCartTipo(${k}, this.value)"><option value="fundo"${i.tipo !== 'outro' ? ' selected' : ''}>Fundo</option><option value="outro"${i.tipo === 'outro' ? ' selected' : ''}>Título</option></select></td>
+        <td>${i.tipo === 'outro' ? '' : `<input type="text" style="width:150px;" value="${i.c ? fmtCnpj(i.c) : ''}" placeholder="CNPJ" onchange="afCartCnpj(${k}, this.value)">`}</td>
+        <td class="af-num">${esc(i.liq || '—')}</td><td class="af-num">${brl(i.valor)}</td><td>${st}</td>
+        <td><a href="#" style="color:var(--err-text);" onclick="afCartTirar(${k});return false;">tirar</a></td></tr>`;
+    }).join('');
+    const falta = imp.itens.filter(i => i.tipo !== 'outro' && !i.c).length;
+    el.innerHTML = `<h3 style="margin-top:1rem;">Conferir antes de salvar: ${esc(imp.nome || 'cliente sem nome')}</h3>
+      <div class="ext-preview-wrap" style="max-height:none;"><table class="ext-preview-table">
+      <tr><th>Ativo</th><th>Tipo</th><th>CNPJ</th><th>Liquidez</th><th>Valor (R$)</th><th></th><th></th></tr>${linhas}
+      <tr><td style="font-weight:600;">Total</td><td></td><td></td><td></td><td class="af-num" style="font-weight:600;">${brl(totalCart(imp))}</td><td></td><td></td></tr></table></div>
+      ${falta ? `<p class="af-nota td-neg">${falta} fundo(s) sem CNPJ: dá para salvar assim, mas eles não aparecem marcados na tabela de fundos. Escreva o CNPJ ou escolha uma sugestão.</p>` : ''}
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.6rem;">
+        <button class="btn-download-ext" onclick="afSalvarCarteira()">Salvar carteira${imp.nome ? ' de ' + esc(imp.nome) : ''}</button>
+        <button class="btn-download-ext" onclick="afCancelarCarteira()">Cancelar</button>
+      </div>`;
+  }
+
+  function afLerCarteira() {
+    const nome = (document.getElementById('afCartNome').value || '').trim();
+    const ref = (document.getElementById('afCartRef').value || '').trim();
+    if (!nome) { alert('Escreva o nome do cliente.'); return; }
+    S.importando = { nome, ref, itens: lerExtrato(document.getElementById('afCartTexto').value) };
+    renderImportacao();
+  }
+  function afCartCnpj(k, v) {
+    const i = S.importando && S.importando.itens[k];
+    if (!i) return;
+    const c = dig(v);
+    i.c = c.length === 14 ? c : ''; i.via = i.c ? 'informado' : ''; i.sugestoes = i.c ? null : i.sugestoes;
+    if (c && c.length !== 14) alert('O CNPJ precisa ter 14 números.');
+    renderImportacao();
+  }
+  function afCartTipo(k, v) { const i = S.importando.itens[k]; i.tipo = v; if (v === 'outro') { i.c = ''; i.sugestoes = null; } renderImportacao(); }
+  function afCartTirar(k) { S.importando.itens.splice(k, 1); renderImportacao(); }
+  function afCancelarCarteira() { S.importando = null; renderImportacao(); }
+
+  async function afSalvarCarteira() {
+    const imp = S.importando;
+    if (!imp || !imp.itens.length) return;
+    const k = normNome(imp.nome);
+    if (S.cart.clientes[k] && !confirm(`Já existe uma carteira de ${S.cart.clientes[k].nome}. Substituir pela nova?`)) return;
+    const nov = JSON.parse(JSON.stringify(S.cart));
+    nov.clientes[k] = {
+      nome: imp.nome, ref: imp.ref, atualizado: new Date().toISOString(),
+      itens: imp.itens.map(i => ({ n: i.n, c: i.c || '', tipo: i.tipo, liq: i.liq || '', valor: i.valor })),
+    };
+    try { await enviarJson(ARQ_CART, nov); } catch (e) { alert('Não consegui salvar: ' + e.message); return; }
+    S.cart = nov; S.importando = null; S.cartAberta = k;
+    document.getElementById('afCartTexto').value = '';
+    renderCarteiras(); renderEstrategias(); if (S.dados) renderTabela();
+  }
+
+  async function afRemoverCarteira(k) {
+    const c = S.cart.clientes[k];
+    if (!c || !confirm(`Remover a carteira de ${c.nome}?`)) return;
+    const nov = JSON.parse(JSON.stringify(S.cart));
+    delete nov.clientes[k];
+    try { await enviarJson(ARQ_CART, nov); } catch (e) { alert('Não consegui salvar: ' + e.message); return; }
+    S.cart = nov; if (S.cartAberta === k) S.cartAberta = null;
+    renderCarteiras(); renderEstrategias(); if (S.dados) renderTabela();
+  }
+
+  function afVerCarteira(k) { S.cartAberta = S.cartAberta === k ? null : k; renderCarteiras(); }
+
+  function afEstrategiaPara(k) {
+    const c = S.cart.clientes[k];
+    if (!c) return;
+    const nome = prompt('Nome da estratégia:', `${c.nome} - ${new Date().toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }).replace('.', '')}`);
+    if (!nome) return;
+    const e = { id: 'e' + Date.now().toString(36), nome: nome.trim(), obs: '', itens: [], cliente: c.nome, criado: new Date().toISOString() };
+    S.estr.estrategias.push(e);
+    S.editando = e;
+    salvarEstr();
+    renderEstrategias(); renderTabela();
+    afAba('fundos');
+  }
+
+  function afEsconderTem(v) { S.esconderTem = v; afFiltrar(); }
+
   // ── estratégias de alocação ──
   // Retorno mensal da carteira = soma dos pesos × retornos. Num mês em que um fundo não tem
   // dado, os pesos dos outros são reescalados (e o mês fica marcado como parcial).
@@ -599,6 +824,8 @@
     const ja = e.itens.findIndex(i => i.id === fid);
     if (sim && ja < 0) {
       const f = S.porId[fid];
+      const cart = carteiraAtiva(), tem = posicao(cart, f.c);
+      if (tem != null && !confirm(`${cart.nome} já tem R$ ${brl(tem)} em ${nomeCurto(f.c, f.n)}. Incluir na estratégia mesmo assim?`)) { renderTabela(); return; }
       e.itens.push({ id: fid, c: f.c, s: f.s, n: f.n, peso: 10 });
     } else if (!sim && ja >= 0) e.itens.splice(ja, 1);
     e.atualizado = new Date().toISOString();
@@ -702,10 +929,12 @@
     const se = serieEstrategia(e);
     const ind = indicadores(se.r);
     const total = e.itens.reduce((a, i) => a + i.peso, 0);
+    const cart = carteiraDe(e.cliente);
     const itens = e.itens.map(i => {
       const f = S.porId[i.id];
       const j12 = f && f.ind.j12;
-      return `<tr><td>${f ? `<a href="${linkFundo(i.id)}" onclick="return afClique(event, '${i.id}')">${esc(f.n)}</a>${f.ns ? `<div class="af-sub">${esc(f.ns)}</div>` : ''}` : `${esc(i.n)} <span class="td-neg">(sem dados neste mês)</span>`}<div class="af-sub">${fmtCnpj(i.c)}${f ? ' · ' + f.t + ' · ' + celulaPlats(f) : ''}</div></td>
+      const tem = posicao(cart, i.c);
+      return `<tr><td>${f ? `<a href="${linkFundo(i.id)}" onclick="return afClique(event, '${i.id}')">${esc(f.n)}</a>${f.ns ? `<div class="af-sub">${esc(f.ns)}</div>` : ''}` : `${esc(i.n)} <span class="td-neg">(sem dados neste mês)</span>`}${tem != null ? ' ' + tagTem(tem, cart.nome) : ''}<div class="af-sub">${fmtCnpj(i.c)}${f ? ' · ' + f.t + ' · ' + celulaPlats(f) : ''}</div></td>
         <td><input class="af-peso" type="number" min="0" step="0.5" value="${i.peso}" onchange="afPeso('${i.id}', this.value)"> %</td>
         <td class="af-num">${total ? pct(i.peso / total, 1) : '—'}</td>
         <td class="af-num">${e.valorTotal && total ? brl(e.valorTotal * i.peso / total) : '—'}</td>
@@ -725,8 +954,13 @@
         </div>
       </div>
       <p class="af-nota">Para incluir fundos, vá em <a href="#" onclick="afAba('fundos');return false;">Fundos</a> e marque a caixinha ao lado do nome. Soma dos pesos: <strong class="${Math.abs(total - 100) < 0.01 ? 'td-pos' : 'td-neg'}">${num(total, 1)}%</strong> (os indicadores usam os pesos proporcionais, então não precisa fechar 100%).</p>
-      <div class="upload-field" style="margin-bottom:0.8rem;"><label>Observações (perfil, clientes que usam, racional)</label>
+      <div class="upload-form af-filtros" style="margin-bottom:0.8rem;">
+        <div class="upload-field" style="max-width:240px;"><label>Cliente</label><input type="text" list="afCliLista" value="${esc(e.cliente || '')}" placeholder="ex.: Daniel" onchange="afEnvio('cliente', this.value)"></div>
+        <div class="upload-field" style="flex:3;"><label>Observações (perfil, clientes que usam, racional)</label>
         <input type="text" value="${esc(e.obs || '')}" onchange="afObs(this.value)" placeholder="ex.: moderado, não qualificado, liquidez até D+30"></div>
+      </div>
+      ${cart ? `<details class="af-cart"${e.itens.length ? '' : ' open'}><summary>Carteira atual de ${esc(cart.nome)}${cart.ref ? ' (' + esc(cart.ref) + ')' : ''}: R$ ${brl(totalCart(cart))} em ${cart.itens.length} ativos</summary>${tabelaCarteira(cart, true)}</details>`
+        : e.cliente ? `<p class="af-nota">Não há carteira guardada de ${esc(e.cliente)}. Envie o relatório em <a href="#" onclick="afAba('carteiras');return false;">Carteiras dos clientes</a> para ver aqui o que já tem.</p>` : ''}
       <div class="ext-preview-wrap" style="max-height:none;"><table class="ext-preview-table">
         <tr><th>Fundo</th><th>Peso</th><th>Proporção</th><th>Valor (R$)</th><th>Liquidez</th><th>12m</th><th>Sharpe 12m</th><th></th></tr>${itens || '<tr><td colspan="8" class="td-na">Nenhum fundo ainda.</td></tr>'}</table></div>
       ${e.itens.length ? painelEnvio(e, ind) : ''}
@@ -808,7 +1042,6 @@
   function painelEnvio(e, ind) {
     return `<h3 style="margin-top:1.2rem;">Enviar ao cliente e gerar a ordem</h3>
       <div class="upload-form af-filtros" style="margin-bottom:0.6rem;">
-        <div class="upload-field"><label>Cliente (nome na proposta)</label><input type="text" value="${esc(e.cliente || '')}" placeholder="ex.: Viviane" onchange="afEnvio('cliente', this.value)"></div>
         <div class="upload-field"><label>Valor total (R$)</label><input type="text" inputmode="decimal" value="${e.valorTotal ? brl(e.valorTotal) : ''}" placeholder="ex.: 250.000,00" onchange="afEnvio('valorTotal', this.value)"></div>
         <div class="upload-field" style="justify-content:flex-end;"><label>&nbsp;</label><label style="display:flex;gap:0.4rem;align-items:center;font-size:12px;cursor:pointer;"><input type="checkbox" ${e.envRent !== false ? 'checked' : ''} onchange="afEnvio('envRent', this.checked)"> Mostrar rentabilidade</label></div>
       </div>
@@ -829,10 +1062,11 @@
     if (campo === 'valorTotal') {
       const n = parseFloat(String(v).replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.'));
       e.valorTotal = isFinite(n) && n > 0 ? n : null;
-    } else e[campo] = v;
+    } else e[campo] = typeof v === 'string' ? v.trim() : v;
     e.atualizado = new Date().toISOString();
     salvarEstr();
     renderEstrategias();
+    if (campo === 'cliente') { S.esconderTem = false; afFiltrar(); }
   }
 
   function fbEnvio(txt, ok = true) {
@@ -1038,6 +1272,8 @@
     afEditar, afMarcar, afPeso, afNormalizar, afIgualar, afRenomear, afObs, afExcluir, afDuplicar,
     afComparar, afJanela, afHover, afExportar, afAba, afTelaInteira, afFecharDetalhe, afClique, afSairPagina,
     afEnvio, afPropostaImagem, afPropostaTexto, afParaOrdem,
+    afLerCarteira, afCartCnpj, afCartTipo, afCartTirar, afCancelarCarteira, afSalvarCarteira, afRemoverCarteira,
+    afVerCarteira, afEstrategiaPara, afEsconderTem,
   });
-  window.AF_TESTE = { janela, acumulado, escalaPasso };
+  window.AF_TESTE = { janela, acumulado, escalaPasso, lerExtrato };
 })();
