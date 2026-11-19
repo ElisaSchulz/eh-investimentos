@@ -17,7 +17,7 @@
   <script src="eh-senha.js"></script>
   <script src="eh-ativos-catalogo.js"></script>
   <script src="eh-clientes-contas.js"></script>
-  <script src="eh-analise-fundos.js?v=2026-11-19a"></script>
+  <script src="eh-analise-fundos.js?v=2026-11-19b"></script>
   <style>
     :root {
       /* Navy & accent palette — aligned to index.html */
@@ -1834,13 +1834,13 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       <div class="af-aba" id="afAba-carteiras">
         <div class="upload-panel af-painel">
           <h3 style="margin:0 0 0.4rem;">Carteiras dos clientes</h3>
-          <p class="af-nota">O que cada cliente já tem. Na estratégia com o nome do cliente, os fundos que ele já tem aparecem marcados "já tem" e o site pergunta antes de incluir de novo. Para guardar: abra o relatório mensal do cliente, selecione as linhas do "Extrato detalhado" (do primeiro ativo até o último), copie e cole abaixo. Fica no armazenamento privado, só para os admins. Enviar de novo para o mesmo cliente substitui a carteira.</p>
+          <p class="af-nota">O que cada cliente já tem. Na estratégia com o nome do cliente, os fundos que ele já tem aparecem marcados "já tem" e o site pergunta antes de incluir de novo. Para guardar: escreva o nome do cliente e envie o PDF do relatório mensal. O site lê a tabela "Extrato detalhado" e mostra para conferir antes de salvar. Também dá para colar uma planilha com nome, CNPJ e valor. Fica no armazenamento privado, só para os admins. Enviar de novo para o mesmo cliente substitui a carteira.</p>
           <div class="upload-form">
             <div class="upload-field" style="max-width:240px;"><label>Cliente</label><input type="text" id="afCartNome" list="afCliLista" placeholder="ex.: Daniel"></div>
             <div class="upload-field" style="max-width:160px;"><label>Referência</label><input type="text" id="afCartRef" placeholder="ex.: out/26"></div>
           </div>
           <textarea id="afCartTexto" placeholder="Cole aqui as linhas do Extrato detalhado. Exemplo:&#10;FUNDO ALFA DI CP   D+0   10.000,00   850,00   100.000,00   40,00% ...&#10;FUNDO BETA FIC FIDC   D+61   0,00   120,00   12.000,00   4,80% ...&#10;&#10;Também serve uma planilha copiada do Excel com nome, CNPJ e valor."></textarea>
-          <div style="margin-top:0.5rem;"><button class="btn-download-ext" onclick="afLerCarteira()">Ler o texto</button></div>
+          <div style="margin-top:0.5rem;display:flex;gap:0.5rem;flex-wrap:wrap;"><label class="btn-download-ext" style="cursor:pointer;text-align:center;">Enviar PDF do relatório<input type="file" accept=".pdf,application/pdf" style="display:none;" onchange="afCartPdf(this)"></label><button class="btn-download-ext" onclick="afLerCarteira()">Ler o texto colado</button></div>
           <div id="afCartPrevia"></div>
           <h3 style="margin-top:1.4rem;">Carteiras guardadas</h3>
           <div class="ext-preview-wrap" style="max-height:none;"><table class="ext-preview-table" id="afCarteiras"></table></div>

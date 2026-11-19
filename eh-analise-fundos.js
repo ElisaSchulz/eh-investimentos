@@ -620,6 +620,14 @@
   // Uma linha por ativo: nome, liquidez (D+N ou vencimento), valores. Com 3 valores ou mais
   // (movimentação, rendimento, saldo final, como no relatório da EH) usa o 3º; senão o último.
   function lerExtrato(txt) {
+    // Relatório inteiro: usa só a seção "Extrato detalhado" (as outras tabelas também têm valores)
+    txt = String(txt || '');
+    const ini = txt.search(/EXTRATO\s+DETALHADO/i);
+    if (ini >= 0) {
+      txt = txt.slice(ini);
+      const fim = txt.search(/RESUMO\s+DE\s+MERCADO/i);
+      if (fim > 0) txt = txt.slice(0, fim);
+    }
     // Alguns leitores de PDF copiam cada célula numa linha: junta as linhas sem letras
     // (liquidez, valores, %) à última linha com nome.
     const linhas = [];
@@ -716,6 +724,41 @@
         <button class="btn-download-ext" onclick="afSalvarCarteira()">Salvar carteira${imp.nome ? ' de ' + esc(imp.nome) : ''}</button>
         <button class="btn-download-ext" onclick="afCancelarCarteira()">Cancelar</button>
       </div>`;
+  }
+
+  // Texto do PDF com pdf.js, remontando as linhas pela posição de cada pedaço na página
+  // (copiar e colar do leitor de PDF perde a ordem das colunas).
+  async function textoPdf(buf) {
+    const doc = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
+    const out = [];
+    for (let pg = 1; pg <= doc.numPages; pg++) {
+      const tc = await (await doc.getPage(pg)).getTextContent();
+      const its = tc.items.filter(i => i.str && i.str.trim()).map(i => ({ s: i.str.trim(), x: i.transform[4], y: i.transform[5] }));
+      const linhas = [];
+      its.forEach(i => {
+        const l = linhas.find(l => Math.abs(l.y - i.y) <= 3);
+        if (l) l.its.push(i); else linhas.push({ y: i.y, its: [i] });
+      });
+      linhas.sort((a, b) => b.y - a.y).forEach(l => out.push(l.its.sort((a, b) => a.x - b.x).map(i => i.s).join('  ')));
+    }
+    return out.join('\n');
+  }
+
+  async function afCartPdf(input) {
+    const f = input.files && input.files[0];
+    input.value = '';
+    if (!f) return;
+    let txt;
+    try { txt = await textoPdf(await f.arrayBuffer()); }
+    catch (e) { alert('Não consegui ler o PDF: ' + e.message); return; }
+    const nomeEl = document.getElementById('afCartNome'), refEl = document.getElementById('afCartRef');
+    if (!nomeEl.value.trim()) { const m = /^([A-ZÀ-Ú][a-zà-ú]+)/.exec(f.name); if (m) nomeEl.value = m[1]; }
+    if (!refEl.value.trim()) {
+      const m = /RESULTADOS\s+(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)[a-zç]*\s*\/\s*(\d{2})/i.exec(txt);
+      if (m) refEl.value = m[1].toLowerCase() + '/' + m[2];
+    }
+    document.getElementById('afCartTexto').value = txt;
+    afLerCarteira();
   }
 
   function afLerCarteira() {
@@ -1272,7 +1315,7 @@
     afEditar, afMarcar, afPeso, afNormalizar, afIgualar, afRenomear, afObs, afExcluir, afDuplicar,
     afComparar, afJanela, afHover, afExportar, afAba, afTelaInteira, afFecharDetalhe, afClique, afSairPagina,
     afEnvio, afPropostaImagem, afPropostaTexto, afParaOrdem,
-    afLerCarteira, afCartCnpj, afCartTipo, afCartTirar, afCancelarCarteira, afSalvarCarteira, afRemoverCarteira,
+    afLerCarteira, afCartPdf, afCartCnpj, afCartTipo, afCartTirar, afCancelarCarteira, afSalvarCarteira, afRemoverCarteira,
     afVerCarteira, afEstrategiaPara, afEsconderTem,
   });
   window.AF_TESTE = { janela, acumulado, escalaPasso, lerExtrato };
