@@ -17,7 +17,7 @@
   <script src="eh-senha.js"></script>
   <script src="eh-ativos-catalogo.js"></script>
   <script src="eh-clientes-contas.js"></script>
-  <script src="eh-analise-fundos.js?v=2026-11-18e"></script>
+  <script src="eh-analise-fundos.js?v=2026-11-19a"></script>
   <style>
     :root {
       /* Navy & accent palette — aligned to index.html */
@@ -811,6 +811,10 @@
     .af-sub { font-size: 10.5px; color: var(--cream-faint); font-weight: 400; white-space: normal; }
     .af-tag { display:inline-block; border:1px solid var(--rule-strong); padding:1px 6px; font-size:10px; letter-spacing:0.06em; color:var(--gold-text); white-space:nowrap; }
     .af-tag-off { color: var(--err-text); }
+    #view-fundos .af-tag.af-tag-tem { color: #fff; background: #c0504d; border-color: #c0504d; font-weight: 600; letter-spacing: 0.02em; }
+    .af-cart { margin: 0 0 1rem; font-size: 12px; }
+    .af-cart summary { cursor: pointer; font-weight: 600; color: var(--gold-text); margin-bottom: 0.5rem; }
+    #afCartTexto { width: 100%; min-height: 150px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11px; padding: 0.5rem; border: 1px solid var(--rule-strong); background: transparent; color: var(--cream); }
     .af-sel td { background: var(--gold-pale); }
     .af-nota { font-size: 12px; color: var(--cream-faint); margin: 0.6rem 0; }
     .af-grade th, .af-grade td { padding: 0.4rem 0.35rem; font-size: 12px; }
@@ -1783,6 +1787,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         <div class="msg-tabs" style="margin-bottom:0;border-bottom:none;flex:1;">
           <button class="email-tab af-aba-btn active" data-aba="fundos" onclick="afAba('fundos')">Fundos</button>
           <button class="email-tab af-aba-btn" data-aba="estrategias" onclick="afAba('estrategias')">Estratégias</button>
+          <button class="email-tab af-aba-btn" data-aba="carteiras" onclick="afAba('carteiras')">Carteiras dos clientes</button>
           <button class="email-tab af-aba-btn" data-aba="listas" onclick="afAba('listas')">Listas das plataformas</button>
         </div>
         <button class="btn-download-ext af-btn-cheia" id="afBtnCheia" onclick="afTelaInteira()" title="Esconde o menu e o topo (Esc sai)">Tela inteira</button>
@@ -1823,6 +1828,23 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           </div>
           <p class="af-nota">Cada estratégia é uma carteira de fundos com pesos. A rentabilidade da carteira é a média ponderada dos fundos mês a mês. Fica salva no armazenamento privado e aparece para todos os admins.</p>
           <div id="afEstrategias"></div>
+        </div>
+      </div>
+
+      <div class="af-aba" id="afAba-carteiras">
+        <div class="upload-panel af-painel">
+          <h3 style="margin:0 0 0.4rem;">Carteiras dos clientes</h3>
+          <p class="af-nota">O que cada cliente já tem. Na estratégia com o nome do cliente, os fundos que ele já tem aparecem marcados "já tem" e o site pergunta antes de incluir de novo. Para guardar: abra o relatório mensal do cliente, selecione as linhas do "Extrato detalhado" (do primeiro ativo até o último), copie e cole abaixo. Fica no armazenamento privado, só para os admins. Enviar de novo para o mesmo cliente substitui a carteira.</p>
+          <div class="upload-form">
+            <div class="upload-field" style="max-width:240px;"><label>Cliente</label><input type="text" id="afCartNome" list="afCliLista" placeholder="ex.: Daniel"></div>
+            <div class="upload-field" style="max-width:160px;"><label>Referência</label><input type="text" id="afCartRef" placeholder="ex.: out/26"></div>
+          </div>
+          <textarea id="afCartTexto" placeholder="Cole aqui as linhas do Extrato detalhado. Exemplo:&#10;FUNDO ALFA DI CP   D+0   10.000,00   850,00   100.000,00   40,00% ...&#10;FUNDO BETA FIC FIDC   D+61   0,00   120,00   12.000,00   4,80% ...&#10;&#10;Também serve uma planilha copiada do Excel com nome, CNPJ e valor."></textarea>
+          <div style="margin-top:0.5rem;"><button class="btn-download-ext" onclick="afLerCarteira()">Ler o texto</button></div>
+          <div id="afCartPrevia"></div>
+          <h3 style="margin-top:1.4rem;">Carteiras guardadas</h3>
+          <div class="ext-preview-wrap" style="max-height:none;"><table class="ext-preview-table" id="afCarteiras"></table></div>
+          <datalist id="afCliLista"></datalist>
         </div>
       </div>
 
