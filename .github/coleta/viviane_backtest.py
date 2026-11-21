@@ -25,7 +25,7 @@ CVM = "https://dados.cvm.gov.br/dados"
 UA = {"User-Agent": "Mozilla/5.0"}
 SAIDA = "saida/viviane"
 INICIO = (2021, 9)
-NOMES = re.compile(r"INCENTIVAD|INFRA|DEBENTURE|DEBÊNTURE|12\.431|BNP PARIBAS MATCH|MAPFRE|WESTERN ASSET", re.I)
+NOMES = re.compile(r"IMA-B|IMAB|IRF-M|INCENTIVAD|INFRA|DEBENTURE|DEBÊNTURE|12\.431|BNP PARIBAS MATCH|MAPFRE|WESTERN ASSET", re.I)
 
 
 def baixar(url, tentativas=4, timeout=300):
@@ -184,8 +184,32 @@ def cotas(cand):
             w.writerow([c, s, v["nome"], v["anbima"], v["publico"], v["gestor"], v["inicio"], d, round(pl), nc])
 
 
+def tesouro():
+    url = ("https://www.tesourotransparente.gov.br/ckan/dataset/df56aa42-484a-4a59-8184-7676580c81e3/"
+           "resource/796d2059-14e9-44e3-80c9-2d9e30b405c1/download/PrecoTaxaTesouroDireto.csv")
+    b = baixar(url)
+    if not b:
+        return
+    texto = b.decode("latin-1")
+    rd = csv.reader(io.StringIO(texto), delimiter=";")
+    cab = next(rd)
+    with open(f"{SAIDA}/tesouro.csv", "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(cab)
+        n = 0
+        for r in rd:
+            if len(r) > 2 and r[2][-4:] >= "2021":
+                w.writerow(r)
+                n += 1
+    print("tesouro:", n, cab)
+
+
 def main():
     os.makedirs(SAIDA, exist_ok=True)
+    try:
+        tesouro()
+    except Exception as e:  # noqa: BLE001
+        print("tesouro falhou", e)
     bcb()
     lista = {dig(x) for x in open(os.path.join(os.path.dirname(__file__), "viviane_cnpjs.txt")).read().split()}
     cotas(cadastro(lista))
