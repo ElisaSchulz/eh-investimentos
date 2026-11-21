@@ -1,0 +1,14 @@
+name: Teste pontual - acesso ANBIMA
+on:
+  push:
+    branches: [claude/project-thread-ebvk81]
+    paths: [".github/coleta/teste_anbima.py", ".github/workflows/teste-anbima.yml"]
+permissions:
+  contents: read
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 .github/coleta/teste_anbima.py
