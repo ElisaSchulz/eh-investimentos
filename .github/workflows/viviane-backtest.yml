@@ -1,0 +1,22 @@
+name: Coleta pontual - backtest carteira Viviane
+on:
+  push:
+    branches: [claude/project-thread-ebvk81]
+    paths: [".github/coleta/viviane_backtest.py", ".github/workflows/viviane-backtest.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  coletar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python .github/coleta/viviane_backtest.py
+      - run: |
+          wc -l saida/viviane/*.csv
+          git config user.name "github-actions"; git config user.email "github-actions@users.noreply.github.com"
+          git add saida && git commit -m "Saida da coleta (backtest Viviane)" && git push
