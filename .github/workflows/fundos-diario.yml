@@ -1,0 +1,41 @@
+name: Fundos (diário)
+
+# Atualiza a aba Análise de Fundos todo dia útil: rentabilidade do mês até ontem e aplicações
+# e resgates dos últimos dias de cada fundo, pelo informe diário da CVM. Grava
+# diario/fundos_diario.json no bucket privado (tarefas-mensais/fundos_diario.py).
+on:
+  schedule:
+    # 9h e 20h de Brasília, segunda a sexta (a CVM publica o informe diário ao longo do dia)
+    - cron: "0 12 * * 1-5"
+    - cron: "0 23 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fundos-diario
+  cancel-in-progress: true
+
+jobs:
+  rodar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: tarefas-mensais
+    env:
+      SUPABASE_URL: https://migyqowqjfhvdcrtryms.supabase.co
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      TZ: America/Sao_Paulo
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tarefas-mensais/requirements.txt
+      - name: Instalar dependências
+        run: pip install -q -r requirements.txt
+      - name: Atualizar fundos
+        run: python fundos_diario.py

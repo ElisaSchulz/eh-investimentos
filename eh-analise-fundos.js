@@ -16,13 +16,14 @@
   const ARQ_PLATS = 'config/plataformas.json';
   const ARQ_ESTR = 'config/estrategias_fundos.json';
   const ARQ_CART = 'config/carteiras_clientes.json';
+  const ARQ_DIARIO = 'diario/fundos_diario.json';   // atualização diária (fundos_diario.py)
   const MAX_LINHAS = 300;
   const CORES = ['#2a78d6', '#eb6834', '#1baf7a'];   // até 3 estratégias no gráfico; CDI em cinza tracejado
   const MESES_CURTOS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
   const S = {
     iniciado: false, mes: null, dados: null, fundos: [], porId: {},
-    plats: { plataformas: {} }, estr: { estrategias: [] }, cart: { clientes: {} }, importando: null, cartAberta: null, esconderTem: false,
+    plats: { plataformas: {} }, estr: { estrategias: [] }, diario: null, cart: { clientes: {} }, importando: null, cartAberta: null, esconderTem: false,
     ordem: { col: 'r12', dir: -1 }, sel: null, editando: null, comparar: new Set(), janela: 36,
   };
   window.AF = S;  // para inspecionar no console
@@ -94,6 +95,8 @@
     { k: 'pl', t: 'PL (R$ mi)', v: f => f.pl, fmt: f => mi(f.pl) },
     { k: 'ct', t: 'Cotistas', v: f => f.ct, fmt: f => f.ct ? f.ct.toLocaleString('pt-BR') : '—' },
     { k: 'lq', t: 'Liquidez', v: f => f.liq && f.liq.dias, fmt: f => f.liq && f.liq.fonte ? `<span title="Fonte: ${esc(f.liq.fonte)}">${esc(f.liq.txt)}</span>` : '—' },
+    { k: 'mtd', t: 'Mês atual', v: f => f.d && f.d.mtd, fmt: f => f.d && f.d.mtd != null ? `${pct(f.d.mtd)}<div class="af-sub">${pctCdi(S.diario.cdi_mes ? f.d.mtd / S.diario.cdi_mes : null)} CDI</div>` : '—', cmp: f => f.d && [f.d.mtd, S.diario.cdi_mes] },
+    { k: 'ap5', t: 'Aplicações 5 dias (R$ mi)', v: f => f.d && f.d.cap, fmt: f => f.d ? `${mi(f.d.cap)}<div class="af-sub">${f.d.dc} de ${S.diario.dias || 5} dias · resg. ${mi(f.d.res)}</div>` : '—' },
     { k: 'm1', t: 'Mês', v: f => f.ind.m1, fmt: f => pct(f.ind.m1), cmp: f => [f.ind.m1, f.ind.m1c] },
     { k: 'ytd', t: 'YTD', v: f => f.ind.ytd && f.ind.ytd.ret, fmt: f => pct(f.ind.ytd && f.ind.ytd.ret), cmp: f => f.ind.ytd && [f.ind.ytd.ret, f.ind.ytd.cdi] },
     { k: 'pytd', t: '% CDI YTD', v: f => f.ind.ytd && f.ind.ytd.pc, fmt: f => pctCdi(f.ind.ytd && f.ind.ytd.pc), pc: true },
@@ -172,7 +175,8 @@
       if ((arqs || []).some(a => a.name === ARQ_DADOS)) comDados.push(m);
       if (comDados.length >= 12) break;
     }
-    [S.plats, S.estr, S.cart] = await Promise.all([baixarJson(ARQ_PLATS), baixarJson(ARQ_ESTR), baixarJson(ARQ_CART)]);
+    [S.plats, S.estr, S.cart, S.diario] = await Promise.all([baixarJson(ARQ_PLATS), baixarJson(ARQ_ESTR), baixarJson(ARQ_CART), baixarJson(ARQ_DIARIO)]);
+    if (S.diario && !S.diario.fundos) S.diario = null;
     S.plats = S.plats && S.plats.plataformas ? S.plats : { plataformas: {} };
     S.estr = S.estr && S.estr.estrategias ? S.estr : { estrategias: [] };
     S.cart = S.cart && S.cart.clientes ? S.cart : { clientes: {} };
@@ -199,10 +203,25 @@
     S.fundos = d.fundos.map(f => ({ ...f, id: id(f), ind: indicadores(f.r) }));
     S.porId = {};
     S.fundos.forEach(f => { S.porId[f.id] = f; });
+    anexarDiario();
     marcarPlats();
     renderResumo();
     afFiltrar();
     renderEstrategias(); renderCarteiras();
+  }
+
+  // Dado diário de cada fundo (rentabilidade do mês até ontem, aplicações e resgates recentes)
+  function anexarDiario() {
+    const D = S.diario;
+    const cm = COLS.find(c => c.k === 'mtd'), ca = COLS.find(c => c.k === 'ap5');
+    if (D && D.data) {
+      cm.t = `${mesCurto(D.mes)} até ${D.data.slice(8, 10)}/${D.data.slice(5, 7)}`;
+      ca.t = `Aplicações ${D.dias || 5} dias (R$ mi)`;
+    }
+    S.fundos.forEach(f => {
+      const x = D && D.fundos[f.id];
+      f.d = x ? { dt: x[0], mtd: x[1], cap: x[2], res: x[3], dc: x[4], pl: x[5], ct: x[6] } : null;
+    });
   }
 
   function marcarPlats() {
@@ -233,6 +252,8 @@
       ['CDI 36m', pct(um(36) && um(36).ret)],
       ['Fundos', S.fundos.length.toLocaleString('pt-BR')],
     ];
+    const D = S.diario;
+    if (D && D.data) chips.push(['Diário até', D.data.split('-').reverse().join('/')], [`CDI ${mesCurto(D.mes)} até ${D.data.slice(8, 10)}/${D.data.slice(5, 7)}`, pct(D.cdi_mes)]);
     document.getElementById('afResumo').innerHTML = chips.map(([a, b]) => `<div class="ext-chip">${a}<span>${b}</span></div>`).join('') +
       `<div class="ext-chip">Gerado em<span>${esc(new Date(d.gerado_em).toLocaleDateString('pt-BR'))}</span></div>`;
   }
@@ -250,6 +271,7 @@
     const acima = document.getElementById('afAcima').checked;
     const capt = document.getElementById('afCapt').checked;
     const aberto = document.getElementById('afAberto').checked;
+    const recebendo = (document.getElementById('afRecebendo') || {}).checked;
     const cart = S.esconderTem ? carteiraAtiva() : null;
     return S.fundos.filter(f => {
       if (cart && posicao(cart, f.c) != null && !(S.editando.itens.some(i => i.id === f.id))) return false;
@@ -265,6 +287,7 @@
       if (acima && !(f.ind.j12 && f.ind.j12.ret > f.ind.j12.cdi)) return false;
       if (capt && !(f.cap > 0)) return false;
       if (aberto && !f.plats.some(p => abertoNa(f, p) === true)) return false;
+      if (recebendo && !(f.d && f.d.dc > 0)) return false;
       return true;
     });
   }
@@ -320,7 +343,7 @@
     const linhas = lista.slice(0, MAX_LINHAS).map(f => {
       const tem = posicao(cart, f.c);
       const nome = `<div class="af-nome"><a href="${linkFundo(f.id)}" onclick="return afClique(event, '${f.id}')">${esc(f.n)}</a>` +
-        (tem != null ? ' ' + tagTem(tem, cart.nome) : '') +
+        (tem != null ? ' ' + tagTem(tem, cart) : '') +
         (f.ns ? `<div class="af-sub">${esc(f.ns)}</div>` : '') +
         `<div class="af-sub">${fmtCnpj(f.c)} · ${f.t}${f.cl && f.cl !== f.t ? ' · ' + esc(f.cl) : ''} · ${f.p === 'G' ? 'Geral' : f.p === 'Q' ? 'Qualificado' : 'Profissional'}${f.g ? ' · ' + esc(f.g) : ''}` +
         (f.ind.defas ? ` · <span class="td-neg">dados até ${mesCurto(f.ind.defas)}</span>` : '') + '</div></div>';
@@ -443,8 +466,12 @@
     const plats = f.plats.map(p => {
       const meta = S.plats.plataformas[p].fundos[f.c] || {};
       const info = Object.entries(meta).filter(([k]) => k !== 'n').map(([k, v]) => `${esc(k)}: <strong>${esc(v)}</strong>`).join(' · ');
-      return `<div><span class="af-tag">${esc(p)}</span> ${info}</div>`;
+      const ab = abertoNa(f, p);
+      const marcar = `<span class="af-sub"> · marcar <a href="#" onclick="afMarcarAberto(decodeURIComponent('${encodeURIComponent(p)}'), '${f.id}', true);return false;"${ab === true ? ' style="font-weight:700;"' : ''}>aberto</a> / <a href="#" onclick="afMarcarAberto(decodeURIComponent('${encodeURIComponent(p)}'), '${f.id}', false);return false;"${ab === false ? ' style="font-weight:700;"' : ''}>fechado</a> para aplicação</span>`;
+      return `<div><span class="af-tag${ab === false ? ' af-tag-off' : ''}">${esc(p)}${ab === false ? ' fechado' : ''}</span> ${info}${marcar}</div>`;
     }).join('') || '<div class="td-na">Não está em nenhuma lista de plataforma enviada.</div>';
+    const D = S.diario;
+    const diario = f.d ? `<div class="af-sub">Até ${f.d.dt.split('-').reverse().join('/')}: ${mesCurto(D.mes)} ${pct(f.d.mtd)}${D.cdi_mes ? ` (${pctCdi(f.d.mtd / D.cdi_mes)} do CDI)` : ''} · aplicações nos últimos ${D.dias || 5} dias: R$ ${mi(f.d.cap)} mi, em ${f.d.dc} dia(s) · resgates: R$ ${mi(f.d.res)} mi${f.d.dc ? ' · <span class="td-pos">recebendo aplicações</span>' : ''}</div>` : '';
     const donos = Object.values(S.cart.clientes).map(c => [c.nome, posicao(c, f.c)]).filter(x => x[1] != null);
     const quemTem = donos.length ? `<div class="af-sub">Clientes que já têm: ${donos.map(([n, v]) => `<strong>${esc(n)}</strong> (R$ ${brl(v)})`).join(', ')}</div>` : '';
     const incluir = S.editando ? (S.editando.itens.some(i => i.id === f.id) ? '<span class="af-nota" style="margin:0;align-self:center;">Já está na estratégia</span>' : `<button class="btn-download-ext" onclick="afMarcar('${f.id}', true);afDetalhe('${f.id}')">Incluir em ${esc(S.editando.nome)}</button>`) : '';
@@ -456,6 +483,7 @@
         <div><h3 style="margin-bottom:0.3rem;">${esc(f.n)}</h3>
           <div class="af-sub">${f.ns ? esc(f.ns) + ' · ' : ''}${fmtCnpj(f.c)} · ${f.t} · ${esc(f.cl || '')} · ${f.p === 'G' ? 'Público geral' : f.p === 'Q' ? 'Qualificado' : 'Profissional'} · Gestor: ${esc(f.g || '—')}</div>
           <div class="af-sub">Liquidez: <strong>${esc(f.liq ? f.liq.txt : '—')}</strong>${f.liq && f.liq.fonte ? ` (${esc(f.liq.fonte)})` : ''} · PL R$ ${mi(f.pl)} mi · ${f.ct ? f.ct.toLocaleString('pt-BR') + ' cotistas' : 'cotistas não informados'} · último dado ${esc(f.dt)}${f.capm ? ` · captação em ${mesCurto(f.capm)}: R$ ${mi(f.cap)} mi` : ''} · dados de ${mesCurto(S.dados.meses[S.dados.meses.length - 1])}</div>
+          ${diario}
           ${quemTem}
         </div>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">${botoes}</div>
@@ -565,6 +593,25 @@
     }
   }
 
+  // Aberto/fechado para aplicação numa plataforma, marcado à mão (ex.: XP, cuja lista não traz
+  // essa coluna). Fica na lista da plataforma, na mesma coluna que o arquivo usa, se houver.
+  async function afMarcarAberto(plat, fid, sim) {
+    const f = S.porId[fid];
+    if (!f || !S.plats.plataformas[plat]) return;
+    const nov = JSON.parse(JSON.stringify(S.plats));
+    const P = nov.plataformas[plat];
+    const meta = P.fundos[f.c] = P.fundos[f.c] || {};
+    const k = Object.keys(meta).find(x => /aberto|aplica/i.test(x) && !/cotiza|hor/i.test(x)) ||
+      (P.colunas || []).find(x => /aberto|aplica/i.test(x) && !/cotiza|hor/i.test(x)) || 'Aberto para aplicação';
+    meta[k] = sim ? 'Sim' : 'Não';
+    meta['Marcado em'] = new Date().toLocaleDateString('pt-BR');
+    P.colunas = [...new Set([...(P.colunas || []), k])];
+    try { await enviarJson(ARQ_PLATS, nov); } catch (e) { alert('Não consegui salvar: ' + e.message); return; }
+    S.plats = nov;
+    renderPlats(); marcarPlats(); afFiltrar();
+    if (document.body.classList.contains('af-pagina')) paginaFundo(fid); else afDetalhe(fid);
+  }
+
   async function afRemoverPlat(nome) {
     if (!confirm(`Remover a lista ${nome}?`)) return;
     const nov = JSON.parse(JSON.stringify(S.plats));
@@ -587,7 +634,10 @@
     return its.length ? its.reduce((a, i) => a + (i.valor || 0), 0) : null;
   }
   const totalCart = cart => cart.itens.reduce((a, i) => a + (i.valor || 0), 0);
-  const tagTem = (v, quem) => `<span class="af-tag af-tag-tem" title="${esc(quem)} já tem este fundo">já tem R$ ${brl(v)}</span>`;
+  const tagTem = (v, cart) => {
+    const t = totalCart(cart);
+    return `<span class="af-tag af-tag-tem" title="${esc(cart.nome)} já tem este fundo">já tem R$ ${brl(v)}${t ? ' · ' + pct(v / t, 1) + ' da carteira' : ''}</span>`;
+  };
 
   const RE_CNPJ = /\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}/;
   const RE_LIQ = /\bD\s*\+\s*\d+\b|\b\d{2}\/\d{2}\/\d{2,4}\b/i;
@@ -869,7 +919,8 @@
       const f = S.porId[fid];
       const cart = carteiraAtiva(), tem = posicao(cart, f.c);
       if (tem != null && !confirm(`${cart.nome} já tem R$ ${brl(tem)} em ${nomeCurto(f.c, f.n)}. Incluir na estratégia mesmo assim?`)) { renderTabela(); return; }
-      e.itens.push({ id: fid, c: f.c, s: f.s, n: f.n, peso: 10 });
+      // com valores em R$, o fundo novo entra zerado até digitar o valor
+      e.itens.push(e.modoValor ? { id: fid, c: f.c, s: f.s, n: f.n, peso: 0, valor: 0 } : { id: fid, c: f.c, s: f.s, n: f.n, peso: 10 });
     } else if (!sim && ja >= 0) e.itens.splice(ja, 1);
     e.atualizado = new Date().toISOString();
     salvarEstr();
@@ -881,6 +932,7 @@
     const it = e && e.itens.find(i => i.id === fid);
     if (!it) return;
     it.peso = Math.max(0, parseFloat(String(v).replace(',', '.')) || 0);
+    e.modoValor = false;
     e.atualizado = new Date().toISOString();
     salvarEstr();
     renderEstrategias();
@@ -891,6 +943,7 @@
     const t = e.itens.reduce((a, i) => a + i.peso, 0);
     if (!t) return;
     e.itens.forEach(i => { i.peso = Math.round(i.peso / t * 10000) / 100; });
+    e.modoValor = false;
     salvarEstr(); renderEstrategias();
   }
 
@@ -898,6 +951,7 @@
     const e = S.editando;
     if (!e.itens.length) return;
     e.itens.forEach(i => { i.peso = Math.round(10000 / e.itens.length) / 100; });
+    e.modoValor = false;
     salvarEstr(); renderEstrategias();
   }
 
@@ -973,19 +1027,29 @@
     const ind = indicadores(se.r);
     const total = e.itens.reduce((a, i) => a + i.peso, 0);
     const cart = carteiraDe(e.cliente);
+    const totCart = cart ? totalCart(cart) : 0;
+    const aporte = e.valorTotal || 0;
+    const L = linhasProposta(e);   // valores em R$ com os centavos fechando o total
     const itens = e.itens.map(i => {
       const f = S.porId[i.id];
       const j12 = f && f.ind.j12;
       const tem = posicao(cart, i.c);
-      return `<tr><td>${f ? `<a href="${linkFundo(i.id)}" onclick="return afClique(event, '${i.id}')">${esc(f.n)}</a>${f.ns ? `<div class="af-sub">${esc(f.ns)}</div>` : ''}` : `${esc(i.n)} <span class="td-neg">(sem dados neste mês)</span>`}${tem != null ? ' ' + tagTem(tem, cart.nome) : ''}<div class="af-sub">${fmtCnpj(i.c)}${f ? ' · ' + f.t + ' · ' + celulaPlats(f) : ''}</div></td>
-        <td><input class="af-peso" type="number" min="0" step="0.5" value="${i.peso}" onchange="afPeso('${i.id}', this.value)"> %</td>
-        <td class="af-num">${total ? pct(i.peso / total, 1) : '—'}</td>
-        <td class="af-num">${e.valorTotal && total ? brl(e.valorTotal * i.peso / total) : '—'}</td>
+      const l = L.find(x => x.id === i.id);
+      const v = l ? l.valor : null;
+      const depois = cart && aporte ? ((tem || 0) + (v || 0)) / (totCart + aporte) : null;
+      return `<tr><td>${f ? `<a href="${linkFundo(i.id)}" onclick="return afClique(event, '${i.id}')">${esc(f.n)}</a>${f.ns ? `<div class="af-sub">${esc(f.ns)}</div>` : ''}` : `${esc(i.n)} <span class="td-neg">(sem dados neste mês)</span>`}${tem != null ? ' ' + tagTem(tem, cart) : ''}<div class="af-sub">${fmtCnpj(i.c)}${f ? ' · ' + f.t + ' · ' + celulaPlats(f) : ''}</div></td>
+        <td style="white-space:nowrap;"><input class="af-peso" type="number" min="0" step="0.5" value="${Math.round(i.peso * 100) / 100}" onchange="afPeso('${i.id}', this.value)"> %<div class="af-sub">${total ? pct(i.peso / total, 1) + ' do aporte' : ''}</div></td>
+        <td><input class="af-peso af-valor" type="text" inputmode="decimal" value="${v != null && v > 0 ? brl(v) : ''}" placeholder="0,00" onchange="afValor('${i.id}', this.value)"></td>
+        ${cart ? `<td class="af-num">${depois != null ? pct(depois, 1) : '—'}<div class="af-sub">${tem != null ? 'hoje ' + pct(tem / totCart, 1) : 'não tem hoje'}</div></td>` : ''}
         <td class="af-num">${f && f.liq ? esc(f.liq.txt) : '—'}</td>
         <td class="af-num">${pct(j12 && j12.ret)}<div class="af-sub">${pctCdi(j12 && j12.pc)} CDI</div></td>
         <td class="af-num">${num(j12 && j12.sharpe)}</td>
         <td><a href="#" style="color:var(--err-text);" onclick="afMarcar('${i.id}', false);return false;">tirar</a></td></tr>`;
     }).join('');
+    const nCol = cart ? 8 : 7;
+    const resumoAporte = cart && aporte
+      ? `<p class="af-nota">Aporte de <strong>R$ ${brl(aporte)}</strong> = <strong>${pct(aporte / totCart, 1)}</strong> da carteira atual de ${esc(cart.nome)} (R$ ${brl(totCart)}). Depois do aporte a carteira fica com R$ ${brl(totCart + aporte)} e o aporte representa ${pct(aporte / (totCart + aporte), 1)} dela.</p>`
+      : cart ? `<p class="af-nota">Preencha o valor do aporte (ou o valor de cada fundo) para ver quanto ele representa na carteira de ${esc(cart.nome)}.</p>` : '';
     return `<div class="upload-panel af-editor" id="afEditor">
       <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center;">
         <h3>Editando: ${esc(e.nome)} <a href="#" onclick="afRenomear();return false;" style="font-size:11px;">renomear</a></h3>
@@ -996,17 +1060,20 @@
           <button class="btn-download-ext" onclick="afEditar('${e.id}')">Concluir</button>
         </div>
       </div>
-      <p class="af-nota">Para incluir fundos, vá em <a href="#" onclick="afAba('fundos');return false;">Fundos</a> e marque a caixinha ao lado do nome. Soma dos pesos: <strong class="${Math.abs(total - 100) < 0.01 ? 'td-pos' : 'td-neg'}">${num(total, 1)}%</strong> (os indicadores usam os pesos proporcionais, então não precisa fechar 100%).</p>
+      <p class="af-nota">Para incluir fundos, vá em <a href="#" onclick="afAba('fundos');return false;">Fundos</a> e marque a caixinha ao lado do nome. Ajuste cada fundo pelo peso (%) ou pelo valor (R$): ao digitar um valor em R$, o aporte passa a ser a soma dos valores e os pesos se ajustam. Soma dos pesos: <strong class="${Math.abs(total - 100) < 0.01 ? 'td-pos' : 'td-neg'}">${num(total, 1)}%</strong> (os indicadores usam os pesos proporcionais, então não precisa fechar 100%).</p>
       <div class="upload-form af-filtros" style="margin-bottom:0.8rem;">
-        <div class="upload-field" style="max-width:240px;"><label>Cliente</label><input type="text" list="afCliLista" value="${esc(e.cliente || '')}" placeholder="ex.: Daniel" onchange="afEnvio('cliente', this.value)"></div>
+        <div class="upload-field" style="max-width:220px;"><label>Cliente</label><input type="text" list="afCliLista" value="${esc(e.cliente || '')}" placeholder="ex.: Daniel" onchange="afEnvio('cliente', this.value)"></div>
+        <div class="upload-field" style="max-width:200px;"><label>Valor do aporte (R$)</label><input type="text" inputmode="decimal" value="${e.valorTotal ? brl(e.valorTotal) : ''}" placeholder="ex.: 250.000,00" onchange="afEnvio('valorTotal', this.value)"></div>
         <div class="upload-field" style="flex:3;"><label>Observações (perfil, clientes que usam, racional)</label>
         <input type="text" value="${esc(e.obs || '')}" onchange="afObs(this.value)" placeholder="ex.: moderado, não qualificado, liquidez até D+30"></div>
       </div>
-      ${cart ? `<details class="af-cart"${e.itens.length ? '' : ' open'}><summary>Carteira atual de ${esc(cart.nome)}${cart.ref ? ' (' + esc(cart.ref) + ')' : ''}: R$ ${brl(totalCart(cart))} em ${cart.itens.length} ativos</summary>${tabelaCarteira(cart, true)}</details>`
+      ${cart ? `<details class="af-cart"${e.itens.length ? '' : ' open'}><summary>Carteira atual de ${esc(cart.nome)}${cart.ref ? ' (' + esc(cart.ref) + ')' : ''}: R$ ${brl(totCart)} em ${cart.itens.length} ativos</summary>${tabelaCarteira(cart, true)}</details>`
         : e.cliente ? `<p class="af-nota">Não há carteira guardada de ${esc(e.cliente)}. Envie o relatório em <a href="#" onclick="afAba('carteiras');return false;">Carteiras dos clientes</a> para ver aqui o que já tem.</p>` : ''}
+      ${resumoAporte}
       <div class="ext-preview-wrap" style="max-height:none;"><table class="ext-preview-table">
-        <tr><th>Fundo</th><th>Peso</th><th>Proporção</th><th>Valor (R$)</th><th>Liquidez</th><th>12m</th><th>Sharpe 12m</th><th></th></tr>${itens || '<tr><td colspan="8" class="td-na">Nenhum fundo ainda.</td></tr>'}</table></div>
-      ${e.itens.length ? painelEnvio(e, ind) : ''}
+        <tr><th>Fundo</th><th>Peso</th><th>Valor (R$)</th>${cart ? `<th title="Posição no fundo depois do aporte ÷ carteira depois do aporte">Na carteira depois</th>` : ''}<th>Liquidez</th><th>12m</th><th>Sharpe 12m</th><th></th></tr>${itens || `<tr><td colspan="${nCol}" class="td-na">Nenhum fundo ainda.</td></tr>`}
+        ${e.itens.length && aporte ? `<tr><td style="font-weight:600;">Total</td><td></td><td class="af-num" style="font-weight:600;">${brl(L.reduce((a, l) => a + (l.valor || 0), 0))}</td>${cart ? `<td class="af-num">${pct(aporte / (totCart + aporte), 1)}</td>` : ''}<td colspan="4"></td></tr>` : ''}</table></div>
+      ${e.itens.length ? painelEnvio(e) : ''}
       ${e.itens.length ? `<h3 style="margin-top:1.2rem;">Indicadores da carteira</h3>
       <div class="ext-preview-wrap" style="max-height:none;"><table class="ext-preview-table">${cartoesIndicadores(ind)}</table></div>
       <h3 style="margin-top:1.2rem;">Carteira mês a mês</h3>
@@ -1015,27 +1082,35 @@
     </div>`;
   }
 
-  // ── proposta para o cliente (imagem e WhatsApp) e ordem ao banco ──
+  // ── valores da estratégia e mensagem da ordem ──
   const brl = v => v == null || !isFinite(v) ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // "250.000,00", "250000", "1.500" ou "1500,5" → número
+  function numBr(s) {
+    let t = String(s == null ? '' : s).replace(/R\$|\s/g, '');
+    if (!t) return null;
+    if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.');
+    else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');
+    const n = parseFloat(t);
+    return isFinite(n) ? n : null;
+  }
   // Nome do catálogo da EH quando houver (mais curto que a denominação da CVM)
   function nomeCurto(c, n) {
     const a = (window.EH_ATIVOS_CATALOGO || []).find(x => dig(x[0]) === c);
     return a ? a[1] : n;
   }
 
+  // Valor de cada fundo. Com valores digitados em R$ (modoValor) usa os valores; senão
+  // aporte × peso, com os centavos do arredondamento no maior fundo para o total fechar.
   function linhasProposta(e) {
     const total = e.itens.reduce((a, i) => a + i.peso, 0) || 1;
     const L = e.itens.filter(i => i.peso > 0).map(i => {
       const f = S.porId[i.id];
-      const j12 = f && f.ind.j12;
       return {
-        id: i.id, c: i.c, nome: nomeCurto(i.c, f ? f.n : i.n), nomeCvm: f ? f.n : i.n,
-        peso: i.peso / total, valor: e.valorTotal ? Math.round(e.valorTotal * i.peso / total * 100) / 100 : null,
-        liq: f && f.liq && f.liq.txt !== '—' ? f.liq.txt : '', r12: j12 ? j12.ret : null, pc12: j12 ? j12.pc : null,
+        id: i.id, c: i.c, nome: nomeCurto(i.c, f ? f.n : i.n), peso: i.peso / total,
+        valor: e.modoValor ? Math.round((i.valor || 0) * 100) / 100 : e.valorTotal ? Math.round(e.valorTotal * i.peso / total * 100) / 100 : null,
       };
     });
-    // Centavos do arredondamento vão para o maior fundo, para o total fechar
-    if (e.valorTotal && L.length) {
+    if (!e.modoValor && e.valorTotal && L.length) {
       const dif = Math.round((e.valorTotal - L.reduce((a, l) => a + l.valor, 0)) * 100) / 100;
       const maior = L.reduce((m, l) => l.peso > m.peso ? l : m, L[0]);
       maior.valor = Math.round((maior.valor + dif) * 100) / 100;
@@ -1043,69 +1118,102 @@
     return L;
   }
 
-  function propostaHtml(e, ind) {
-    const L = linhasProposta(e), rent = e.envRent !== false;
-    const f = "font-family:Calibri,Arial,sans-serif;font-size:11pt;";
-    const td = f + 'padding:5px 10px;border-bottom:1px solid #d9d9d9;color:#000;';
-    const th = f + 'color:#fff;font-weight:bold;padding:9px 10px;background:#002060;';
-    const comValor = L.some(l => l.valor != null);
-    const cab = ['Fundo', 'Liquidez', '% da carteira', ...(comValor ? ['Valor (R$)'] : []), ...(rent ? ['Rent. 12m', '% do CDI 12m'] : [])];
-    const linhas = L.map((l, k) => `<tr style="background:${k % 2 ? '#f2f2f2' : '#fff'};">
-      <td style="${td}">${esc(l.nome)}</td><td style="${td}text-align:center;">${esc(l.liq || '—')}</td>
-      <td style="${td}text-align:right;">${pct(l.peso, 1)}</td>
-      ${comValor ? `<td style="${td}text-align:right;color:#0000ff;">${brl(l.valor)}</td>` : ''}
-      ${rent ? `<td style="${td}text-align:right;">${pct(l.r12)}</td><td style="${td}text-align:right;">${pctCdi(l.pc12)}</td>` : ''}</tr>`).join('');
-    const tot = `<tr style="background:#dfe5f1;"><td style="${td}font-weight:bold;border-top:2px solid #002060;">TOTAL</td><td style="${td}border-top:2px solid #002060;"></td>
-      <td style="${td}text-align:right;font-weight:bold;border-top:2px solid #002060;">100%</td>
-      ${comValor ? `<td style="${td}text-align:right;font-weight:bold;border-top:2px solid #002060;">${brl(L.reduce((a, l) => a + (l.valor || 0), 0))}</td>` : ''}
-      ${rent ? `<td style="${td}text-align:right;font-weight:bold;border-top:2px solid #002060;">${pct(ind.j12 && ind.j12.ret)}</td><td style="${td}text-align:right;font-weight:bold;border-top:2px solid #002060;">${pctCdi(ind.j12 && ind.j12.pc)}</td>` : ''}</tr>`;
-    const fim = S.dados.meses[ind.fim >= 0 ? ind.fim : S.dados.meses.length - 1];
-    const resumo = rent && ind.j12 ? `<div style="${f}margin-top:10px;color:#000;">Carteira proposta nos últimos 12 meses: <b>${pct(ind.j12.ret)}</b> (${pctCdi(ind.j12.pc)} do CDI). CDI no período: ${pct(ind.j12.cdi)}.` +
-      (ind.j24 ? ` Em 24 meses: <b>${pct(ind.j24.ret)}</b> (${pctCdi(ind.j24.pc)} do CDI).` : '') + '</div>' : '';
-    return `<div style="${f}color:#000;">
-      <div style="${f}font-size:15pt;font-weight:bold;color:#002060;">PROPOSTA DE ALOCAÇÃO${e.cliente ? ' – ' + esc(e.cliente.toUpperCase()) : ''}</div>
-      <div style="${f}color:#92600D;margin:2px 0 10px;">${esc(new Date().toLocaleDateString('pt-BR'))} · EH Investimentos</div>
-      <table style="border-collapse:collapse;${f}min-width:620px;"><thead><tr>${cab.map((c, j) => `<th style="${th}text-align:${j ? 'right' : 'left'};${j === 1 ? 'text-align:center;' : ''}">${c}</th>`).join('')}</tr></thead>
-      <tbody>${linhas}${tot}</tbody></table>${resumo}
-      ${rent ? `<div style="${f}font-size:9pt;color:#6C6D70;margin-top:8px;">Rentabilidade passada não é garantia de rentabilidade futura. Fonte: CVM e Banco Central, dados até ${mesCurto(fim)}.</div>` : ''}
-    </div>`;
+  // Valor em R$ digitado num fundo: passa a estratégia para valores; o aporte é a soma e os
+  // pesos são recalculados (os indicadores continuam usando os pesos).
+  function afValor(fid, v) {
+    const e = S.editando;
+    const it = e && e.itens.find(i => i.id === fid);
+    if (!it) return;
+    if (!e.modoValor) {
+      const L = linhasProposta(e);
+      e.itens.forEach(i => { const l = L.find(x => x.id === i.id); i.valor = l && l.valor ? l.valor : 0; });
+      e.modoValor = true;
+    }
+    it.valor = Math.max(0, numBr(v) || 0);
+    const soma = e.itens.reduce((a, i) => a + (i.valor || 0), 0);
+    e.valorTotal = soma > 0 ? Math.round(soma * 100) / 100 : null;
+    e.itens.forEach(i => { i.peso = soma > 0 ? Math.round((i.valor || 0) / soma * 1e6) / 1e4 : 0; });
+    e.atualizado = new Date().toISOString();
+    salvarEstr();
+    renderEstrategias();
   }
 
-  function propostaTexto(e, ind) {
-    const L = linhasProposta(e), rent = e.envRent !== false;
-    const linhas = L.map(l => `• ${l.nome}: ${pct(l.peso, 1)}${l.valor != null ? ` (R$ ${brl(l.valor)})` : ''}${l.liq ? ` · liquidez ${l.liq}` : ''}` +
-      (rent && l.r12 != null ? ` · 12m ${pct(l.r12)} (${pctCdi(l.pc12)} do CDI)` : ''));
-    const totalV = L.reduce((a, l) => a + (l.valor || 0), 0);
-    return [`*Proposta de alocação${e.cliente ? ' – ' + e.cliente : ''}*`, '', ...linhas,
-      ...(totalV ? ['', `*Total: R$ ${brl(totalV)}*`] : []),
-      ...(rent && ind.j12 ? ['', `Carteira proposta nos últimos 12 meses: ${pct(ind.j12.ret)} (${pctCdi(ind.j12.pc)} do CDI). CDI no período: ${pct(ind.j12.cdi)}.`,
-        '_Rentabilidade passada não é garantia de rentabilidade futura._'] : [])].join('\n');
+  // Conta do cliente: lista de contas de Mensagens Padrão (eh-clientes-contas.js), achando o
+  // cliente pelo nome da estratégia ("Daniel" → DanielAQ). A última conta usada nas ordens vale mais.
+  const INSTS = ['XP', 'EQI', 'BTG'];
+  function chaveContas(nome) {
+    const L = window.EH_CLIENTES_CONTAS || [];
+    const n = normNome(nome);
+    if (!n) return null;
+    const junto = n.replace(/ /g, '');
+    const ex = L.find(c => normNome(c[0]) === junto);
+    if (ex) return ex[0];
+    const p = n.split(' ')[0];
+    const c = L.find(x => normNome(x[0]).startsWith(p));
+    return c ? c[0] : null;
   }
+  function contaPara(e, inst) {
+    const k = chaveContas(e.cliente);
+    if (!k) return '';
+    try { if (typeof moContaPara === 'function') { const c = moContaPara('cat:' + k, inst); if (c) return c; } } catch (x) { /* Mensagens Padrão ainda não carregou */ }
+    const row = (window.EH_CLIENTES_CONTAS || []).find(c => c[0] === k);
+    return row ? row[1 + INSTS.indexOf(inst)] || '' : '';
+  }
+  const instOrdem = e => e.inst || INSTS.find(i => contaPara(e, i)) || 'XP';
+  const contaOrdem = e => e.conta ? e.conta : contaPara(e, instOrdem(e));
+  const nomeOrdem = e => (e.cliente || '').trim().split(/\s+/)[0].toUpperCase();
 
-  function painelEnvio(e, ind) {
-    return `<h3 style="margin-top:1.2rem;">Enviar ao cliente e gerar a ordem</h3>
+  // Mesmo objeto que a Ordem ao Banco (moDados) monta: assim a tabela, a imagem e o texto
+  // saem iguais aos de Mensagens Padrão (moTabelaHtml, moTabelaTexto, moTextoWhatsApp).
+  function ordemObj(e) {
+    const data = new Date().toLocaleDateString('pt-BR');
+    const linhas = linhasProposta(e).filter(l => l.valor > 0)
+      .map(l => ({ cnpj: fmtCnpj(l.c), fundo: l.nome, liquidez: '', valor: l.valor, total: false, op: 'compra' }));
+    const conta = contaOrdem(e);
+    return {
+      tipo: 'compra', data, linhas, grupos: [{ rotulo: '', op: 'compra', linhas }], modo: 'cliente',
+      titulo: `ORDEM DE COMPRA – CLIENTE ${nomeOrdem(e) || '[NOME]'}`,
+      infos: [['Data da ordem:', data], ...(conta ? [['Conta:', conta]] : [])],
+      colunasGrupo: () => ['CNPJ', 'Fundo', 'Valor da Aplicação (R$)'],
+      alinhar: ['right', 'left', 'left'],
+      cels: l => [l.cnpj, l.fundo],
+    };
+  }
+  const temMo = () => typeof moTabelaHtml === 'function' && typeof moTextoWhatsApp === 'function';
+
+  function painelEnvio(e) {
+    const inst = instOrdem(e), k = chaveContas(e.cliente), o = ordemObj(e);
+    const prev = !o.linhas.length ? '<p class="af-nota">Preencha o valor do aporte (ou o valor de cada fundo) para montar a ordem.</p>'
+      : temMo() ? `<div class="af-proposta-prev">${moTabelaHtml(o)}</div>`
+      : '<p class="af-nota td-neg">Não achei a ferramenta de Mensagens Padrão nesta página.</p>';
+    return `<h3 style="margin-top:1.2rem;">Mensagem da ordem</h3>
+      <p class="af-nota">No mesmo formato da Ordem ao Banco de Mensagens Padrão: CNPJ, fundo e valor de cada aplicação, com a conta do cliente. Liquidez, % da carteira e rentabilidade ficam só aqui, para a sua análise.</p>
       <div class="upload-form af-filtros" style="margin-bottom:0.6rem;">
-        <div class="upload-field"><label>Valor total (R$)</label><input type="text" inputmode="decimal" value="${e.valorTotal ? brl(e.valorTotal) : ''}" placeholder="ex.: 250.000,00" onchange="afEnvio('valorTotal', this.value)"></div>
-        <div class="upload-field" style="justify-content:flex-end;"><label>&nbsp;</label><label style="display:flex;gap:0.4rem;align-items:center;font-size:12px;cursor:pointer;"><input type="checkbox" ${e.envRent !== false ? 'checked' : ''} onchange="afEnvio('envRent', this.checked)"> Mostrar rentabilidade</label></div>
+        <div class="upload-field" style="max-width:140px;"><label>Instituição</label><select onchange="afEnvio('inst', this.value)">${INSTS.map(i => `<option${i === inst ? ' selected' : ''}>${i}</option>`).join('')}</select></div>
+        <div class="upload-field" style="max-width:220px;"><label>Conta${k ? ` (${esc(k)})` : ''}</label><input type="text" value="${esc(contaOrdem(e))}" placeholder="Número da conta" onchange="afEnvio('conta', this.value)"></div>
       </div>
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.6rem;">
-        <button class="btn-download-ext" onclick="afPropostaImagem('copiar')">Copiar imagem</button>
-        <button class="btn-download-ext" onclick="afPropostaImagem('baixar')">Baixar imagem</button>
-        <button class="btn-download-ext" onclick="afPropostaTexto('copiar')">Copiar texto</button>
-        <button class="btn-download-ext" onclick="afPropostaTexto('whatsapp')">Abrir no WhatsApp</button>
-        <button class="btn-download-ext" onclick="afParaOrdem()">Gerar ordem ao banco →</button>
+        <button class="btn-download-ext" onclick="afOrdemImagem('copiar')">Copiar imagem</button>
+        <button class="btn-download-ext" onclick="afOrdemImagem('baixar')">Baixar imagem</button>
+        <button class="btn-download-ext" onclick="afOrdemTabela()">Copiar tabela (email)</button>
+        <button class="btn-download-ext" onclick="afOrdemTexto('copiar')">Copiar texto</button>
+        <button class="btn-download-ext" onclick="afOrdemTexto('whatsapp')">Abrir no WhatsApp</button>
+        <button class="btn-download-ext" onclick="afParaOrdem()">Abrir em Mensagens Padrão →</button>
         <span class="af-nota" id="afEnvioFb" style="margin:0;align-self:center;"></span>
       </div>
-      <div class="af-proposta-prev">${propostaHtml(e, ind)}</div>`;
+      ${prev}`;
   }
 
   function afEnvio(campo, v) {
     const e = S.editando;
     if (!e) return;
     if (campo === 'valorTotal') {
-      const n = parseFloat(String(v).replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.'));
-      e.valorTotal = isFinite(n) && n > 0 ? n : null;
-    } else e[campo] = typeof v === 'string' ? v.trim() : v;
+      const n = numBr(v);
+      e.valorTotal = n != null && n > 0 ? n : null;
+      e.modoValor = false;   // aporte digitado: os valores voltam a sair dos pesos
+    } else if (campo === 'inst') { e.inst = v; e.conta = ''; }
+    else if (campo === 'cliente') { e.cliente = String(v).trim(); e.inst = null; e.conta = ''; }
+    else e[campo] = typeof v === 'string' ? v.trim() : v;
     e.atualizado = new Date().toISOString();
     salvarEstr();
     renderEstrategias();
@@ -1117,14 +1225,21 @@
     if (el) { el.textContent = txt; el.className = 'af-nota ' + (ok ? 'td-pos' : 'td-neg'); }
   }
 
-  function nomeArquivo(e) {
-    return `Proposta ${(e.cliente || e.nome).replace(/[\\/:*?"<>|]/g, '')} - ${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.png`;
+  function ordemPronta() {
+    const e = S.editando;
+    if (!e || !e.itens.length) return null;
+    if (!temMo()) { fbEnvio('Não achei a ferramenta de Mensagens Padrão nesta página.', false); return null; }
+    const o = ordemObj(e);
+    if (!o.linhas.length) { fbEnvio('Preencha o valor do aporte ou dos fundos.', false); return null; }
+    return o;
   }
 
-  async function canvasProposta(e) {
+  const nomeArquivo = e => `Ordem Compra - ${(nomeOrdem(e) || e.nome).replace(/[\\/:*?"<>|]/g, '')} - ${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.png`;
+
+  async function canvasOrdem(o) {
     const box = document.createElement('div');
-    box.style.cssText = 'position:fixed;left:-10000px;top:0;background:#fff;padding:18px;display:inline-block;';
-    box.innerHTML = propostaHtml(e, indicadores(serieEstrategia(e).r));
+    box.style.cssText = 'position:fixed;left:-10000px;top:0;background:#fff;padding:16px;display:inline-block;';
+    box.innerHTML = moTabelaHtml(o);
     document.body.appendChild(box);
     try { return await html2canvas(box, { backgroundColor: '#ffffff', scale: 2 }); }
     finally { box.remove(); }
@@ -1132,22 +1247,23 @@
 
   // Mesmo jeito da Ordem ao Banco: ClipboardItem criado no clique (Safari), e no celular sem
   // suporte cai no menu de compartilhar.
-  async function afPropostaImagem(modo) {
+  async function afOrdemImagem(modo) {
+    const o = ordemPronta();
+    if (!o) return;
     const e = S.editando;
-    if (!e || !e.itens.length) return;
     if (modo === 'baixar') {
       try {
-        const c = await canvasProposta(e);
+        const c = await canvasOrdem(o);
         const a = document.createElement('a');
         a.href = c.toDataURL('image/png'); a.download = nomeArquivo(e); a.click();
       } catch (err) { fbEnvio('Erro ao gerar a imagem: ' + err.message, false); }
       return;
     }
-    const blob = canvasProposta(e).then(c => new Promise((ok, erro) => c.toBlob(b => b ? ok(b) : erro(new Error('falha ao gerar a imagem')), 'image/png')));
+    const blob = canvasOrdem(o).then(c => new Promise((ok, erro) => c.toBlob(b => b ? ok(b) : erro(new Error('falha ao gerar a imagem')), 'image/png')));
     try {
       if (!window.ClipboardItem || !navigator.clipboard?.write) throw new Error('sem suporte');
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-      fbEnvio('✓ Imagem copiada. Cole no WhatsApp.');
+      fbEnvio('✓ Imagem copiada. Cole no WhatsApp ou no email.');
     } catch (err) {
       try {
         const arq = new File([await blob], nomeArquivo(e), { type: 'image/png' });
@@ -1157,31 +1273,50 @@
     }
   }
 
-  async function afPropostaTexto(modo) {
-    const e = S.editando;
-    if (!e || !e.itens.length) return;
-    const txt = propostaTexto(e, indicadores(serieEstrategia(e).r));
+  // Tabela formatada (HTML) para colar no email, com o texto simples junto
+  async function afOrdemTabela() {
+    const o = ordemPronta();
+    if (!o) return;
+    const html = moTabelaHtml(o), txt = moTabelaTexto(o);
+    try {
+      if (window.ClipboardItem && navigator.clipboard?.write) {
+        await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([txt], { type: 'text/plain' }) })]);
+      } else await navigator.clipboard.writeText(txt);
+      fbEnvio('✓ Tabela copiada. Cole no email.');
+    } catch (err) { fbEnvio('Não consegui copiar: ' + err.message, false); }
+  }
+
+  async function afOrdemTexto(modo) {
+    const o = ordemPronta();
+    if (!o) return;
+    const txt = moTextoWhatsApp(o);
     if (modo === 'whatsapp') { window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank'); return; }
     try { await navigator.clipboard.writeText(txt); fbEnvio('✓ Texto copiado.'); }
     catch (err) { fbEnvio('Não consegui copiar: ' + err.message, false); }
   }
 
-  // Leva a carteira para Mensagens Padrão → Ordem ao Banco (ordem de compra por cliente),
-  // com CNPJ, fundo, liquidez e valor de cada fundo; lá saem a tabela, a imagem e o Excel.
+  // Leva a ordem para Mensagens Padrão → Ordem ao Banco (cliente, instituição, conta e fundos),
+  // para guardar no histórico de ordens e baixar o Excel por lá.
   async function afParaOrdem() {
     const e = S.editando;
     if (!e || !e.itens.length) return;
     if (typeof msgInit !== 'function' || typeof moAddRow !== 'function') { fbEnvio('Não achei a tela de Mensagens Padrão.', false); return; }
-    const L = linhasProposta(e);
+    const L = linhasProposta(e).filter(l => l.valor > 0);
+    const inst = instOrdem(e), conta = contaOrdem(e), k = chaveContas(e.cliente);
     navigateToView('mensagens');
     await msgInit();
     const aba = [...document.querySelectorAll('#view-mensagens .email-tab')].find(b => (b.getAttribute('onclick') || '').includes("'banco'"));
     if (aba) msgSwitchTab('banco', aba);
     gset('mo_modo', 'cliente'); moModoChange();
     gset('mo_tipo', 'compra');
-    if (e.cliente) gset('mo_nome', e.cliente.toUpperCase());
+    gset('mo_inst', inst);
+    const sel = document.getElementById('mo_cliente');
+    if (k && sel && [...sel.options].some(op => op.value === 'cat:' + k)) { sel.value = 'cat:' + k; moClienteChange(); }
+    if (e.cliente) gset('mo_nome', nomeOrdem(e));
+    const ci = document.getElementById('mo_conta');
+    if (ci && conta) { ci.value = conta; ci.dataset.auto = conta; }
     document.getElementById('mo_rows').innerHTML = '';
-    L.forEach(l => moAddRow({ cnpj: fmtCnpj(l.c), fundo: l.nome, liquidez: l.liq, valor: l.valor != null ? brl(l.valor) : '' }));
+    L.forEach(l => moAddRow({ cnpj: fmtCnpj(l.c), fundo: l.nome, liquidez: '', valor: brl(l.valor) }));
     moAtualizarLinhas();
     window.scrollTo(0, 0);
   }
@@ -1286,6 +1421,12 @@
       o['Drawdown'] = jd ? jd.dd : null;
       o['Meses < CDI 12m'] = f.ind.j12 ? f.ind.j12.abaixo : null;
       o['Captação último mês (R$)'] = f.cap;
+      if (S.diario) {
+        o[`Rent. ${S.diario.mes} até ${S.diario.data}`] = f.d ? f.d.mtd : null;
+        o[`Aplicações ${S.diario.dias || 5} dias (R$)`] = f.d ? f.d.cap : null;
+        o[`Resgates ${S.diario.dias || 5} dias (R$)`] = f.d ? f.d.res : null;
+        o['Dias com aplicação'] = f.d ? f.d.dc : null;
+      }
       o['Liquidez'] = f.liq ? f.liq.txt : '';
       o['Fonte da liquidez'] = f.liq ? f.liq.fonte : '';
       o['Plataformas'] = f.plats.join(', ');
@@ -1314,7 +1455,7 @@
     afInit, afCarregar, afFiltrar, afOrdenar, afDetalhe, afEnviarPlat, afRemoverPlat, afNovaEstrategia,
     afEditar, afMarcar, afPeso, afNormalizar, afIgualar, afRenomear, afObs, afExcluir, afDuplicar,
     afComparar, afJanela, afHover, afExportar, afAba, afTelaInteira, afFecharDetalhe, afClique, afSairPagina,
-    afEnvio, afPropostaImagem, afPropostaTexto, afParaOrdem,
+    afMarcarAberto, afEnvio, afValor, afOrdemImagem, afOrdemTabela, afOrdemTexto, afParaOrdem,
     afLerCarteira, afCartPdf, afCartCnpj, afCartTipo, afCartTirar, afCancelarCarteira, afSalvarCarteira, afRemoverCarteira,
     afVerCarteira, afEstrategiaPara, afEsconderTem,
   });
