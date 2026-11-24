@@ -17,7 +17,7 @@
   <script src="eh-senha.js"></script>
   <script src="eh-ativos-catalogo.js"></script>
   <script src="eh-clientes-contas.js"></script>
-  <script src="eh-analise-fundos.js?v=2026-11-19b"></script>
+  <script src="eh-analise-fundos.js?v=2026-11-24a"></script>
   <style>
     :root {
       /* Navy & accent palette — aligned to index.html */
@@ -821,6 +821,7 @@
     .af-grade th { letter-spacing: 0.06em; }
     .af-grade .af-sub { font-size: 9.5px; }
     .af-peso { width: 70px; padding: 0.3rem; border: 1px solid var(--rule-strong); background: transparent; color: var(--cream); }
+    .af-peso.af-valor { width: 120px; text-align: right; }
     .af-editor { border-left: 3px solid var(--gold); }
     .af-legenda { display:flex; gap:1rem; flex-wrap:wrap; font-size:11px; color:var(--cream-soft); margin:0.6rem 0; }
     .af-leg { display:inline-flex; align-items:center; gap:0.35rem; }
@@ -1809,6 +1810,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           <label><input type="checkbox" id="afAcima" checked onchange="afFiltrar()"> Acima do CDI em 12 meses</label>
           <label><input type="checkbox" id="afCapt" onchange="afFiltrar()"> Com captação no último mês</label>
           <label><input type="checkbox" id="afAberto" onchange="afFiltrar()"> Aberto para aplicação na plataforma</label>
+          <label title="Fundos que receberam aplicações em algum dos últimos 5 dias informados à CVM (atualização diária)"><input type="checkbox" id="afRecebendo" onchange="afFiltrar()"> Recebendo aplicações (últimos 5 dias)</label>
         </div>
         <div class="ext-chips" id="afResumo"></div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:0.8rem;flex-wrap:wrap;margin-bottom:0.6rem;">
