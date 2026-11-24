@@ -165,6 +165,8 @@
     if (S.iniciado) return;
     S.iniciado = true;
     try { const a = localStorage.getItem('eh-af-aba'); if (a) afAba(a); } catch (e) {}
+    // contas dos clientes para a mensagem da ordem (Mensagens Padrão carrega do bucket privado)
+    if (typeof msgCarregarContasCatalogo === 'function') msgCarregarContasCatalogo().then(() => { if (S.editando) renderEstrategias(); }).catch(() => {});
     const sel = document.getElementById('afMes');
     const { data, error } = await sb.storage.from(TM_BUCKET).list('', { limit: 200, sortBy: { column: 'name', order: 'desc' } });
     if (error) { msgTabela(`Não consegui ler o bucket: ${esc(error.message)}`, 'td-neg'); S.iniciado = false; return; }
@@ -1138,7 +1140,7 @@
     renderEstrategias();
   }
 
-  // Conta do cliente: lista de contas de Mensagens Padrão (eh-clientes-contas.js), achando o
+  // Conta do cliente: lista de contas de Mensagens Padrão (bucket privado), achando o
   // cliente pelo nome da estratégia ("Daniel" → DanielAQ). A última conta usada nas ordens vale mais.
   const INSTS = ['XP', 'EQI', 'BTG'];
   function chaveContas(nome) {

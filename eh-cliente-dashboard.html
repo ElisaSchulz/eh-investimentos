@@ -16,8 +16,7 @@
   <script src="eh-documentos.js"></script>
   <script src="eh-senha.js"></script>
   <script src="eh-ativos-catalogo.js"></script>
-  <script src="eh-clientes-contas.js"></script>
-  <script src="eh-analise-fundos.js?v=2026-11-24a"></script>
+  <script src="eh-analise-fundos.js?v=2026-11-24b"></script>
   <style>
     :root {
       /* Navy & accent palette — aligned to index.html */
@@ -2003,6 +2002,15 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
       <!-- ABA: ORDEM AO BANCO -->
       <div class="msg-tab-content" id="msgtab-banco">
+        <details class="upload-panel" id="moContasPainel" style="padding-top:0.9rem;padding-bottom:0.9rem;">
+          <summary style="cursor:pointer;font-weight:600;">Lista de contas dos clientes <span class="af-nota" id="moContasStatus" style="margin:0 0 0 0.4rem;font-weight:400;"></span></summary>
+          <p class="af-nota">Nome do cliente e número da conta em cada instituição, usados para preencher a conta nas ordens. Fica no armazenamento privado (só os admins veem), fora do código do site. Para incluir ou corrigir: baixe a planilha, edite e envie de novo (a nova substitui a anterior). Colunas: Nome, XP, EQI, BTG; deixe as contas como texto para não perder zeros à esquerda.</p>
+          <div class="msg-actions" style="margin-top:0.4rem;">
+            <button class="btn-download-ext" onclick="msgBaixarContas()">Baixar planilha</button>
+            <label class="btn-download-ext" style="cursor:pointer;text-align:center;">Enviar planilha<input type="file" accept=".xlsx,.xls,.csv" style="display:none;" onchange="msgEnviarContas(this)"></label>
+          </div>
+          <div class="upload-feedback" id="moContasFb"></div>
+        </details>
         <div class="upload-panel">
           <h3>Ordem</h3>
           <div class="upload-form">
@@ -5861,11 +5869,66 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   let msgLib = { ativos: [], fundos: [], contas: {}, ordens: [] };
   let msgClientes = [];
   const MSG_INSTITUICOES = ['XP', 'EQI', 'BTG'];
-  // Lista fixa de clientes (eh-clientes-contas.js): { 'cat:<nome>': { XP, EQI, BTG } }
+  // Lista fixa de clientes e contas: { 'cat:<nome>': { XP, EQI, BTG } }. Fica no bucket privado
+  // (config/clientes_contas.json, linhas [nome, conta XP, conta EQI, conta BTG]), nunca no
+  // repositório, que é público. window.EH_CLIENTES_CONTAS guarda as linhas para a Análise de Fundos.
+  const MSG_CONTAS_ARQ = 'config/clientes_contas.json';
   const MSG_CONTAS_CATALOGO = {};
-  (window.EH_CLIENTES_CONTAS || []).forEach(([nome, ...contas]) => {
-    MSG_CONTAS_CATALOGO['cat:' + nome] = Object.fromEntries(MSG_INSTITUICOES.map((inst, i) => [inst, contas[i] || '']));
-  });
+  let msgContasCarregando = null;
+  function msgAplicarContas(linhas) {
+    window.EH_CLIENTES_CONTAS = linhas;
+    Object.keys(MSG_CONTAS_CATALOGO).forEach(k => delete MSG_CONTAS_CATALOGO[k]);
+    linhas.forEach(([nome, ...contas]) => {
+      MSG_CONTAS_CATALOGO['cat:' + nome] = Object.fromEntries(MSG_INSTITUICOES.map((inst, i) => [inst, contas[i] || '']));
+    });
+  }
+  function msgCarregarContasCatalogo(recarregar) {
+    if (msgContasCarregando && !recarregar) return msgContasCarregando;
+    msgContasCarregando = (async () => {
+      let dados = null;
+      try {
+        const { data, error } = await sb.storage.from(TM_BUCKET).download(MSG_CONTAS_ARQ);
+        if (!error && data) dados = JSON.parse(await data.text());
+      } catch (e) { /* sem lista ainda */ }
+      msgAplicarContas((dados && dados.clientes) || []);
+      const st = document.getElementById('moContasStatus');
+      if (st) st.textContent = dados ? `(${dados.clientes.length} clientes${dados.atualizado ? ', atualizada em ' + new Date(dados.atualizado).toLocaleDateString('pt-BR') : ''})` : '(ainda não enviada)';
+      return window.EH_CLIENTES_CONTAS;
+    })();
+    return msgContasCarregando;
+  }
+  function msgBaixarContas() {
+    const linhas = window.EH_CLIENTES_CONTAS || [];
+    const ws = XLSX.utils.aoa_to_sheet([['Nome', ...MSG_INSTITUICOES], ...linhas.map(l => [l[0], ...MSG_INSTITUICOES.map((_, i) => l[i + 1] || '')])]);
+    // contas como texto, para manter os zeros à esquerda
+    Object.keys(ws).filter(k => !k.startsWith('!')).forEach(k => { ws[k].t = 's'; ws[k].z = '@'; ws[k].v = String(ws[k].v); });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Contas');
+    XLSX.writeFile(wb, 'Contas dos clientes.xlsx');
+  }
+  async function msgEnviarContas(input) {
+    const f = input.files && input.files[0];
+    input.value = '';
+    if (!f) return;
+    let rows;
+    try {
+      const wb = XLSX.read(await f.arrayBuffer(), { type: 'array' });
+      rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false, defval: '' });
+    } catch (e) { showFb2('moContasFb', 'Não consegui ler a planilha: ' + e.message, 'error'); return; }
+    const cab = (rows[0] || []).map(c => String(c).trim().toUpperCase());
+    const iNome = cab.findIndex(c => /NOME|CLIENTE/.test(c));
+    const iInst = MSG_INSTITUICOES.map(inst => cab.indexOf(inst));
+    if (iNome < 0 || iInst.every(i => i < 0)) { showFb2('moContasFb', 'A planilha precisa das colunas Nome, XP, EQI e BTG.', 'error'); return; }
+    const conta = v => String(v == null ? '' : v).trim().replace(/\.0+$/, '');
+    const linhas = rows.slice(1).map(r => [String(r[iNome] || '').trim(), ...iInst.map(i => i < 0 ? '' : conta(r[i]))]).filter(l => l[0]);
+    if (!linhas.length) { showFb2('moContasFb', 'Nenhum cliente na planilha.', 'error'); return; }
+    const corpo = new Blob([JSON.stringify({ atualizado: new Date().toISOString(), clientes: linhas })], { type: 'application/json' });
+    const { error } = await sb.storage.from(TM_BUCKET).upload(MSG_CONTAS_ARQ, corpo, { upsert: true, contentType: 'application/json' });
+    if (error) { showFb2('moContasFb', 'Não consegui salvar: ' + error.message, 'error'); return; }
+    await msgCarregarContasCatalogo(true);
+    await msgCarregarClientes();
+    showFb2('moContasFb', `✓ ${linhas.length} clientes salvos.`, 'success');
+  }
   let moRowSeq = 0;
   // Ativos da mensagem de aprovação: o formulário "Ativo" edita mcItens[mcSel].
   let mcItens = [{ tipo: 'FII', nome: '', caracteristicas: '', campos: {} }];
@@ -6669,6 +6732,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   }
 
   async function msgCarregarClientes() {
+    await msgCarregarContasCatalogo();
     try {
       const [{ data: cad }, { data: profs }] = await Promise.all([
         sb.from('cadastro_clientes').select('user_id, nome_completo, email'),
