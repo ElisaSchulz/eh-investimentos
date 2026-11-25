@@ -17,6 +17,7 @@
   <script src="eh-senha.js"></script>
   <script src="eh-ativos-catalogo.js"></script>
   <script src="eh-analise-fundos.js?v=2026-11-24b"></script>
+  <script src="eh-historico-ordens.js?v=2026-11-25a"></script>
   <style>
     :root {
       /* Navy & accent palette — aligned to index.html */
@@ -816,6 +817,8 @@
     #afCartTexto { width: 100%; min-height: 150px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11px; padding: 0.5rem; border: 1px solid var(--rule-strong); background: transparent; color: var(--cream); }
     .af-sel td { background: var(--gold-pale); }
     .af-nota { font-size: 12px; color: var(--cream-faint); margin: 0.6rem 0; }
+    #msgtab-historico a { color: var(--gold-text); }
+    #msgtab-historico .af-num .af-sub { margin-left: 0.3rem; }
     .af-grade th, .af-grade td { padding: 0.4rem 0.35rem; font-size: 12px; }
     .af-grade th { letter-spacing: 0.06em; }
     .af-grade .af-sub { font-size: 9.5px; }
@@ -1912,6 +1915,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V10M19 21V10M9 21V10M15 21V10"/><path d="M12 3l9 5H3z"/></svg>
           Ordem ao Banco
         </button>
+        <button class="email-tab" onclick="msgSwitchTab('historico',this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="1"/><path d="M3 9h18M8 2v4M16 2v4M7 13h4M7 17h8"/></svg>
+          Histórico de ordens
+        </button>
       </div>
 
       <!-- ABA: APROVAÇÃO DO CLIENTE -->
@@ -2078,8 +2085,46 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
             <button class="btn-download-ext" onclick="moBaixarPng()">Baixar imagem</button>
             <button class="btn-download-ext" onclick="moBaixarExcel()">Baixar Excel</button>
           </div>
-          <div class="msg-hint">"Copiar tabela" mantém a formatação ao colar no email e as colunas ao colar no Excel. "Copiar para WhatsApp" copia a ordem em texto, com negrito, pronta para colar na conversa. Os fundos e a conta do cliente são salvos para as próximas ordens.</div>
+          <div class="msg-hint">"Copiar tabela" mantém a formatação ao colar no email e as colunas ao colar no Excel. "Copiar para WhatsApp" copia a ordem em texto, com negrito, pronta para colar na conversa. Os fundos e a conta do cliente são salvos para as próximas ordens, e a ordem entra no Histórico de ordens do mês.</div>
           <div class="upload-feedback" id="moFb"></div>
+        </div>
+      </div>
+
+      <!-- ABA: HISTÓRICO DE ORDENS — lógica em eh-historico-ordens.js (ao mudar o .js, troque o ?v= do script no head) -->
+      <div class="msg-tab-content" id="msgtab-historico">
+        <div class="upload-panel">
+          <h3 style="margin-bottom:0.3rem;">Ordens do mês</h3>
+          <p class="af-nota">Toda ordem gerada em "Ordem ao Banco" (copiar tabela, WhatsApp, imagem ou Excel) entra aqui sozinha, uma linha por cliente e ativo. Gerar a mesma ordem de novo só atualiza os valores. O % da carteira usa o patrimônio da carteira guardada em Análise de Fundos → Carteiras dos clientes, ou o que você informar aqui para o mês. Fica no armazenamento privado, só para os admins.</p>
+          <div class="upload-form af-filtros">
+            <div class="upload-field"><label>Mês</label><select id="hoMes" onchange="hoMes(this.value)"><option value="">Carregando…</option></select></div>
+            <div class="upload-field"><label>Cliente</label><select id="hoCliente" onchange="hoRender()"><option value="">Todos</option></select></div>
+            <div class="upload-field" style="flex:2;min-width:200px;"><label>Ativo</label><select id="hoFundo" onchange="hoRender()"><option value="">Todos</option></select></div>
+            <div class="upload-field"><label>Operação</label><select id="hoOp" onchange="hoRender()"><option value="">Todas</option><option value="compra">Aplicação</option><option value="resgate">Resgate</option></select></div>
+            <div class="upload-field"><label>Instituição</label><select id="hoInst" onchange="hoRender()"><option value="">Todas</option><option value="XP">XP</option><option value="EQI">EQI</option><option value="BTG">BTG</option></select></div>
+          </div>
+          <div class="ext-chips" id="hoResumo"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:0.8rem;flex-wrap:wrap;">
+            <span class="af-nota" id="hoStatus" style="margin:0;"></span>
+            <div class="msg-actions" style="margin-top:0;">
+              <button class="btn-download-ext" onclick="hoExportar()">Baixar Excel (filtro atual)</button>
+              <button class="btn-download-ext" onclick="hoTrazerRecentes()" title="Traz as ordens dos últimos 30 dias que já estavam em Mensagens Padrão">Trazer ordens dos últimos 30 dias</button>
+              <button class="btn-download-ext" onclick="hoInit(true)">Atualizar</button>
+            </div>
+          </div>
+          <div class="upload-feedback" id="hoFb"></div>
+        </div>
+        <div class="upload-panel">
+          <h3>Por cliente</h3>
+          <div class="ext-preview-wrap" style="max-height:none;"><table class="ext-preview-table" id="hoClientes"></table></div>
+          <p class="af-nota" id="hoSemPat"></p>
+        </div>
+        <div class="upload-panel">
+          <h3>Por ativo</h3>
+          <div class="ext-preview-wrap" style="max-height:none;"><table class="ext-preview-table" id="hoAtivos"></table></div>
+        </div>
+        <div class="upload-panel">
+          <h3>Todas as ordens</h3>
+          <div class="ext-preview-wrap af-tabela-wrap"><table class="ext-preview-table" id="hoTabela"></table></div>
         </div>
       </div>
     </div>
@@ -5947,6 +5992,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.querySelectorAll('#view-mensagens .msg-tab-content').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('msgtab-' + tab).classList.add('active');
+    if (tab === 'historico' && typeof hoInit === 'function') hoInit();
   }
 
   // ══════════ TAREFAS MENSAIS (admin) ══════════
@@ -7510,6 +7556,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       lembrarConta(gv('mo_cliente'), gv('mo_conta'));
     }
     if (moRegistrarOrdem(o)) mudou = true;
+    // Histórico de ordens do mês (bucket privado); não bloqueia a cópia
+    if (typeof hoRegistrarOrdem === 'function')
+      hoRegistrarOrdem(o).catch(e => showFb2('moFb', 'A ordem foi copiada, mas não entrou no Histórico de ordens: ' + e.message, 'error'));
     if (!mudou) return;
     msgLib.fundos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
     try { await msgSalvarBiblioteca(); moRenderFundosList(); } catch (e) { /* não bloqueia a cópia */ }
