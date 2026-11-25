@@ -6750,8 +6750,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const daPlataforma = msgClientes;
     msgClientes = [...daPlataforma, ...lista];
     const optsDe = l => l.map(c => `<option value="${c.user_id}">${escHtml(c.nome || c.email)}</option>`).join('');
+    // Sem a lista no bucket privado, avisa no próprio campo em vez de mostrar só os clientes da plataforma.
+    const semLista = '<optgroup label="Lista de contas"><option value="" disabled>Lista não enviada: Ordem ao Banco → Lista de contas dos clientes → Enviar planilha</option></optgroup>';
     const opts = '<option value="">— Digitar manualmente —</option>' +
-      (lista.length ? `<optgroup label="Lista de contas">${optsDe(lista)}</optgroup>` : '') +
+      (lista.length ? `<optgroup label="Lista de contas">${optsDe(lista)}</optgroup>` : semLista) +
       (daPlataforma.length ? `<optgroup label="Clientes da plataforma">${optsDe(daPlataforma)}</optgroup>` : '');
     ['mc_cliente', 'mo_cliente'].forEach(id => {
       const sel = document.getElementById(id); const atual = sel.value;
