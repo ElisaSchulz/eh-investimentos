@@ -147,6 +147,8 @@
       let tipo = r.tipo;
       if (tipo === 'Outro') {
         if (/^IR\b|IRRF/i.test(r.historico)) tipo = 'IRRF';
+        else if (/^IOF\b/i.test(r.historico)) tipo = 'IOF';
+        else if (/INVESTBACK/i.test(r.historico)) tipo = 'Investback';
         else if (/^VENCIMENTO\b/i.test(r.historico)) tipo = 'Vencimento';
         else { const c = CAIXA.find(([re]) => re.test(r.historico || '')); if (c) tipo = c[1]; }
       }
@@ -171,6 +173,7 @@
   const serialDe = d => (Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(1899, 11, 30)) / 86400000;
   const fmtSerial = n => { const d = new Date(Date.UTC(1899, 11, 30) + n * 86400000); return extDataFmt(d); };
 
+  const SEM_AVISO = /^(IRRF|IR|IOF|Investback|Come-Cotas)$/;
   function alertar(l, tipo, texto) { (l.alertas = l.alertas || []).push({ tipo, texto }); }
 
   function alertasDasLinhas(L) {
@@ -178,6 +181,8 @@
     // IR do mesmo dia, para saber se um resgate de fundo na XP veio bruto
     const irNoDia = new Set(L.filter(l => l.tipo === 'IRRF' || /^IR\b|IRRF/i.test(l.historico)).map(l => `${l.banco}|${l.nome}|${l.data}`));
     L.forEach(l => {
+      // Investback, IR e IOF nunca entram nos avisos (Elisa, 25/11/2026)
+      if (SEM_AVISO.test(l.tipo) || /INVESTBACK/i.test(l.historico)) return;
       if (l.tipo === 'Outro') alertar(l, 'linha', 'O leitor não reconheceu o tipo deste lançamento');
       if (l.semCodigo) alertar(l, 'codigo', 'Produto sem código: cadastre o trecho do nome na Tabela de Produtos');
       if (l.semBruto) alertar(l, 'bruto', 'Não achei o valor bruto na seção do fundo: o valor é o líquido do extrato');

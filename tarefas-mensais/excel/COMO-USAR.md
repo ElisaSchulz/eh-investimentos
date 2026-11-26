@@ -105,7 +105,7 @@ Na planilha do cliente, a movimentação de um ativo num dia fica assim:
 
 ## Alertas (o que conferir no PDF)
 
-O Excel do site marca **Sim** na coluna Conferir e explica o motivo na coluna Alerta. A aba
+Investback, IR e IOF nunca entram nos avisos. O Excel do site marca **Sim** na coluna Conferir e explica o motivo na coluna Alerta. A aba
 **Alertas** junta tudo. São quatro tipos:
 
 - **Linha não reconhecida**: o leitor não soube o tipo do lançamento. Transferências, PIX, TED,
