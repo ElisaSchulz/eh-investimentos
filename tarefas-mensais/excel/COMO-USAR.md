@@ -102,3 +102,22 @@ Na planilha do cliente, a movimentação de um ativo num dia fica assim:
 ```
 
 (com a base aberta, como já acontece hoje com o SUMIFS nas abas de cada cliente).
+
+## Alertas (o que conferir no PDF)
+
+O Excel do site marca **Sim** na coluna Conferir e explica o motivo na coluna Alerta. A aba
+**Alertas** junta tudo. São quatro tipos:
+
+- **Linha não reconhecida**: o leitor não soube o tipo do lançamento. Transferências, PIX, TED,
+  taxas, câmbio e bolsa já são reconhecidos e não entram.
+- **Código fora da Tabela de Produtos**: resgate, aplicação, rendimento, juros, amortização ou
+  vencimento sem código. Cadastre o trecho do nome na Tabela de Produtos e processe de novo.
+- **Valor pode ser o líquido**: na EQI/BTG, quando o valor bruto não foi achado na seção do
+  fundo ou ficou menor que o líquido; na XP/Monte Bravo, resgate de fundo sem IR no mesmo dia.
+- **Juros/amortização previstos que não vieram**: compara com o resultado do `cra_eventos` do
+  mês nas Tarefas Mensais (mês com mais lançamentos). Avisa quando nenhum extrato trouxe o
+  pagamento previsto (±5 dias) e quando o cliente tem outro lançamento do papel no mês, mas não
+  o pagamento previsto. Quem tem o papel e não teve nenhum lançamento dele no mês só vai ser
+  pego quando a base tiver o histórico de Movimentações.
+
+Na importação, o alerta vai para a coluna Obs como `Conferir: ...`.

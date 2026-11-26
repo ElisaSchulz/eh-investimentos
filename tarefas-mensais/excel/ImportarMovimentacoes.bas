@@ -14,6 +14,8 @@ Option Explicit
 '     (o mesmo nome de aba que o Extratos -> Excel gerava), coluna B = cliente
 '     (ex.: LuizFLM). Nome sem Mapa entra com Cliente vazio e aparece no
 '     relatorio; depois de completar o Mapa, rode PreencherClientesPeloMapa.
+'   - O alerta do site (coluna Alerta) vai para a coluna Obs como
+'     "Conferir: ...". Filtre Obs por "Conferir" para ver so o que conferir.
 '   - Se a aba Movimentacoes nao existir, a macro cria (com a tabela).
 '
 ' Como usar: abra a base, deixe ela ativa e rode ImportarMovimentacoes
@@ -50,6 +52,7 @@ Public Sub ImportarMovimentacoes()
     Dim novas() As Variant, nNovas As Long, nRepetidas As Long, nLidas As Long
     Dim semMapa As Object, nome As String, agora As Date, calcAntes As XlCalculation
     Dim relatorio As String, chave As Variant
+    Dim temAlerta As Boolean, nConferir As Long
 
     Set base = ActiveWorkbook
     If Not TemAba(base, "Mapa") Then
@@ -92,8 +95,10 @@ Public Sub ImportarMovimentacoes()
             GoTo Proximo
         End If
         n = wsO.Cells(wsO.Rows.Count, 14).End(xlUp).Row
+        ' Coluna 16 = Alerta (versao com lista de alertas): vai para Obs na base
+        temAlerta = (Trim(CStr(wsO.Cells(1, 16).Value)) = "Alerta")
         If n >= 2 Then
-            dados = wsO.Range(wsO.Cells(2, 1), wsO.Cells(n, 14)).Value
+            dados = wsO.Range(wsO.Cells(2, 1), wsO.Cells(n, IIf(temAlerta, 16, 14))).Value
             If nNovas + n - 1 > capacidade Then
                 capacidade = nNovas + n - 1
                 ReDim Preserve novas(1 To N_COLS, 1 To capacidade)
@@ -117,6 +122,12 @@ Public Sub ImportarMovimentacoes()
                         End If
                         novas(C_IMPORTADO, nNovas) = agora
                         novas(C_OBS, nNovas) = Empty
+                        If temAlerta Then
+                            If Trim(CStr(dados(i, 16))) <> "" Then
+                                novas(C_OBS, nNovas) = "Conferir: " & Trim(CStr(dados(i, 16)))
+                                nConferir = nConferir + 1
+                            End If
+                        End If
                     End If
                 End If
             Next i
@@ -137,6 +148,7 @@ Proximo:
     relatorio = "Lancamentos lidos: " & nLidas & vbCrLf & _
                 "Novos na base: " & nNovas & vbCrLf & _
                 "Ja estavam na base (pulados): " & nRepetidas & vbCrLf & _
+                IIf(nConferir > 0, "Novos com alerta (Obs comeca com 'Conferir:'): " & nConferir & vbCrLf, "") & _
                 IIf(nPreenchidos > 0, "Clientes preenchidos em linhas antigas: " & nPreenchidos & vbCrLf, "") & _
                 relatorio
     If semMapa.Count > 0 Then
