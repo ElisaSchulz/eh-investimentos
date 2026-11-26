@@ -18,7 +18,7 @@
   <script src="eh-ativos-catalogo.js"></script>
   <script src="eh-analise-fundos.js?v=2026-11-24b"></script>
   <script src="eh-historico-ordens.js?v=2026-11-25a"></script>
-  <script src="eh-movimentacoes.js?v=2026-11-26b"></script>
+  <script src="eh-movimentacoes.js?v=2026-11-26c"></script>
   <style>
     :root {
       /* Navy & accent palette — aligned to index.html */
@@ -1744,6 +1744,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         <div class="section-header"><div class="section-title">2. Prévia e download</div></div>
         <div class="ext-chips" id="movChips"></div>
         <div id="movFaltam"></div>
+        <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--gray-light);margin:0 0 0.6rem;cursor:pointer;">
+          <input type="checkbox" id="movSoConferir" onchange="movFiltrar()" style="width:15px;height:15px;accent-color:var(--gold);" /> Mostrar só o que precisa conferir
+        </label>
         <div class="ext-preview-wrap"><table class="ext-preview-table" id="movTabela"></table></div>
         <button class="btn-download-ext" onclick="movBaixar()">Baixar Excel de movimentações</button>
       </div>
