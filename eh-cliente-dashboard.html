@@ -18,7 +18,7 @@
   <script src="eh-ativos-catalogo.js"></script>
   <script src="eh-analise-fundos.js?v=2026-11-24b"></script>
   <script src="eh-historico-ordens.js?v=2026-11-25a"></script>
-  <script src="eh-movimentacoes.js?v=2026-11-26a"></script>
+  <script src="eh-movimentacoes.js?v=2026-11-26b"></script>
   <style>
     :root {
       /* Navy & accent palette — aligned to index.html */
@@ -1366,7 +1366,7 @@
 
       <div class="upload-panel">
         <h3>Documentos</h3>
-        <div id="geradorDocs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;"></div>
+        <div id="geradorDocs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1rem;"></div>
         <div class="upload-feedback" id="geradorDocsFb"></div>
       </div>
     </div>
@@ -1720,25 +1720,14 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     <div class="view" id="view-movimentacoes">
       <div class="welcome-banner">
         <h2>Extratos <em>→ Movimentações</em></h2>
-        <p>Versão nova do Extratos → Excel. Gera uma tabela única, uma linha por lançamento, para a aba Movimentações da nova Base EH. Importe na base com a macro ImportarMovimentacoes: ela pula o que já foi importado e preenche o cliente pelo Mapa.</p>
+        <p>Versão nova do Extratos → Excel. Junta os extratos de todas as corretoras numa tabela única, uma linha por lançamento, para a aba Movimentações da nova Base EH. Importe na base com a macro ImportarMovimentacoes: ela pula o que já foi importado e preenche o cliente pelo Mapa.</p>
       </div>
 
-      <div class="broker-selector" id="movBancos"></div>
-
-      <div class="eqi-notice-dash" id="movAvisoEqi">
-        <strong style="color:var(--white);">EQI / BTG:</strong> faça upload do <strong style="color:var(--white);">Extrato da Conta Investimento</strong> (PDF longo com todas as seções). Resgates, amortizações e integralizações saem com o valor bruto, e o líquido fica na coluna ao lado.
+      <div class="eqi-notice-dash visible">
+        Coloque os PDFs de cada corretora na caixinha dela (pode deixar caixinhas vazias) e gere um Excel só. Na <strong style="color:var(--white);">EQI e BTG</strong>, use o <strong style="color:var(--white);">Extrato da Conta Investimento</strong> (PDF longo com todas as seções): resgates, amortizações e integralizações saem com o valor bruto e o líquido fica na coluna ao lado. Os códigos vêm da Tabela de Produtos do Extratos → Excel (XP para XP e Monte Bravo, EQI/BTG para EQI e BTG).
       </div>
 
-      <div class="upload-panel">
-        <h3>1. Extratos PDF</h3>
-        <div class="extrato-upload-zone" id="movUploadZone">
-          <input type="file" id="movFileInput" accept=".pdf" multiple />
-          <div style="font-size:0.85rem;color:var(--gray-light);margin-bottom:0.3rem;">Arraste os PDFs aqui</div>
-          <div style="font-size:0.68rem;color:var(--gray);">ou clique para selecionar · vários arquivos do mesmo banco</div>
-        </div>
-        <div class="file-list-ext" id="movListaArquivos"></div>
-        <p style="font-size:0.72rem;color:var(--gray);margin-top:0.8rem;line-height:1.6;">Os códigos dos produtos vêm da mesma Tabela de Produtos do Extratos → Excel (XP para XP e Monte Bravo, EQI/BTG para EQI e BTG).</p>
-      </div>
+      <div id="movCaixas" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1rem;margin-bottom:1.2rem;"></div>
 
       <label style="display:flex;align-items:flex-start;gap:0.5rem;font-size:0.78rem;color:var(--gray-light);line-height:1.5;margin:0 0 0.9rem;cursor:pointer;">
         <input type="checkbox" id="movRecuarUltimoDU" checked style="width:16px;height:16px;margin-top:0.15rem;accent-color:var(--gold);flex-shrink:0;" />

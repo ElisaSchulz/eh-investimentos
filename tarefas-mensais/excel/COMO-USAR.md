@@ -75,7 +75,7 @@ não aparece em nenhum extrato do lote fica de fora.
 os lançamentos do arquivo `movimentacoes_<banco>_<data>.xlsx`, gerado no site em
 **Extratos → Movimentações** (versão nova do Extratos → Excel).
 
-1. No site, escolha o banco (XP, EQI, BTG ou Monte Bravo), arraste os PDFs e baixe o Excel.
+1. No site, coloque os PDFs de cada corretora na caixinha dela (XP, EQI, BTG, Monte Bravo) e baixe um Excel só.
 2. Abra a base, deixe ela ativa e rode `ImportarMovimentacoes` (Alt+F8). Dá para escolher
    vários arquivos de uma vez (XP, EQI e BTG do mês juntos).
 3. A macro mostra quantos lançamentos entraram, quantos já estavam na base e os nomes que

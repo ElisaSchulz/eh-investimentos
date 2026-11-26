@@ -33,10 +33,12 @@
   const CABECALHO = ['Data', 'Data Liq.', 'Cliente', 'Nome no extrato', 'Banco', 'Código', 'Histórico', 'Tipo',
     'Valor (R$)', 'Valor Líquido (R$)', 'Saldo (R$)', 'Data original', 'Arquivo', 'ID'];
 
-  const S = { banco: 'XP', arquivos: [], linhas: [], tabelas: {}, ocupado: false };
+  const S = { arquivos: {}, linhas: [], tabelas: {}, ocupado: false };  // arquivos: banco → [File]
   window.MOV = S;  // para inspecionar no console
 
   const $ = id => document.getElementById(id);
+  const nomeBanco = b => b === 'MONTE BRAVO' ? 'Monte Bravo' : b;
+  const idBanco = b => b.replace(/\s+/g, '');
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   const brl = n => (n < 0 ? '-' : '') + 'R$ ' + Math.abs(n || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const dataSerial = s => {  // "dd/mm/aaaa" → número de série do Excel (data de verdade na planilha)
@@ -70,26 +72,30 @@
     return (S.tabelas[cfg.tabela] = rows);
   }
 
-  // ── Seleção de banco e arquivos ──
-  function selecionarBanco(banco) {
-    S.banco = banco;
-    document.querySelectorAll('#movBancos .broker-btn').forEach(b => b.classList.toggle('active', b.dataset.banco === banco));
-    $('movAvisoEqi').classList.toggle('visible', BANCOS[banco].layout === 'EQI');
+  // ── Arquivos: uma caixinha por banco ──
+  function definirArquivos(banco, files) {
+    S.arquivos[banco] = files;
+    renderLista(banco);
+    const total = Object.values(S.arquivos).reduce((n, l) => n + l.length, 0);
+    $('movBtnProcessar').disabled = !total;
+    $('movBtnLabel').textContent = total > 1 ? `Processar ${total} extratos` : 'Processar extrato';
     limparResultado();
   }
-
-  function definirArquivos(files) {
-    S.arquivos = files;
-    $('movListaArquivos').innerHTML = files.map((f, i) => `
+  function renderLista(banco) {
+    const lista = S.arquivos[banco] || [];
+    $('movLista' + idBanco(banco)).innerHTML = lista.map((f, i) => `
       <div class="file-item-ext">
         <span class="file-item-ext-name">${esc(f.name)}</span>
-        <span class="file-item-ext-status file-status-wait" id="movArq${i}">aguardando</span>
+        <span class="file-item-ext-status file-status-wait" id="movArq${idBanco(banco)}_${i}">aguardando</span>
+        <button title="Tirar" onclick="movTirar('${banco}',${i})" style="background:none;border:none;color:#e05555;cursor:pointer;font-size:0.9rem;padding:0 0.2rem;">✕</button>
       </div>`).join('');
-    $('movBtnProcessar').disabled = !files.length;
-    $('movBtnLabel').textContent = files.length > 1 ? `Processar ${files.length} extratos` : 'Processar extrato';
-    limparResultado();
+    $('movConta' + idBanco(banco)).textContent = lista.length ? `${lista.length} PDF${lista.length > 1 ? 's' : ''}` : '';
   }
-  function statusArquivo(i, txt, cls) { const el = $('movArq' + i); if (el) { el.textContent = txt; el.className = 'file-item-ext-status ' + (cls || ''); } }
+  function tirar(banco, i) {
+    const lista = [...(S.arquivos[banco] || [])]; lista.splice(i, 1);
+    definirArquivos(banco, lista);
+  }
+  function statusArquivo(banco, i, txt, cls) { const el = $(`movArq${idBanco(banco)}_${i}`); if (el) { el.textContent = txt; el.className = 'file-item-ext-status ' + (cls || ''); } }
 
   function limparResultado() {
     S.linhas = [];
@@ -135,7 +141,7 @@
   }
 
   async function processar() {
-    if (!S.arquivos.length || S.ocupado) return;
+    if (S.ocupado || !Object.values(S.arquivos).some(l => l.length)) return;
     S.ocupado = true; S.linhas = [];
     const box = $('movStatusBox');
     box.innerHTML = ''; box.classList.add('visible');
@@ -143,26 +149,31 @@
     $('movBtnProcessar').disabled = true;
     const anterior = extLogBox; extLogBox = 'movStatusBox';  // os leitores escrevem o log aqui
     try {
-      const banco = S.banco, cfg = BANCOS[banco];
-      const mapa = await tabela(banco);
       const recuar = $('movRecuarUltimoDU').checked;
-      for (let i = 0; i < S.arquivos.length; i++) {
-        const f = S.arquivos[i];
-        log(`── ${f.name}`, 'head'); statusArquivo(i, 'processando...');
-        try {
-          const text = await extExtractText(f);
-          let { nome, rows } = cfg.layout === 'XP' ? lerXP(text, f.name, mapa) : lerEQI(text, f.name, mapa);
-          if (!rows.length) { log('Nenhum lançamento encontrado', 'err'); statusArquivo(i, 'erro', 'file-status-err'); continue; }
-          if (recuar) {
-            const rec = extRecuarUltimoDiaUtil(rows);
-            if (rec.n) { rows = rec.rows; log(`${rec.n} lançamento(s) de juros/amortização do último dia útil recuado(s) 1 dia útil`, 'ok'); }
+      for (const banco of Object.keys(BANCOS)) {
+        const lista = S.arquivos[banco] || [];
+        if (!lista.length) continue;
+        const cfg = BANCOS[banco];
+        log(`══ ${nomeBanco(banco)} (${lista.length} PDF${lista.length > 1 ? 's' : ''})`, 'head');
+        const mapa = await tabela(banco);
+        for (let i = 0; i < lista.length; i++) {
+          const f = lista[i];
+          log(`── ${f.name}`, 'head'); statusArquivo(banco, i, 'processando...');
+          try {
+            const text = await extExtractText(f);
+            let { nome, rows } = cfg.layout === 'XP' ? lerXP(text, f.name, mapa) : lerEQI(text, f.name, mapa);
+            if (!rows.length) { log('Nenhum lançamento encontrado: confira se o PDF está na caixinha do banco certo', 'err'); statusArquivo(banco, i, 'erro', 'file-status-err'); continue; }
+            if (recuar) {
+              const rec = extRecuarUltimoDiaUtil(rows);
+              if (rec.n) { rows = rec.rows; log(`${rec.n} lançamento(s) de juros/amortização do último dia útil recuado(s) 1 dia útil`, 'ok'); }
+            }
+            const linhas = paraLinhas(banco, nome, rows, f.name);
+            S.linhas.push(...linhas);
+            log(`Cliente: "${nome}" · ${linhas.length} lançamentos`, 'ok');
+            statusArquivo(banco, i, `✓ ${linhas.length} lançamentos`, 'file-status-ok');
+          } catch (e) {
+            log('Erro: ' + e.message, 'err'); console.error(e); statusArquivo(banco, i, 'erro', 'file-status-err');
           }
-          const linhas = paraLinhas(banco, nome, rows, f.name);
-          S.linhas.push(...linhas);
-          log(`Cliente: "${nome}" · ${linhas.length} lançamentos`, 'ok');
-          statusArquivo(i, `✓ ${linhas.length} lançamentos`, 'file-status-ok');
-        } catch (e) {
-          log('Erro: ' + e.message, 'err'); console.error(e); statusArquivo(i, 'erro', 'file-status-err');
         }
       }
       if (S.linhas.length) mostrarPreview();
@@ -174,9 +185,10 @@
   // ── Prévia ──
   function mostrarPreview() {
     const L = S.linhas;
-    const clientes = new Set(L.map(l => l.nome)).size;
+    const clientes = new Set(L.map(l => l.nome.toUpperCase())).size;
     const semCodigo = L.filter(l => l.semCodigo), semBruto = L.filter(l => l.semBruto);
     $('movChips').innerHTML = `
+      ${Object.keys(BANCOS).filter(b => L.some(l => l.banco === b)).map(b => `<div class="ext-chip">${nomeBanco(b)} <span>${L.filter(l => l.banco === b).length}</span></div>`).join('')}
       <div class="ext-chip">Clientes <span>${clientes}</span></div>
       <div class="ext-chip">Lançamentos <span>${L.length}</span></div>
       <div class="ext-chip">Sem código <span style="color:${semCodigo.length ? '#e05555' : 'var(--ok-text)'}">${semCodigo.length}</span></div>
@@ -186,25 +198,25 @@
     $('movFaltam').innerHTML = faltam.length ? `
       <div class="eqi-notice-dash visible" style="margin-bottom:1rem;">
         <strong style="color:var(--white);">${faltam.length} produto(s) sem código.</strong>
-        Cadastre o trecho do nome na Tabela de Produtos (${BANCOS[S.banco].layout === 'XP' ? 'XP' : 'EQI/BTG'}) em Extratos → Excel e processe de novo, ou corrija o código depois na base.
-        <ul style="margin:0.5rem 0 0 1.1rem;">${faltam.slice(0, 15).map(l => `<li>${esc(l.historico)} <span style="color:var(--gray)">(${esc(l.nome)})</span></li>`).join('')}</ul>
+        Cadastre o trecho do nome na Tabela de Produtos (XP para XP e Monte Bravo, EQI/BTG para EQI e BTG) em Extratos → Excel e processe de novo, ou corrija o código depois na base.
+        <ul style="margin:0.5rem 0 0 1.1rem;">${faltam.slice(0, 15).map(l => `<li>${esc(l.historico)} <span style="color:var(--gray)">(${esc(nomeBanco(l.banco))} · ${esc(l.nome)})</span></li>`).join('')}</ul>
         ${faltam.length > 15 ? `<div>… e mais ${faltam.length - 15}</div>` : ''}
       </div>` : '';
     const linhas = L.slice(0, 80).map(l => `
       <tr${l.semCodigo || l.semBruto ? ' style="background:rgba(224,85,85,0.08)"' : ''}>
-        <td class="td-sheet">${esc(l.nome)}</td><td>${l.data}${l.dataOriginal ? ` <span style="color:var(--gray)" title="Data no extrato: ${l.dataOriginal}">↶</span>` : ''}</td>
+        <td class="td-sheet">${esc(l.nome)}</td><td>${esc(nomeBanco(l.banco))}</td><td>${l.data}${l.dataOriginal ? ` <span style="color:var(--gray)" title="Data no extrato: ${l.dataOriginal}">↶</span>` : ''}</td>
         <td class="${l.codigo ? 'td-cnpj' : 'td-na'}">${esc(l.codigo || '—')}</td>
         <td title="${esc(l.historico)}">${esc(l.historico.length > 40 ? l.historico.slice(0, 39) + '…' : l.historico)}</td>
         <td class="${l.valor < 0 ? 'td-neg' : 'td-pos'}">${brl(l.valor)}</td><td>${esc(l.tipo)}</td></tr>`).join('');
-    $('movTabela').innerHTML = `<thead><tr><th>Nome no extrato</th><th>Data</th><th>Código</th><th>Histórico</th><th>Valor</th><th>Tipo</th></tr></thead>
-      <tbody>${linhas}${L.length > 80 ? `<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:0.8rem;font-size:0.68rem;">… e mais ${L.length - 80} lançamentos no Excel</td></tr>` : ''}</tbody>`;
+    $('movTabela').innerHTML = `<thead><tr><th>Nome no extrato</th><th>Banco</th><th>Data</th><th>Código</th><th>Histórico</th><th>Valor</th><th>Tipo</th></tr></thead>
+      <tbody>${linhas}${L.length > 80 ? `<tr><td colspan="7" style="text-align:center;color:var(--gray);padding:0.8rem;font-size:0.68rem;">… e mais ${L.length - 80} lançamentos no Excel</td></tr>` : ''}</tbody>`;
     $('movPreview').classList.add('visible');
   }
 
   // ── Excel: aba Movimentacoes (para a macro) + Conferência por cliente ──
   function baixar() {
     const L = [...S.linhas].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' })
-      || dataSerial(a.data) - dataSerial(b.data));
+      || a.banco.localeCompare(b.banco) || dataSerial(a.data) - dataSerial(b.data));
     const aoa = [CABECALHO, ...L.map(l => [dataSerial(l.data), dataSerial(l.dataLiq), '', l.nome, l.banco, l.codigo,
       l.historico, l.tipo, l.valor, l.valorLiq, l.saldo, l.dataOriginal ? dataSerial(l.dataOriginal) : '', l.arquivo, l.id])];
     const ws = XLSX.utils.aoa_to_sheet(aoa);
@@ -218,12 +230,12 @@
     // Conferência: um resumo por cliente para bater com o PDF
     const porNome = new Map();
     L.forEach(l => {
-      const k = l.nome; if (!porNome.has(k)) porNome.set(k, { n: 0, ent: 0, sai: 0, semCod: 0, semBruto: 0, saldo: 0 });
+      const k = l.nome + '|' + l.banco; if (!porNome.has(k)) porNome.set(k, { nome: l.nome, banco: l.banco, n: 0, ent: 0, sai: 0, semCod: 0, semBruto: 0, saldo: 0 });
       const c = porNome.get(k); c.n++; if (l.valorLiq >= 0) c.ent += l.valorLiq; else c.sai += l.valorLiq;
       c.semCod += l.semCodigo ? 1 : 0; c.semBruto += l.semBruto ? 1 : 0; c.saldo = l.saldo;
     });
     const conf = [['Nome no extrato', 'Banco', 'Lançamentos', 'Entradas líquidas (R$)', 'Saídas líquidas (R$)', 'Saldo do último lançamento (R$)', 'Sem código', 'Sem valor bruto'],
-      ...[...porNome].map(([k, c]) => [k, S.banco, c.n, Math.round(c.ent * 100) / 100, Math.round(c.sai * 100) / 100, c.saldo, c.semCod, c.semBruto])];
+      ...[...porNome.values()].map(c => [c.nome, nomeBanco(c.banco), c.n, Math.round(c.ent * 100) / 100, Math.round(c.sai * 100) / 100, c.saldo, c.semCod, c.semBruto])];
     const ws2 = XLSX.utils.aoa_to_sheet(conf);
     ws2['!cols'] = [34, 12, 12, 20, 20, 24, 11, 14].map(w => ({ wch: w }));
 
@@ -231,33 +243,43 @@
     XLSX.utils.book_append_sheet(wb, ws, 'Movimentacoes');
     XLSX.utils.book_append_sheet(wb, ws2, 'Conferencia');
     const hoje = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(wb, `movimentacoes_${S.banco.toLowerCase().replace(/\s+/g, '')}_${hoje}.xlsx`);
+    const bancos = Object.keys(BANCOS).filter(b => L.some(l => l.banco === b)).map(b => idBanco(b).toLowerCase()).join('_');
+    XLSX.writeFile(wb, `movimentacoes_${bancos}_${hoje}.xlsx`);
   }
 
   // ── Ligações da tela ──
   function iniciar() {
-    const zona = $('movUploadZone'), input = $('movFileInput');
-    if (!zona || zona.dataset.ok) return;
-    zona.dataset.ok = '1';
-    zona.addEventListener('click', () => input.click());
-    zona.addEventListener('dragover', e => { e.preventDefault(); zona.classList.add('drag-over'); });
-    zona.addEventListener('dragleave', () => zona.classList.remove('drag-over'));
-    zona.addEventListener('drop', e => {
-      e.preventDefault(); zona.classList.remove('drag-over');
-      const pdfs = [...e.dataTransfer.files].filter(f => f.type === 'application/pdf');
-      if (pdfs.length) definirArquivos(pdfs);
+    const caixas = $('movCaixas');
+    if (!caixas || caixas.dataset.ok) return;
+    caixas.dataset.ok = '1';
+    caixas.innerHTML = Object.entries(BANCOS).map(([b, cfg]) => `
+      <div class="upload-panel" style="margin:0;">
+        <h3 style="display:flex;justify-content:space-between;align-items:baseline;gap:0.5rem;">${nomeBanco(b)}
+          <span id="movConta${idBanco(b)}" style="font-size:0.62rem;font-weight:400;color:var(--gold-text);"></span></h3>
+        <div style="font-size:0.68rem;color:var(--gray);margin:-0.4rem 0 0.7rem;">${cfg.sub}</div>
+        <div class="extrato-upload-zone" id="movZona${idBanco(b)}" style="padding:1.2rem;">
+          <input type="file" accept=".pdf" multiple />
+          <div style="font-size:0.8rem;color:var(--gray-light);">Arraste os PDFs aqui</div>
+          <div style="font-size:0.66rem;color:var(--gray);">ou clique para selecionar</div>
+        </div>
+        <div class="file-list-ext" id="movLista${idBanco(b)}"></div>
+      </div>`).join('');
+    Object.keys(BANCOS).forEach(b => {
+      const zona = $('movZona' + idBanco(b)), input = zona.querySelector('input');
+      const somar = files => definirArquivos(b, [...(S.arquivos[b] || []), ...files.filter(f => !(S.arquivos[b] || []).some(g => g.name === f.name))]);
+      zona.addEventListener('dragover', e => { e.preventDefault(); zona.classList.add('drag-over'); });
+      zona.addEventListener('dragleave', () => zona.classList.remove('drag-over'));
+      zona.addEventListener('drop', e => {
+        e.preventDefault(); zona.classList.remove('drag-over');
+        const pdfs = [...e.dataTransfer.files].filter(f => f.type === 'application/pdf');
+        if (pdfs.length) somar(pdfs);
+      });
+      input.addEventListener('change', () => { if (input.files.length) somar([...input.files]); input.value = ''; });
     });
-    input.addEventListener('change', () => { if (input.files.length) definirArquivos([...input.files]); input.value = ''; });
-    $('movBancos').innerHTML = Object.entries(BANCOS).map(([b, cfg]) => `
-      <button class="broker-btn${b === S.banco ? ' active' : ''}" data-banco="${b}" onclick="movSelecionarBanco('${b}')">
-        <span class="broker-btn-name">${b === 'MONTE BRAVO' ? 'Monte Bravo' : b}</span>
-        <span class="broker-btn-sub">${cfg.sub}</span>
-      </button>`).join('');
-    S.tabelas = {};  // recarrega a Tabela de Produtos a cada visita (pode ter sido editada)
   }
 
   window.movInit = () => { iniciar(); S.tabelas = {}; };
-  window.movSelecionarBanco = selecionarBanco;
+  window.movTirar = tirar;
   window.movProcessar = processar;
   window.movBaixar = baixar;
 })();
