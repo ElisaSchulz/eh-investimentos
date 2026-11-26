@@ -4488,12 +4488,14 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   function extCurrentTable() { return extCurrentBroker === 'XP' ? 'cnpj_mapping_xp' : 'cnpj_mapping_eqi'; }
   function extCurrentDefault() { return extCurrentBroker === 'XP' ? DEFAULT_MAPPING_XP : DEFAULT_MAPPING_EQI; }
 
+  const extMappingCarregado = {};
   async function extLoadMappingFromSupabase() {
     extMarkSave('loading');
     try {
       const { data, error } = await sb.from(extCurrentTable()).select('*').order('key');
       if (error) throw error;
       const rows = (data && data.length > 0) ? data.map(r => ({ key: r.key, cnpj: r.cnpj || '', full: r.full_name || '' })) : extCurrentDefault();
+      extMappingCarregado[extCurrentTable()] = new Set((data || []).map(r => (r.key || '').toUpperCase()));
       extRenderMapping(rows);
       extMarkSave('saved');
     } catch(e) {
@@ -4510,6 +4512,19 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       const rows = extGetMappingRows();
       const table = extCurrentTable();
       try {
+        // Não perder o que entrou na tabela depois que ela foi aberta nesta tela
+        // (ex.: correções salvas no Extratos → Movimentações ou em outra aba do navegador).
+        const { data: atuais, error: eLer } = await sb.from(table).select('*');
+        if (eLer) throw eLer;
+        const carregadas = extMappingCarregado[table] || new Set();
+        const naTela = new Set(rows.map(r => r.key.toUpperCase()));
+        const novas = (atuais || []).filter(r => r.key && !carregadas.has(r.key.toUpperCase()) && !naTela.has(r.key.toUpperCase()))
+          .map(r => ({ key: r.key, cnpj: r.cnpj || '', full: r.full_name || '' }));
+        if (novas.length) {
+          rows.push(...novas);
+          novas.forEach(r => carregadas.add(r.key.toUpperCase()));
+          if (table === extCurrentTable()) extRenderMapping(rows);
+        }
         await sb.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000');
         if (rows.length > 0) {
           const inserts = rows.map(r => ({ key: r.key, cnpj: r.cnpj, full_name: r.full, updated_at: new Date().toISOString() }));
