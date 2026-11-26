@@ -18,6 +18,7 @@
   <script src="eh-ativos-catalogo.js"></script>
   <script src="eh-analise-fundos.js?v=2026-11-24b"></script>
   <script src="eh-historico-ordens.js?v=2026-11-25a"></script>
+  <script src="eh-movimentacoes.js?v=2026-11-26a"></script>
   <style>
     :root {
       /* Navy & accent palette — aligned to index.html */
@@ -945,6 +946,10 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 017 7h2"/><path d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
     Extratos → Excel
   </button>
+  <button class="mobile-drawer-link" id="mobileMovBtn" style="display:none;" onclick="showView('movimentacoes',this);closeDrawer()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    Extratos → Movimentações
+  </button>
   <button class="mobile-drawer-link" id="mobileCotasBtn" style="display:none;" onclick="showView('cotas',this);closeDrawer()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
     Cotas dos Fundos
@@ -1026,6 +1031,10 @@
     <button class="sidebar-link" onclick="showView('extratos',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 017 7h2"/><path d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
       Extratos → Excel
+    </button>
+    <button class="sidebar-link" onclick="showView('movimentacoes',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Extratos → Movimentações
     </button>
     <button class="sidebar-link" onclick="showView('cotas',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
@@ -1706,6 +1715,51 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       </div>
     </div>
 
+    <!-- EXTRATOS → MOVIMENTAÇÕES (admin only): versão nova do Extratos → Excel, gera a aba Movimentações da nova Base EH.
+         Lógica em eh-movimentacoes.js (ao mudar o .js, troque o ?v= do script no head). -->
+    <div class="view" id="view-movimentacoes">
+      <div class="welcome-banner">
+        <h2>Extratos <em>→ Movimentações</em></h2>
+        <p>Versão nova do Extratos → Excel. Gera uma tabela única, uma linha por lançamento, para a aba Movimentações da nova Base EH. Importe na base com a macro ImportarMovimentacoes: ela pula o que já foi importado e preenche o cliente pelo Mapa.</p>
+      </div>
+
+      <div class="broker-selector" id="movBancos"></div>
+
+      <div class="eqi-notice-dash" id="movAvisoEqi">
+        <strong style="color:var(--white);">EQI / BTG:</strong> faça upload do <strong style="color:var(--white);">Extrato da Conta Investimento</strong> (PDF longo com todas as seções). Resgates, amortizações e integralizações saem com o valor bruto, e o líquido fica na coluna ao lado.
+      </div>
+
+      <div class="upload-panel">
+        <h3>1. Extratos PDF</h3>
+        <div class="extrato-upload-zone" id="movUploadZone">
+          <input type="file" id="movFileInput" accept=".pdf" multiple />
+          <div style="font-size:0.85rem;color:var(--gray-light);margin-bottom:0.3rem;">Arraste os PDFs aqui</div>
+          <div style="font-size:0.68rem;color:var(--gray);">ou clique para selecionar · vários arquivos do mesmo banco</div>
+        </div>
+        <div class="file-list-ext" id="movListaArquivos"></div>
+        <p style="font-size:0.72rem;color:var(--gray);margin-top:0.8rem;line-height:1.6;">Os códigos dos produtos vêm da mesma Tabela de Produtos do Extratos → Excel (XP para XP e Monte Bravo, EQI/BTG para EQI e BTG).</p>
+      </div>
+
+      <label style="display:flex;align-items:flex-start;gap:0.5rem;font-size:0.78rem;color:var(--gray-light);line-height:1.5;margin:0 0 0.9rem;cursor:pointer;">
+        <input type="checkbox" id="movRecuarUltimoDU" checked style="width:16px;height:16px;margin-top:0.15rem;accent-color:var(--gold);flex-shrink:0;" />
+        <span>Juros e amortização pagos no último dia útil do mês entram com a data do dia útil anterior (vale também para o IRRF desses pagamentos). A data do extrato fica na coluna Data original.</span>
+      </label>
+
+      <button class="btn-process-ext" id="movBtnProcessar" onclick="movProcessar()" disabled>
+        <span id="movBtnLabel">Processar extrato</span>
+      </button>
+
+      <div class="ext-status-box" id="movStatusBox"></div>
+
+      <div class="ext-preview-section" id="movPreview">
+        <div class="section-header"><div class="section-title">2. Prévia e download</div></div>
+        <div class="ext-chips" id="movChips"></div>
+        <div id="movFaltam"></div>
+        <div class="ext-preview-wrap"><table class="ext-preview-table" id="movTabela"></table></div>
+        <button class="btn-download-ext" onclick="movBaixar()">Baixar Excel de movimentações</button>
+      </div>
+    </div>
+
     <!-- COTAS DOS FUNDOS VIEW (admin only) -->
     <div class="view" id="view-cotas">
       <div class="welcome-banner">
@@ -2217,6 +2271,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       document.getElementById('mobileUploadBtn').style.display = 'flex';
       document.getElementById('mobileExtratosBtn').style.display = 'flex';
       document.getElementById('mobileCotasBtn').style.display = 'flex';
+      document.getElementById('mobileMovBtn').style.display = 'flex';
       document.getElementById('mobileClientesBtn').style.display = 'flex';
       document.getElementById('mobileEmailsBtn').style.display = 'flex';
       document.getElementById('mobileGeradorBtn').style.display = 'flex';
@@ -2294,13 +2349,14 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.querySelectorAll('.mobile-drawer-link').forEach(l => l.classList.remove('active'));
     document.getElementById('view-' + viewId).classList.add('active');
     if (btn) btn.classList.add('active');
-    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Documentos', documentos:'Meus Documentos', extratos:'Extratos → Excel', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos', mensagens:'Mensagens Padrão', tarefas:'Tarefas Mensais', editorcarta:'Editor da Carta', fundos:'Análise de Fundos' };
+    const titles = { inicio:'Início', relatorios:'Relatórios', cartas:'Cartas Mensais', upload:'Upload de Documentos', documentos:'Meus Documentos', extratos:'Extratos → Excel', movimentacoes:'Extratos → Movimentações', cotas:'Cotas dos Fundos', emails:'Envio de Emails', clientes:'Gestão de Clientes', perfil:'Meu Perfil' , gerador:'Gerador de Documentos', mensagens:'Mensagens Padrão', tarefas:'Tarefas Mensais', editorcarta:'Editor da Carta', fundos:'Análise de Fundos' };
     const topbar = document.getElementById('topbarTitle');
     if (topbar) topbar.textContent = titles[viewId] || viewId;
     // keep the active tab in the URL so a refresh returns to it
     history.replaceState(null, '', window.location.pathname + window.location.search + (viewId === 'inicio' ? '' : '#' + viewId));
     if (viewId === 'emails') { loadTemplates().then(() => { buildTemplateAccordion(); fillCartaFields(); renderUltimoDisparo(); }); if (clientRows.length === 0) addClientRow(); loadRascunho(); }
     if (viewId === 'extratos') extLoadMappingFromSupabase();
+    if (viewId === 'movimentacoes') movInit();
     if (viewId === 'cotas') ctLoadXpMapping();
     if (viewId === 'clientes') loadClientesView();
     if (viewId === 'gerador') geradorCarregarClientes();
@@ -5028,8 +5084,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     document.getElementById('extBtnProcess').disabled=false;
   }
 
+  // Caixa onde os leitores escrevem o log; o Extratos → Movimentações (eh-movimentacoes.js) troca para a dele
+  var extLogBox = 'extStatusBox';
   function extLog(msg, type='') {
-    const box=document.getElementById('extStatusBox');
+    const box=document.getElementById(extLogBox);
     const cls=type==='ok'?'ext-log-ok':type==='warn'?'ext-log-warn':type==='err'?'ext-log-err':type==='head'?'ext-log-head':'';
     box.innerHTML+=`<div class="${cls}">› ${msg}</div>`;
     box.scrollTop=box.scrollHeight;
