@@ -185,7 +185,7 @@
       if (SEM_AVISO.test(l.tipo) || /INVESTBACK/i.test(l.historico)) return;
       if (l.tipo === 'Outro') alertar(l, 'linha', 'O leitor não reconheceu o tipo deste lançamento');
       if (l.semCodigo) alertar(l, 'codigo', 'Produto sem código: cadastre o trecho do nome na Tabela de Produtos');
-      if (l.semBruto) alertar(l, 'bruto', 'Não achei o valor bruto na seção do fundo: o valor é o líquido do extrato');
+      if (l.semBruto) alertar(l, 'bruto', 'Não achei o valor bruto na seção do fundo: o valor é o líquido do extrato (se o pagamento é do fim do mês anterior, o bruto está no extrato daquele mês)');
       else if (BANCOS[l.banco].layout === 'EQI' && /Resgate|Amortiza/.test(l.tipo) && l.valor > 0 && l.valorLiq > 0 && l.valor + 0.005 < l.valorLiq)
         alertar(l, 'bruto', 'Valor bruto menor que o líquido num resgate/amortização');
       else if (BANCOS[l.banco].layout === 'XP' && l.tipo === 'Resgate' && l.valor > 0 && ehCnpj(l.codigo) && !irNoDia.has(`${l.banco}|${l.nome}|${l.data}`))

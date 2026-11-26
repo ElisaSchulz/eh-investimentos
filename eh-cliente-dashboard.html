@@ -18,7 +18,7 @@
   <script src="eh-ativos-catalogo.js"></script>
   <script src="eh-analise-fundos.js?v=2026-11-24b"></script>
   <script src="eh-historico-ordens.js?v=2026-11-25a"></script>
-  <script src="eh-movimentacoes.js?v=2026-11-26e"></script>
+  <script src="eh-movimentacoes.js?v=2026-11-26f"></script>
   <style>
     :root {
       /* Navy & accent palette — aligned to index.html */
@@ -4772,7 +4772,10 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       const fundName = nameMatch[1].trim().toUpperCase();
       const totalIdx = part.search(/[Tt]\s*otal\s+de\s+[Aa]|[Tt]\s*otal\s+de\s+[Rr]/i);
       const secText = totalIdx >= 0 ? part.slice(0, totalIdx) : part;
-      const dates = [...secText.matchAll(/\d{2}\/\d{2}\/\d{2,4}/g)];
+      // "RESGATE REF. APLIC. 30/03/2026": a data da aplicação original fica no meio da linha e não
+      // pode virar o começo de outra transação (senão o resgate inteiro se perdia e o valor ia líquido)
+      const dates = [...secText.matchAll(/\d{2}\/\d{2}\/\d{2,4}/g)]
+        .filter(m => !/APLIC\.?\s*$/i.test(secText.slice(Math.max(0, m.index - 12), m.index)));
       const movs = [];
       for (let di = 0; di < dates.length; di++) {
         const dPos = dates[di].index; const dEnd = di+1<dates.length?dates[di+1].index:secText.length;
@@ -4906,7 +4909,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     const m2 = u.match(/AMORTIZA[ÇC][AÃ]O\s+DO\s+FUNDO\s+(\w[\w\s]+)/);
     if (m2) fundHint = m2[1].trim();
     function sumByDate(movs) { const bd={}; for (const mov of movs.filter(m=>m.tipo===targetTipo)) { if (!bd[mov.date]) bd[mov.date]={bruto:0,liq:0}; bd[mov.date].bruto+=mov.bruto; bd[mov.date].liq+=mov.liq; } return bd; }
-    function searchFund(fname) { const bd=sumByDate(fundMovs[fname]); for (const v of Object.values(bd)) { if (Math.abs(v.liq-absLiq)<0.02) return v.bruto; } for (const mov of fundMovs[fname].filter(m=>m.tipo===targetTipo)) { if (Math.abs(mov.liq-absLiq)<0.02) return mov.bruto; } return null; }
+    function searchFund(fname) { const bd=sumByDate(fundMovs[fname]); for (const v of Object.values(bd)) { if (Math.abs(v.liq-absLiq)<0.02) return Math.round(v.bruto*100)/100; } for (const mov of fundMovs[fname].filter(m=>m.tipo===targetTipo)) { if (Math.abs(mov.liq-absLiq)<0.02) return mov.bruto; } return null; }
     if (fundHint) { const hw=fundHint.split(/\s+/).filter(w=>w.length>2); let bf=null,bs=0; for (const fn of Object.keys(fundMovs)) { const s=hw.filter(w=>fn.includes(w)).length; if(s>bs){bs=s;bf=fn;} } if (bf&&bs>0) { const f=searchFund(bf); if(f!==null) return f; } }
     for (const fn of Object.keys(fundMovs)) { const f=searchFund(fn); if(f!==null) return f; }
     return null;
