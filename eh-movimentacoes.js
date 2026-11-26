@@ -254,7 +254,7 @@
 
   async function processar() {
     if (S.ocupado || !Object.values(S.arquivos).some(l => l.length)) return;
-    S.ocupado = true; S.linhas = []; S.alertasSoltos = []; S.craInfo = '';
+    S.ocupado = true; S.linhas = []; S.alertasSoltos = []; S.craInfo = ''; S.tabelas = {};
     const box = $('movStatusBox');
     box.innerHTML = ''; box.classList.add('visible');
     $('movPreview').classList.remove('visible');
@@ -357,7 +357,7 @@
       try {
         const { error } = await sb.from(x.tab).insert([{ key: trecho, cnpj: codigo, full_name: x.historico, updated_at: new Date().toISOString() }]);
         if (error) throw error;
-        delete S.tabelas[x.tab];
+        tabelaProdutos(x.tab === 'cnpj_mapping_xp' ? 'XP' : 'EQI');
         msg += ' Salvo na Tabela de Produtos.';
       } catch (e) { msg += ' Não consegui salvar na Tabela de Produtos (' + e.message + '): cadastre em Extratos → Excel.'; }
     }
@@ -519,7 +519,20 @@
     });
   }
 
-  window.movInit = () => { iniciar(); S.tabelas = {}; };
+  // Tabela de Produtos na tela: usa o painel do Extratos → Excel (extMappingBox), que o showView
+  // traz para cá; XP vale para XP e Monte Bravo, EQI para EQI e BTG
+  function tabelaProdutos(b) {
+    extCurrentBroker = b;
+    const ativo = 'font-size:0.62rem;padding:0.35rem 0.8rem;', inativo = ativo + 'background:rgba(255,255,255,0.06);color:var(--gray-light);';
+    $('movTabXP').style.cssText = b === 'XP' ? ativo : inativo;
+    $('movTabEQI').style.cssText = b === 'EQI' ? ativo : inativo;
+    const lbl = $('extMappingBrokerLabel'); if (lbl) lbl.textContent = '— ' + (b === 'XP' ? 'XP' : 'EQI/BTG');
+    extLoadMappingFromSupabase();
+    S.tabelas = {};
+  }
+
+  window.movInit = () => { iniciar(); S.tabelas = {}; tabelaProdutos(extCurrentBroker === 'EQI' ? 'EQI' : 'XP'); };
+  window.movTabelaProdutos = tabelaProdutos;
   window.movTirar = tirar;
   window.movProcessar = processar;
   window.movBaixar = baixar;
