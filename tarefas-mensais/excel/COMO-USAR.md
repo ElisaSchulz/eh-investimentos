@@ -66,3 +66,39 @@ uns 15 dias depois do fim do mês. Para o relatório, use os extratos:
 
 Séries com CNPJ fictício (ex.: Exodus SR3) casam pelo nome dentro do mesmo fundo. Fundo que
 não aparece em nenhum extrato do lote fica de fora.
+
+---
+
+# Importar movimentações (aba Movimentações da nova Base EH)
+
+`ImportarMovimentacoes.bas` acrescenta na aba **Movimentações** da base (tabela `tbl_Movimentacoes`)
+os lançamentos do arquivo `movimentacoes_<banco>_<data>.xlsx`, gerado no site em
+**Extratos → Movimentações** (versão nova do Extratos → Excel).
+
+1. No site, escolha o banco (XP, EQI, BTG ou Monte Bravo), arraste os PDFs e baixe o Excel.
+2. Abra a base, deixe ela ativa e rode `ImportarMovimentacoes` (Alt+F8). Dá para escolher
+   vários arquivos de uma vez (XP, EQI e BTG do mês juntos).
+3. A macro mostra quantos lançamentos entraram, quantos já estavam na base e os nomes que
+   não estão na aba **Mapa**. Complete o Mapa e rode `PreencherClientesPeloMapa`.
+4. Confira e salve a base (a macro não salva).
+
+Regras:
+
+- Cada lançamento tem um ID (banco, nome, data do extrato, histórico, valor líquido e saldo).
+  ID que já está na base é pulado: importar o mesmo extrato duas vezes não duplica, e o que
+  você corrigiu à mão na base (código, valor, Obs) continua como está.
+- Cliente vem do Mapa: coluna A = nome no extrato, coluna B = cliente (ex.: LuizFLM).
+- Valor = bruto (é o que vai para a COTA); Valor Líquido = o que saiu na conta corrente.
+- Data = data usada no cálculo; Data original só aparece quando o juro/amortização do último
+  dia útil foi recuado um dia útil.
+- Se a aba Movimentações não existir, a macro cria com a tabela e os formatos.
+
+Na planilha do cliente, a movimentação de um ativo num dia fica assim:
+
+```
+=-SUMIFS(tbl_Movimentacoes[Valor], tbl_Movimentacoes[Cliente], "LuizFLM",
+         tbl_Movimentacoes[Banco], "XP", tbl_Movimentacoes[Código], $E55,
+         tbl_Movimentacoes[Data], FJ$1)
+```
+
+(com a base aberta, como já acontece hoje com o SUMIFS nas abas de cada cliente).
