@@ -18,7 +18,7 @@
   <script src="eh-ativos-catalogo.js"></script>
   <script src="eh-analise-fundos.js?v=2026-11-24b"></script>
   <script src="eh-historico-ordens.js?v=2026-11-25a"></script>
-  <script src="eh-movimentacoes.js?v=2026-11-26g"></script>
+  <script src="eh-movimentacoes.js?v=2026-11-26h"></script>
   <style>
     :root {
       /* Navy & accent palette — aligned to index.html */
@@ -1654,8 +1654,9 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
         </div>
       </div>
 
-      <!-- Mapping -->
-      <div class="upload-panel">
+      <!-- Mapping (o mesmo painel é movido para a tela Extratos → Movimentações quando ela abre) -->
+      <div id="extMappingSlot"></div>
+      <div class="upload-panel" id="extMappingBox">
         <h3>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
           2. Tabela de Produtos
@@ -1725,6 +1726,16 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
 
       <div class="eqi-notice-dash visible">
         Coloque os PDFs de cada corretora na caixinha dela (pode deixar caixinhas vazias) e gere um Excel só. Na <strong style="color:var(--white);">EQI e BTG</strong>, use o <strong style="color:var(--white);">Extrato da Conta Investimento</strong> (PDF longo com todas as seções): resgates, amortizações e integralizações saem com o valor bruto e o líquido fica na coluna ao lado. Os códigos vêm da Tabela de Produtos do Extratos → Excel (XP para XP e Monte Bravo, EQI/BTG para EQI e BTG).
+      </div>
+
+      <div class="upload-panel" style="margin-bottom:1rem;">
+        <h3 style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.6rem;">Tabela de Produtos
+          <span style="display:flex;gap:0.4rem;">
+            <button class="btn-upload" id="movTabXP" onclick="movTabelaProdutos('XP')" style="font-size:0.62rem;padding:0.35rem 0.8rem;">XP e Monte Bravo</button>
+            <button class="btn-upload" id="movTabEQI" onclick="movTabelaProdutos('EQI')" style="font-size:0.62rem;padding:0.35rem 0.8rem;background:rgba(255,255,255,0.06);color:var(--gray-light);">EQI e BTG</button>
+          </span></h3>
+        <p style="font-size:0.72rem;color:var(--gray);margin:-0.3rem 0 0.6rem;">A mesma tabela do Extratos → Excel: o que mudar aqui vale nas duas telas. Depois de mudar, processe de novo.</p>
+        <div id="movMappingSlot"></div>
       </div>
 
       <div id="movCaixas" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1rem;margin-bottom:1.2rem;"></div>
@@ -2347,6 +2358,15 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
     // keep the active tab in the URL so a refresh returns to it
     history.replaceState(null, '', window.location.pathname + window.location.search + (viewId === 'inicio' ? '' : '#' + viewId));
     if (viewId === 'emails') { loadTemplates().then(() => { buildTemplateAccordion(); fillCartaFields(); renderUltimoDisparo(); }); if (clientRows.length === 0) addClientRow(); loadRascunho(); }
+    // Tabela de Produtos: um painel só, que vai para a tela aberta (Extratos → Excel ou → Movimentações)
+    const mapBox = document.getElementById('extMappingBox');
+    if (viewId === 'extratos' && mapBox) {
+      document.getElementById('extMappingSlot').after(mapBox);
+      document.getElementById('btnXP').classList.toggle('active', extCurrentBroker === 'XP');
+      document.getElementById('btnEQI').classList.toggle('active', extCurrentBroker === 'EQI');
+      document.getElementById('eqiNotice').classList.toggle('visible', extCurrentBroker === 'EQI');
+    }
+    if (viewId === 'movimentacoes' && mapBox) document.getElementById('movMappingSlot').appendChild(mapBox);
     if (viewId === 'extratos') extLoadMappingFromSupabase();
     if (viewId === 'movimentacoes') movInit();
     if (viewId === 'cotas') ctLoadXpMapping();
@@ -4468,12 +4488,14 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
   function extCurrentTable() { return extCurrentBroker === 'XP' ? 'cnpj_mapping_xp' : 'cnpj_mapping_eqi'; }
   function extCurrentDefault() { return extCurrentBroker === 'XP' ? DEFAULT_MAPPING_XP : DEFAULT_MAPPING_EQI; }
 
+  const extMappingCarregado = {};
   async function extLoadMappingFromSupabase() {
     extMarkSave('loading');
     try {
       const { data, error } = await sb.from(extCurrentTable()).select('*').order('key');
       if (error) throw error;
       const rows = (data && data.length > 0) ? data.map(r => ({ key: r.key, cnpj: r.cnpj || '', full: r.full_name || '' })) : extCurrentDefault();
+      extMappingCarregado[extCurrentTable()] = new Set((data || []).map(r => (r.key || '').toUpperCase()));
       extRenderMapping(rows);
       extMarkSave('saved');
     } catch(e) {
@@ -4490,6 +4512,19 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       const rows = extGetMappingRows();
       const table = extCurrentTable();
       try {
+        // Não perder o que entrou na tabela depois que ela foi aberta nesta tela
+        // (ex.: correções salvas no Extratos → Movimentações ou em outra aba do navegador).
+        const { data: atuais, error: eLer } = await sb.from(table).select('*');
+        if (eLer) throw eLer;
+        const carregadas = extMappingCarregado[table] || new Set();
+        const naTela = new Set(rows.map(r => r.key.toUpperCase()));
+        const novas = (atuais || []).filter(r => r.key && !carregadas.has(r.key.toUpperCase()) && !naTela.has(r.key.toUpperCase()))
+          .map(r => ({ key: r.key, cnpj: r.cnpj || '', full: r.full_name || '' }));
+        if (novas.length) {
+          rows.push(...novas);
+          novas.forEach(r => carregadas.add(r.key.toUpperCase()));
+          if (table === extCurrentTable()) extRenderMapping(rows);
+        }
         await sb.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000');
         if (rows.length > 0) {
           const inserts = rows.map(r => ({ key: r.key, cnpj: r.cnpj, full_name: r.full, updated_at: new Date().toISOString() }));
