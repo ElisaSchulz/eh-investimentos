@@ -147,6 +147,8 @@
       let tipo = r.tipo;
       if (tipo === 'Outro') {
         if (/^IR\b|IRRF/i.test(r.historico)) tipo = 'IRRF';
+        else if (/^IOF\b/i.test(r.historico)) tipo = 'IOF';
+        else if (/INVESTBACK/i.test(r.historico)) tipo = 'Investback';
         else if (/^VENCIMENTO\b/i.test(r.historico)) tipo = 'Vencimento';
         else { const c = CAIXA.find(([re]) => re.test(r.historico || '')); if (c) tipo = c[1]; }
       }
@@ -171,6 +173,7 @@
   const serialDe = d => (Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(1899, 11, 30)) / 86400000;
   const fmtSerial = n => { const d = new Date(Date.UTC(1899, 11, 30) + n * 86400000); return extDataFmt(d); };
 
+  const SEM_AVISO = /^(IRRF|IR|IOF|Investback|Come-Cotas)$/;
   function alertar(l, tipo, texto) { (l.alertas = l.alertas || []).push({ tipo, texto }); }
 
   function alertasDasLinhas(L) {
@@ -178,9 +181,11 @@
     // IR do mesmo dia, para saber se um resgate de fundo na XP veio bruto
     const irNoDia = new Set(L.filter(l => l.tipo === 'IRRF' || /^IR\b|IRRF/i.test(l.historico)).map(l => `${l.banco}|${l.nome}|${l.data}`));
     L.forEach(l => {
+      // Investback, IR e IOF nunca entram nos avisos (Elisa, 25/11/2026)
+      if (SEM_AVISO.test(l.tipo) || /INVESTBACK/i.test(l.historico)) return;
       if (l.tipo === 'Outro') alertar(l, 'linha', 'O leitor não reconheceu o tipo deste lançamento');
       if (l.semCodigo) alertar(l, 'codigo', 'Produto sem código: cadastre o trecho do nome na Tabela de Produtos');
-      if (l.semBruto) alertar(l, 'bruto', 'Não achei o valor bruto na seção do fundo: o valor é o líquido do extrato');
+      if (l.semBruto) alertar(l, 'bruto', 'Não achei o valor bruto na seção do fundo: o valor é o líquido do extrato (se o pagamento é do fim do mês anterior, o bruto está no extrato daquele mês)');
       else if (BANCOS[l.banco].layout === 'EQI' && /Resgate|Amortiza/.test(l.tipo) && l.valor > 0 && l.valorLiq > 0 && l.valor + 0.005 < l.valorLiq)
         alertar(l, 'bruto', 'Valor bruto menor que o líquido num resgate/amortização');
       else if (BANCOS[l.banco].layout === 'XP' && l.tipo === 'Resgate' && l.valor > 0 && ehCnpj(l.codigo) && !irNoDia.has(`${l.banco}|${l.nome}|${l.data}`))
@@ -302,6 +307,64 @@
     return lista.sort((x, y) => ordem.indexOf(x.tipo) - ordem.indexOf(y.tipo) || x.nome.localeCompare(y.nome) || dataSerial(x.data) - dataSerial(y.data));
   }
 
+  // ── Correção manual do código, antes de gerar o Excel ──
+  // Um item por histórico sem código (por Tabela de Produtos): o código digitado vale para todas
+  // as linhas cujo histórico contém o trecho, e pode ser salvo na Tabela de Produtos para os
+  // próximos meses.
+  const tirarPrefixo = h => String(h || '').replace(/^\s*\*\s*PROV\s*\*\s*/i, '').trim();
+  function gruposSemCodigo() {
+    const g = new Map();
+    S.linhas.filter(l => l.semCodigo && !SEM_AVISO.test(l.tipo)).forEach(l => {
+      const tab = BANCOS[l.banco].tabela, k = tab + '|' + tirarPrefixo(l.historico).toUpperCase();
+      if (!g.has(k)) g.set(k, { tab, historico: tirarPrefixo(l.historico), bancos: new Set(), n: 0, clientes: new Set() });
+      const x = g.get(k); x.n++; x.bancos.add(nomeBanco(l.banco)); x.clientes.add(l.nome);
+    });
+    S.grupos = [...g.values()].sort((a, b) => b.n - a.n);
+    return S.grupos;
+  }
+  function blocoCorrecao() {
+    const G = gruposSemCodigo();
+    if (!G.length) return '';
+    const inp = 'style="width:100%;background:transparent;border:1px solid var(--rule-strong);color:var(--cream);font-family:inherit;padding:0.35rem 0.5rem;font-size:0.75rem;"';
+    return `
+      <details open style="margin-top:0.9rem;"><summary style="cursor:pointer;font-size:0.8rem;">Corrigir códigos aqui (${G.length} produto${G.length > 1 ? 's' : ''})</summary>
+        <p style="font-size:0.72rem;color:var(--gray);margin:0.5rem 0;line-height:1.6;">Digite o CNPJ ou código e clique em Aplicar: vale para todas as linhas sem código cujo histórico contém o trecho (IR e IOF continuam sem código, como hoje). Com "Salvar" marcado, o trecho também entra na Tabela de Produtos e os próximos extratos já saem com o código.</p>
+        <div class="ext-preview-wrap"><table class="ext-preview-table">
+          <thead><tr><th style="min-width:320px;">Trecho do histórico</th><th>Banco</th><th>Linhas</th><th style="min-width:170px;">CNPJ / código</th><th>Salvar</th><th></th></tr></thead>
+          <tbody>${G.map((x, i) => `<tr>
+            <td><input id="movTrecho${i}" value="${esc(x.historico)}" ${inp} title="Pode encurtar: basta um pedaço do nome que só este produto tem" /></td>
+            <td>${esc([...x.bancos].join(', '))}</td><td>${x.n} <span style="color:var(--gray)">(${x.clientes.size} cliente${x.clientes.size > 1 ? 's' : ''})</span></td>
+            <td><input id="movCod${i}" placeholder="00.000.000/0000-00" ${inp} onkeydown="if(event.key==='Enter')movCorrigir(${i})" /></td>
+            <td style="text-align:center;"><input type="checkbox" id="movSalvar${i}" checked style="accent-color:var(--gold);" /></td>
+            <td><button class="btn-upload" onclick="movCorrigir(${i})" style="font-size:0.62rem;padding:0.35rem 0.7rem;">Aplicar</button></td></tr>`).join('')}</tbody>
+        </table></div>
+      </details>`;
+  }
+  async function corrigir(i) {
+    const x = (S.grupos || [])[i]; if (!x) return;
+    const trecho = $('movTrecho' + i).value.trim(), codigo = $('movCod' + i).value.trim(), salvar = $('movSalvar' + i).checked;
+    if (!trecho || !codigo) { alert('Preencha o trecho e o CNPJ/código.'); return; }
+    const T = trecho.toUpperCase();
+    let n = 0;
+    S.linhas.forEach(l => {
+      if (!l.semCodigo || BANCOS[l.banco].tabela !== x.tab || !(l.historico || '').toUpperCase().includes(T)) return;
+      l.codigo = codigo; l.semCodigo = false; l.corrigido = true; n++;
+    });
+    if (!n) { alert('Nenhuma linha sem código tem esse trecho no histórico.'); return; }
+    let msg = `${n} linha(s) com o código ${codigo}.`;
+    if (salvar) {
+      try {
+        const { error } = await sb.from(x.tab).insert([{ key: trecho, cnpj: codigo, full_name: x.historico, updated_at: new Date().toISOString() }]);
+        if (error) throw error;
+        delete S.tabelas[x.tab];
+        msg += ' Salvo na Tabela de Produtos.';
+      } catch (e) { msg += ' Não consegui salvar na Tabela de Produtos (' + e.message + '): cadastre em Extratos → Excel.'; }
+    }
+    const anterior = extLogBox; extLogBox = 'movStatusBox';
+    try { log(msg, 'ok'); alertasDasLinhas(S.linhas); await alertasCra(S.linhas); } finally { extLogBox = anterior; }
+    mostrarPreview();
+  }
+
   function mostrarPreview() {
     const L = S.linhas;
     const clientes = new Set(L.map(l => l.nome.toUpperCase())).size;
@@ -324,6 +387,7 @@
         <h3>Alertas para conferir</h3>
         <p style="font-size:0.75rem;color:var(--gray);margin:-0.3rem 0 0.8rem;line-height:1.6;">Confira no PDF só as linhas abaixo: no Excel elas vêm com <strong>Sim</strong> na coluna Conferir e o motivo na coluna Alerta, e tudo junto na aba Alertas.${S.craInfo ? ' ' + esc(S.craInfo) : ''}</p>
         <div class="ext-chips">${Object.entries(ALERTAS).map(([t, nome]) => `<div class="ext-chip">${nome} <span style="color:${cont(t) ? '#e05555' : 'var(--ok-text)'}">${cont(t)}</span></div>`).join('')}</div>
+        ${blocoCorrecao()}
         ${alertas.length ? Object.entries(ALERTAS).filter(([t]) => cont(t)).map(([t, nome]) => `
           <details${cont(t) <= 20 ? ' open' : ''} style="margin-top:0.8rem;"><summary style="cursor:pointer;font-size:0.8rem;">${nome} (${cont(t)})</summary>
             <div class="ext-preview-wrap" style="margin-top:0.5rem;"><table class="ext-preview-table">
@@ -429,6 +493,7 @@
   window.movTirar = tirar;
   window.movProcessar = processar;
   window.movBaixar = baixar;
+  window.movCorrigir = corrigir;
   window.movFiltrar = () => { if (S.linhas.length) mostrarPreview(); };
   window.MOV_TESTE = { paraLinhas, alertasDasLinhas, alertasCra, mostrarPreview };  // para testes no console
 })();
