@@ -185,6 +185,7 @@
       if (SEM_AVISO.test(l.tipo) || /INVESTBACK/i.test(l.historico)) return;
       if (l.tipo === 'Outro') alertar(l, 'linha', 'O leitor não reconheceu o tipo deste lançamento');
       if (l.semCodigo) alertar(l, 'codigo', 'Produto sem código: cadastre o trecho do nome na Tabela de Produtos');
+      if (l.brutoConferido) return;
       if (l.semBruto) alertar(l, 'bruto', 'Não achei o valor bruto na seção do fundo: o valor é o líquido do extrato (se o pagamento é do fim do mês anterior, o bruto está no extrato daquele mês)');
       else if (BANCOS[l.banco].layout === 'EQI' && /Resgate|Amortiza/.test(l.tipo) && l.valor > 0 && l.valorLiq > 0 && l.valor + 0.005 < l.valorLiq)
         alertar(l, 'bruto', 'Valor bruto menor que o líquido num resgate/amortização');
@@ -365,6 +366,31 @@
     mostrarPreview();
   }
 
+  // ── Valor bruto digitado (ex.: amortização paga no começo do mês, cujo bruto só está no extrato anterior) ──
+  function numBr(txt) {
+    let t = String(txt || '').replace(/R\$|\s/g, '');
+    if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.');
+    const n = parseFloat(t); return isFinite(n) ? n : null;
+  }
+  async function recalcular(msg) {
+    const anterior = extLogBox; extLogBox = 'movStatusBox';
+    try { if (msg) log(msg, 'ok'); alertasDasLinhas(S.linhas); } finally { extLogBox = anterior; }
+    mostrarPreview();
+  }
+  function aplicarBruto(id) {
+    const l = S.linhas.find(x => x.id === id); if (!l) return;
+    const n = numBr($('movBruto_' + id).value);
+    if (n == null || n === 0) { alert('Digite o valor bruto, por exemplo 12.650,00'); return; }
+    const sinal = (l.valorLiq || l.valor) < 0 ? -1 : 1;
+    l.valor = sinal * Math.abs(n); l.semBruto = false; l.brutoConferido = true; l.brutoManual = true;
+    recalcular(`Valor bruto digitado: ${l.nome} · ${l.data} · ${brl(l.valor)} (líquido ${brl(l.valorLiq)})`);
+  }
+  function brutoOk(id) {
+    const l = S.linhas.find(x => x.id === id); if (!l) return;
+    l.brutoConferido = true;
+    recalcular(`Valor conferido como bruto: ${l.nome} · ${l.data} · ${brl(l.valor)}`);
+  }
+
   function mostrarPreview() {
     const L = S.linhas;
     const clientes = new Set(L.map(l => l.nome.toUpperCase())).size;
@@ -381,7 +407,11 @@
         <td class="td-sheet">${esc(a.nome || '—')}</td><td>${esc(a.banco ? nomeBanco(a.banco) : '')}</td><td>${esc(a.data)}</td>
         <td class="${a.codigo ? 'td-cnpj' : 'td-na'}">${esc(a.codigo || '—')}</td>
         <td title="${esc(a.historico)}">${esc((a.historico || '').length > 40 ? a.historico.slice(0, 39) + '…' : a.historico)}</td>
-        <td>${a.valor === '' ? '' : brl(a.valor)}</td><td>${esc(a.texto)}</td></tr>`;
+        <td>${a.valor === '' ? '' : brl(a.valor)}</td>${a.tipo === 'bruto' ? `
+        <td style="min-width:240px;white-space:nowrap;"><input id="movBruto_${a.id}" placeholder="Valor bruto" inputmode="decimal" onkeydown="if(event.key==='Enter')movBruto('${a.id}')"
+            style="width:110px;background:transparent;border:1px solid var(--rule-strong);color:var(--cream);font-family:inherit;padding:0.3rem 0.45rem;font-size:0.75rem;" />
+          <button class="btn-upload" onclick="movBruto('${a.id}')" style="font-size:0.6rem;padding:0.3rem 0.55rem;">Aplicar</button>
+          <button class="btn-upload" onclick="movBrutoOk('${a.id}')" title="O valor já é o bruto: tirar o alerta" style="font-size:0.6rem;padding:0.3rem 0.55rem;background:rgba(255,255,255,0.06);color:var(--gray-light);">Está certo</button></td>` : ''}<td>${esc(a.texto)}</td></tr>`;
     $('movFaltam').innerHTML = `
       <div class="upload-panel" style="margin-bottom:1rem;">
         <h3>Alertas para conferir</h3>
@@ -391,7 +421,7 @@
         ${alertas.length ? Object.entries(ALERTAS).filter(([t]) => cont(t)).map(([t, nome]) => `
           <details${cont(t) <= 20 ? ' open' : ''} style="margin-top:0.8rem;"><summary style="cursor:pointer;font-size:0.8rem;">${nome} (${cont(t)})</summary>
             <div class="ext-preview-wrap" style="margin-top:0.5rem;"><table class="ext-preview-table">
-              <thead><tr><th>Nome no extrato</th><th>Banco</th><th>Data</th><th>Código</th><th>Histórico</th><th>Valor</th><th>Motivo</th></tr></thead>
+              <thead><tr><th>Nome no extrato</th><th>Banco</th><th>Data</th><th>Código</th><th>Histórico</th><th>Valor</th>${t === 'bruto' ? '<th>Corrigir</th>' : ''}<th>Motivo</th></tr></thead>
               <tbody>${alertas.filter(a => a.tipo === t).slice(0, 200).map(linhaAlerta).join('')}</tbody></table></div>
           </details>`).join('') : '<p style="font-size:0.8rem;color:var(--ok-text);margin-top:0.6rem;">Nenhum alerta: nada para conferir.</p>'}
       </div>`;
@@ -494,6 +524,8 @@
   window.movProcessar = processar;
   window.movBaixar = baixar;
   window.movCorrigir = corrigir;
+  window.movBruto = aplicarBruto;
+  window.movBrutoOk = brutoOk;
   window.movFiltrar = () => { if (S.linhas.length) mostrarPreview(); };
   window.MOV_TESTE = { paraLinhas, alertasDasLinhas, alertasCra, mostrarPreview };  // para testes no console
 })();

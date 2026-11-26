@@ -116,6 +116,8 @@ Investback, IR e IOF nunca entram nos avisos. O Excel do site marca **Sim** na c
   histórico; com "Salvar" marcado, o trecho entra na Tabela de Produtos para os próximos meses).
 - **Valor pode ser o líquido**: na EQI/BTG, quando o valor bruto não foi achado na seção do
   fundo ou ficou menor que o líquido; na XP/Monte Bravo, resgate de fundo sem IR no mesmo dia.
+  Na tela dá para digitar o valor bruto (Aplicar) ou marcar "Está certo". Ex.: amortização paga
+  no dia 1º cujo evento foi no fim do mês anterior: o bruto está no extrato daquele mês.
 - **Juros/amortização previstos que não vieram**: compara com o resultado do `cra_eventos` do
   mês nas Tarefas Mensais (mês com mais lançamentos). Avisa quando nenhum extrato trouxe o
   pagamento previsto (±5 dias) e quando o cliente tem outro lançamento do papel no mês, mas não
