@@ -136,7 +136,17 @@
     return { nome: extGetSheetName(text, nomeArq), rows: extParseEQI(text, mapa) };
   }
 
-  function paraLinhas(banco, nome, rows, arquivo) {
+  // Número da conta, só para saber qual PDF abrir ao conferir (não vai para a aba Movimentacoes).
+  // XP: "Conta Depósito - 0000000"; EQI: "Conta investimento 000000000"; senão, os dígitos do nome do arquivo.
+  function acharConta(text, nomeArq) {
+    const t = String(text || '').replace(/\s+/g, ' ');
+    const m = t.match(/Conta\s+(?:Dep[oó]sito|Investimento|Corrente)\s*[-:nº°]*\s*(\d[\d.\-]{3,})/i) || t.match(/\bConta\s*[:nº°]+\s*(\d[\d.\-]{3,})/i);
+    if (m) return m[1].replace(/[.\-]$/, '');
+    const f = String(nomeArq || '').match(/(\d{5,})/);
+    return f ? f[1] : '';
+  }
+
+  function paraLinhas(banco, nome, rows, arquivo, conta) {
     const vistos = {};
     return rows.map(r => {
       const liq = r.valorLiq !== undefined ? r.valorLiq : r.valor;
@@ -155,7 +165,7 @@
       return {
         data: r.dataMov, dataLiq: r.dataLiq || r.dataMov, nome, banco, codigo,
         historico: r.historico, tipo, tipoLeitor: r.tipo, valor: r.valor, valorLiq: liq, saldo: r.saldo ?? 0,
-        dataOriginal: r.recuado || '', arquivo,
+        dataOriginal: r.recuado || '', arquivo, conta: conta || '',
         id: hash(base + '#' + vistos[base]),
         semCodigo: !codigo && (TIPOS_COM_PRODUTO.has(tipo) || tipo === 'Vencimento'),
         semBruto: !!(r.needsGross && !r.isGross),
@@ -279,9 +289,10 @@
               const rec = extRecuarUltimoDiaUtil(rows);
               if (rec.n) { rows = rec.rows; log(`${rec.n} lançamento(s) de juros/amortização do último dia útil recuado(s) 1 dia útil`, 'ok'); }
             }
-            const linhas = paraLinhas(banco, nome, rows, f.name);
+            const conta = acharConta(text, f.name);
+            const linhas = paraLinhas(banco, nome, rows, f.name, conta);
             S.linhas.push(...linhas);
-            log(`Cliente: "${nome}" · ${linhas.length} lançamentos`, 'ok');
+            log(`Cliente: "${nome}"${conta ? ' · conta ' + conta : ''} · ${linhas.length} lançamentos`, 'ok');
             statusArquivo(banco, i, `✓ ${linhas.length} lançamentos`, 'file-status-ok');
           } catch (e) {
             log('Erro: ' + e.message, 'err'); console.error(e); statusArquivo(banco, i, 'erro', 'file-status-err');
@@ -301,9 +312,10 @@
   // ── Prévia ──
   function todosAlertas() {
     const lista = [];
-    S.linhas.forEach(l => (l.alertas || []).forEach(a => lista.push({ ...a, nome: l.nome, banco: l.banco, data: l.data,
+    const contaDe = {}; S.linhas.forEach(l => { if (l.conta) contaDe[l.nome + '|' + l.banco] = l.conta; });
+    S.linhas.forEach(l => (l.alertas || []).forEach(a => lista.push({ ...a, nome: l.nome, banco: l.banco, conta: l.conta, data: l.data,
       codigo: l.codigo, historico: l.historico, valor: l.valor, id: l.id })));
-    (S.alertasSoltos || []).forEach(a => lista.push({ ...a, historico: '', valor: '', id: '' }));
+    (S.alertasSoltos || []).forEach(a => lista.push({ ...a, conta: a.conta || contaDe[a.nome + '|' + a.banco] || '', historico: '', valor: '', id: '' }));
     const ordem = Object.keys(ALERTAS);
     return lista.sort((x, y) => ordem.indexOf(x.tipo) - ordem.indexOf(y.tipo) || x.nome.localeCompare(y.nome) || dataSerial(x.data) - dataSerial(y.data));
   }
@@ -317,8 +329,8 @@
     const g = new Map();
     S.linhas.filter(l => l.semCodigo && !SEM_AVISO.test(l.tipo)).forEach(l => {
       const tab = BANCOS[l.banco].tabela, k = tab + '|' + tirarPrefixo(l.historico).toUpperCase();
-      if (!g.has(k)) g.set(k, { tab, historico: tirarPrefixo(l.historico), bancos: new Set(), n: 0, clientes: new Set() });
-      const x = g.get(k); x.n++; x.bancos.add(nomeBanco(l.banco)); x.clientes.add(l.nome);
+      if (!g.has(k)) g.set(k, { tab, historico: tirarPrefixo(l.historico), bancos: new Set(), n: 0, clientes: new Set(), contas: new Set() });
+      const x = g.get(k); x.n++; x.bancos.add(nomeBanco(l.banco)); x.clientes.add(l.nome); if (l.conta) x.contas.add(l.conta);
     });
     S.grupos = [...g.values()].sort((a, b) => b.n - a.n);
     return S.grupos;
@@ -331,10 +343,10 @@
       <details open style="margin-top:0.9rem;"><summary style="cursor:pointer;font-size:0.8rem;">Corrigir códigos aqui (${G.length} produto${G.length > 1 ? 's' : ''})</summary>
         <p style="font-size:0.72rem;color:var(--gray);margin:0.5rem 0;line-height:1.6;">Digite o CNPJ ou código e clique em Aplicar: vale para todas as linhas sem código cujo histórico contém o trecho (IR e IOF continuam sem código, como hoje). Com "Salvar" marcado, o trecho também entra na Tabela de Produtos e os próximos extratos já saem com o código.</p>
         <div class="ext-preview-wrap"><table class="ext-preview-table">
-          <thead><tr><th style="min-width:320px;">Trecho do histórico</th><th>Banco</th><th>Linhas</th><th style="min-width:170px;">CNPJ / código</th><th>Salvar</th><th></th></tr></thead>
+          <thead><tr><th style="min-width:320px;">Trecho do histórico</th><th>Banco</th><th>Conta</th><th>Linhas</th><th style="min-width:170px;">CNPJ / código</th><th>Salvar</th><th></th></tr></thead>
           <tbody>${G.map((x, i) => `<tr>
             <td><input id="movTrecho${i}" value="${esc(x.historico)}" ${inp} title="Pode encurtar: basta um pedaço do nome que só este produto tem" /></td>
-            <td>${esc([...x.bancos].join(', '))}</td><td>${x.n} <span style="color:var(--gray)">(${x.clientes.size} cliente${x.clientes.size > 1 ? 's' : ''})</span></td>
+            <td>${esc([...x.bancos].join(', '))}</td><td style="white-space:nowrap;">${esc([...x.contas].slice(0, 3).join(', ') + (x.contas.size > 3 ? '…' : '')) || '—'}</td><td>${x.n} <span style="color:var(--gray)">(${x.clientes.size} cliente${x.clientes.size > 1 ? 's' : ''})</span></td>
             <td><input id="movCod${i}" placeholder="00.000.000/0000-00" ${inp} onkeydown="if(event.key==='Enter')movCorrigir(${i})" /></td>
             <td style="text-align:center;"><input type="checkbox" id="movSalvar${i}" checked style="accent-color:var(--gold);" /></td>
             <td><button class="btn-upload" onclick="movCorrigir(${i})" style="font-size:0.62rem;padding:0.35rem 0.7rem;">Aplicar</button></td></tr>`).join('')}</tbody>
@@ -404,7 +416,7 @@
 
     const cont = t => alertas.filter(a => a.tipo === t).length;
     const linhaAlerta = a => `<tr>
-        <td class="td-sheet">${esc(a.nome || '—')}</td><td>${esc(a.banco ? nomeBanco(a.banco) : '')}</td><td>${esc(a.data)}</td>
+        <td class="td-sheet">${esc(a.nome || '—')}</td><td>${esc(a.banco ? nomeBanco(a.banco) : '')}</td><td style="white-space:nowrap;">${esc(a.conta || '—')}</td><td>${esc(a.data)}</td>
         <td class="${a.codigo ? 'td-cnpj' : 'td-na'}">${esc(a.codigo || '—')}</td>
         <td title="${esc(a.historico)}">${esc((a.historico || '').length > 40 ? a.historico.slice(0, 39) + '…' : a.historico)}</td>
         <td>${a.valor === '' ? '' : brl(a.valor)}</td>${a.tipo === 'bruto' ? `
@@ -421,7 +433,7 @@
         ${alertas.length ? Object.entries(ALERTAS).filter(([t]) => cont(t)).map(([t, nome]) => `
           <details${cont(t) <= 20 ? ' open' : ''} style="margin-top:0.8rem;"><summary style="cursor:pointer;font-size:0.8rem;">${nome} (${cont(t)})</summary>
             <div class="ext-preview-wrap" style="margin-top:0.5rem;"><table class="ext-preview-table">
-              <thead><tr><th>Nome no extrato</th><th>Banco</th><th>Data</th><th>Código</th><th>Histórico</th><th>Valor</th>${t === 'bruto' ? '<th>Corrigir</th>' : ''}<th>Motivo</th></tr></thead>
+              <thead><tr><th>Nome no extrato</th><th>Banco</th><th>Conta</th><th>Data</th><th>Código</th><th>Histórico</th><th>Valor</th>${t === 'bruto' ? '<th>Corrigir</th>' : ''}<th>Motivo</th></tr></thead>
               <tbody>${alertas.filter(a => a.tipo === t).slice(0, 200).map(linhaAlerta).join('')}</tbody></table></div>
           </details>`).join('') : '<p style="font-size:0.8rem;color:var(--ok-text);margin-top:0.6rem;">Nenhum alerta: nada para conferir.</p>'}
       </div>`;
@@ -468,15 +480,15 @@
 
     // Alertas: tudo o que precisa ser conferido, numa lista só
     const al = todosAlertas();
-    const aoaA = [['Alerta', 'Nome no extrato', 'Banco', 'Data', 'Código', 'Histórico', 'Valor (R$)', 'Motivo', 'Conferido', 'ID'],
-      ...al.map(a => [ALERTAS[a.tipo], a.nome, a.banco ? nomeBanco(a.banco) : '', dataSerial(a.data), a.codigo, a.historico,
+    const aoaA = [['Alerta', 'Nome no extrato', 'Banco', 'Conta', 'Data', 'Código', 'Histórico', 'Valor (R$)', 'Motivo', 'Conferido', 'ID'],
+      ...al.map(a => [ALERTAS[a.tipo], a.nome, a.banco ? nomeBanco(a.banco) : '', a.conta || '', dataSerial(a.data), a.codigo, a.historico,
         a.valor === '' ? '' : a.valor, a.texto, '', a.id])];
     const ws3 = XLSX.utils.aoa_to_sheet(aoaA);
     for (let r = 1; r < aoaA.length; r++) {
-      const d = ws3[XLSX.utils.encode_cell({ r, c: 3 })]; if (d && typeof d.v === 'number') d.z = 'dd/mm/yyyy';
-      const v = ws3[XLSX.utils.encode_cell({ r, c: 6 })]; if (v && typeof v.v === 'number') v.z = '#,##0.00';
+      const d = ws3[XLSX.utils.encode_cell({ r, c: 4 })]; if (d && typeof d.v === 'number') d.z = 'dd/mm/yyyy';
+      const v = ws3[XLSX.utils.encode_cell({ r, c: 7 })]; if (v && typeof v.v === 'number') v.z = '#,##0.00';
     }
-    ws3['!cols'] = [30, 32, 11, 11, 20, 48, 14, 60, 10, 16].map(w => ({ wch: w }));
+    ws3['!cols'] = [30, 32, 11, 13, 11, 20, 48, 14, 60, 10, 16].map(w => ({ wch: w }));
     if (aoaA.length > 1) ws3['!autofilter'] = { ref: ws3['!ref'] };
 
     const wb = XLSX.utils.book_new();
