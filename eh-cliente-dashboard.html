@@ -17,7 +17,7 @@
   <script src="eh-senha.js"></script>
   <script src="eh-ativos-catalogo.js"></script>
   <script src="eh-analise-fundos.js?v=2026-11-24b"></script>
-  <script src="eh-historico-ordens.js?v=2026-11-25a"></script>
+  <script src="eh-historico-ordens.js?v=2026-11-27a"></script>
   <script src="eh-movimentacoes.js?v=2026-11-27a"></script>
   <style>
     :root {
@@ -2157,7 +2157,7 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       <div class="msg-tab-content" id="msgtab-historico">
         <div class="upload-panel">
           <h3 style="margin-bottom:0.3rem;">Ordens do mês</h3>
-          <p class="af-nota">Toda ordem gerada em "Ordem ao Banco" (copiar tabela, WhatsApp, imagem ou Excel) entra aqui sozinha, uma linha por cliente e ativo. Gerar a mesma ordem de novo só atualiza os valores. O % da carteira usa o patrimônio da carteira guardada em Análise de Fundos → Carteiras dos clientes, ou o que você informar aqui para o mês. Fica no armazenamento privado, só para os admins.</p>
+          <p class="af-nota">Toda ordem gerada em "Ordem ao Banco" (copiar tabela, WhatsApp, imagem ou Excel) entra aqui sozinha, uma linha por cliente e ativo, assim como as ordens da lista "Ordens enviadas ao banco" (em Aprovação do Cliente), trazidas ao abrir esta aba. Gerar a mesma ordem de novo só atualiza os valores. O % da carteira usa o patrimônio da carteira guardada em Análise de Fundos → Carteiras dos clientes, ou o que você informar aqui para o mês. Fica no armazenamento privado, só para os admins.</p>
           <div class="upload-form af-filtros">
             <div class="upload-field"><label>Mês</label><select id="hoMes" onchange="hoMes(this.value)"><option value="">Carregando…</option></select></div>
             <div class="upload-field"><label>Cliente</label><select id="hoCliente" onchange="hoRender()"><option value="">Todos</option></select></div>
@@ -2170,7 +2170,6 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
             <span class="af-nota" id="hoStatus" style="margin:0;"></span>
             <div class="msg-actions" style="margin-top:0;">
               <button class="btn-download-ext" onclick="hoExportar()">Baixar Excel (filtro atual)</button>
-              <button class="btn-download-ext" onclick="hoTrazerRecentes()" title="Traz as ordens dos últimos 30 dias que já estavam em Mensagens Padrão">Trazer ordens dos últimos 30 dias</button>
               <button class="btn-download-ext" onclick="hoInit(true)">Atualizar</button>
             </div>
           </div>
@@ -6910,7 +6909,8 @@ Valor do serviço: &lt;strong&gt;{{valor}}&lt;/strong&gt;.
       mcItemParaEditor();
       mcGerar();
     }
-    await Promise.all([msgCarregarBiblioteca(), msgCarregarClientes()]);
+    window.msgLibPronta = msgCarregarBiblioteca();  // a aba Histórico espera por ela
+    await Promise.all([window.msgLibPronta, msgCarregarClientes()]);
   }
 
   async function msgCarregarBiblioteca() {
