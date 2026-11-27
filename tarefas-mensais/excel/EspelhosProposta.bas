@@ -229,8 +229,10 @@ Public Sub MontarEspelhos()
     PrepararAba base, "Resumo de Mercado": EscreverLayout base, "Resumo de Mercado"
     rel = rel & "- Tabela produtos e Resumo de Mercado: copiados do layout" & vbCrLf
 
-    Application.StatusBar = False
+    Application.StatusBar = "Calculando..."
     Application.Calculation = calcAntes
+    Application.Calculate     ' mesmo em modo manual, para salvar com os valores das formulas
+    Application.StatusBar = False
     Application.ScreenUpdating = True
     MsgBox "Espelhos montados em " & Format(Timer - t, "0") & " s:" & vbCrLf & rel & vbCrLf & _
            "A Proposta nao foi salva: confira e salve.", vbInformation, "Montar espelhos"
