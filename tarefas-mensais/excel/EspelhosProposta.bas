@@ -603,7 +603,7 @@ Public Sub LigarClienteAProposta()
     Dim cli As Workbook, prop As Workbook, velha As Workbook, wb As Workbook, ws As Worksheet, c As Range, fs As Range
     Dim re As Object, m As Object, f As String, novo As String, aba As String, banco As String, mov As String
     Dim nTroca As Long, nResto As Long, links As Variant, i As Long, linkVelho As String, arqProp As Variant, rel As String
-    Dim calcAntes As XlCalculation
+    Dim calcAntes As XlCalculation, nomeVelho As String, nCand As Long
     Set cli = ActiveWorkbook
     For Each wb In Workbooks
         If TemTabela(wb, "tbl_Movimentacoes") And TemAba(wb, LAYOUT) Then Set prop = wb
@@ -619,8 +619,19 @@ Public Sub LigarClienteAProposta()
     For i = LBound(links) To UBound(links)
         If InStr(1, links(i), velha.Name, vbTextCompare) > 0 Then linkVelho = links(i)
     Next i
+    ' a base aberta pode ser uma copia com outro nome: aceita um unico vinculo "EH Base Unica..."
+    If linkVelho = "" Then
+        For i = LBound(links) To UBound(links)
+            If InStr(1, links(i), "EH Base Unica", vbTextCompare) > 0 And InStr(1, links(i), prop.Name, vbTextCompare) = 0 Then
+                linkVelho = links(i): nCand = nCand + 1
+            End If
+        Next i
+        If nCand > 1 Then linkVelho = ""
+    End If
     If linkVelho = "" Then MsgBox "Nao achei o vinculo com " & velha.Name & ".", vbExclamation: Exit Sub
-    If MsgBox("Vou trocar as movimentacoes e a fonte do vinculo de" & vbCrLf & "  " & velha.Name & vbCrLf & "para" & vbCrLf & _
+    nomeVelho = Mid(linkVelho, InStrRev(linkVelho, "\") + 1)
+    If MsgBox("Vou trocar as movimentacoes e a fonte do vinculo de" & vbCrLf & "  " & linkVelho & vbCrLf & _
+              "(lendo os bancos das abas de " & velha.Name & ")" & vbCrLf & "para" & vbCrLf & _
               "  " & prop.Name & vbCrLf & vbCrLf & "Continuar?", vbOKCancel + vbQuestion, "Ligar cliente a Proposta") = vbCancel Then Exit Sub
 
     calcAntes = Application.Calculation
@@ -640,7 +651,7 @@ Public Sub LigarClienteAProposta()
         If Not fs Is Nothing Then
             For Each c In fs.Cells
                 f = c.Formula
-                If InStr(1, f, velha.Name, vbTextCompare) > 0 And InStr(1, f, "SUMIFS", vbTextCompare) > 0 Then
+                If InStr(1, f, nomeVelho, vbTextCompare) > 0 And InStr(1, f, "SUMIFS", vbTextCompare) > 0 Then
                     If re.Test(f) Then
                         Set m = re.Execute(f)(0)
                         aba = m.SubMatches(1)
@@ -666,7 +677,7 @@ Public Sub LigarClienteAProposta()
         On Error GoTo Falha
         If Not fs Is Nothing Then
             For Each c In fs.Cells
-                If InStr(1, c.Formula, velha.Name, vbTextCompare) > 0 Then
+                If InStr(1, c.Formula, nomeVelho, vbTextCompare) > 0 Then
                     If AbaDeClienteNaFormula(velha, c.Formula) <> "" Then
                         nResto = nResto + 1
                         If nResto <= 10 Then rel = rel & "  " & ws.Name & "!" & c.Address(0, 0) & ": " & Left(c.Formula, 80) & vbCrLf
