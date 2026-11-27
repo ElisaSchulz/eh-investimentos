@@ -190,6 +190,64 @@ Public Sub PreencherClientesPeloMapa()
     MsgBox txt, vbInformation, "Preencher clientes"
 End Sub
 
+' Refaz a coluna "Nome no extrato" pelos arquivos que foram importados (casa pelo ID).
+' Use se a coluna D for apagada ou colada por engano. Escolha todos os arquivos ja
+' importados (ex.: a migracao e a v3). So a coluna D e alterada.
+Public Sub RestaurarNomesNoExtrato()
+    Dim base As Workbook, lo As ListObject, arquivos As Variant, k As Long, wbO As Workbook, wsO As Worksheet
+    Dim nomes As Object, n As Long, i As Long, v As Variant, ids As Variant, col As Variant
+    Dim nUsadas As Long, nTrocados As Long, nSemArquivo As Long, id As String, txt As String
+    Set base = ActiveWorkbook
+    If Not TemAba(base, NomeAba()) Then
+        MsgBox "Deixe a base com a aba " & NomeAba() & " ativa antes de rodar.", vbExclamation
+        Exit Sub
+    End If
+    arquivos = Application.GetOpenFilename("Movimentacoes (*.xlsx),*.xlsx", , _
+                                           "Escolha TODOS os arquivos ja importados", , True)
+    If Not IsArray(arquivos) Then Exit Sub
+    Application.ScreenUpdating = False
+    Set nomes = CreateObject("Scripting.Dictionary")
+    For k = LBound(arquivos) To UBound(arquivos)
+        Set wbO = Workbooks.Open(arquivos(k), ReadOnly:=True, UpdateLinks:=False)
+        Set wsO = Nothing
+        On Error Resume Next
+        Set wsO = wbO.Worksheets("Movimentacoes")
+        On Error GoTo 0
+        If wsO Is Nothing Then Set wsO = wbO.Worksheets(1)
+        If Trim(CStr(wsO.Cells(1, 14).Value)) = "ID" Then
+            n = wsO.Cells(wsO.Rows.Count, 14).End(xlUp).Row
+            If n >= 2 Then
+                v = wsO.Range(wsO.Cells(2, 1), wsO.Cells(n, 14)).Value
+                For i = 1 To n - 1
+                    id = Trim(CStr(v(i, 14)))
+                    If id <> "" Then nomes(id) = v(i, C_NOME)
+                Next i
+            End If
+        Else
+            txt = txt & "- " & wbO.Name & ": sem coluna ID (ignorado)" & vbCrLf
+        End If
+        wbO.Close SaveChanges:=False
+    Next k
+    Set lo = base.Worksheets(NomeAba()).ListObjects(TABELA)
+    nUsadas = LinhasUsadas(lo)
+    If nUsadas = 0 Then Application.ScreenUpdating = True: MsgBox "A tabela esta vazia.": Exit Sub
+    ids = Coluna(lo, C_ID)
+    col = Coluna(lo, C_NOME)
+    For i = 1 To nUsadas
+        id = Trim(CStr(ids(i, 1)))
+        If nomes.Exists(id) Then
+            If CStr(col(i, 1)) <> CStr(nomes(id)) Then col(i, 1) = nomes(id): nTrocados = nTrocados + 1
+        Else
+            nSemArquivo = nSemArquivo + 1
+        End If
+    Next i
+    lo.ListColumns(C_NOME).DataBodyRange.Value = col
+    Application.ScreenUpdating = True
+    MsgBox "Nomes corrigidos: " & nTrocados & vbCrLf & _
+           "Linhas sem o ID nos arquivos escolhidos (ficaram como estavam): " & nSemArquivo & vbCrLf & txt & vbCrLf & _
+           "A base nao foi salva: confira e salve.", vbInformation, "Restaurar Nome no extrato"
+End Sub
+
 '------------------------------------------------------------------------------
 
 Private Function GarantirTabela(base As Workbook) As ListObject
