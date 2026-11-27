@@ -12,6 +12,10 @@
  * Gerar a mesma ordem de novo (mesmo cliente ou fundo, data, tipo e instituição) substitui as
  * linhas anteriores dessa ordem, para não duplicar quando o valor é corrigido.
  *
+ * As ordens da lista "Ordens enviadas ao banco" (msgLib.ordens, em Aprovação do Cliente) também
+ * entram sozinhas: ao abrir esta aba, as que ainda não estão no histórico são acrescentadas.
+ * Linhas removidas aqui ficam em "removidas" no arquivo do mês, para não voltarem.
+ *
  * Usa do dashboard: sb, TM_BUCKET, tmNomeMes, escHtml, gv, hojeISO, moInst, moModo, moTipo,
  * moFmtCnpj, msgClientes, msgLib, MO_TIPO_NOME, showFb2, currentUser e XLSX (SheetJS).
  */
@@ -32,7 +36,9 @@
   const dataBr = iso => iso ? iso.split('-').reverse().join('/') : '';
   const novoId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const arquivo = mes => `${PASTA}/${mes}.json`;
-  const vazio = () => ({ linhas: [], patrimonio: {} });
+  const vazio = () => ({ linhas: [], patrimonio: {}, removidas: [] });
+  // Mesma linha = mesmo cliente, data, operação e ativo
+  const chave = l => [normNome(l.cliente), l.data, l.operacao, chaveAtivo(l)].join('|');
 
   async function baixarJson(caminho) {
     try {
@@ -48,7 +54,7 @@
   }
   async function lerMes(mes) {
     const d = await baixarJson(arquivo(mes));
-    return d && Array.isArray(d.linhas) ? { ...vazio(), ...d, patrimonio: d.patrimonio || {} } : vazio();
+    return d && Array.isArray(d.linhas) ? { ...vazio(), ...d, patrimonio: d.patrimonio || {}, removidas: d.removidas || [] } : vazio();
   }
   // Lê de novo antes de gravar, para não apagar o que outro admin salvou nesse meio tempo.
   async function alterarMes(mes, fn) {
@@ -138,7 +144,13 @@
     }
     if (!novas.length) return;
     novas.forEach(l => { l.grupo = grupo; });
-    await alterarMes(mes, d => { d.linhas = d.linhas.filter(l => l.grupo !== grupo).concat(novas); });
+    // Substitui também a mesma linha vinda de "Ordens enviadas ao banco" (ou da outra forma de
+    // montar a ordem), e uma linha removida antes volta, já que a ordem foi gerada de novo.
+    const ks = new Set(novas.map(chave));
+    await alterarMes(mes, d => {
+      d.linhas = d.linhas.filter(l => l.grupo !== grupo && !ks.has(chave(l))).concat(novas);
+      d.removidas = d.removidas.filter(k => !ks.has(k));
+    });
   }
 
   // ── tela ──
@@ -155,6 +167,10 @@
     renderMeses();
     await carteiras(true);
     await hoMes(S.mes && S.meses.includes(S.mes) ? S.mes : atual);
+    try {
+      const n = await hoSincronizar();
+      if (n) showFb2('hoFb', `✓ ${n} linha(s) acrescentadas da lista "Ordens enviadas ao banco".`, 'success');
+    } catch (e) { showFb2('hoFb', 'Não consegui trazer as ordens enviadas ao banco: ' + e.message, 'error'); }
   }
   function renderMeses() {
     const sel = document.getElementById('hoMes');
@@ -252,7 +268,7 @@
       `<tr><th>Data</th><th>Cliente</th><th>Instituição</th><th>Operação</th><th>Ativo</th><th class="af-num">Valor (R$)</th><th class="af-num">% carteira</th><th></th></tr>` +
       (ls.map(l => {
         const p = patrimonioDe(l), v = valorDe(l);
-        const valor = l.total ? (v ? brl(v) + ' <span class="af-tag" title="Resgate total: posição pela carteira guardada">total, estimado</span>' : '<span class="af-tag">Resgate total</span>') : brl(v);
+        const valor = l.total ? (v ? brl(v) + ' <span class="af-tag" title="Resgate total: posição pela carteira guardada">total, estimado</span>' : '<span class="af-tag">Resgate total</span>') : (v ? brl(v) : '<span class="td-na">sem valor</span>');
         return `<tr><td>${dataBr(l.data)}</td><td>${esc(l.cliente)}${l.conta ? `<div class="af-sub">conta ${esc(l.conta)}</div>` : ''}</td><td>${esc(l.instituicao)}</td>
           <td class="${l.operacao === 'resgate' ? 'td-neg' : ''}">${OP_NOME[l.operacao] || esc(l.operacao)}</td>
           <td class="af-nome">${esc(l.ativo)}${l.cnpj ? `<div class="af-sub">${esc(l.cnpj)}${l.liquidez ? ' · ' + esc(l.liquidez) : ''}</div>` : ''}</td>
@@ -286,16 +302,22 @@
   async function hoRemover(id) {
     const l = S.dados.linhas.find(x => x.id === id);
     if (!l || !confirm(`Remover do histórico: ${OP_NOME[l.operacao] || l.operacao} de ${l.ativo} para ${l.cliente} em ${dataBr(l.data)}?`)) return;
-    try { await alterarMes(S.mes, d => { d.linhas = d.linhas.filter(x => x.id !== id); }); }
+    try {
+      await alterarMes(S.mes, d => {
+        d.linhas = d.linhas.filter(x => x.id !== id);
+        if (!d.removidas.includes(chave(l))) d.removidas.push(chave(l));  // não volta na sincronização
+      });
+    }
     catch (e) { alert('Não consegui salvar: ' + e.message); }
   }
 
-  // Ordens das últimas semanas que já estavam em Mensagens Padrão (lista "Aprovação do Cliente",
-  // guardada por 30 dias) e ainda não estão no histórico.
-  async function hoTrazerRecentes() {
-    const fb = 'hoFb';
-    const ordens = (msgLib && msgLib.ordens) || [];
-    if (!ordens.length) { showFb2(fb, 'Não há ordens recentes guardadas em Mensagens Padrão.', 'error'); return; }
+  // Ordens da lista "Ordens enviadas ao banco" (msgLib.ordens: as pendentes e as concluídas dos
+  // últimos 30 dias) que ainda não estão no histórico. Roda sozinha ao abrir a aba; só acrescenta,
+  // nunca altera linhas existentes nem traz de volta as que foram removidas aqui.
+  async function hoSincronizar() {
+    if (window.msgLibPronta) { try { await window.msgLibPronta; } catch (e) { /* segue com o que houver */ } }
+    const ordens = (typeof msgLib !== 'undefined' && msgLib && msgLib.ordens) || [];
+    if (!ordens.length) return 0;
     await carteiras();
     const porMes = {};
     ordens.forEach(o => {
@@ -304,29 +326,30 @@
       const dataIso = `${m[3]}-${m[2]}-${m[1]}`;
       const cart = carteiraDe(o.cliente);
       (o.ativos || []).forEach(a => {
-        if (!a.nome || !(a.valor || a.total)) return;
+        if (!a.nome) return;  // sem valor também entra (ex.: compra sem valor anotado), para a ordem aparecer
         const l = { id: novoId(), grupo: ['c', dataIso, o.operacao, o.instituicao || '', normNome(o.cliente)].join('|'),
                     data: dataIso, cliente: o.cliente, conta: '', instituicao: o.instituicao || '',
-                    operacao: a.operacao || o.operacao, ativo: a.nome, cnpj: a.cnpj || '', liquidez: a.liquidez || '',
+                    operacao: a.operacao || (o.operacao === 'resgate' ? 'resgate' : 'compra'), ativo: a.nome, cnpj: a.cnpj || '', liquidez: a.liquidez || '',
                     valor: a.total ? 0 : a.valor || 0, total: !!a.total,
                     patrimonio: cart ? totalCart(cart) : null, patrimonio_ref: cart ? (cart.ref || '') : '',
-                    registrada_em: o.criada_em || new Date().toISOString(), por: 'importada' };
+                    registrada_em: o.criada_em || new Date().toISOString(), por: 'ordens enviadas ao banco', ordem_id: o.id || '' };
         if (a.total) { const pos = posicaoNaCarteira(cart, a.cnpj, a.nome); if (pos) l.valor_estimado = pos; }
         (porMes[dataIso.slice(0, 7)] = porMes[dataIso.slice(0, 7)] || []).push(l);
       });
     });
-    // Mesma linha = mesmo cliente, data, operação e ativo
-    const chave = l => [normNome(l.cliente), l.data, l.operacao, chaveAtivo(l)].join('|');
     let n = 0;
-    try {
-      for (const [mes, novas] of Object.entries(porMes)) {
-        await alterarMes(mes, d => {
-          const tem = new Set(d.linhas.map(chave));
-          novas.forEach(l => { if (!tem.has(chave(l))) { d.linhas.push(l); tem.add(chave(l)); n++; } });
-        });
-      }
-    } catch (e) { showFb2(fb, 'Não consegui salvar: ' + e.message, 'error'); return; }
-    showFb2(fb, n ? `✓ ${n} linha(s) trazidas das ordens recentes.` : 'Todas as ordens recentes já estavam no histórico.', 'success');
+    for (const [mes, novas] of Object.entries(porMes)) {
+      // Lê antes para não regravar o mês quando não há nada novo
+      const atual = await lerMes(mes);
+      const tem = new Set(atual.linhas.map(chave).concat(atual.removidas));
+      const faltam = novas.filter(l => !tem.has(chave(l)) && tem.add(chave(l)));
+      if (!faltam.length) continue;
+      await alterarMes(mes, d => {
+        const ja = new Set(d.linhas.map(chave).concat(d.removidas));
+        faltam.forEach(l => { if (!ja.has(chave(l))) { d.linhas.push(l); ja.add(chave(l)); n++; } });
+      });
+    }
+    return n;
   }
 
   function hoExportar() {
@@ -367,5 +390,5 @@
     XLSX.writeFile(wb, `Historico de ordens ${S.mes}.xlsx`);
   }
 
-  Object.assign(window, { hoInit, hoMes, hoRender: render, hoFiltrarCliente, hoPatrimonio, hoRemover, hoTrazerRecentes, hoExportar, hoRegistrarOrdem });
+  Object.assign(window, { hoInit, hoMes, hoRender: render, hoFiltrarCliente, hoPatrimonio, hoRemover, hoSincronizar, hoExportar, hoRegistrarOrdem });
 })();
