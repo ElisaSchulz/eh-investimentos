@@ -5,8 +5,11 @@ Attribute VB_Name = "EspelhosProposta"
 ' ImportarHistorico
 '   Acrescenta nas tabelas da Proposta (tbl_Cotacoes, tbl_Indices, tbl_Eventos,
 '   tbl_Cadastro) as linhas de um arquivo gerado na migracao (abas Cotacoes,
-'   Indices, Eventos, Cadastro) e copia a aba Layout_Espelhos. Pula o que ja
-'   existe (mesma data + codigo, mesmo mes + indice, ...). Nao salva.
+'   Indices, Eventos, Cadastro) e copia a aba Layout_Espelhos. Antes, tira das
+'   tres primeiras as linhas que vieram de uma migracao anterior (Fonte "Base
+'   atual (migracao)" ou "Planilha atual (migracao)"), entao pode rodar de novo
+'   com um arquivo corrigido. Pula o que ja existe (mesma data + codigo, ...).
+'   Nao salva.
 '
 ' MontarEspelhos
 '   (Re)monta na Proposta as abas no formato da base antiga, so com valores
@@ -21,6 +24,7 @@ Attribute VB_Name = "EspelhosProposta"
 Option Explicit
 
 Private Const LAYOUT As String = "Layout_Espelhos"
+Private mCS As Long     ' coluna Subclasse de tbl_Cotacoes (series da aba Dados usam Subclasse "Dados")
 
 ' ---- nomes com acento (o modulo e ASCII de proposito) ----
 Private Function sCodigo() As String: sCodigo = "C" & ChrW(243) & "digo": End Function
@@ -46,6 +50,9 @@ Public Sub ImportarHistorico()
     On Error GoTo Falha
     Set wbO = Workbooks.Open(CStr(arq), ReadOnly:=True, UpdateLinks:=0)
 
+    rel = rel & RemoverMigracao(base, "tbl_Cotacoes")
+    rel = rel & RemoverMigracao(base, "tbl_Indices")
+    rel = rel & RemoverMigracao(base, "tbl_Eventos")
     rel = rel & Acrescentar(base, wbO, "Cotacoes", "tbl_Cotacoes", Array("Data", sCodigo(), "Subclasse"))
     rel = rel & Acrescentar(base, wbO, "Indices", "tbl_Indices", Array(sMes(), sIndice()))
     rel = rel & Acrescentar(base, wbO, "Eventos", "tbl_Eventos", Array(sCodigo(), "Data pagamento", "Tipo"))
@@ -136,6 +143,38 @@ Private Function Acrescentar(base As Workbook, wbO As Workbook, aba As String, t
     Acrescentar = "- " & aba & ": " & Format(nNovas, "#,##0") & " novas, " & Format(nRep, "#,##0") & " ja existiam" & vbCrLf
 End Function
 
+' Tira da tabela as linhas cuja Fonte e de migracao da base atual (para reimportar corrigido)
+Private Function RemoverMigracao(base As Workbook, tbl As String) As String
+    Dim lo As ListObject, cF As Long, usadas As Long, dados As Variant, i As Long, j As Long, nK As Long, f As String
+    Dim fica() As Variant, tcols As Long, sMig As String
+    Set lo = AcharTabela(base, tbl)
+    If lo Is Nothing Then Exit Function
+    cF = ColunaDaTabela(lo, "Fonte")
+    usadas = LinhasUsadas(lo)
+    If cF = 0 Or usadas = 0 Then Exit Function
+    Application.StatusBar = "Limpando " & tbl & "..."
+    sMig = "atual (migra" & ChrW(231) & ChrW(227) & "o)"
+    tcols = lo.ListColumns.Count
+    dados = lo.DataBodyRange.Value
+    ReDim fica(1 To usadas, 1 To tcols)
+    For i = 1 To usadas
+        f = CStr(dados(i, cF))
+        If Not (f = "Base " & sMig Or f = "Planilha " & sMig) Then
+            nK = nK + 1
+            For j = 1 To tcols: fica(nK, j) = dados(i, j): Next j
+        End If
+    Next i
+    If nK = usadas Then Exit Function
+    lo.DataBodyRange.ClearContents
+    If nK > 0 Then
+        lo.DataBodyRange.Cells(1, 1).Resize(nK, tcols).Value = fica
+        lo.Resize lo.Range.Resize(1 + nK)
+    Else
+        lo.Resize lo.Range.Resize(2)
+    End If
+    RemoverMigracao = "- " & tbl & ": " & Format(usadas - nK, "#,##0") & " linhas da migracao anterior removidas" & vbCrLf
+End Function
+
 Private Function Chave1(v As Variant) As String
     If IsDate(v) And VarType(v) = vbDate Then
         Chave1 = CStr(CLng(v))
@@ -175,6 +214,7 @@ Public Sub MontarEspelhos()
     Set lo = AcharTabela(base, "tbl_Cotacoes")
     cot = lo.DataBodyRange.Value: nCot = LinhasUsadas(lo)
     cD = ColunaDaTabela(lo, "Data"): cC = ColunaDaTabela(lo, sCodigo()): cV = ColunaDaTabela(lo, "Valor")
+    mCS = ColunaDaTabela(lo, "Subclasse")
 
     Application.StatusBar = "Montando Cotas..."
     rel = rel & MontarGrade(base, "Cotas", 2, 3, 4, 2, cot, nCot, cD, cC, cV)
@@ -220,7 +260,7 @@ Private Function MontarGrade(base As Workbook, aba As String, linCod As Long, li
     ' datas com alguma cota destes codigos
     Set datas = CreateObject("Scripting.Dictionary")
     For i = 1 To nCot
-        If cols.Exists(UCase(Trim(CStr(cot(i, cC))))) Then
+        If cols.Exists(UCase(Trim(CStr(cot(i, cC))))) And Not EhDados(cot, i) Then
             If IsDate(cot(i, cD)) Then datas(CDbl(CDate(cot(i, cD)))) = True
         End If
     Next i
@@ -235,7 +275,7 @@ Private Function MontarGrade(base As Workbook, aba As String, linCod As Long, li
     For i = 1 To nd: grade(i, 1) = CDate(lista(i)): Next i
     For i = 1 To nCot
         code = UCase(Trim(CStr(cot(i, cC))))
-        If cols.Exists(code) And IsDate(cot(i, cD)) Then
+        If cols.Exists(code) And IsDate(cot(i, cD)) And Not EhDados(cot, i) Then
             r = datas(CDbl(CDate(cot(i, cD))))
             grade(r, cols(code) - colData + 1) = cot(i, cV)
         End If
@@ -255,15 +295,18 @@ Private Function MontarGrade(base As Workbook, aba As String, linCod As Long, li
     For j = colData To ultCol: ws.Cells(linIdx, j).Value = j - colData + 1: Next j
     ws.Cells(lin0, colData).Resize(nd, ultCol - colData + 1).Value = grade
     ws.Columns(colData).NumberFormat = "dd/mm/yyyy"
+    ws.Cells(linIdx, colData).NumberFormat = "General"
     MontarGrade = "- " & aba & ": " & cols.Count & " ativos x " & Format(nd, "#,##0") & " datas" & vbCrLf
 End Function
 
-' Fluxos: linhas e rotulos vem do layout (C = codigo na linha de Amortizacao, a de baixo e Juros);
-' datas na linha 1 a partir da coluna F; valores = soma de tbl_Eventos por codigo, tipo e data.
+' Fluxos: rotulos, colunas A:G e datas da linha 1 (a partir de H) vem do layout, como na base antiga
+' (C = codigo na linha de Amortizacao, a de baixo e Juros). Valores = soma de tbl_Eventos por codigo,
+' tipo e data; data de evento que nao esta na linha 1 entra no fim.
 Private Function MontarFluxos(base As Workbook) As String
+    Const COL0 As Long = 8
     Dim ws As Worksheet, lo As ListObject, evs As Variant, nEv As Long, eC As Long, eD As Long, eT As Long, eVal As Long
-    Dim linhas As Object, ult As Long, i As Long, code As String, datas As Object, lista() As Double, nd As Long, k As Variant
-    Dim grade() As Variant, r As Long, c As Long, tipo As String
+    Dim linhas As Object, ult As Long, i As Long, code As String, colDe As Object, ultC As Long, nCols As Long
+    Dim grade As Variant, r As Long, c As Long, tipo As String, dt As Double, nNovas As Long, nVal As Long
     PrepararAba base, "Fluxos"
     EscreverLayout base, "Fluxos"
     Set ws = base.Worksheets("Fluxos")
@@ -271,7 +314,7 @@ Private Function MontarFluxos(base As Workbook) As String
     evs = lo.DataBodyRange.Value: nEv = LinhasUsadas(lo)
     eC = ColunaDaTabela(lo, sCodigo()): eD = ColunaDaTabela(lo, "Data pagamento")
     eT = ColunaDaTabela(lo, "Tipo"): eVal = ColunaDaTabela(lo, "Valor por unidade")
-    ult = ws.Cells(ws.Rows.Count, 3).End(xlUp).Row
+    ult = Application.WorksheetFunction.Max(ws.Cells(ws.Rows.Count, 3).End(xlUp).Row, ws.Cells(ws.Rows.Count, 4).End(xlUp).Row)
     Set linhas = CreateObject("Scripting.Dictionary")
     For i = 2 To ult
         If CStr(ws.Cells(i, 5).Value) = sAmort() Then
@@ -279,32 +322,44 @@ Private Function MontarFluxos(base As Workbook) As String
             If code <> "" And Not linhas.Exists(code) Then linhas(code) = i
         End If
     Next i
-    Set datas = CreateObject("Scripting.Dictionary")
+    ' colunas das datas que ja estao na linha 1
+    ultC = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column
+    If ultC < COL0 Then ultC = COL0 - 1
+    Set colDe = CreateObject("Scripting.Dictionary")
+    For c = COL0 To ultC
+        If VarType(ws.Cells(1, c).Value) = vbDate Then colDe(CDbl(ws.Cells(1, c).Value)) = c
+    Next c
+    ' datas de eventos que faltam: vao para o fim
     For i = 1 To nEv
-        If linhas.Exists(UCase(Trim(CStr(evs(i, eC))))) And IsDate(evs(i, eD)) Then datas(CDbl(CDate(evs(i, eD)))) = True
+        If linhas.Exists(UCase(Trim(CStr(evs(i, eC))))) And IsDate(evs(i, eD)) Then
+            dt = CDbl(CDate(evs(i, eD)))
+            If Not colDe.Exists(dt) Then
+                nNovas = nNovas + 1
+                colDe(dt) = ultC + nNovas
+                ws.Cells(1, ultC + nNovas).Value = CDate(dt)
+            End If
+        End If
     Next i
-    nd = datas.Count
-    If nd = 0 Then MontarFluxos = "- Fluxos: sem eventos" & vbCrLf: Exit Function
-    ReDim lista(1 To nd): i = 0
-    For Each k In datas.Keys: i = i + 1: lista(i) = k: Next k
-    Ordenar lista, 1, nd
-    Set datas = CreateObject("Scripting.Dictionary")
-    For i = 1 To nd: datas(lista(i)) = i: Next i
-    ReDim grade(1 To ult, 1 To nd)
-    For c = 1 To nd: grade(1, c) = CDate(lista(c)): Next c
+    nCols = ultC + nNovas - COL0 + 1
+    If nCols < 1 Then MontarFluxos = "- Fluxos: sem datas" & vbCrLf: Exit Function
+    grade = ws.Cells(1, COL0).Resize(ult, nCols).Value
     For i = 1 To nEv
         code = UCase(Trim(CStr(evs(i, eC))))
         If linhas.Exists(code) And IsDate(evs(i, eD)) And IsNumeric(evs(i, eVal)) Then
-            tipo = CStr(evs(i, eT))
-            r = linhas(code)
-            If tipo <> sAmort() Then r = r + 1            ' Juros e Dividendo/Rendimento: linha de baixo
-            c = datas(CDbl(CDate(evs(i, eD))))
-            If r <= ult Then grade(r, c) = Val0(grade(r, c)) + CDbl(evs(i, eVal))
+            If Not IsEmpty(evs(i, eVal)) Then
+                tipo = CStr(evs(i, eT))
+                r = linhas(code)
+                If tipo <> sAmort() Then r = r + 1            ' Juros e Dividendo/Rendimento: linha de baixo
+                c = colDe(CDbl(CDate(evs(i, eD)))) - COL0 + 1
+                If r <= ult And VarType(grade(r, c)) <> vbString Then
+                    grade(r, c) = Val0(grade(r, c)) + CDbl(evs(i, eVal)): nVal = nVal + 1
+                End If
+            End If
         End If
     Next i
-    ws.Cells(1, 6).Resize(ult, nd).Value = grade
-    ws.Rows(1).NumberFormat = "dd/mm/yyyy"
-    MontarFluxos = "- Fluxos: " & linhas.Count & " ativos x " & nd & " datas" & vbCrLf
+    ws.Cells(1, COL0).Resize(ult, nCols).Value = grade
+    ws.Cells(1, COL0).Resize(1, nCols).NumberFormat = "dd/mm/yyyy"
+    MontarFluxos = "- Fluxos: " & linhas.Count & " ativos x " & nCols & " datas (" & nNovas & " novas), " & Format(nVal, "#,##0") & " valores" & vbCrLf
 End Function
 
 ' Dados: mesmas colunas da base antiga
@@ -413,9 +468,17 @@ Private Function SerieDiaria(ws As Worksheet, colLetra As String, codigos As Var
     For k = LBound(codigos) To UBound(codigos)
         If CStr(codigos(k)) <> "" Then cods(UCase(CStr(codigos(k)))) = k - LBound(codigos) + 2
     Next k
+    ' codigo com linhas de Subclasse "Dados" usa so essas (ex.: AGG tambem existe na Cotas USD)
+    Dim temDados As Object: Set temDados = CreateObject("Scripting.Dictionary")
+    For i = 1 To nCot
+        If EhDados(cot, i) Then temDados(UCase(Trim(CStr(cot(i, cC))))) = True
+    Next i
     Set datas = CreateObject("Scripting.Dictionary")
     For i = 1 To nCot
-        If cods.Exists(UCase(Trim(CStr(cot(i, cC))))) And IsDate(cot(i, cD)) Then datas(CDbl(CDate(cot(i, cD)))) = True
+        code = UCase(Trim(CStr(cot(i, cC))))
+        If cods.Exists(code) And IsDate(cot(i, cD)) Then
+            If EhDados(cot, i) Or Not temDados.Exists(code) Then datas(CDbl(CDate(cot(i, cD)))) = True
+        End If
     Next i
     nd = datas.Count
     If nd = 0 Then Exit Function
@@ -428,7 +491,9 @@ Private Function SerieDiaria(ws As Worksheet, colLetra As String, codigos As Var
     For i = 1 To nd: g(i, 1) = CDate(lst(i)): Next i
     For i = 1 To nCot
         code = UCase(Trim(CStr(cot(i, cC))))
-        If cods.Exists(code) And IsDate(cot(i, cD)) Then g(datas(CDbl(CDate(cot(i, cD)))), cods(code)) = cot(i, cV)
+        If cods.Exists(code) And IsDate(cot(i, cD)) Then
+            If EhDados(cot, i) Or Not temDados.Exists(code) Then g(datas(CDbl(CDate(cot(i, cD)))), cods(code)) = cot(i, cV)
+        End If
     Next i
     ws.Range(colLetra & "3").Resize(nd, UBound(g, 2)).Value = g
     ws.Columns(colLetra).NumberFormat = "dd/mm/yyyy"
@@ -466,6 +531,10 @@ Private Sub EscreverLayout(base As Workbook, aba As String)
         End If
     Next i
 End Sub
+
+Private Function EhDados(cot As Variant, i As Long) As Boolean
+    If mCS > 0 Then EhDados = (UCase(Trim(CStr(cot(i, mCS)))) = "DADOS")
+End Function
 
 Private Function Val0(v As Variant) As Double
     If IsNumeric(v) And Not IsEmpty(v) Then Val0 = CDbl(v)
