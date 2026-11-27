@@ -123,7 +123,12 @@
   function lerXP(text, nomeArq, mapa) {
     const antigos = extParseXP(text), novos = xpnParse(text);
     const novo = novos.length > antigos.length;
-    const nome = novo ? xpnGetSheetName(text, nomeArq) : extGetSheetName(text, nomeArq);
+    // Se o leitor escolhido não achar o nome (cai no nome do arquivo), tenta o do outro layout.
+    // Ex.: Monte Bravo com poucos lançamentos: o leitor antigo vence, mas o cabeçalho é o novo ("Cliente <nome> <conta> Assessor").
+    const doArquivo = n => { const b = nomeArq.replace(/\.pdf$/i, '').replace(/[_-]/g, ' ').trim().toUpperCase(), x = String(n || '').trim().toUpperCase();
+      return !x || b.startsWith(x.slice(0, 20)) || x.startsWith(b.slice(0, 20)); };
+    let nome = novo ? xpnGetSheetName(text, nomeArq) : extGetSheetName(text, nomeArq);
+    if (doArquivo(nome)) { const outro = novo ? extGetSheetName(text, nomeArq) : xpnGetSheetName(text, nomeArq); if (!doArquivo(outro)) nome = outro; }
     if (novo) log('Layout novo da XP detectado', 'ok');
     const rows = (novo ? novos : antigos).map(r => {
       const tipo = extClassifyTipoXP(r.historico);
