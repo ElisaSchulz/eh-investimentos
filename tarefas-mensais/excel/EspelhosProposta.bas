@@ -261,16 +261,16 @@ End Function
 ' Fluxos: linhas e rotulos vem do layout (C = codigo na linha de Amortizacao, a de baixo e Juros);
 ' datas na linha 1 a partir da coluna F; valores = soma de tbl_Eventos por codigo, tipo e data.
 Private Function MontarFluxos(base As Workbook) As String
-    Dim ws As Worksheet, lo As ListObject, ev As Variant, nEv As Long, eC As Long, eD As Long, eT As Long, eV As Long
+    Dim ws As Worksheet, lo As ListObject, evs As Variant, nEv As Long, eC As Long, eD As Long, eT As Long, eVal As Long
     Dim linhas As Object, ult As Long, i As Long, code As String, datas As Object, lista() As Double, nd As Long, k As Variant
     Dim grade() As Variant, r As Long, c As Long, tipo As String
     PrepararAba base, "Fluxos"
     EscreverLayout base, "Fluxos"
     Set ws = base.Worksheets("Fluxos")
     Set lo = AcharTabela(base, "tbl_Eventos")
-    ev = lo.DataBodyRange.Value: nEv = LinhasUsadas(lo)
+    evs = lo.DataBodyRange.Value: nEv = LinhasUsadas(lo)
     eC = ColunaDaTabela(lo, sCodigo()): eD = ColunaDaTabela(lo, "Data pagamento")
-    eT = ColunaDaTabela(lo, "Tipo"): eV = ColunaDaTabela(lo, "Valor por unidade")
+    eT = ColunaDaTabela(lo, "Tipo"): eVal = ColunaDaTabela(lo, "Valor por unidade")
     ult = ws.Cells(ws.Rows.Count, 3).End(xlUp).Row
     Set linhas = CreateObject("Scripting.Dictionary")
     For i = 2 To ult
@@ -281,7 +281,7 @@ Private Function MontarFluxos(base As Workbook) As String
     Next i
     Set datas = CreateObject("Scripting.Dictionary")
     For i = 1 To nEv
-        If linhas.Exists(UCase(Trim(CStr(ev(i, eC))))) And IsDate(ev(i, eD)) Then datas(CDbl(CDate(ev(i, eD)))) = True
+        If linhas.Exists(UCase(Trim(CStr(evs(i, eC))))) And IsDate(evs(i, eD)) Then datas(CDbl(CDate(evs(i, eD)))) = True
     Next i
     nd = datas.Count
     If nd = 0 Then MontarFluxos = "- Fluxos: sem eventos" & vbCrLf: Exit Function
@@ -293,13 +293,13 @@ Private Function MontarFluxos(base As Workbook) As String
     ReDim grade(1 To ult, 1 To nd)
     For c = 1 To nd: grade(1, c) = CDate(lista(c)): Next c
     For i = 1 To nEv
-        code = UCase(Trim(CStr(ev(i, eC))))
-        If linhas.Exists(code) And IsDate(ev(i, eD)) And IsNumeric(ev(i, eV)) Then
-            tipo = CStr(ev(i, eT))
+        code = UCase(Trim(CStr(evs(i, eC))))
+        If linhas.Exists(code) And IsDate(evs(i, eD)) And IsNumeric(evs(i, eVal)) Then
+            tipo = CStr(evs(i, eT))
             r = linhas(code)
             If tipo <> sAmort() Then r = r + 1            ' Juros e Dividendo/Rendimento: linha de baixo
-            c = datas(CDbl(CDate(ev(i, eD))))
-            If r <= ult Then grade(r, c) = Val0(grade(r, c)) + CDbl(ev(i, eV))
+            c = datas(CDbl(CDate(evs(i, eD))))
+            If r <= ult Then grade(r, c) = Val0(grade(r, c)) + CDbl(evs(i, eVal))
         End If
     Next i
     ws.Cells(1, 6).Resize(ult, nd).Value = grade
