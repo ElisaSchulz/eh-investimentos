@@ -12,7 +12,8 @@ Option Explicit
 '     a mao na base (codigo, valor, Obs) nao sao desfeitas.
 '   - A coluna Cliente vem da aba Mapa da base: coluna A = nome no extrato
 '     (o mesmo nome de aba que o Extratos -> Excel gerava), coluna B = cliente
-'     (ex.: LuizFLM). Nome sem Mapa entra com Cliente vazio e aparece no
+'     (ex.: LuizFLM). Se o arquivo ja trouxer o Cliente preenchido (migracao
+'     da base antiga), ele e mantido. Nome sem Mapa entra com Cliente vazio e aparece no
 '     relatorio; depois de completar o Mapa, rode PreencherClientesPeloMapa.
 '   - O alerta do site (coluna Alerta) vai para a coluna Obs como
 '     "Conferir: ...". Filtre Obs por "Conferir" para ver so o que conferir.
@@ -114,7 +115,10 @@ Public Sub ImportarMovimentacoes()
                         nNovas = nNovas + 1
                         For j = 1 To 14: novas(j, nNovas) = dados(i, j): Next j
                         nome = UCase(Trim(CStr(dados(i, C_NOME))))
-                        If mapa.Exists(nome) Then
+                        If Trim(CStr(dados(i, C_CLIENTE))) <> "" Then
+                            ' Cliente ja veio preenchido no arquivo (ex.: migracao da base antiga): mantem
+                            novas(C_CLIENTE, nNovas) = Trim(CStr(dados(i, C_CLIENTE)))
+                        ElseIf mapa.Exists(nome) Then
                             novas(C_CLIENTE, nNovas) = mapa(nome)
                         Else
                             novas(C_CLIENTE, nNovas) = Empty
