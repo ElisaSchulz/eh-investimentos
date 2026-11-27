@@ -115,6 +115,7 @@ Public Sub ImportarMovimentacoes()
                         nNovas = nNovas + 1
                         For j = 1 To 14: novas(j, nNovas) = dados(i, j): Next j
                         nome = UCase(Trim(CStr(dados(i, C_NOME))))
+                        novas(C_NOME, nNovas) = nome   ' Nome no extrato sempre em maiusculas
                         If Trim(CStr(dados(i, C_CLIENTE))) <> "" Then
                             ' Cliente ja veio preenchido no arquivo (ex.: migracao da base antiga): mantem
                             novas(C_CLIENTE, nNovas) = Trim(CStr(dados(i, C_CLIENTE)))
