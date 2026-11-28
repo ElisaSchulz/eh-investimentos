@@ -317,13 +317,14 @@ Private Function LerMapa(base As Workbook) As Object
 End Function
 
 Private Function IdsExistentes(lo As ListObject) As Object
-    Dim v As Variant, i As Long, n As Long
-    Set IdsExistentes = CreateObject("Scripting.Dictionary")
+    Dim v As Variant, i As Long, n As Long, d As Object
+    Set d = CreateObject("Scripting.Dictionary")
+    Set IdsExistentes = d
     n = LinhasUsadas(lo)
     If n = 0 Then Exit Function
     v = Coluna(lo, C_ID)
     For i = 1 To n
-        If Trim(CStr(v(i, 1))) <> "" Then IdsExistentes(Trim(CStr(v(i, 1)))) = True
+        If Trim(CStr(v(i, 1))) <> "" Then d(Trim(CStr(v(i, 1)))) = True
     Next i
 End Function
 
