@@ -146,7 +146,9 @@ Public Sub MigrarClienteNovaBase()
         If nCand > 1 Then linkVelho = ""
     End If
     If linkVelho = "" Then MsgBox "Nao achei o vinculo com a base atual.", vbExclamation: Exit Sub
-    mVelho = Mid(linkVelho, InStrRev(linkVelho, "\") + 1)
+    ' o vinculo pode ser caminho (C:\...\arquivo.xlsx) ou endereco do OneDrive (https://.../arquivo.xlsx)
+    i = InStrRev(linkVelho, "\"): If InStrRev(linkVelho, "/") > i Then i = InStrRev(linkVelho, "/")
+    mVelho = Mid(linkVelho, i + 1)
     If MsgBox("Planilha: " & cli.Name & vbCrLf & vbCrLf & _
               "- Antes de " & Format(DataCorte(), "dd/mm/yyyy") & ": formulas que leem " & mVelho & " viram valor." & vbCrLf & _
               "- Depois: passam a ler " & mProp.Name & "." & vbCrLf & vbCrLf & "Continuar?", _
