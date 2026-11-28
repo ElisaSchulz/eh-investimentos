@@ -179,6 +179,7 @@ Public Sub MigrarClienteNovaBase()
     cli.ChangeLink Name:=linkVelho, NewName:=mProp.FullName, Type:=xlExcelLinks
     Application.Calculation = calcAntes
     Application.Calculate
+    nCong = nCong + CongelarHistorico(cli)
     Application.ScreenUpdating = True
     MsgBox "Formulas congeladas (antes de " & Format(DataCorte(), "dd/mm/yyyy") & "): " & Format(nCong, "#,##0") & vbCrLf & _
            "Formulas trocadas para a Proposta: " & Format(nTroca, "#,##0") & vbCrLf & _
@@ -283,6 +284,47 @@ Private Sub MigrarAba(ws As Worksheet, nCong As Long, nTroca As Long, nResto As 
         Next j
     Next i
 End Sub
+
+' Para planilhas ja migradas: transforma em valor TODAS as formulas das colunas
+' de datas (a partir da H) anteriores ao corte, nas abas COTA / COTA USD.
+Public Sub CongelarHistoricoCOTA()
+    Dim n As Long
+    If MsgBox("Planilha: " & ActiveWorkbook.Name & vbCrLf & vbCrLf & _
+              "Todas as formulas das colunas antes de " & Format(DataCorte(), "dd/mm/yyyy") & _
+              " nas abas de cota viram valor. De " & Format(DataCorte(), "dd/mm/yyyy") & " em diante nada muda." & vbCrLf & vbCrLf & "Continuar?", _
+              vbOKCancel + vbQuestion, "Congelar historico") = vbCancel Then Exit Sub
+    Application.ScreenUpdating = False
+    Application.Calculate
+    n = CongelarHistorico(ActiveWorkbook)
+    Application.Calculate
+    Application.ScreenUpdating = True
+    MsgBox "Formulas transformadas em valor: " & Format(n, "#,##0") & vbCrLf & vbCrLf & _
+           "A planilha nao foi salva: confira a COTA e salve.", vbInformation, "Congelar historico"
+End Sub
+
+Private Function CongelarHistorico(wb As Workbook) As Long
+    Dim ws As Worksheet, colCorte As Long, ultLin As Long, rng As Range, fr As Range, ar As Range, n As Long
+    For Each ws In wb.Worksheets
+        colCorte = ColunaDeCorte(ws)
+        If colCorte > 8 Then
+            ultLin = ws.UsedRange.Row + ws.UsedRange.Rows.Count - 1
+            Set rng = ws.Range(ws.Cells(1, 8), ws.Cells(ultLin, colCorte - 1))
+            Set fr = Nothing
+            On Error Resume Next
+            Set fr = rng.SpecialCells(xlCellTypeFormulas)
+            On Error GoTo 0
+            If Not fr Is Nothing Then
+                For Each ar In fr.Areas
+                    n = n + ar.Cells.CountLarge
+                    On Error Resume Next
+                    ar.Value = ar.Value
+                    On Error GoTo 0
+                Next ar
+            End If
+        End If
+    Next ws
+    CongelarHistorico = n
+End Function
 
 ' Primeira coluna com data >= corte na linha 1 (so em abas com pelo menos 20 datas na linha 1)
 Private Function ColunaDeCorte(ws As Worksheet) As Long
