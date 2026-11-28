@@ -116,8 +116,10 @@ Public Sub ConverterParaModelo2027()
     tpl.Worksheets(nomes).Copy After:=wb.Worksheets("COTA")
     wb.Worksheets(sBaseRel()).Move Before:=wb.Worksheets("COTA")
 
+    ' tira a referencia ao modelo ([Modelo2027.xlsx]COTA -> COTA) regravando com Formula2,
+    ' para nao transformar as formulas de matriz dinamica em formulas antigas (com @)
     For i = LBound(nomes) To UBound(nomes)
-        wb.Worksheets(nomes(i)).Cells.Replace What:="[" & tpl.Name & "]", Replacement:="", LookAt:=xlPart, MatchCase:=False
+        TirarRefModelo wb.Worksheets(nomes(i)), "[" & tpl.Name & "]"
     Next i
     Dim restoLinks As String
     restoLinks = UnificarLinks(wb, tpl, linksAntes)
@@ -386,6 +388,24 @@ Private Function Juntar(col As Collection) As String
         Juntar = Juntar & IIf(Juntar = "", "", ", ") & x
     Next x
 End Function
+
+Private Sub TirarRefModelo(ws As Worksheet, alvo As String)
+    Dim fr As Range, c As Range, f As String, ancora As Boolean
+    On Error Resume Next
+    Set fr = ws.UsedRange.SpecialCells(xlCellTypeFormulas)
+    On Error GoTo 0
+    If fr Is Nothing Then Exit Sub
+    For Each c In fr.Cells
+        ancora = True
+        On Error Resume Next
+        If c.HasSpill Then ancora = (c.SpillParent.Address = c.Address)
+        On Error GoTo 0
+        If ancora Then
+            f = c.Formula2
+            If InStr(1, f, alvo, vbTextCompare) > 0 Then c.Formula2 = Replace(f, alvo, "", , , vbTextCompare)
+        End If
+    Next c
+End Sub
 
 Private Function WbAberto(nome As String) As Boolean
     Dim w As Workbook
