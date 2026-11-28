@@ -46,6 +46,23 @@ Public Sub ConverterParaModelo2027()
     Next w
     If tpl Is Nothing Then MsgBox "Abra o modelo (Modelo2027.xlsx) antes de rodar.", vbExclamation: Exit Sub
 
+    ' a base atual (EH Base Unica.xlsx) precisa estar aberta: SUMIFS em arquivo fechado da #VALOR! ao recalcular
+    Dim lsB As Variant, nomeBase As String
+    lsB = wb.LinkSources(xlExcelLinks)
+    If Not IsEmpty(lsB) Then
+        For i = LBound(lsB) To UBound(lsB)
+            If InStr(1, NomeArq(CStr(lsB(i))), "EH Base Unica", vbTextCompare) > 0 Then nomeBase = NomeArq(CStr(lsB(i)))
+        Next i
+    End If
+    If nomeBase <> "" Then
+        nomeBase = Replace(nomeBase, "%20", " ")
+        If Not WbAberto(nomeBase) Then
+            MsgBox "Abra antes a base atual " & nomeBase & " (a original, da pasta Clientes; pode ser somente leitura)." & vbLf & _
+                   "Sem ela aberta, as SUMIFS das movimentacoes viram #VALOR! quando a planilha recalcula.", vbExclamation
+            Exit Sub
+        End If
+    End If
+
     Set cota = wb.Worksheets("COTA")
     If Trim(CStr(cota.Range("B3").Value)) <> "RF" Or Trim(CStr(cota.Range("E39").Value)) <> "TOTAL" Then
         MsgBox "A COTA desta planilha nao tem o layout antigo esperado (RF em B3, TOTAL em E39).", vbExclamation
@@ -84,8 +101,9 @@ Public Sub ConverterParaModelo2027()
     wb.SaveAs Filename:=novo, FileFormat:=xlOpenXMLWorkbook
     Set cota = wb.Worksheets("COTA")
 
-    ' 1. COTA
-    Dim nAlt As Long, nPos As Long
+    ' 1. COTA: historico (antes de 01/10/2026) que le a base atual vira valor; depois cria POS etc.
+    Dim nAlt As Long, nPos As Long, nCong As Long
+    nCong = CongelarExternos(cota, DateSerial(2026, 10, 1))
     AjustarCota cota, nAlt, nPos
 
     ' 2. abas antigas fora, abas do modelo dentro
@@ -143,6 +161,7 @@ Public Sub ConverterParaModelo2027()
     msg = "Pronto: " & wb.Name & vbLf & vbLf & _
           "COTA: classe " & sPOS() & " criada; " & nPos & " papel(is) RF -> " & sPOS() & "; " & nAlt & " ativo(s) Estruturado -> Alternativo (em amarelo)." & vbLf & _
           "Performance: " & nHist & " meses de historico copiados." & vbLf & _
+          "Formulas antes de 01/10/2026 que liam a base: " & Format(nCong, "#,##0") & " viraram valor." & vbLf & _
           "Corretoras: " & Juntar(bancos) & vbLf
     If colDB > 0 Then msg = msg & vbLf & "Saldo TOTAL na data-base antes: " & Format(totAntes, "#,##0.00") & vbLf & _
           "Saldo TOTAL na data-base agora: " & Format(Val(CStr(cota.Cells(45, colDB).Value)), "#,##0.00") & vbLf & _
@@ -173,12 +192,15 @@ Private Sub AjustarCota(ws As Worksheet, nAlt As Long, nPos As Long)
     ' linha de cota POS (nova linha 4)
     ws.Rows(4).Insert Shift:=xlDown
     ws.Range("B4").Value = sPOS(): ws.Range("C4").Value = sPOS() & "1": ws.Range("D4").Value = sPOS() & "2"
-    ws.Range("E4").Formula = "=E18": ws.Range("F4").Value = "Cota "
+    ws.Range("F4").Value = "Cota "
     ' bloco de saldos POS (novas linhas 16:18, logo depois do bloco RF em 13:15)
     ws.Rows("16:18").Insert Shift:=xlDown
     ws.Range("E16").Value = sPOS() & "1": ws.Range("E17").Value = sPOS() & "2": ws.Range("E18").Value = sPOS()
     ws.Range("F16").Value = "Saldo Inicial": ws.Range("F17").Value = "Movimenta" & ChrW(231) & ChrW(227) & "o ": ws.Range("F18").Value = "Saldo Final"
+    ws.Range("E4").Formula = "=E18"
     ws.Range(ws.Cells(13, colMes), ws.Cells(15, lastCol)).Copy Destination:=ws.Cells(16, colMes)
+    lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+    If lastRow > 2 Then ws.Range(ws.Cells(2, 1), ws.Cells(lastRow, 1)).FormulaR1C1 = "=R[-1]C+1"
     ws.Cells(4, colMes).Value = 1
     If lastCol > colMes Then
         ws.Range(ws.Cells(4, colMes + 1), ws.Cells(4, lastCol)).FormulaR1C1 = _
@@ -327,7 +349,11 @@ Private Function UnificarLinks(wb As Workbook, tpl As Workbook, antes As Variant
             End If
             If alvo <> "" Then
                 On Error Resume Next
-                wb.ChangeLink Name:=ls(i), NewName:=alvo, Type:=xlExcelLinks
+                If alvo = wb.FullName Then
+                    wb.BreakLink Name:=ls(i), Type:=xlExcelLinks
+                Else
+                    wb.ChangeLink Name:=ls(i), NewName:=alvo, Type:=xlExcelLinks
+                End If
                 On Error GoTo 0
             End If
         End If
@@ -359,6 +385,42 @@ Private Function Juntar(col As Collection) As String
     For Each x In col
         Juntar = Juntar & IIf(Juntar = "", "", ", ") & x
     Next x
+End Function
+
+Private Function WbAberto(nome As String) As Boolean
+    Dim w As Workbook
+    For Each w In Workbooks
+        If LCase(w.Name) = LCase(nome) Then WbAberto = True: Exit Function
+    Next w
+End Function
+
+' Formulas com referencia externa nas colunas de datas anteriores ao corte viram valor
+Private Function CongelarExternos(ws As Worksheet, corte As Date) As Long
+    Dim c As Long, lastCol As Long, colCorte As Long, lastRow As Long, rng As Range
+    Dim fs As Variant, vs As Variant, i As Long, j As Long, n As Long, v As Variant
+    lastCol = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column
+    colCorte = lastCol + 1
+    For c = 8 To lastCol
+        v = ws.Cells(1, c).Value
+        If IsDate(v) Then
+            If CDate(v) >= corte Then colCorte = c: Exit For
+        End If
+    Next c
+    If colCorte <= 8 Then Exit Function
+    lastRow = ws.UsedRange.Row + ws.UsedRange.Rows.Count - 1
+    Set rng = ws.Range(ws.Cells(1, 8), ws.Cells(lastRow, colCorte - 1))
+    fs = rng.Formula: vs = rng.Value
+    For i = 1 To UBound(fs, 1)
+        For j = 1 To UBound(fs, 2)
+            If VarType(fs(i, j)) = vbString Then
+                If Left(fs(i, j), 1) = "=" And InStr(fs(i, j), "[") > 0 Then
+                    rng.Cells(i, j).Value = vs(i, j)
+                    n = n + 1
+                End If
+            End If
+        Next j
+    Next i
+    CongelarExternos = n
 End Function
 
 Private Function TemAba(wb As Workbook, nome As String) As Boolean
